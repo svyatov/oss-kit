@@ -65,3 +65,5 @@ Each `###` line is exactly `### R-<AREA>-<NN>: <statement>`, where AREA is DOC, 
 ## Gotchas
 
 `claude plugin validate . --strict` accepts `"source": "./"` for a plugin declared in the same repository as its `marketplace.json`, verified on Claude Code 2.1.217. There is no need to move the plugin body into `plugins/oss-kit/`. Note that the command validates the marketplace manifest only; it prints `Validating marketplace manifest` and does not report on `plugin.json`.
+
+`pip install skills-ref` and `uv tool install skills-ref` both install the package under the name `skills-ref`, but the executable it puts on PATH is `agentskills`, not `skills-ref`. Call `agentskills validate <dir>`, verified on skills-ref 0.1.1. `agentskills validate` exits 0 on a valid skill and 1 on a name and directory mismatch, with the mismatch named in text on stderr, so a CI step can test the exit status directly and does not need to grep the output.
