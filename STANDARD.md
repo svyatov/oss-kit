@@ -41,14 +41,14 @@ Documentation drifts silently. A README promising support for a runtime version 
 
 Check: runtime versions, package versions, install commands, and CLI flags quoted in `README.md` appear with the same values in the package manifest, the CI configuration, and the source.
 
-Fixed by: oss-audit
+Fixed by: oss-readme
 Forges: both
 
 ### R-DOC-05: Documentation prose is plain, active, and free of marketing language
 
-Documentation is read by someone who is already stuck. Promotional adjectives and hedging add reading time without adding information, and they make the honest parts harder to trust.
+Documentation is read by someone who is already stuck. Promotional adjectives and hedging add reading time without adding information, and they make the honest parts harder to trust. Write sentences in the active voice and name the actor, so a reader learns who has to do the thing. The check below names only evidence a tool can count, because an auditor that scores the same files differently on two runs makes every other score in the report unreliable.
 
-Check: `README.md` and files under `docs/` contain no em dashes, en dashes, or emoji; headings are sentence case; sentences use active voice and name the actor; no promotional adjectives such as robust, powerful, seamless, or comprehensive describe the project.
+Check: `README.md` and files under `docs/` contain no em dash (U+2014), en dash (U+2013), or emoji character; every heading is sentence case; and none of the words robust, powerful, seamless, comprehensive, blazing, or effortless describes the project.
 
 Fixed by: oss-writing
 Forges: both
@@ -189,19 +189,28 @@ Forges: both
 
 Branch protection is the only rule here that a repository setting enforces rather than a file. Without it, every other rule in this document can be bypassed by one push.
 
-Check: the default branch is protected, requires at least one approving review, requires the CI status check to pass, and blocks force pushes and deletion.
+Check: the default branch is protected, requires at least one approving review, requires the CI status check to pass, and blocks force pushes and deletion. Read the settings with `gh api repos/{owner}/{repo}/branches/{branch}/protection` on GitHub, or `GET /projects/:id/protected_branches/:name` on GitLab.
 
 Fixed by: oss-harden
 Forges: both
 
 ### R-SEC-05: Release tags are signed and verifiable
 
-An unsigned tag proves nothing about who cut the release. Anyone with write access, or anyone who takes it, can point a tag at any commit.
+An unsigned tag proves nothing about who cut the release. Anyone with write access, or anyone who takes it, can point a tag at any commit. Neither forge exposes an API that reports tag signature validity, so the evidence comes from git itself once the tag and the maintainer's public key are local.
 
-Check: `git tag -v` on the newest release tag succeeds against a published signing key, and the tag is annotated rather than lightweight.
+Check: after `git fetch --tags` and importing the maintainer's published signing key, `git tag -v <tag>` on the newest release tag succeeds, and `git cat-file -t <tag>` prints `tag`, which means the tag is annotated rather than lightweight.
 
 Fixed by: oss-harden
 Forges: both
+
+### R-SEC-06: A GitLab pipeline pins every image and every included file, and limits what its job token reaches
+
+GitLab has no `uses:` line to pin, so the same mutable-reference problem arrives through `image:`, `services:`, and `include:`. A floating image tag or an `include:` on a branch name changes what runs without a diff in your repository, and a job token with an open inbound scope lets whatever runs read every project that trusts the token. The pin and the scope belong in one rule because a pinned pipeline with an unscoped token still hands an attacker the blast radius.
+
+Check: every `image:` and `services:` entry in `.gitlab-ci.yml` and its included files names an image by digest (`image@sha256:...`), every `include:project` entry sets `ref:` to a commit SHA or a protected tag, every `include:remote` entry points at an immutable URL and sets `integrity:`, and `GET /projects/:id/job_token_scope` reports `inbound_enabled` true with `GET /projects/:id/job_token_scope/allowlist` naming only the projects the pipeline needs.
+
+Fixed by: oss-harden
+Forges: gitlab
 
 ## Release and publishing
 
@@ -227,7 +236,7 @@ Forges: both
 
 Provenance links the published artifact back to the commit and workflow that built it, so a consumer can tell a legitimate release from one uploaded by whoever held the token.
 
-Check: the publish step emits provenance (`npm publish --provenance`, PyPI attestations, or a build provenance attestation step), and the registry page for the newest version displays it.
+Check: the publish step emits provenance (`npm publish --provenance`, PyPI attestations, or a build provenance attestation step), and the registry serves it for the newest version: `npm audit signatures` reports a verified attestation for the package, or `GET https://pypi.org/integrity/<project>/<version>/<filename>/provenance` returns a provenance object instead of a 404.
 
 Fixed by: oss-release
 Forges: both
@@ -236,7 +245,7 @@ Forges: both
 
 A registry publish cannot be undone. An approval gate is the last point where a compromised tag, a wrong version, or a bad artifact can be stopped.
 
-Check: the publish job targets a GitHub environment with required reviewers, or a GitLab protected environment with a manual job, and the environment lists at least one approver other than an automation account.
+Check: the publish job targets a GitHub environment with required reviewers, or a GitLab protected environment with a manual job, and the environment lists at least one approver other than an automation account. Read `protection_rules` from `gh api repos/{owner}/{repo}/environments/{environment_name}` and look for a `required_reviewers` entry on GitHub, or read `approval_rules` and `deploy_access_levels` from `GET /projects/:id/protected_environments/:name` on GitLab.
 
 Fixed by: oss-release
 Forges: both
@@ -274,7 +283,7 @@ Forges: both
 
 Auto-generated release notes list merged pull requests, which repeats work the changelog already did better. Two divergent descriptions of one release is worse than one.
 
-Check: the release body on GitHub or GitLab for the newest version matches the corresponding section of `CHANGELOG.md`.
+Check: the release body on the forge for the newest version matches the corresponding section of `CHANGELOG.md`. Read it with `gh release view <tag> --json body` on GitHub, or from the `description` field of `GET /projects/:id/releases/:tag_name` on GitLab.
 
 Fixed by: oss-changelog
 Forges: both
