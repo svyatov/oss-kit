@@ -1,0 +1,43 @@
+{
+  "created_at": "2026-07-22T00:00:00.000Z",
+  "type": "merge",
+  "merged_from": ["secure-npm-package", "secure-ruby-gem"],
+  "sources": [
+    {
+      "url": "https://github.com/evilmartians/agent-skills/tree/main/skills/secure-npm-package",
+      "repository": "evilmartians/agent-skills",
+      "path": "skills/secure-npm-package",
+      "branch": "main",
+      "sha": "0813c8304717dc2fa392b6f4a475f3ac6c8f7336",
+      "original_name": "secure-npm-package",
+      "fetched_at": "2026-07-22T00:00:00.000Z",
+      "ported_via": "secure-npm-package"
+    },
+    {
+      "url": "https://github.com/evilmartians/agent-skills/tree/main/skills/secure-npm-package",
+      "repository": "evilmartians/agent-skills",
+      "path": "skills/secure-npm-package",
+      "branch": "main",
+      "sha": "0813c8304717dc2fa392b6f4a475f3ac6c8f7336",
+      "original_name": "secure-npm-package",
+      "fetched_at": "2026-07-22T00:00:00.000Z",
+      "ported_via": "secure-ruby-gem",
+      "note": "secure-ruby-gem's own sources.json (type: derived) cites this same evilmartians upstream as its structural source; its RubyGems, Bundler, and sigstore content is original, verified against upstream docs in July 2026."
+    }
+  ],
+  "modifications": [
+    "Merged secure-npm-package and secure-ruby-gem, both about 300 lines, into one oss-release skill: SKILL.md now holds only the forge- and registry-independent spine (gather repo facts, configure trusted publishing, write a hardened release workflow, gate on manual approval with 2FA, verify provenance), and every registry-specific flow moved into references/npm.md and references/rubygems.md.",
+    "Added references/pypi.md and references/crates.md, covering PyPI and crates.io, which neither source skill covered.",
+    "Added GitLab CI/CD coverage to every reference file; both source skills covered GitHub Actions only. Every GitLab flow (npm, PyPI, crates.io) and every GitHub Actions flow was checked against current vendor documentation before being written, not carried over from the GitHub Actions text by analogy.",
+    "Verified the RubyGems-and-GitLab gap the design spec flagged still holds: RubyGems' own guide names GitHub Actions as its only OIDC provider, and the GitLab CI support discussion (rubygems/rubygems.org#4845) has an open, unmerged draft PR. references/rubygems.md states the gap explicitly and gives the strongest fallback that exists (a scoped, expiring, masked-and-protected API key behind a protected environment, plus certificate-based gem signing since sigstore attestation needs the OIDC token trusted publishing supplies), marked below the bar per R-REL-02.",
+    "Verified crates.io's GitLab trusted publishing status rather than inheriting the spec's 'unverified' flag: crates.io shipped GitLab CI/CD trusted publishing (gitlab.com only, public beta) per the 2026-01-21 crates.io development update, so references/crates.md documents both forges with no publishing gap. It does add a gap section of its own: crates.io has no build provenance or attestation mechanism at all today, so Step 5 in that file names the gap and offers GitHub's independent actions/attest-build-provenance as a below-the-bar substitute, rather than claiming a registry-served provenance record that does not exist.",
+    "Verified PyPI's provider list (GitHub Actions, GitLab CI/CD, Google Cloud, ActiveState) against current PyPI docs and noted that self-managed GitLab now has a manual-onboarding beta path distinct from the gitlab.com self-service flow.",
+    "Added a Scope section, matching oss-ci's shape, naming the boundary with oss-ci (what runs) and oss-harden (SHA pinning, permissions, branch protection, signed tags) on the same workflow and pipeline files.",
+    "Added a Routing table mapping each ecosystem's manifest signal to its reference file, and a 'Rules this skill owns' section citing R-REL-01 through R-REL-04 from oss-kit's STANDARD.md.",
+    "Preserved the 'How to run this skill' rule from secure-npm-package: registry and forge settings only the user can change get click-by-click instructions with URLs resolved from the repository's own data, and the skill waits for the user to confirm each settings block before verifying and moving on."
+  ],
+  "license": "MIT",
+  "copyright": "Copyright (c) evilmartians",
+  "license_override": false,
+  "license_override_reason": null
+}
