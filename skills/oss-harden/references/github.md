@@ -30,11 +30,13 @@ Resolve a tag to the commit it points at with `gh api`:
 gh api repos/{owner}/{repo}/git/refs/tags/{tag} --jq '.object.sha'
 ```
 
-A lightweight tag's `object.sha` is already the commit SHA. An annotated tag's `object.sha` is the SHA of the tag object, not the commit, and using it directly pins to the wrong thing; when `.object.type` in the same response is `tag` rather than `commit`, dereference it with the `^{}` suffix instead:
+A lightweight tag's `object.sha` is already the commit SHA. An annotated tag's `object.sha` is the SHA of the tag object, not the commit, and using it directly pins to the wrong thing. When `.object.type` in the same response is `tag` rather than `commit`, make a second call against the tag object to get the commit it points at:
 
 ```bash
-gh api repos/{owner}/{repo}/git/refs/tags/{tag}^{} --jq '.object.sha'
+gh api repos/{owner}/{repo}/git/tags/{tag-object-sha} --jq '.object.sha'
 ```
+
+The `^{}` peeled-ref suffix does not work here. It is git wire-protocol syntax, not a REST path segment, so `git/refs/tags/{tag}^{}` returns 404.
 
 Where the action's repository is not the one being audited, `git ls-remote` avoids a second `gh` context: `git ls-remote https://github.com/{owner}/{repo} refs/tags/{tag}` prints the commit SHA directly for a lightweight tag, or the tag object's SHA for an annotated one; append `refs/tags/{tag}^{}` to the same command to get the dereferenced commit SHA for an annotated tag in one call.
 
