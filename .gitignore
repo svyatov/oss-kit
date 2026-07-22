@@ -1,0 +1,7 @@
+.compound-engineering/
+docs/
+STRATEGY.md
+CONCEPTS.md
+node_modules/
+dist/
+coverage/
