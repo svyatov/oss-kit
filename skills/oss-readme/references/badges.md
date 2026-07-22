@@ -1,21 +1,21 @@
 # Badge policy
 
-Exactly three badges, always in this order: **version, CI, coverage**. No fourth badge, ever.
+Optional, and at most three, in this order when present: version, CI, coverage. Omit any that does not apply; a repository where none apply gets no badge row.
 
 Everything renders through `img.shields.io` with no `style` parameter, so all three match in height, font, and corner radius by construction. Native vendor badges (GitHub Actions' `badge.svg`, badge.fury, Code Climate) are never used, because mixing renderers is what makes a badge row look ragged.
 
 ## Placement
 
-Own paragraph directly below the H1, one badge per source line:
+Own paragraph directly below the opening sentence, one badge per source line:
 
 ```markdown
 # project-name
 
+One-sentence description of what it does and why it is different.
+
 [![gem](https://img.shields.io/gem/v/project-name)](https://rubygems.org/gems/project-name)
 [![CI](https://img.shields.io/github/actions/workflow/status/owner/project-name/main.yml?branch=main&label=CI)](https://github.com/owner/project-name/actions/workflows/main.yml)
 [![coverage](https://img.shields.io/codecov/c/github/owner/project-name)](https://app.codecov.io/gh/owner/project-name)
-
-One-sentence description of what it does and why it is different.
 ```
 
 Markdown joins consecutive lines into one paragraph, so this renders as a single row while keeping each badge a one-line diff.
@@ -59,4 +59,4 @@ Link to `https://app.codecov.io/gh/OWNER/REPO`.
 
 Docs links, language-version requirements, type-system claims, bundle size, downloads, license, sponsorship, chat rooms.
 
-A badge earns its place only by showing a **live fact that changes without anyone editing the README**. Everything on that list is either static (a link wearing a status costume), hardcoded in the badge URL and therefore guaranteed to go stale, or vanity. Facts worth stating go in the Facts bullet list, where `**Small.** 141 bytes minified + gzipped.` outweighs any badge.
+A badge earns its place only by showing a live fact that changes without anyone editing the README. Everything on that list is either static (a link wearing a status costume), hardcoded in the badge URL and therefore guaranteed to go stale, or vanity. Facts worth stating go in the Facts bullet list instead: 141 bytes minified and gzipped outweighs any badge.

@@ -15,7 +15,8 @@
   ],
   "modifications": [
     "Renamed from good-readme to oss-readme on migration into oss-kit.",
-    "Style guidance removed in favour of citing oss-writing."
+    "Style guidance removed in favour of citing oss-writing.",
+    "references/badges.md revised: badge row now placed after the opening sentence instead of directly below the H1, badge count changed from a fixed three to optional and at most three, and the inline-header bullet example was rewritten as a plain declarative, to agree with SKILL.md and with oss-writing's ban on inline-header bullets."
   ],
   "license": "MIT",
   "copyright": "Copyright (c) evilmartians",

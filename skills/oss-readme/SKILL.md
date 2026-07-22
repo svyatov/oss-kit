@@ -16,7 +16,7 @@ Never invent facts. If the repository does not contain a piece of data you need,
 
 ### 1. Title
 
-A `#` heading naming the project. Nothing else goes in the heading text: a badge inside it leaks into the generated anchor slug and reads as alt-text soup in a plain-text renderer.
+A `#` heading naming the project. Nothing else goes in the heading text.
 
 ### 2. Opening sentence
 
@@ -41,7 +41,7 @@ A bullet list of the project's most important facts, features, and differentiato
 
 ### 5. Install and example
 
-Two fenced code blocks back to back: an install command, then a minimal usage example, in that order. Both must appear before any section about design, motivation, or comparisons.
+Two fenced code blocks back to back: an install command, then a minimal usage example, in that order. The second block must show the project being used, not a second way to install it; two install blocks with no usage block fails this section even when the two commands differ. Both must appear before any section about design, motivation, or comparisons.
 
 Keep the usage example small, 4 to 10 lines, and show its output in a comment so the reader sees the result without running anything. Nano ID's opener packs the title, the opening sentence, the facts, and this pair on one screen:
 
@@ -72,7 +72,7 @@ A step-by-step guide for adding the tool to an existing project, with explicit c
 
 ### 7. Links
 
-Link the license file, `CHANGELOG.md`, and `CONTRIBUTING.md`. Confirm each target exists in the repository before adding the link; a link to a file that is not there costs the reader a click to learn that.
+Link the license file, `CHANGELOG.md`, and `CONTRIBUTING.md`. Confirm each target exists in the repository before adding the link.
 
 ### Table of contents
 
@@ -94,7 +94,7 @@ If the README runs longer than about two screens, add a table of contents after 
 
 ## Accuracy
 
-Before finishing, read the package manifest, the CI configuration, and the source. Match every version number, install command, and CLI flag quoted in the README against what those files actually say. A support claim the test matrix dropped two releases ago sends a contributor into an afternoon of debugging that ends in your issue tracker.
+Before finishing, read the package manifest, the CI configuration, and the source. Match every version number, install command, and CLI flag quoted in the README against what those files actually say.
 
 ## Checklist before finishing
 
