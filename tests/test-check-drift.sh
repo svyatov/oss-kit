@@ -134,6 +134,21 @@ printf '### R-DOC-01: README states what the project does in one sentence\r\n\r\
 printf -- '---\r\nname: oss-readme\r\ndescription: "test"\r\n---\r\nOwns R-DOC-01.\r\n' > "$d/skills/oss-readme/SKILL.md"
 run_case "CRLF line endings do not cause false drift" 0 "$d"
 
+# The cleanup trap can only remove fixtures that reached this array. An
+# earlier version appended from inside make_fixture, where the $(...)
+# subshell discarded every write, so the trap ran over an empty list and
+# removed nothing. Each case above creates exactly one fixture and runs
+# exactly one run_case, so the counts must agree.
+registered=${#fixtures[@]}
+total=$((pass + fail))
+if [ "$registered" -eq "$total" ]; then
+  echo "ok   - every fixture registered for cleanup"
+  pass=$((pass + 1))
+else
+  echo "FAIL - every fixture registered for cleanup (expected $total, got $registered)"
+  fail=$((fail + 1))
+fi
+
 echo
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

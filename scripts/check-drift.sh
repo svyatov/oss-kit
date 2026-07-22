@@ -6,7 +6,7 @@ status=0
 err() { echo "drift: $*" >&2; status=1; }
 
 if [ ! -f STANDARD.md ] || [ ! -r STANDARD.md ]; then
-  err "STANDARD.md is missing or unreadable; restore it before this check can run"
+  err "STANDARD.md is missing or unreadable; restore the file or fix its permissions"
   exit $status
 fi
 
