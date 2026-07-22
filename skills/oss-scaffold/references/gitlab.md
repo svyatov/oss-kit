@@ -17,7 +17,7 @@ A group can also designate one project as the source of templates shared across 
 
 ## CODEOWNERS (R-COM-06)
 
-Accepted locations, checked in this order, first file found wins: `CODEOWNERS` at the repository root, `docs/CODEOWNERS`, `.gitlab/CODEOWNERS`.
+Accepted locations, checked in this order, first file found wins: `CODEOWNERS` at the repository root, `docs/CODEOWNERS`, `.gitlab/CODEOWNERS`. These locations only matter where the project's GitLab plan is Premium or Ultimate; see Enforcement and tier below before writing this file on a Free-tier project.
 
 Base syntax matches GitHub's: a gitignore-style path pattern followed by one or more owners as `@username`, `@group/subgroup`, or an email address. GitLab adds two things GitHub's CODEOWNERS has no equivalent for.
 
@@ -59,9 +59,9 @@ A number in a second bracket after the section name sets how many distinct appro
 
 ### Enforcement and tier
 
-The CODEOWNERS file itself is read on every GitLab tier. Enforcing it, the "Code Owner approval" setting on a protected branch that blocks merge until the file's owners approve, requires GitLab Premium or Ultimate, on GitLab.com, self-managed, or GitLab Dedicated. Note that requirement to the maintainer before promising enforcement; on a Free-tier project, CODEOWNERS still assigns default reviewers but nothing blocks a merge without their approval.
+GitLab gates the whole Code Owners feature behind Premium or Ultimate, on GitLab.com, self-managed, or GitLab Dedicated, not just the enforcement setting. GitLab's own documentation carries a Premium/Ultimate tier badge on the Code Owners page and describes no Free-tier behavior anywhere on it, so on a Free-tier project GitLab does not read the CODEOWNERS file at all; it assigns no default reviewers and does nothing else with the file's contents. Confirm the project's tier before writing this file. On Free tier, say so plainly and skip it: there is no partial benefit to writing a CODEOWNERS file GitLab never reads. A Free-tier project that still wants routed review has to do it without this file, for example by naming owners per area in CONTRIBUTING.md and asking reviewers directly, or by upgrading the plan.
 
-Enforcement, like the branch protection setting on GitHub, is a project setting outside this file; note that it is needed and leave enabling it to whoever owns branch and merge request protection rather than attempting it from this skill.
+Enforcing Code Owner approval, the setting on a protected branch that blocks merge until the file's owners approve, requires the same Premium or Ultimate tiers as the base feature; it adds no separate gate beyond what reading the file already needs. Enforcement, like the branch protection setting on GitHub, is a project setting outside this file; note that it is needed and leave enabling it to whoever owns branch and merge request protection rather than attempting it from this skill.
 
 ## FUNDING.yml
 

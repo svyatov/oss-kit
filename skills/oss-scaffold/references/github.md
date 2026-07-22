@@ -57,7 +57,7 @@ Each entry in `body` is one form element:
     required: true
 ```
 
-Every element needs `type` and `attributes`. `id` is required on every element except `markdown`. `validations` is optional and, where an element type supports it, its only key is `required`.
+Every element needs `type` and `attributes`. `id` is optional on every element type; it sets the field's identifier for URL query-parameter prefills and does not apply to `markdown`, which is never submitted. `validations` is optional and, where an element type supports it, its only key is `required`.
 
 Element types and their required attributes:
 

@@ -68,7 +68,7 @@ Forges: both
 
 A contributor who cannot run the tests sends a patch you have to fix yourself. The three commands that get them from clone to green cost you one paragraph and save every future contributor an hour.
 
-Check: `CONTRIBUTING.md` exists at the repository root, in `.github/`, or in `.gitlab/`, and states the setup command, the test command, and how to open a pull request or merge request.
+Check: `CONTRIBUTING.md` exists at the repository root, in `.github/`, or in `docs/` on GitHub, or at the repository root on GitLab, and states the setup command, the test command, and how to open a pull request or merge request.
 
 Fixed by: oss-scaffold
 Forges: both
@@ -77,7 +77,7 @@ Forges: both
 
 A code of conduct with `[INSERT CONTACT METHOD]` still in it is worse than none, because it advertises a reporting channel that goes nowhere.
 
-Check: `CODE_OF_CONDUCT.md` exists at the repository root, in `.github/`, or in `.gitlab/`, and contains an email address or a reporting URL with no template placeholder text.
+Check: `CODE_OF_CONDUCT.md` exists at the repository root, in `.github/`, or in `docs/` on GitHub, or at the repository root on GitLab, and contains an email address or a reporting URL with no template placeholder text.
 
 Fixed by: oss-scaffold
 Forges: both
@@ -86,7 +86,7 @@ Forges: both
 
 Without a stated channel, a finder either opens a public issue that discloses the bug to everyone at once, or gives up. A stated response window tells them when to escalate.
 
-Check: `SECURITY.md` exists at the repository root, in `.github/`, or in `.gitlab/`, and names a private channel (GitHub private vulnerability reporting, a GitLab confidential issue, or an email address) together with the time you commit to responding in.
+Check: `SECURITY.md` exists at the repository root, in `.github/`, or in `docs/` on GitHub, or at the repository root on GitLab, and names a private channel (GitHub private vulnerability reporting, a GitLab confidential issue, or an email address) together with the time you commit to responding in.
 
 Fixed by: oss-scaffold
 Forges: both

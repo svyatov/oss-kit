@@ -12,7 +12,7 @@ A scaffolded file nobody maintains is worse than no file at all. A CODE_OF_CONDU
 
 ## Scope
 
-This skill owns the COM rules: what CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, the issue and change-request templates, CODEOWNERS, and the license file must each contain. `oss-readme` owns README structure, including the paragraph that links to the license, the changelog, and CONTRIBUTING.md; do not reorder or rewrite README sections while working from this skill. `oss-writing` owns the sentences in every file this skill creates: once a file's required content is in place, apply oss-writing to how it reads. This skill decides that CONTRIBUTING.md must state the setup, test, and submission steps; it does not decide how those sentences are phrased.
+The COM rules below (R-COM-*) belong here: what CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, the issue and change-request templates, CODEOWNERS, and the license file must each contain. The DOC rules split by concern: R-DOC-01 through R-DOC-04, README structure including the paragraph that links to the license, the changelog, and CONTRIBUTING.md, belong to `oss-readme`; R-DOC-05, the sentences in every file this skill creates, belongs to `oss-writing`. R-SEC-04, enforcing CODEOWNERS review as part of branch protection, belongs to `oss-harden`. Do not reorder or rewrite README sections, decide how a file's sentences are phrased, or configure branch protection while working from this skill; note that the project needs it and hand the work to the owning skill.
 
 ## Ask rather than invent
 
@@ -30,15 +30,15 @@ CONTRIBUTING.md needs the actual local setup, test, and submission commands, not
 
 Confirm the project accepts outside contributions at all before writing a file that invites them. Check the README for a statement either way, check whether the repository is archived, and ask directly if neither answers it; a project that does not want contributions needs a license and a security policy, not a CONTRIBUTING.md.
 
-Identify the language and ecosystem from the package manifest and source layout, so the license template and the commands quoted in CONTRIBUTING.md match reality. Identify the forge from the git remote or by asking; this decides which reference file governs Steps 6 through 8. Identify whether the repository sits under a personal account or an organization, since CODEOWNERS teams and default community health files behave differently under each. List the community files that already exist, in every location each forge recognizes, so Steps 2 through 8 extend or replace rather than duplicate them.
+Identify the language and ecosystem from the package manifest and source layout, so the license template and the commands quoted in CONTRIBUTING.md match reality. Identify the forge from the git remote or by asking; this decides which reference file governs Steps 6 through 8. Identify whether the repository sits under a personal account or an organization: a personal account has no teams, so a CODEOWNERS entry there must name a `@username` or an email address, never an `@org/team-name`. List the community files that already exist, in every location each forge recognizes, so Steps 2 through 8 extend or replace rather than duplicate them.
 
 ### Step 2: License file (R-COM-01)
 
-Read the package manifest's `license` field. If it names a license and no `LICENSE` or `LICENSE.md` file exists, write the matching license's standard text; the text of a license is fixed and not a place to improvise. If the manifest names no license, ask which one to use rather than defaulting to MIT or any other license silently. If a `LICENSE` file already exists and disagrees with the manifest, point out the mismatch and ask which one is correct instead of picking one.
+Read the package manifest's `license` field. If it names a license and no `LICENSE` or `LICENSE.md` file exists, write the matching license's standard text; the text of a license is fixed and not a place to improvise. If the manifest names no license, or the repository ships no package manifest at all, ask which one to use rather than defaulting to MIT or any other license silently. If a `LICENSE` file already exists and disagrees with the manifest, point out the mismatch and ask which one is correct instead of picking one.
 
 ### Step 3: CONTRIBUTING.md (R-COM-02)
 
-State the setup command, the test command, and how to open a pull request or merge request, using the commands verified in Step 1's read of the manifest and any build files. Name the actual branch and fork workflow the repository uses; do not describe a generic GitHub flow for a project that requires a different one. Place the file at the repository root unless the project already keeps community files in `.github/` or `.gitlab/`, in which case match that convention.
+State the setup command, the test command, and how to open a pull request or merge request, using the commands verified in Step 1's read of the manifest and any build files. Name the actual branch and fork workflow the repository uses; do not describe a generic GitHub flow for a project that requires a different one. Place the file at the repository root unless the project already keeps community files in `.github/` or `docs/` on GitHub, in which case match that convention; GitLab recognizes no alternate location for this file, so keep it at the root there.
 
 ### Step 4: CODE_OF_CONDUCT.md (R-COM-03)
 
@@ -54,7 +54,7 @@ Open the reference file for the forge chosen in Step 1 before writing any templa
 
 ### Step 7: CODEOWNERS (R-COM-06)
 
-Open the matching reference file; GitHub and GitLab both read CODEOWNERS, but only GitLab supports sections and a required approval count within a section, and enforcing CODEOWNERS approval on either forge is a branch or merge request protection setting outside this file. Note that setting is needed and hand it to `oss-harden` rather than attempting it here. Every CODEOWNERS file this skill writes needs at least one catch-all `*` rule naming a real owner; ask who that should be if it is not already obvious from the repository's single maintainer or an existing CODEOWNERS file.
+Open the matching reference file; GitHub reads CODEOWNERS on every plan, while GitLab's Code Owners feature, including reading this file at all, requires Premium or Ultimate, and only GitLab supports sections and a required approval count within a section. Enforcing CODEOWNERS approval, where the tier allows it, is a branch or merge request protection setting outside this file. Note that setting is needed and hand it to `oss-harden` rather than attempting it here. Every CODEOWNERS file this skill writes needs at least one catch-all `*` rule naming a real owner; ask who that should be if it is not already obvious from the repository's single maintainer or an existing CODEOWNERS file.
 
 ### Step 8: FUNDING (optional)
 
