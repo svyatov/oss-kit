@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "oss-kit",
+  "owner": {
+    "name": "Leonid Svyatov",
+    "email": "leonid@svyatov.com",
+    "url": "https://www.svyatov.com"
+  },
+  "metadata": {
+    "description": "An opinionated quality bar for open source projects"
+  },
+  "plugins": [
+    {
+      "name": "oss-kit",
+      "source": "./",
+      "description": "An opinionated quality bar for open source projects: README, community files, CI, supply-chain hardening, secure releases, and changelogs.",
+      "category": "productivity",
+      "tags": ["open-source", "readme", "changelog", "ci", "security", "release"]
+    }
+  ]
+}

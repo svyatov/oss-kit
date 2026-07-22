@@ -1,0 +1,289 @@
+# The oss-kit standard
+
+This document states every opinion oss-kit holds about an open source repository, one numbered rule at a time. A rule has an ID, a statement, the reason it exists, a `Check:` line naming the evidence a reader or a tool can look for, the skill that fixes it, and the forges it applies to. The skills in this repository cite these IDs instead of restating the opinions, so a rule changes in one place. `oss-audit` scores a repository against these IDs.
+
+Some rules name a fallback marked below the bar. That marker means the blessed option is unavailable, not that the fallback is acceptable practice: a registry with no trusted publishing, a forge with no attestation support, a plan tier with no protected environments. Take the fallback only when the platform leaves you no other option, and revisit it when the platform catches up.
+
+Rule IDs are `R-<AREA>-<NN>`. Areas are DOC, COM, CI, SEC, REL, and CHG. IDs are permanent: a retired rule keeps its number and is marked retired rather than reused.
+
+## Documentation
+
+### R-DOC-01: The README opens with one sentence saying what the project does
+
+A reader decides in about five seconds whether to keep reading. A title followed by a badge wall or a table of contents spends that budget on nothing.
+
+Check: the first paragraph of `README.md` after the title is a single sentence naming what the project is and who it is for, and it appears before any table of contents, badge row, or `##` heading.
+
+Fixed by: oss-readme
+Forges: both
+
+### R-DOC-02: The README shows how to install the project and one runnable example, in that order, near the top
+
+Installation and a working snippet answer the two questions every visitor has. Burying them under motivation, philosophy, or comparison tables costs you the readers who would have used the project.
+
+Check: `README.md` contains a fenced code block with an install command, followed by a second fenced code block showing minimal usage, and both appear before any section about design, motivation, or comparisons.
+
+Fixed by: oss-readme
+Forges: both
+
+### R-DOC-03: The README links to the license, the changelog, and the contributing guide
+
+These three files answer whether a reader may use the project, what changed since they last looked, and how to send a fix. A link that resolves to nothing is worse than no link, because it costs a click to learn the file is missing.
+
+Check: `README.md` contains links whose targets are the license file, `CHANGELOG.md`, and `CONTRIBUTING.md`, and each target exists in the repository.
+
+Fixed by: oss-readme
+Forges: both
+
+### R-DOC-04: Every version, command, and support claim in the README matches the repository
+
+Documentation drifts silently. A README promising support for a runtime version the test matrix dropped two releases ago sends a contributor into an afternoon of debugging that ends in your issue tracker.
+
+Check: runtime versions, package versions, install commands, and CLI flags quoted in `README.md` appear with the same values in the package manifest, the CI configuration, and the source.
+
+Fixed by: oss-audit
+Forges: both
+
+### R-DOC-05: Documentation prose is plain, active, and free of marketing language
+
+Documentation is read by someone who is already stuck. Promotional adjectives and hedging add reading time without adding information, and they make the honest parts harder to trust.
+
+Check: `README.md` and files under `docs/` contain no em dashes, en dashes, or emoji; headings are sentence case; sentences use active voice and name the actor; no promotional adjectives such as robust, powerful, seamless, or comprehensive describe the project.
+
+Fixed by: oss-writing
+Forges: both
+
+## Community
+
+### R-COM-01: The repository ships a license file whose license matches the package manifest
+
+Without a license file the default is exclusive copyright, so nobody may legally use the code. A manifest field saying MIT while the file says Apache-2.0 forces every downstream legal review to stop and ask.
+
+Check: `LICENSE` or `LICENSE.md` exists at the repository root, and the license it contains matches the `license` field of the package manifest.
+
+Fixed by: oss-scaffold
+Forges: both
+
+### R-COM-02: CONTRIBUTING.md tells a newcomer how to set up, test, and submit a change
+
+A contributor who cannot run the tests sends a patch you have to fix yourself. The three commands that get them from clone to green cost you one paragraph and save every future contributor an hour.
+
+Check: `CONTRIBUTING.md` exists at the repository root, in `.github/`, or in `.gitlab/`, and states the setup command, the test command, and how to open a pull request or merge request.
+
+Fixed by: oss-scaffold
+Forges: both
+
+### R-COM-03: CODE_OF_CONDUCT.md exists and names a working reporting contact
+
+A code of conduct with `[INSERT CONTACT METHOD]` still in it is worse than none, because it advertises a reporting channel that goes nowhere.
+
+Check: `CODE_OF_CONDUCT.md` exists at the repository root, in `.github/`, or in `.gitlab/`, and contains an email address or a reporting URL with no template placeholder text.
+
+Fixed by: oss-scaffold
+Forges: both
+
+### R-COM-04: SECURITY.md states a private reporting channel and a response window
+
+Without a stated channel, a finder either opens a public issue that discloses the bug to everyone at once, or gives up. A stated response window tells them when to escalate.
+
+Check: `SECURITY.md` exists at the repository root, in `.github/`, or in `.gitlab/`, and names a private channel (GitHub private vulnerability reporting, a GitLab confidential issue, or an email address) together with the time you commit to responding in.
+
+Fixed by: oss-scaffold
+Forges: both
+
+### R-COM-05: Issue and change-request templates exist so reports arrive with the facts you need
+
+Every free-form bug report costs a round trip to ask for the version and the reproduction. A template collects both before the issue is filed.
+
+Check: the repository has `.github/ISSUE_TEMPLATE/` with at least one template plus `.github/pull_request_template.md`, or `.gitlab/issue_templates/` with at least one template plus `.gitlab/merge_request_templates/`.
+
+Fixed by: oss-scaffold
+Forges: both
+
+### R-COM-06: A CODEOWNERS file assigns a reviewer to every path
+
+Without a catch-all owner, a change to an unclaimed directory waits for someone to notice it. With one, the forge requests review automatically.
+
+Check: a `CODEOWNERS` file exists in the repository root, `.github/`, `.gitlab/`, or `docs/`, and it contains a `*` rule naming at least one owner.
+
+Fixed by: oss-scaffold
+Forges: both
+
+## Continuous integration
+
+### R-CI-01: CI runs on every push to the default branch and on every change request
+
+A pipeline that only runs on tags tells you the build broke after you shipped it. Running on the default branch and on every pull or merge request catches breakage while the author still has the context.
+
+Check: the CI configuration triggers on `push` to the default branch and on `pull_request` (GitHub), or defines rules for `$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH` and `merge_request_event` (GitLab).
+
+Fixed by: oss-ci
+Forges: both
+
+### R-CI-02: CI runs the same lint, test, and build commands the contributing guide gives to humans
+
+When CI runs a different command than `CONTRIBUTING.md` documents, a contributor passes locally and fails in CI, and neither of you can tell which is authoritative.
+
+Check: the CI configuration invokes a linter, a test runner, and the build command for the shipped artifact, and each command string matches the one in `CONTRIBUTING.md`.
+
+Fixed by: oss-ci
+Forges: both
+
+### R-CI-03: The test matrix covers every runtime version the project claims to support
+
+A support claim you do not test is a guess. Dropping the oldest supported version from the matrix is how a patch release breaks half the installed base.
+
+Check: the matrix entries in the CI configuration list the same runtime versions as the supported range declared in the package manifest, including the oldest and the newest.
+
+Fixed by: oss-ci
+Forges: both
+
+### R-CI-04: Dependency caches are keyed on the lockfile
+
+A cache key that ignores the lockfile serves stale dependencies after an upgrade, so CI tests a dependency set nobody has. A key that changes on every run caches nothing and pays the restore cost anyway.
+
+Check: every cache step in the CI configuration includes a hash of the lockfile in its key, and declares a restore-key prefix so a changed lockfile still warms from the previous cache.
+
+Fixed by: oss-ci
+Forges: both
+
+### R-CI-05: Every job has a timeout, and superseded runs for the same branch are cancelled
+
+A hung job holds a runner until the platform's default timeout expires, which is six hours on GitHub. Queued runs for commits nobody will merge burn the same minutes.
+
+Check: every job sets `timeout-minutes` (GitHub) or `timeout` (GitLab), and the configuration sets `concurrency` with `cancel-in-progress: true` for change-request runs (GitHub) or marks jobs `interruptible: true` with auto-cancel enabled (GitLab).
+
+Fixed by: oss-ci
+Forges: both
+
+## Security posture
+
+### R-SEC-01: Pin every third-party action to a full commit SHA
+
+Tag and branch refs are mutable, so a compromised upstream tag changes what runs in your workflow without a diff in your repo.
+
+Check: every `uses:` line in `.github/workflows/` that references a third-party action resolves to a 40-character SHA.
+
+Fixed by: oss-harden
+Forges: github
+
+### R-SEC-02: Workflows declare least-privilege permissions
+
+The default token permission set is broad enough that a compromised build step can push commits or publish a release. A read-only default costs one line and turns most injection findings into nothing.
+
+Check: every workflow file sets a top-level `permissions:` block that grants no more than `contents: read`, and any job needing more declares the extra scope at the job level.
+
+Fixed by: oss-harden
+Forges: github
+
+### R-SEC-03: Automated dependency updates cover both application dependencies and CI dependencies
+
+Pinning actions to SHAs (R-SEC-01) freezes them until something unfreezes them. Without an updater, pinned means unpatched.
+
+Check: the repository contains `.github/dependabot.yml` or a Renovate configuration, and its ecosystem list covers both the package manager the project uses and the CI action or container images it runs.
+
+Fixed by: oss-harden
+Forges: both
+
+### R-SEC-04: The default branch requires review and passing checks before merge, and rejects force pushes
+
+Branch protection is the only rule here that a repository setting enforces rather than a file. Without it, every other rule in this document can be bypassed by one push.
+
+Check: the default branch is protected, requires at least one approving review, requires the CI status check to pass, and blocks force pushes and deletion.
+
+Fixed by: oss-harden
+Forges: both
+
+### R-SEC-05: Release tags are signed and verifiable
+
+An unsigned tag proves nothing about who cut the release. Anyone with write access, or anyone who takes it, can point a tag at any commit.
+
+Check: `git tag -v` on the newest release tag succeeds against a published signing key, and the tag is annotated rather than lightweight.
+
+Fixed by: oss-harden
+Forges: both
+
+## Release and publishing
+
+### R-REL-01: Publishing happens in CI, triggered by a tag, never from a developer machine
+
+A local publish ships whatever is in the working tree, from a machine holding a long-lived registry token. A tag-triggered CI publish ships a commit that is in the repository and that CI has tested.
+
+Check: a release workflow or pipeline triggered by a tag push runs the publish command, and the publish command appears in no local script intended for manual use.
+
+Fixed by: oss-release
+Forges: both
+
+### R-REL-02: The publish job authenticates to the registry with trusted publishing, not a stored token
+
+A long-lived registry token in CI secrets is the single credential that turns any workflow compromise into a supply-chain compromise. Trusted publishing exchanges a short-lived OIDC token per run, so there is nothing to steal between releases.
+
+Check: the publish job requests `id-token: write` and publishes through the registry's OIDC flow (npm trusted publishing, PyPI trusted publishers, RubyGems OIDC, crates.io trusted publishing). Where the registry offers no OIDC flow, a scoped token limited to one package is below the bar and permitted.
+
+Fixed by: oss-release
+Forges: both
+
+### R-REL-03: Published artifacts carry build provenance
+
+Provenance links the published artifact back to the commit and workflow that built it, so a consumer can tell a legitimate release from one uploaded by whoever held the token.
+
+Check: the publish step emits provenance (`npm publish --provenance`, PyPI attestations, or a build provenance attestation step), and the registry page for the newest version displays it.
+
+Fixed by: oss-release
+Forges: both
+
+### R-REL-04: A human approves the run before anything reaches a public registry
+
+A registry publish cannot be undone. An approval gate is the last point where a compromised tag, a wrong version, or a bad artifact can be stopped.
+
+Check: the publish job targets a GitHub environment with required reviewers, or a GitLab protected environment with a manual job, and the environment lists at least one approver other than an automation account.
+
+Fixed by: oss-release
+Forges: both
+
+## Changelog and versioning
+
+### R-CHG-01: The repository keeps CHANGELOG.md in Keep a Changelog format
+
+A changelog exists so a user upgrading two versions can read what changed without diffing tags. Generated commit lists do not answer that, because commit subjects address the maintainer, not the user.
+
+Check: `CHANGELOG.md` exists at the repository root, carries an `## [Unreleased]` section, and every release heading matches `## [X.Y.Z] - YYYY-MM-DD` with entries grouped under Added, Changed, Deprecated, Removed, Fixed, or Security.
+
+Fixed by: oss-changelog
+Forges: both
+
+### R-CHG-02: Versions follow semantic versioning, and any breaking change bumps the major
+
+Semver is a promise to a dependency resolver. A breaking change shipped as a patch bypasses every version constraint your users wrote and breaks their builds without their action.
+
+Check: every version in `CHANGELOG.md` and every release tag matches `v?MAJOR.MINOR.PATCH` with an optional prerelease suffix, and every release containing a Removed entry or a breaking Changed entry increments MAJOR.
+
+Fixed by: oss-changelog
+Forges: both
+
+### R-CHG-03: The release tag, the manifest version, and the newest changelog entry are the same version
+
+When these three disagree, nobody can tell which one describes the artifact users installed, and the changelog stops being a reliable upgrade record.
+
+Check: for the newest release tag, the tag name, the `version` field of the package manifest at that commit, and the topmost release heading in `CHANGELOG.md` all name the same version.
+
+Fixed by: oss-changelog
+Forges: both
+
+### R-CHG-04: Forge release notes reproduce the changelog entry for that version
+
+Auto-generated release notes list merged pull requests, which repeats work the changelog already did better. Two divergent descriptions of one release is worse than one.
+
+Check: the release body on GitHub or GitLab for the newest version matches the corresponding section of `CHANGELOG.md`.
+
+Fixed by: oss-changelog
+Forges: both
+
+### R-CHG-05: A public API is deprecated in a release before it is removed
+
+Removing an API without warning turns an upgrade into an outage. A deprecation shipped one minor release earlier gives users a window to migrate while both paths still work.
+
+Check: every item under Removed in a release appears under Deprecated in an earlier release, and the deprecated API emits a runtime warning naming its replacement.
+
+Fixed by: oss-changelog
+Forges: both
