@@ -39,7 +39,7 @@ Source: [rubygems/rubygems.org discussion #4845, "trusted publishing with gitlab
 
 The strongest alternative that exists today, given GitLab CI/CD is not a supported provider:
 
-Create a scoped API key at `https://rubygems.org/settings/edit` under API keys, restricted to the `Push rubygem` scope for this one gem only, with the shortest expiry rubygems.org offers that still fits the release cadence (1, 7, 30, or 90 days); rubygems.org does not let the expiry be edited after creation, so plan to rotate it on that schedule. Store it as a GitLab CI/CD variable that is both masked and protected, so it is redacted from job logs and only available to pipelines running on a protected branch or tag. Put the publish job behind a GitLab protected environment with required approvers, the same gate Step 4 uses elsewhere, so the key's mere presence in the pipeline is not enough to publish. Sign the built gem: `gem push --attestation` needs the same OIDC token trusted publishing supplies, which is unavailable here, so use the older certificate-based signing instead, with `gem cert --build <email>` to create a signing key and `spec.signing_key` and `spec.cert_chain` in the gemspec to sign every build.
+Create a scoped API key at `https://rubygems.org/profile/api_keys/new`, restricted to the `Push rubygem` scope for this one gem only. The expiry field is a free datetime picker with a minimum of five minutes from the current time, not a list of preset durations; set it to the shortest value that still fits the release cadence. rubygems.org does not let the expiry be edited after creation, so plan to rotate it on that schedule. Store it as a GitLab CI/CD variable that is both masked and protected, so it is redacted from job logs and only available to pipelines running on a protected branch or tag. Put the publish job behind a GitLab protected environment with required approvers, the same gate Step 4 uses elsewhere, so the key's mere presence in the pipeline is not enough to publish. Sign the built gem: `gem push --attestation` needs the same OIDC token trusted publishing supplies, which is unavailable here, so use the older certificate-based signing instead, with `gem cert --build <email>` to create a signing key and `spec.signing_key` and `spec.cert_chain` in the gemspec to sign every build.
 
 This is below the bar R-REL-02 sets, because a scoped, expiring key is still a credential that can leak, unlike a trusted publishing flow where nothing is ever stored; take it only because GitLab CI/CD is not a supported provider today, and revisit it once discussion #4845 ships.
 
@@ -56,8 +56,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v7
         with:
@@ -67,12 +65,10 @@ jobs:
           ruby-version: .ruby-version
           bundler-cache: false
       - run: bundle install
-      - run: bundle exec rake test
+      - run: bundle exec rake test  # oss-ci decides the actual command from CONTRIBUTING.md (R-CI-02)
 
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v7
         with:
@@ -104,11 +100,11 @@ jobs:
         with:
           ruby-version: ruby
           bundler-cache: false
-      - uses: rubygems/configure-rubygems-credentials@v2
-      - run: gem push pkg/gem.gem --attestation pkg/gem.sigstore.json
+      - uses: rubygems/configure-rubygems-credentials@main  # oss-harden pins this to a commit SHA
+      - run: gem push pkg/gem.gem
 ```
 
-`oss-harden` pins every `uses:` line above to a commit SHA; do not pin them here. `rubygems/release-gem@v1` is a simpler drop-in that runs `bundle exec rake release` end to end, including attestation, but it needs `contents: write` and installs the full Gemfile in the job that can publish; offer it as the low-effort option and let the user weigh the tradeoff rather than choosing silently.
+`oss-harden` pins every `uses:` line above to a commit SHA and sets this workflow's `permissions:`, including the `contents: read` this skill left off the test and build jobs above; do not pin them or add permissions here. `configure-rubygems-credentials` documents `@main` itself and recommends pinning it to a commit SHA rather than a version tag; the repository has no floating major tag, only the point releases `v1.0.0`, `v2.0.0`, and `v2.1.0`, so `@main` is the only ref name stable enough to hand to `oss-harden`. `rubygems/release-gem@v1` is a simpler drop-in that runs `bundle exec rake release` end to end, including attestation, but it needs `contents: write` and installs the full Gemfile in the job that can publish; offer it as the low-effort option and let the user weigh the tradeoff rather than choosing silently.
 
 If an existing workflow uses `secrets.RUBYGEMS_API_KEY` or `GEM_HOST_API_KEY`, remove it from the YAML now and tell the user to delete the corresponding secret once the new flow is verified.
 
@@ -122,7 +118,13 @@ spec.metadata["rubygems_mfa_required"] = "true"
 
 ## Verify provenance (Step 5)
 
-`gem push --attestation pkg/gem.sigstore.json` in the workflow above signs the gem with sigstore at publish time; this only works through trusted publishing's OIDC token, which is why the GitLab fallback above uses certificate signing instead. After the first release, verify the attestation is attached from the gem's page on rubygems.org, or with `gem info --remote <name>` and checking the version's cert data.
+`gem push` in the workflow above signs the gem with sigstore automatically: RubyGems attempts attestation whenever the target host is rubygems.org and the process is not running under JRuby, which describes exactly this GitHub Actions job, so no `--attestation` flag or pre-built bundle is needed. Passing `--attestation` with a path this workflow never creates would make `gem push` try to read a file that does not exist; RubyGems catches that error, warns, and retries without attestation, so the release would still go green with no provenance and no failure signal. This auto-attestation path only works through trusted publishing's OIDC token, which is why the GitLab fallback above uses certificate signing instead. After the first release, verify the attestation with:
+
+```bash
+curl -s https://rubygems.org/api/v1/attestations/<name>-<version>.json
+```
+
+A non-empty JSON array of attestation bodies confirms the registry served it; an empty `[]` means the auto-attestation path failed or Step 3 was skipped.
 
 ## Not yet published gems
 

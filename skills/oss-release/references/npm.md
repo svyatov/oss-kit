@@ -1,6 +1,6 @@
 # npm
 
-Concrete flow for the decisions `SKILL.md` makes, for a package published to the public npm registry. npm accepts three trusted publishing providers: GitHub Actions, GitLab CI/CD (GitLab.com shared runners), and CircleCI. This file covers GitHub Actions and GitLab CI/CD; CircleCI is out of scope for this skill because `oss-kit`'s forge scope is GitHub and GitLab. Self-hosted runners on any provider are not supported. Trusted publishing needs npm CLI 11.5.1 or newer and Node 22.14.0 or newer; check the project's `packageManager` field and lockfile before assuming either is new enough, and tell the user to upgrade rather than falling back to a token silently.
+Concrete flow for the decisions `SKILL.md` makes, for a package published to the public npm registry. npm accepts three trusted publishing providers: GitHub Actions, GitLab CI/CD (GitLab.com shared runners), and CircleCI. This file covers GitHub Actions and GitLab CI/CD; CircleCI is out of scope for this skill because `oss-kit`'s forge scope is GitHub and GitLab. Self-hosted runners on any provider are not supported. Trusted publishing needs npm CLI 11.5.1 or newer and Node 22.14.0 or newer; check the project's `packageManager` field and lockfile before assuming either is new enough, and tell the user to upgrade rather than falling back to a token silently. Staged publishing, which this file uses for the approval gate in Step 4, needs a higher floor still: npm CLI 11.15.0 or newer, with the same Node 22.14.0 minimum. `actions/setup-node` pins Node, not npm, so the publish job upgrades npm explicitly to meet this floor rather than trusting whatever version the Node release happens to bundle.
 
 Source: [npm Docs, Trusted publishing for npm packages](https://docs.npmjs.com/trusted-publishers/).
 
@@ -68,24 +68,20 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
       - run: npm ci --ignore-scripts
-      - run: npm test
+      - run: npm test  # oss-ci decides the actual command from CONTRIBUTING.md (R-CI-02)
 
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - uses: actions/setup-node@v6
@@ -107,6 +103,9 @@ jobs:
       contents: read
       id-token: write
     steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/download-artifact@v6
         with:
           name: build-artifacts
@@ -115,10 +114,11 @@ jobs:
         with:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
+      - run: npm install -g npm@'>=11.15.0'
       - run: npm stage publish --ignore-scripts
 ```
 
-`oss-harden` pins every `uses:` line above to a commit SHA and adds any permission this skill did not name; do not pin them here. On GitLab CI/CD, give the publish job `environment: name: release` with `action: stop`-style manual gating per the reference in `oss-harden`'s scope, and the `id_tokens` block above, then run `npm ci --ignore-scripts`, `npm run build`, and `npm stage publish --ignore-scripts` in `script:`.
+`oss-harden` pins every `uses:` line above to a commit SHA and sets this workflow's `permissions:`, including the `contents: read` this skill left off the test and build jobs above; do not pin them or add permissions here. On GitLab CI/CD, give the publish job `environment: name: release` with `when: manual`, and configure `release` as a protected environment with approval rules, the same gate Step 4 below describes; then run `npm ci --ignore-scripts`, `npm run build`, and `npm stage publish --ignore-scripts` in `script:`.
 
 If an existing workflow uses `secrets.NPM_TOKEN`, remove it from the YAML now and tell the user to delete the corresponding secret and revoke the token once the new flow is verified.
 

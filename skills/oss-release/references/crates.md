@@ -51,7 +51,12 @@ id_tokens:
     aud: crates.io
 ```
 
-crates.io has no equivalent to `crates-io-auth-action` for GitLab; the pipeline exchanges the OIDC token for a publish token itself, with a small script that POSTs to the crates.io API:
+crates.io has no equivalent to `crates-io-auth-action` for GitLab; the pipeline exchanges the OIDC token for a publish token itself, with a small script that POSTs to the crates.io API. The script needs `curl` and `jq`. The official `rust:*-bookworm` image ships `curl` through its `buildpack-deps` base, but never ships `jq`, and this file does not pin which `rust:` image variant to use, so install both explicitly rather than assuming either is there:
+
+```yaml
+before_script:
+  - apt-get update && apt-get install -y --no-install-recommends curl jq
+```
 
 ```bash
 #!/bin/bash
@@ -84,11 +89,11 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
-      - uses: actions/checkout@v6
-      - run: cargo test --all-features
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - run: cargo test --all-features  # oss-ci decides the actual command from CONTRIBUTING.md (R-CI-02)
 
   publish:
     runs-on: ubuntu-latest
@@ -97,7 +102,9 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: rust-lang/crates-io-auth-action@v1
         id: auth
       - run: cargo publish
@@ -105,7 +112,7 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
 ```
 
-`oss-harden` pins every `uses:` line above to a commit SHA; do not pin them here. On GitLab CI/CD, give the publish job the `id_tokens` block above, run `exchange-token.sh` in `before_script:` or `script:` to get `CARGO_REGISTRY_TOKEN`, then `cargo publish`, restricted to tag pushes with `only: [tags]` or an equivalent `rules:` entry.
+`oss-harden` pins every `uses:` line above to a commit SHA and sets this workflow's `permissions:`, including the `contents: read` this skill left off the test job above; do not pin them or add permissions here. On GitLab CI/CD, give the publish job the `id_tokens` block above, run `exchange-token.sh` in `before_script:` or `script:` to get `CARGO_REGISTRY_TOKEN`, then `cargo publish`, restricted to tag pushes with `only: [tags]` or an equivalent `rules:` entry.
 
 If an existing workflow reads a `CARGO_REGISTRY_TOKEN` from repository secrets, remove that now and tell the user to delete the secret and revoke the token on crates.io once the new flow is verified.
 
@@ -115,9 +122,9 @@ Pin the publish job to `environment: release` as above, and create that environm
 
 ## Verify provenance (Step 5): a gap, not a check
 
-crates.io has no build provenance mechanism today: no cryptographic signature on a published crate, no attestation object, and nothing comparable to npm's `npm audit signatures` or PyPI's PEP 740 integrity endpoint for this skill to verify against. A Sigstore integration has been proposed (RFC 3403) but is not implemented. Trusted publishing itself still gives real value here, an OIDC-verified link between the publish action and the repository and workflow that ran it, but that link lives in crates.io's internal audit trail, not in anything the registry serves back for a consumer to check.
+crates.io has no build provenance mechanism today: no cryptographic signature on a published crate, no attestation object, and nothing comparable to npm's `npm audit signatures` or PyPI's PEP 740 integrity endpoint for this skill to verify against. A Sigstore integration was proposed for crates.io (RFC 3403), but the RFC was closed without merging in 2023 and nothing has replaced it; treat Sigstore signing as not on the roadmap rather than pending. Trusted publishing itself still gives real value here, an OIDC-verified link between the publish action and the repository and workflow that ran it, but that link lives in crates.io's internal audit trail, not in anything the registry serves back for a consumer to check.
 
-Source: [rust-lang/rfcs#3403, Sigstore-based signing for crates.io](https://github.com/rust-lang/rfcs/pull/3403).
+Source: [rust-lang/rfcs#3403, Sigstore-based signing for crates.io (closed, not merged)](https://github.com/rust-lang/rfcs/pull/3403).
 
 The strongest substitute available is GitHub's own artifact attestation, produced and verified independently of crates.io:
 

@@ -1,6 +1,6 @@
 # PyPI
 
-Concrete flow for the decisions `SKILL.md` makes, for a package published to pypi.org. PyPI accepts four trusted publishing providers: GitHub Actions, GitLab CI/CD, Google Cloud, and ActiveState. This file covers GitHub Actions and GitLab CI/CD, matching `oss-kit`'s forge scope. The self-service GitLab flow below covers gitlab.com projects. A self-managed GitLab instance can use trusted publishing too, but only through a manual beta: the instance operator emails `support+orgs@pypi.org` with the instance URL and confirms its `/.well-known/openid-configuration` and `/oauth/discovery/keys` endpoints are reachable, and PyPI staff establish the trust relationship by hand. Tell the user about that path if `git remote get-url origin` points at a GitLab host other than gitlab.com, rather than assuming the self-service flow below applies to it.
+Concrete flow for the decisions `SKILL.md` makes, for a package published to pypi.org. PyPI accepts four trusted publishing providers: GitHub Actions, GitLab CI/CD, Google Cloud, and ActiveState. This file covers GitHub Actions and GitLab CI/CD, matching `oss-kit`'s forge scope. The self-service GitLab flow below covers gitlab.com projects. A self-managed GitLab instance can use trusted publishing too, but PyPI's own announcement scopes the beta to organizations running their own GitLab, not to an individual maintainer's self-hosted instance: the organization emails `support+orgs@pypi.org` with the instance URL and confirms its `/.well-known/openid-configuration` and `/oauth/discovery/keys` endpoints are reachable, and PyPI staff establish the trust relationship by hand. Tell the user about that path if `git remote get-url origin` points at a GitLab host other than gitlab.com and the repository belongs to an organization, rather than assuming the self-service flow below applies to it or that a solo maintainer's personal instance qualifies.
 
 Source: [PyPI Docs, Trusted publishers](https://docs.pypi.org/trusted-publishers/adding-a-publisher/), [PyPI Docs, Using a publisher](https://docs.pypi.org/trusted-publishers/using-a-publisher/), and [PyPI Blog, Trusted Publishing is popular, now for GitLab Self-Managed and Organizations](https://blog.pypi.org/posts/2025-11-10-trusted-publishers-coming-to-orgs/).
 
@@ -66,22 +66,22 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
       - run: pip install -e .[test]
-      - run: pytest
+      - run: pytest  # oss-ci decides these commands from CONTRIBUTING.md (R-CI-02)
 
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
@@ -107,7 +107,7 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@release/v1
 ```
 
-`oss-harden` pins every `uses:` line above to a commit SHA; do not pin them here. On GitLab CI/CD, run the equivalent `test`, `build`, and `publish` jobs with `image: python:3.13-bookworm`, give the publish job the `id_tokens` block above, and run `python -m pip install -U twine && twine upload dist/*` in its `script:`.
+`oss-harden` pins every `uses:` line above to a commit SHA and sets this workflow's `permissions:`, including the `contents: read` this skill left off the test and build jobs above; do not pin them or add permissions here. On GitLab CI/CD, run the equivalent `test`, `build`, and `publish` jobs with `image: python:3.13-bookworm`, give the publish job the `id_tokens` block above, and run `python -m pip install -U twine && twine upload dist/*` in its `script:`.
 
 If an existing workflow uses `secrets.PYPI_API_TOKEN`, remove it from the YAML now and tell the user to delete the corresponding secret once the new flow is verified.
 
