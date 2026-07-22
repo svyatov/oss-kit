@@ -40,6 +40,10 @@ Claude Code and GitHub Copilot CLI both read `.claude-plugin/marketplace.json`, 
 
 Every opinion these skills hold is written down in [STANDARD.md](STANDARD.md), one numbered rule at a time. Each rule states what to do, why, what to check for, and which skill fixes it. Read it and disagree with it before you install anything.
 
+## Changelog
+
+Every notable change is recorded in [CHANGELOG.md](CHANGELOG.md).
+
 ## Credits
 
 Four upstream projects this kit borrows from:
