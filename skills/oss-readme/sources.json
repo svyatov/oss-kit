@@ -1,0 +1,24 @@
+{
+  "created_at": "2026-07-22T00:00:00.000Z",
+  "type": "copy",
+  "renamed_from": "good-readme",
+  "sources": [
+    {
+      "url": "https://github.com/evilmartians/agent-skills/tree/main/skills/good-readme",
+      "repository": "evilmartians/agent-skills",
+      "path": "skills/good-readme",
+      "branch": "main",
+      "sha": "0813c8304717dc2fa392b6f4a475f3ac6c8f7336",
+      "original_name": "good-readme",
+      "fetched_at": "2026-07-22T00:00:00.000Z"
+    }
+  ],
+  "modifications": [
+    "Renamed from good-readme to oss-readme on migration into oss-kit.",
+    "Style guidance removed in favour of citing oss-writing."
+  ],
+  "license": "MIT",
+  "copyright": "Copyright (c) evilmartians",
+  "license_override": false,
+  "license_override_reason": null
+}
