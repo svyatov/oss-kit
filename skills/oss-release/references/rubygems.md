@@ -45,7 +45,11 @@ This is below the bar R-REL-02 sets, because a scoped, expiring key is still a c
 
 ## Write the hardened release workflow (Step 3)
 
-The publish job installs no Gemfile dependencies and uses no Bundler cache anywhere in the workflow, including the test job: a restored cache is a cache-poisoning vector in a tag-triggered publishing workflow, and releases are rare enough that the lost cache costs nothing. Build the gem in a separate job and pass the `.gem` file via artifact:
+The publish job installs no Gemfile dependencies and uses no Bundler cache anywhere in the workflow, including the test job: a restored cache is a cache-poisoning vector in a tag-triggered publishing workflow, and releases are rare enough that the lost cache costs nothing.
+
+The least-effort way to get a real attestation today is `rubygems/release-gem@v1`. Its `action.yml` runs `bundle exec rake release` with `RUBYOPT` pointed at a patch the action ships in the same repository, `rubygems-attestation-patch.rb`, which signs the built gem with `gem exec sigstore-cli:0.2.3 sign ... --bundle` and pushes it with that bundle attached. That is tooling released today, not RubyGems' own unreleased auto-attestation, so it works. It needs `contents: write`, since `rake release` pushes the release tag itself, and it installs the full Gemfile in the job that holds publish credentials, which this skill avoids by default; offer it as the low-effort option and let the user weigh that tradeoff rather than choosing silently.
+
+Where job separation matters more than the smaller diff, build the gem in a separate job, pass the `.gem` file via artifact, and sign it explicitly in the publish job with the same tool `release-gem` calls under the hood:
 
 ```yaml
 name: Release
@@ -101,10 +105,11 @@ jobs:
           ruby-version: ruby
           bundler-cache: false
       - uses: rubygems/configure-rubygems-credentials@main  # oss-harden pins this to a commit SHA
-      - run: gem push pkg/gem.gem
+      - run: gem exec --conservative sigstore-cli:0.2.3 sign pkg/gem.gem --bundle pkg/gem.gem.sigstore.json
+      - run: gem push pkg/gem.gem --attestation pkg/gem.gem.sigstore.json
 ```
 
-`oss-harden` pins every `uses:` line above to a commit SHA and sets this workflow's `permissions:`, including the `contents: read` this skill left off the test and build jobs above; do not pin them or add permissions here. `configure-rubygems-credentials` documents `@main` itself and recommends pinning it to a commit SHA rather than a version tag; the repository has no floating major tag, only the point releases `v1.0.0`, `v2.0.0`, and `v2.1.0`, so `@main` is the only ref name stable enough to hand to `oss-harden`. `rubygems/release-gem@v1` is a simpler drop-in that runs `bundle exec rake release` end to end, including attestation, but it needs `contents: write` and installs the full Gemfile in the job that can publish; offer it as the low-effort option and let the user weigh the tradeoff rather than choosing silently.
+`oss-harden` pins every `uses:` line above to a commit SHA and sets this workflow's `permissions:`, including the `contents: read` this skill left off the test and build jobs above; do not pin them or add permissions here. `configure-rubygems-credentials` documents `@main` itself and recommends pinning it to a commit SHA rather than a version tag; the repository has no floating major tag, only the point releases `v1.0.0`, `v2.0.0`, and `v2.1.0`, so `@main` is the only ref name stable enough to hand to `oss-harden`. `sigstore-cli` is pinned to `0.2.3`, the exact version published to rubygems.org and the one `release-gem@v1.4.0`'s own patch calls, so it needs no separate SHA pin.
 
 If an existing workflow uses `secrets.RUBYGEMS_API_KEY` or `GEM_HOST_API_KEY`, remove it from the YAML now and tell the user to delete the corresponding secret once the new flow is verified.
 
@@ -118,13 +123,15 @@ spec.metadata["rubygems_mfa_required"] = "true"
 
 ## Verify provenance (Step 5)
 
-`gem push` in the workflow above signs the gem with sigstore automatically: RubyGems attempts attestation whenever the target host is rubygems.org and the process is not running under JRuby, which describes exactly this GitHub Actions job, so no `--attestation` flag or pre-built bundle is needed. Passing `--attestation` with a path this workflow never creates would make `gem push` try to read a file that does not exist; RubyGems catches that error, warns, and retries without attestation, so the release would still go green with no provenance and no failure signal. This auto-attestation path only works through trusted publishing's OIDC token, which is why the GitLab fallback above uses certificate signing instead. After the first release, verify the attestation with:
+Neither this job's `gem push` nor the RubyGems that `ruby/setup-ruby@v1` installs auto-attests. The code path that skips `--attestation` and signs automatically whenever the host is rubygems.org and `GITHUB_ACTIONS` is set exists only on `rubygems/rubygems`'s unreleased `master` branch, where `VERSION` is `4.1.0.dev`; the latest released tag, `v4.0.17`, does not have it, confirmed by reading `lib/rubygems/commands/push_command.rb` on both refs directly. The gem `gem update --system` installs is built from that same released source (`rubygems-update` on rubygems.org was at `4.0.17` as of this writing), so pinning a newer RubyGems inside the job does not reach this feature either; nothing shipped today reaches it from a released version.
+
+What does work, and is what the workflow above does: `gem exec sigstore-cli:0.2.3 sign` builds a sigstore bundle using the job's own OIDC token, the same `ACTIONS_ID_TOKEN_REQUEST_TOKEN` / `ACTIONS_ID_TOKEN_REQUEST_URL` ambient-credential detection cosign and other sigstore clients use (source: `sigstore/sigstore-ruby`'s `cli/lib/sigstore/cli/id_token.rb`), gated on the `id-token: write` permission this job already has; `gem push --attestation` then reads that bundle and uploads it alongside the gem, a flag the released push command has always supported. `rubygems/release-gem@v1` runs the identical `sigstore-cli` call through its own `RUBYOPT`-injected patch instead of this explicit step. Both routes are genuine attestations, verified against the sigstore-ruby CLI source and the released RubyGems push command, not against RubyGems' own unreleased feature. If the sign step is skipped or the bundle path is wrong, `gem push --attestation` fails outright on a released RubyGems: `v4.0.17`'s attestation code path has no rescue around a missing file the way the unreleased `master` branch does, so the step, and the job, fails instead of quietly shipping without provenance. After the first release, verify the attestation with:
 
 ```bash
 curl -s https://rubygems.org/api/v1/attestations/<name>-<version>.json
 ```
 
-A non-empty JSON array of attestation bodies confirms the registry served it; an empty `[]` means the auto-attestation path failed or Step 3 was skipped.
+A non-empty JSON array of attestation bodies confirms the registry served it; an empty `[]` means the sign or push step failed, or Step 3 was skipped, not that provenance is optional.
 
 ## Not yet published gems
 

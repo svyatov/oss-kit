@@ -74,7 +74,7 @@ jobs:
         with:
           python-version: '3.13'
       - run: pip install -e .[test]
-      - run: pytest  # oss-ci decides these commands from CONTRIBUTING.md (R-CI-02)
+      - run: pytest  # oss-ci decides the actual command from CONTRIBUTING.md (R-CI-02)
 
   build:
     runs-on: ubuntu-latest
