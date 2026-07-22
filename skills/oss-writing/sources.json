@@ -1,0 +1,40 @@
+{
+  "created_at": "2026-07-22T00:00:00.000Z",
+  "type": "merge",
+  "renamed_from": "repo-prose",
+  "sources": [
+    {
+      "url": "https://github.com/blader/humanizer/tree/main",
+      "repository": "blader/humanizer",
+      "path": ".",
+      "branch": "main",
+      "sha": "1b48564898e999219882660237fde01bf4843a0f",
+      "original_name": "humanizer",
+      "fetched_at": "2026-07-13T00:00:00.000Z",
+      "note": "Contributed the AI-tell catalog. Filtered from 37 patterns to the ~21 that fire in a technical register and compressed to one-line rows."
+    },
+    {
+      "url": "https://github.com/softaworks/agent-toolkit/tree/main/skills/writing-clearly-and-concisely",
+      "repository": "softaworks/agent-toolkit",
+      "path": "skills/writing-clearly-and-concisely",
+      "branch": "main",
+      "sha": "3027f20f3181758385a1bb8c022d4041dfb4de84",
+      "original_name": "writing-clearly-and-concisely",
+      "fetched_at": "2026-03-17T00:00:00.000Z",
+      "note": "Contributed the composition rules. Strunk's 18 rules condensed to the 8 that apply to short technical prose. The elements-of-style reference files were dropped."
+    }
+  ],
+  "modifications": [
+    "Authoring-first, not editing-first: humanizer's draft/audit/final rewrite loop, travel-blog example, DETECTION GUIDANCE, and PERSONALITY AND SOUL sections were dropped.",
+    "Scope narrowed to repo and forge prose. Voiced and long-form prose stays with humanizer.",
+    "Dropped curly-quote pattern (Claude emits straight ASCII) and the Wikipedia-article framing of the significance, notability, and challenges patterns.",
+    "Added a content rule (carry why, not what), length-and-silence rules, git-shaped worked examples, guidance for error messages, log lines, and code comments, and anti-patterns specific to agent-written git prose. None of these exist upstream.",
+    "Inverted upstream's diff-anchored-writing rule for commits, changelogs, and migration guides, where narrating the change is correct.",
+    "DO NOT TOUCH condensed to five lines and extended to identifiers, CLI flags, and file paths.",
+    "Renamed from repo-prose to oss-writing on migration into oss-kit."
+  ],
+  "license": "MIT",
+  "copyright": "Copyright (c) blader; Copyright (c) softaworks",
+  "license_override": false,
+  "license_override_reason": null
+}
