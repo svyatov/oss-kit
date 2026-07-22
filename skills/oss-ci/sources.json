@@ -1,0 +1,27 @@
+{
+  "created_at": "2026-07-22T00:00:00.000Z",
+  "type": "copy",
+  "renamed_from": "generate-cicd",
+  "sources": [
+    {
+      "url": "https://github.com/vfarcic/dot-ai/tree/main/shared-prompts",
+      "repository": "vfarcic/dot-ai",
+      "path": "shared-prompts/generate-cicd.md",
+      "branch": "main",
+      "sha": "7f573c31a3885cb94d049baa85f438b06b04836e",
+      "original_name": "generate-cicd",
+      "fetched_at": "2026-03-17T00:00:00.000Z"
+    }
+  ],
+  "modifications": [
+    "Renamed from generate-cicd to oss-ci on migration into oss-kit.",
+    "Body split by forge: SKILL.md now holds only the forge-independent process (detect the ecosystem, decide what runs, choose a matrix, decide caching), and syntax moved out into references/github-actions.md and a new references/gitlab.md.",
+    "references/best-practices.md renamed to references/github-actions.md and rewritten: its Security section was removed because that content belongs to oss-harden (the SEC rules), concrete YAML examples for triggers, matrix, cache keying, timeout, and cancellation were added so the file actually backs the R-CI-* rules it is cited against, and it now states the boundary with oss-harden and oss-release explicitly.",
+    "references/gitlab.md added: GitLab CI/CD syntax for the same decisions (workflow:rules, parallel:matrix, cache:key:files, timeout, interruptible, artifacts:reports:junit), each keyword checked against the current GitLab CI/CD YAML reference before being written.",
+    "Added a Scope section and a 'Rules this skill owns' section citing R-CI-01 through R-CI-05 from oss-kit's STANDARD.md."
+  ],
+  "license": "MIT",
+  "copyright": "Copyright (c) 2025 Viktor Farcic",
+  "license_override": false,
+  "license_override_reason": null
+}
