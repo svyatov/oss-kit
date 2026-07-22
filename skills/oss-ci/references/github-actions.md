@@ -2,6 +2,8 @@
 
 Concrete syntax for the decisions `SKILL.md` makes. This file covers what runs: triggers, matrices, caching, timeouts, and cancellation. It does not cover the security posture of the same workflow file, such as `permissions:`, pinning `uses:` to a commit SHA, or OIDC; that is `oss-harden`'s reference. It does not cover a publish job; that is `oss-release`'s reference.
 
+Every `uses:` line below names a version tag, not a commit SHA. Resolving a tag to a full commit SHA is R-SEC-01, which belongs to `oss-harden`; emit the tag form here and let `oss-harden` pin it before the workflow ships.
+
 ## Triggers (R-CI-01)
 
 Run on push to the default branch and on every pull request:
@@ -44,7 +46,7 @@ strategy:
   matrix:
     node-version: ['20', '22', '24']
 steps:
-  - uses: actions/setup-node@<pinned-sha>
+  - uses: actions/setup-node@v7  # oss-harden pins this to a commit SHA
     with:
       node-version: ${{ matrix.node-version }}
 ```
@@ -53,27 +55,18 @@ steps:
 
 ## Caching keyed on the lockfile (R-CI-04)
 
-Most `setup-*` actions (`actions/setup-node`, `actions/setup-python`, `actions/setup-go`) accept a `cache:` input that hashes the project's lockfile automatically:
+Use `actions/cache` directly, keyed on a hash of the lockfile, with a `restore-keys` prefix so a changed lockfile still warms from the closest prior cache instead of starting cold:
 
 ```yaml
-- uses: actions/setup-node@<pinned-sha>
+- uses: actions/cache@v6  # oss-harden pins this to a commit SHA
   with:
-    node-version: ${{ matrix.node-version }}
-    cache: npm
-```
-
-When the ecosystem's `setup-*` action has no built-in cache, use `actions/cache` directly and include a restore-key prefix, so a changed lockfile still warms from the closest prior cache instead of starting cold:
-
-```yaml
-- uses: actions/cache@<pinned-sha>
-  with:
-    path: ~/.cache/pip
-    key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+    path: ~/.npm
+    key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
     restore-keys: |
-      ${{ runner.os }}-pip-
+      ${{ runner.os }}-npm-
 ```
 
-A cache key with no lockfile hash serves stale dependencies after an upgrade. A key with no `restore-keys` fallback caches nothing useful the moment the lockfile changes.
+A cache key with no lockfile hash serves stale dependencies after an upgrade. A key with no `restore-keys` fallback caches nothing useful the moment the lockfile changes, which is why the `cache:` input built into `actions/setup-node`, `actions/setup-python`, and `actions/setup-go` is not the first choice here: it hashes the lockfile for you, but it restores on that exact key only, has no `restore-keys` equivalent, and so fails the restore-key half of R-CI-04 on its own. Reach for `actions/cache` with `restore-keys` as shown above; only fall back to the built-in `cache:` input where the pipeline does not need the fallback restore.
 
 ## Timeout and cancellation of superseded runs (R-CI-05)
 
@@ -98,14 +91,17 @@ Scoping `cancel-in-progress` to pull request events, rather than always true, av
 
 ## Secrets
 
-Secrets configured on the repository are not available to a workflow run triggered by a pull request from a fork. A job that needs one should check for it rather than fail outright:
+Secrets configured on the repository are not available to a workflow run triggered by a pull request from a fork. A job that needs one should check for it rather than fail outright. The `secrets` context is not available in a job's or a step's `if:` condition; a workflow that references it there fails to parse with `Unrecognized named-value: 'secrets'`. Promote the secret into `env:` first, then test the `env` value, which a step's `if:` can read:
 
 ```yaml
-- name: Run integration tests
-  if: ${{ secrets.API_KEY != '' }}
-  run: npm run test:integration
-  env:
-    API_KEY: ${{ secrets.API_KEY }}
+jobs:
+  test:
+    env:
+      API_KEY: ${{ secrets.API_KEY }}
+    steps:
+      - name: Run integration tests
+        if: ${{ env.API_KEY != '' }}
+        run: npm run test:integration
 ```
 
 List every secret a generated workflow needs, with the `gh secret set` command to add it, but do not run that command; setting a secret is the repository owner's action, not this skill's.

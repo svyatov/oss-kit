@@ -2,7 +2,7 @@
 
 Concrete syntax for the decisions `SKILL.md` makes, written for `.gitlab-ci.yml`. This file covers what runs: pipeline structure, triggers, matrices, caching, timeouts, and cancellation. It does not cover the security posture of the same pipeline, such as pinning `image:` and `include:` to a digest or a SHA, or job token scope; that is `oss-harden`'s reference (R-SEC-06). It does not cover a publish job; that is `oss-release`'s reference.
 
-Every keyword below was checked against the current GitLab CI/CD YAML reference at `docs.gitlab.com/ci/yaml/` before it was written here. GitLab has no direct equivalent of a GitHub Actions `uses:` step; a pipeline calls project commands directly in `script:`, or reuses configuration through `include:`.
+Every keyword below was checked against the current GitLab CI/CD YAML reference at `docs.gitlab.com/ci/yaml/` before it was written here. GitLab's closest equivalent to a GitHub Actions `uses:` step is a CI/CD component, reusable pipeline configuration consumed through `include:` with a component path and `inputs:`; components reached general availability in GitLab 17.0. A pipeline can also call project commands directly in `script:`, or reuse plain configuration through `include:`.
 
 ## Pipeline structure
 
@@ -77,23 +77,27 @@ Include the oldest and the newest version the manifest claims to support; do not
 
 ## Caching keyed on the lockfile (R-CI-04)
 
-`cache:key:files` generates a new cache key when the content of the named files changes, which is how a GitLab cache stays keyed on the lockfile:
+`cache:key:files` generates a new cache key when the content of the named files changes, which is how a GitLab cache stays keyed on the lockfile. It accepts at most two files, and it does not expand CI/CD variables, so name the lockfile paths literally:
 
 ```yaml
 test:
   stage: test
   script:
-    - npm ci
+    - npm ci --cache .npm --prefer-offline
     - npm test
   cache:
     key:
       files:
         - package-lock.json
     paths:
-      - node_modules
+      - .npm/
+    fallback_keys:
+      - npm-default
 ```
 
-Unlike `actions/cache` on GitHub, `cache:key:files` needs no separate restore-key entry: GitLab falls back to the closest prior cache for the same key prefix automatically when no exact match exists.
+Cache `.npm/`, not `node_modules`: `npm ci` deletes `node_modules` before installing, so a cache of `node_modules` returns nothing on the next run. `npm ci --cache .npm --prefer-offline` points npm's own cache at a project-local directory GitLab can persist between jobs.
+
+If no cache is found for `cache:key`, GitLab runs the job without a cache; there is no automatic fallback to the closest prior key. `cache:fallback_keys` is what makes a fallback happen: up to five keys, tried in the listed order, before the job falls back to running uncached. A project-wide `CACHE_FALLBACK_KEY` variable is also available and is tried last, after `cache:key` and every entry in `fallback_keys`.
 
 ## Timeout and cancellation of superseded runs (R-CI-05)
 
@@ -107,7 +111,7 @@ test:
     - npm test
 ```
 
-Mark a job `interruptible: true` so it can be cancelled if a newer pipeline supersedes it:
+Mark a job `interruptible: true` so it is a candidate for cancellation when a newer pipeline supersedes it:
 
 ```yaml
 test:
@@ -117,21 +121,32 @@ test:
     - npm test
 ```
 
-`interruptible: true` alone is not enough. GitLab only cancels a superseded pipeline when the project setting Auto-cancel redundant pipelines is also enabled, under Settings > CI/CD > General pipelines; this setting lives in the project, not in `.gitlab-ci.yml`, so name it in the setup summary rather than trying to express it as YAML. A single job left at the `interruptible` default of `false` makes the entire pipeline non-interruptible, so mark every job that is safe to cancel, not just one.
+`workflow:auto_cancel:on_new_commit` is the top-level keyword that turns that candidacy into an actual cancellation when a new commit lands on the same branch:
+
+```yaml
+workflow:
+  auto_cancel:
+    on_new_commit: interruptible
+    on_job_failure: all
+```
+
+`on_new_commit` takes `conservative` (the default: cancel the pipeline only if no `interruptible: false` job has already started), `interruptible` (cancel only jobs marked `interruptible: true`), or `none`. `on_job_failure` takes `all` (cancel the rest of the pipeline as soon as one job fails) or `none`, and defaults to `none`. `workflow:rules:auto_cancel` overrides either value per rule, for example to turn cancellation off on a protected branch. A job left at the `interruptible` default of `false` is never itself cancelled, and under the default `on_new_commit: conservative` it also blocks cancellation of the whole pipeline while it is running, so mark every job that is safe to cancel, not just one.
+
+The project setting Auto-cancel redundant pipelines, under Settings > CI/CD > General pipelines, is an older, coarser mechanism that still works alongside these keywords. Prefer the YAML above so the behavior travels with the pipeline definition; mention the project setting in the setup summary only as a fallback for a GitLab version that predates these keywords.
 
 ## Test reports
 
-`artifacts:reports:junit` attaches JUnit XML test results to a job so GitLab shows pass and fail counts on the merge request, matching what R-CI-02 asks for: a pipeline that surfaces the same result a contributor sees locally.
+`artifacts:reports:junit` attaches JUnit XML test results to a job so GitLab shows pass and fail counts on the merge request. Point it at the report path the project's own test runner already writes, configured in the project's test config rather than as extra flags bolted onto the CI command, so the `script:` line stays the same command a contributor runs locally:
 
 ```yaml
 test:
   stage: test
   script:
-    - npm test -- --reporter junit --output-file report.xml
+    - npm test
   artifacts:
     when: always
     reports:
       junit: report.xml
 ```
 
-`artifacts:reports` also accepts other report types such as `coverage_report` and `dotenv`. Several report types, including `sast`, `dependency_scanning`, and `container_scanning`, ship as part of GitLab's paid tiers rather than through this skill; do not add one without confirming the project's GitLab tier supports it.
+`artifacts:reports` also accepts other report types such as `coverage_report` and `dotenv`. `sast` is available on GitLab Free; its advanced features, such as GitLab Advanced SAST cross-file analysis, are gated to Ultimate. `dependency_scanning` and `container_scanning` ship as part of GitLab's paid tiers. Do not add a report type without confirming the project's GitLab tier supports it.
