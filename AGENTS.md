@@ -30,7 +30,7 @@ No skill ships an executable file, and no skill contains a `scripts/` directory.
 
 No skill names a harness-specific tool such as `Task`, `TodoWrite`, or `Skill`, tells the reader to dispatch a subagent, or branches on which tools are available. Describe the structure of the work instead.
 
-Prose follows the repo-prose skill: no em dashes, no en dashes, no ` -- `, no emoji, sentence-case headings, active voice, straight ASCII quotes, and no inline-header bullet lists such as `- **Thing:** text`.
+Prose follows the `skills/oss-writing` skill in this repo: no em dashes, no en dashes, no ` -- `, no emoji, sentence-case headings, active voice, straight ASCII quotes, and no inline-header bullet lists such as `- **Thing:** text`.
 
 Forge scope is GitHub and GitLab. A rule that applies to only one says so in its `Forges:` line.
 
@@ -57,10 +57,10 @@ Each `###` line is exactly `### R-<AREA>-<NN>: <statement>`, where AREA is DOC, 
 
 ## Checklist after any skill change
 
-1. Bump `version` in `.claude-plugin/plugin.json`.
-2. Update the skills table in `README.md` if the skill's one-line description changed.
-3. Run the drift check, which fails when a skill cites a rule ID that `STANDARD.md` does not define, or when `STANDARD.md` names a rule as fixed by a skill that does not claim it.
-4. Confirm the `SKILL.md` body is still under 500 lines.
+1. Update the skills table in `README.md` if the skill's one-line description changed.
+2. Run the drift check, which fails when a skill cites a rule ID that `STANDARD.md` does not define, or when `STANDARD.md` names a rule as fixed by a skill that does not claim it.
+3. Confirm the `SKILL.md` body is still under 500 lines.
+4. Before a release, bump `version` in `.claude-plugin/plugin.json`.
 
 ## Gotchas
 

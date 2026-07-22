@@ -48,7 +48,7 @@ Forges: both
 
 Documentation is read by someone who is already stuck. Promotional adjectives and hedging add reading time without adding information, and they make the honest parts harder to trust. Write sentences in the active voice and name the actor, so a reader learns who has to do the thing. The check below names only evidence a tool can count, because an auditor that scores the same files differently on two runs makes every other score in the report unreliable.
 
-Check: `README.md` and files under `docs/` contain no em dash (U+2014), en dash (U+2013), or emoji character; every heading is sentence case; and none of the words robust, powerful, seamless, comprehensive, blazing, or effortless describes the project.
+Check: `README.md`, files under `docs/`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, and the entry text under `CHANGELOG.md` release headings contain no em dash (U+2014), en dash (U+2013), or emoji character; every heading is sentence case; and none of the words robust, powerful, seamless, comprehensive, blazing, or effortless describes the project.
 
 Fixed by: oss-writing
 Forges: both

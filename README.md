@@ -34,7 +34,7 @@ Claude Code and GitHub Copilot CLI both read `.claude-plugin/marketplace.json`, 
 | `oss-harden` | Hardens the security posture: pinned action SHAs, minimal workflow permissions, Dependabot or Renovate, branch protection, and signed tags. |
 | `oss-release` | Sets up registry publishing with trusted publishing, provenance, and an approval gate, for npm, RubyGems, PyPI, and crates.io. |
 | `oss-changelog` | Keeps CHANGELOG.md in Keep a Changelog format, decides the semver bump, and writes release notes and deprecation notices. |
-| `oss-writing` | Fixes the sentences in commits, pull requests, issues, and docs. |
+| `oss-writing` | Fixes the sentences in commits, pull requests, issues, docs, error messages, log lines, and code comments. |
 
 ## Read the standard without installing anything
 
