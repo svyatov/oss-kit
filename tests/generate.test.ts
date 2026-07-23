@@ -35,6 +35,10 @@ Check: every \`uses:\` line resolves to a 40-character SHA.
 
 Fixed by: oss-harden
 Forges: github
+
+## Security
+
+Section preamble prose.
 `
 
 test("parseRules reads every field of every rule", () => {
@@ -52,6 +56,12 @@ test("parseRules reads every field of every rule", () => {
   })
   expect(rules[1]!.id).toBe("R-SEC-01")
   expect(rules[1]!.forges).toBe("github")
+})
+
+test("parseRules ends a rule body at the next heading of any level, not just ###", () => {
+  const rules = parseRules(TWO_RULES)
+  expect(rules[1]!.why).not.toContain("Security")
+  expect(rules[1]!.why).not.toContain("Section preamble")
 })
 
 test("parseRules rejects a rule missing its check line", () => {

@@ -13,6 +13,7 @@ import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "nod
 import { dirname, join } from "node:path"
 
 const HEADING = /^### (R-([A-Z]{2,3})-(\d{2})): (.+)$/ // areas are 2 or 3 letters (CI is two)
+const ANY_HEADING = /^#{1,6} /
 /** @type {Record<string, string>} */
 const FORGE_LABEL = { github: "GitHub only", gitlab: "GitLab only", both: "GitHub and GitLab" }
 
@@ -33,11 +34,14 @@ export function parseRules(text) {
   const lines = text.split("\n")
   /** @type {number[]} */
   const starts = []
+  /** @type {number[]} */
+  const headings = []
   for (let i = 0; i < lines.length; i++) {
     if (lines[i]?.startsWith("### ")) starts.push(i)
+    if (ANY_HEADING.test(lines[i] ?? "")) headings.push(i)
   }
-  return starts.map((start, index) => {
-    const end = starts[index + 1] ?? lines.length
+  return starts.map((start) => {
+    const end = headings.find((h) => h > start) ?? lines.length
     const heading = lines[start] ?? ""
     const match = HEADING.exec(heading)
     if (!match) throw new Error(`malformed rule heading: ${heading.slice(4)}`)
