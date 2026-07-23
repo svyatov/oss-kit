@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test"
-import { existsSync, readFileSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync } from "node:fs"
 
 const install = () => readFileSync("docs/install.md", "utf8")
 const readme = () => readFileSync("README.md", "utf8")
 
-test("the install page names every harness that has a manifest", () => {
+test("the install page names every harness this repository documents", () => {
   const text = install()
   for (const harness of ["Claude Code", "Codex", "Cursor", "Kimi", "OpenCode", "VS Code", "Copilot"]) {
     expect(text, harness).toContain(harness)
@@ -13,10 +13,21 @@ test("the install page names every harness that has a manifest", () => {
 
 test("every manifest path the install page claims exists", () => {
   const paths = install().match(/`\.[\w./-]+\/(plugin|marketplace)\.json`/g) ?? []
-  expect(paths.length).toBeGreaterThan(3)
+  expect(paths.length).toBeGreaterThan(2)
   for (const quoted of paths) {
     const path = quoted.replaceAll("`", "")
     expect(existsSync(path), path).toBe(true)
+  }
+})
+
+test("every plugin manifest directory in the repository is named on the install page", () => {
+  const dirs = readdirSync(".", { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && entry.name.endsWith("-plugin"))
+    .map((entry) => entry.name)
+  expect(dirs.length).toBeGreaterThan(0)
+  const text = install()
+  for (const dir of dirs) {
+    expect(text, dir).toContain(`${dir}/plugin.json`)
   }
 })
 

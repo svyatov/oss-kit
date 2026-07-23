@@ -5,7 +5,6 @@ const MANIFESTS = [
   ".claude-plugin/plugin.json",
   ".codex-plugin/plugin.json",
   ".cursor-plugin/plugin.json",
-  ".kimi-plugin/plugin.json",
 ]
 
 function json(path: string) {

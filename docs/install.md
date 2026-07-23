@@ -18,6 +18,11 @@ One skill at a time:
 npx skills add svyatov/oss-kit --skill oss-readme
 ```
 
+Kimi Code CLI, OpenCode, and Antigravity have no manifest of ours to read.
+Each of them finds skills by scanning a directory in your project, such as
+`.agents/skills/` or `.claude/skills/`, and this command is what puts the
+skills there.
+
 ## Claude Code, GitHub Copilot CLI, and VS Code
 
 All three read `.claude-plugin/plugin.json`, whose `skills` field defaults to
@@ -43,21 +48,21 @@ codex plugin marketplace add svyatov/oss-kit
 
 ## Cursor
 
-Reads `.cursor-plugin/plugin.json`. Install the plugin from the repository URL,
-or sync `skills/` into `.cursor/skills/` in your own project.
+Reads `.cursor-plugin/plugin.json`. Cursor has no CLI or slash command for
+installing a plugin. Install it through the Customize panel inside Cursor, or
+from cursor.com/marketplace. A team admin can add it from the Dashboard,
+under Plugins, Add Marketplace, Import from Repo.
 
 ## Kimi Code
 
-Reads `.kimi-plugin/plugin.json`:
-
-```
-/plugins install https://github.com/svyatov/oss-kit
-```
+Kimi Code CLI has no manifest of ours. It finds skills by scanning
+`.agents/skills/` and `.claude/skills/`, so the `skills` CLI at the top of
+this page is the install path.
 
 ## OpenCode
 
-Reads `.opencode/skills`, a symlink to `skills/`. Add the repository to the
-`plugin` array in your `opencode.json`.
+Scans `.opencode/skills/`, `.claude/skills/`, and `.agents/skills/`. The
+`skills` CLI above is the install path.
 
 ## Gemini CLI
 
@@ -67,11 +72,10 @@ Installs the skills directory directly, with no manifest:
 gemini skills install https://github.com/svyatov/oss-kit.git --path skills
 ```
 
-## Antigravity CLI
+## Antigravity
 
-```bash
-agy plugin install https://github.com/svyatov/oss-kit.git
-```
+Scans `.agents/skills/` by default. The `skills` CLI above is the install
+path.
 
 ## Every other agent
 
