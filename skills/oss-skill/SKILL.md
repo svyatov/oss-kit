@@ -2,17 +2,18 @@
 name: oss-skill
 description: "Fix the structure and packaging of a repository that ships agent skills, so every skill loads in every host that reads the Agent Skills format. Covers the top-level skills directory layout, SKILL.md frontmatter conformance, splitting an oversized skill into references, and the license field an extracted skill carries with it. Use when a skill fails to load or never triggers, when a repository keeps its skills somewhere an installer does not read, when a SKILL.md has grown too long to load cheaply, or when auditing a repository whose product is agent skills. What a skill teaches and how its sentences read is out of scope: prose belongs to oss-writing, README structure belongs to oss-readme."
 license: MIT
+compatibility: Requires Node 22+ or Bun to run the bundled validator
 ---
 
 # Structure of a repository that ships agent skills
 
 Fix the four things that decide whether a skill loads at all: where it sits, whether its frontmatter conforms to the Agent Skills specification, how much context its body spends, and whether a copy of it carries its license. A skill that fails any of these is invisible or unusable no matter how good its instructions are.
 
-Most of what this skill fixes is mechanical, and a specification validator, `skills-ref validate`, from the upstream `agentskills/agentskills` repository (R-SKL-02), names the fault precisely. Run the validator before reading further into any repository; its output tells you which of the rules below is in play.
+Most of what this skill fixes is mechanical, and the validator this skill ships at `scripts/validate.mjs` in its own directory names the fault precisely (R-SKL-02). It reads files, needs nothing installed, and runs on Node or Bun: `node scripts/validate.mjs <repository>`. Run it before reading further into any repository; its output tells you which of the rules below is in play.
 
 ## Scope
 
-The SKL rules belong here: R-SKL-01 layout, R-SKL-02 specification conformance, R-SKL-03 body size, and R-SKL-04 the license field.
+The SKL rules belong here: R-SKL-01 layout, R-SKL-02 specification conformance, R-SKL-03 body size, R-SKL-04 the license field, and R-SKL-05 what a skill may ship as a script.
 
 Neighbouring work belongs elsewhere. Wiring the validator into CI is R-CI-02, owned by `oss-ci`, because the rule already requires CI to run the same linter the contributing guide gives to humans, and for a skills repository that linter is the validator. Keeping every host manifest on one version is R-CHG-03, owned by `oss-changelog`. The README's install command and runnable example are R-DOC-02, and its links to the license, changelog, and contributing guide are R-DOC-03, both owned by `oss-readme`. The sentences inside any file are R-DOC-05, owned by `oss-writing`. Note what a repository needs and hand it to the owning skill rather than doing that work from here.
 
@@ -30,7 +31,15 @@ Where a repository ships skills only as a plugin and keeps them under a nested p
 
 ## Step 2: Validate against the specification (R-SKL-02)
 
-Run the validator over every directory under `skills/` and fix what it names. The faults it reports come in a small set.
+Run the bundled validator over the repository and fix what it names:
+
+```bash
+node scripts/validate.mjs /path/to/repository
+```
+
+It needs Node 22 or later, or Bun, and nothing installed. It reads files: it writes nothing, spawns nothing, and makes no network call. It reports an error for every violation of R-SKL-01 through R-SKL-05, warns where a frontmatter construct is one it does not read, and exits 1 if any error was found.
+
+The faults come in a small set.
 
 A name and directory mismatch means the frontmatter `name` and the directory name differ. The specification requires them to match exactly. Decide which one is correct by looking at what already references the skill: a name in the README table, in a plugin manifest, or in another skill's prose is a name people already use. Rename the other one.
 
@@ -57,6 +66,16 @@ Keep references one level deep. A reference file that sends the reader to a thir
 Add a `license:` line to the frontmatter of every `SKILL.md`, naming the same license as the repository license file. Where the two disagree, stop and ask which is correct rather than picking one.
 
 This matters because of how skills travel. An installer that fetches one skill copies that directory and nothing else, so the repository's `LICENSE` file stays behind and the copy arrives with no terms. The specification defines the field to solve exactly this, and it accepts either a license name or a reference to a bundled license file.
+
+## Step 5: Keep a shipped script runnable (R-SKL-05)
+
+Where a skill ships a `scripts/` directory, check what its files assume. A script runs on the reader's machine, so an interpreter they lack or a dependency they cannot install fails the task the skill was invoked for.
+
+A script file needs a shebang naming `sh`, `bash`, or `node`; documentation and data files under `scripts/`, such as a README or a fixture a script reads, carry no such requirement. A JavaScript or TypeScript file may import a Node built-in module or its own sibling file by relative path, but not a package, so no `package.json`, no lockfile, and no `node_modules` travels with the skill, and it references no runtime-specific global, because a script written against one runtime fails on the other.
+
+The specification permits Python here and this rule does not. A Python script pins an interpreter version and, in practice, pulls dependencies, which is the failure this rule exists to prevent. Where a skill needs Python, say so plainly and let the maintainer decide, rather than rewriting working code.
+
+Fix a violation by rewriting the script against Node built-ins, or by moving the work into the skill's prose where an agent performs it directly.
 
 ## Renaming a skill breaks installs
 

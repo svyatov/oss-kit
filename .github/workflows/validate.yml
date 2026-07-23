@@ -13,40 +13,36 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  spec:
-    name: skills-ref validate
+  check:
+    name: typecheck, test, validate
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6  # v2.2.0
         with:
-          python-version: "3.13"
-      - run: pip install "skills-ref @ git+https://github.com/agentskills/agentskills.git@492e1b71046249d085444cad81d47985836c451b#subdirectory=skills-ref"
-      - name: Validate every skill
-        run: |
-          set -u
-          shopt -s nullglob
-          dirs=(skills/*/)
-          if [ ${#dirs[@]} -eq 0 ]; then
-            echo "no skill directories under skills/; nothing to validate" >&2
-            exit 1
-          fi
-          status=0
-          for dir in "${dirs[@]}"; do
-            echo "== $dir"
-            skills-ref validate "$dir" || status=1
-          done
-          exit $status
-
-  drift:
-    name: STANDARD.md drift
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+          bun-version-file: ".bun-version"
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun test
       - run: ./tests/test-check-drift.sh
       - run: ./scripts/check-drift.sh
+
+  runtime:
+    name: validator on node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["22", "24", "current"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Validate every skill
+        run: node skills/oss-skill/scripts/validate.mjs .
 
   scan:
     name: skillspector

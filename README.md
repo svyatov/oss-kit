@@ -51,7 +51,7 @@ R-SEC-01: 2 unpinned actions in .github/workflows/validate.yml. Fixed by oss-har
 | `oss-publish` | Sets up registry publishing with trusted publishing, provenance, and an approval gate, for npm, RubyGems, PyPI, and crates.io. |
 | `oss-changelog` | Keeps CHANGELOG.md in Keep a Changelog format, decides the semver bump, and writes release notes and deprecation notices. |
 | `oss-writing` | Fixes the sentences in commits, pull requests, issues, docs, error messages, log lines, and code comments. |
-| `oss-skill` | Fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` frontmatter conformance, oversized bodies that belong in `references/`, and the license field an extracted skill carries with it. |
+| `oss-skill` | Fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` frontmatter conformance, oversized bodies that belong in `references/`, the license field an extracted skill carries with it, and what a skill may ship as a script. Bundles a validator that needs Node 22 or later, or Bun, and nothing installed. |
 
 ## Read the standard without installing anything
 

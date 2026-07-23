@@ -341,7 +341,7 @@ Forges: both
 
 The specification is the one format every host reads. A skill that violates it fails to load, and most hosts fail silently, so the author sees a skill that never triggers and no error saying why.
 
-Check: a specification validator exits 0 for every directory under `skills/`. `skills-ref validate <dir>` is one such validator, installed from the `skills-ref` directory of the upstream `agentskills/agentskills` repository.
+Check: a specification validator exits 0 for every directory under `skills/`. `oss-skill` ships one at `scripts/validate.mjs` in its own installed directory, which reads files, needs nothing installed, and runs on Node 22 or later and on Bun.
 
 Fixed by: oss-skill
 Forges: both
@@ -360,6 +360,15 @@ Forges: both
 Installers extract one skill directory at a time. The repository license file does not travel with it, so an extracted skill arrives with no terms attached and nobody downstream can tell whether they may use it.
 
 Check: the frontmatter of every `skills/*/SKILL.md` carries a `license:` field, and its value names the same license as the repository license file.
+
+Fixed by: oss-skill
+Forges: both
+
+### R-SKL-05: A skill that ships a script uses sh or Node, with no dependencies
+
+A script inside a skill runs on the reader's machine, not the author's. An interpreter the reader does not have, or a dependency install the skill cannot perform, turns a skill that loads into a skill that fails partway through the task it was invoked for.
+
+Check: within a skill's `scripts/` directory, at any depth, every file whose extension is not `.md`, `.txt`, `.json`, `.yml`, `.yaml`, `.toml`, or `.csv` starts with a shebang naming `sh`, `bash`, or `node` as its interpreter, directly or through `env`; every file whose extension is `.js`, `.mjs`, `.cjs`, `.ts`, `.mts`, or `.cts` resolves every import and require to a relative path, an absolute path, or a Node built-in module, and reads no property from a `Bun` or `Deno` global; and the skill directory contains no `node_modules` directory and none of `package.json`, `bun.lock`, `bun.lockb`, `package-lock.json`, `yarn.lock`, or `pnpm-lock.yaml`. A skill that ships no script and no manifest falls outside this rule rather than failing it.
 
 Fixed by: oss-skill
 Forges: both
