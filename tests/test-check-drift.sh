@@ -67,6 +67,16 @@ d="$(make_fixture)"; fixtures+=("$d")
 echo "Also owns R-DOC-99." >> "$d/skills/oss-readme/SKILL.md"
 run_case "citation of undefined rule fails" 1 "$d" "R-DOC-99"
 
+# oss-audit scores the repository and routes each gap to the skill that
+# fixes it, so a rule it owned would route to itself. The citation check
+# cannot catch this on its own, because STANDARD.md lives in
+# skills/oss-audit/ and every id therefore self-matches inside that
+# directory. The fixture keeps oss-readme's citation intact so this case
+# fails for the ownership reason alone.
+d="$(make_fixture)"; fixtures+=("$d")
+sed -i.bak 's/Fixed by: oss-readme/Fixed by: oss-audit/' "$d/skills/oss-audit/STANDARD.md"
+run_case "rule owned by oss-audit fails" 1 "$d" "owns no rule"
+
 # defined but no owning skill directory
 d="$(make_fixture)"; fixtures+=("$d")
 sed -i.bak 's/Fixed by: oss-readme/Fixed by: oss-nonexistent/' "$d/skills/oss-audit/STANDARD.md"

@@ -82,7 +82,7 @@ Pending, with the trigger that resolves each one:
 ## Checklist after any skill change
 
 1. Update the skills table in `README.md` if the skill's one-line description changed.
-2. Run the drift check, which fails when a skill cites a rule ID that `STANDARD.md` does not define, or when `STANDARD.md` names a rule as fixed by a skill that does not claim it.
+2. Run the drift check, which fails when a skill cites a rule ID that `STANDARD.md` does not define, when `STANDARD.md` names a rule as fixed by a skill that does not claim it, or when a rule names `oss-audit` as its owner.
 3. Confirm the `SKILL.md` body is still under 500 lines.
 4. Before a release, bump `version` in `.claude-plugin/plugin.json`.
 

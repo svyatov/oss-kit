@@ -45,6 +45,11 @@ while read -r id; do
     err "$id has no 'Fixed by:' line; add one naming the skill that fixes it"
   elif [ "$count" -gt 1 ]; then
     err "$id has $count 'Fixed by:' lines; keep exactly one"
+  elif [ "$owner" = "oss-audit" ]; then
+    # Caught here rather than by the citation check below, which cannot
+    # see it: STANDARD.md lives in skills/oss-audit/, so every id
+    # self-matches there and would pass.
+    err "$id is fixed by 'oss-audit', which owns no rule; oss-audit scores the repository and routes each gap to the skill that fixes it, so name that skill in the 'Fixed by:' line"
   elif [ ! -d "skills/$owner" ]; then
     err "$id is fixed by '$owner', which is not a directory under skills/; create skills/$owner or correct the 'Fixed by:' line"
   elif ! grep -rqF "$id" "skills/$owner" 2>/dev/null; then
