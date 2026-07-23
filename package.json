@@ -5,7 +5,7 @@
   "scripts": {
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "validate": "node skills/oss-skill/scripts/validate.mjs ."
+    "validate": "bun skills/oss-skill/scripts/validate.mjs ."
   },
   "devDependencies": {
     "@types/bun": "^1.3.14",
