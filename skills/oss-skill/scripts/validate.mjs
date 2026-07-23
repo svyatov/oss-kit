@@ -68,10 +68,22 @@ const DATA_EXTENSIONS = new Set([".md", ".txt", ".json", ".yml", ".yaml", ".toml
 // flag is how a portable shebang passes arguments through env, so a script
 // written as env -S node --flag names node just as plainly as env node does.
 const SHEBANG_RE = /^#!\s*(?:\S*\/)?(?:env\s+(?:-S\s+)?)?(?:sh|bash|node)(?:\s|$)/
-// A negative lookbehind keeps this from matching a property access on some
-// other identifier that merely ends in "Bun" or "Deno".
-const RUNTIME_GLOBAL_RE = /(?<![\w$.'"`])(Bun|Deno)\s*\./
+// This guard stops the pattern from matching a property access on some other
+// identifier that merely ends in a runtime name, such as `myBun.trim()`. It
+// does not stop every false match: the same runtime name inside a string or a
+// comment, followed by a dot, is still reported, because a shipped script has
+// no legitimate reason to write that text either.
+const RUNTIME_GLOBAL_RE = /(?<![\w$.'"`])(Bun|Deno)[^\S\n]*(?:\?\.|\.|\[)/
+// A module namespace only one runtime provides. Checked before the built-in set
+// below, because that set reflects whichever runtime is running this file, and a
+// runtime that ships its own modules lists them there as though they were Node's.
+const RUNTIME_MODULE_RE = /^(?:bun|deno)(?::|$)/
 const SPECIFIER_RE = /\b(?:from|require|import)\s*\(?\s*["']([^"']+)["']/g
+// A specifier contains no whitespace and none of the characters a regex
+// literal or a shell string brings with it. A capture that fails this test is
+// prose the specifier scan misread, not a dependency.
+const SPECIFIER_SHAPE_RE = /^[^\s"'()*<>|?]+$/
+const UNREADABLE_FILE_MESSAGE = "could not read this file"
 
 /**
  * Yields every regular file under dir. Skips .git and node_modules. A symlinked
@@ -102,6 +114,30 @@ function* walk(dir) {
     } else if (entry.isFile()) {
       yield path
     }
+  }
+}
+
+/**
+ * Yields every directory under dir, including one named node_modules, which
+ * walk() skips. R-SKL-05 bans that directory, so the check has to be able to
+ * see it. Does not descend into a directory it reports, since one finding for a
+ * vendored tree is enough.
+ * @param {string} dir
+ * @returns {Generator<string>}
+ */
+function* walkDirs(dir) {
+  let entries
+  try {
+    entries = readdirSync(dir, { withFileTypes: true })
+  } catch {
+    return
+  }
+  for (const entry of entries) {
+    if (entry.isSymbolicLink() || !entry.isDirectory()) continue
+    if (entry.name === ".git") continue
+    const path = join(dir, entry.name)
+    yield path
+    if (entry.name !== "node_modules") yield* walkDirs(path)
   }
 }
 
@@ -522,11 +558,25 @@ export function checkLicense(rel, fm, repoLicense) {
 }
 
 /**
+ * Removes block and line comments so prose in a comment is not read as an
+ * import. A protocol-relative or absolute URL inside a string literal can be
+ * truncated by the line-comment pass, which at worst loses an import on that
+ * line and never invents one.
+ * @param {string} source
+ * @returns {string}
+ */
+function stripComments(source) {
+  return source.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/(^|[^:])\/\/.*$/gm, "$1")
+}
+
+/**
  * R-SKL-05: a shipped script uses sh or Node, with no dependencies.
  *
- * The specifier scan is textual, so a specifier-shaped string inside a
- * comment reads as an import. That trade keeps the check to a few lines and
- * errs toward asking a question rather than missing a dependency.
+ * The specifier scan runs against a comment-stripped copy of the source, so
+ * prose that merely reads like an import statement is not reported. A
+ * commented-out import is stripped along with the comment that carries it, so
+ * it no longer draws a finding either: a line the author commented out is not
+ * a dependency the skill ships.
  * @param {string} root
  * @param {string} skillDir absolute path of the skill directory
  * @returns {Finding[]}
@@ -540,36 +590,54 @@ export function checkScripts(root, skillDir) {
    */
   const err = (path, message) => out.push({ severity: "error", rule: "R-SKL-05", file: relative(root, path), message })
 
-  for (const name of MANIFESTS) {
-    const path = join(skillDir, name)
-    if (existsSync(path)) err(path, "a skill ships no manifest and no lockfile; its scripts run with no install step")
+  for (const path of walk(skillDir)) {
+    if (MANIFESTS.includes(basename(path))) {
+      err(path, "a skill ships no manifest and no lockfile; its scripts run with no install step")
+    }
   }
-  const modules = join(skillDir, "node_modules")
-  if (existsSync(modules)) err(modules, "a skill ships no node_modules; its scripts use only Node built-in modules")
+  for (const path of walkDirs(skillDir)) {
+    if (basename(path) === "node_modules") {
+      err(path, "a skill ships no node_modules; its scripts use only Node built-in modules")
+    }
+  }
 
   const scriptsDir = join(skillDir, "scripts")
   if (!existsSync(scriptsDir)) return out
 
   for (const path of walk(scriptsDir)) {
-    const isData = DATA_EXTENSIONS.has(extname(path))
+    const extension = extname(path)
+    const isData = DATA_EXTENSIONS.has(extension)
     let source
     try {
       source = readFileSync(path, "utf8")
     } catch {
-      err(path, "could not read this file")
+      out.push({ severity: "warning", rule: null, file: relative(root, path), message: UNREADABLE_FILE_MESSAGE })
       continue
     }
     if (!isData && !SHEBANG_RE.test(source)) {
       err(path, "no shebang naming sh, bash, or node; a reader's machine may have no other interpreter")
     }
-    if (!CODE_EXTENSIONS.has(extname(path))) continue
+    if (!CODE_EXTENSIONS.has(extension)) continue
     const runtime = source.match(RUNTIME_GLOBAL_RE)
     if (runtime?.[1]) {
       err(path, `uses the ${runtime[1]} runtime global; a shipped script runs under whatever the reader already has`)
     }
-    for (const match of source.matchAll(SPECIFIER_RE)) {
+    const withoutComments = stripComments(source)
+    for (const match of withoutComments.matchAll(SPECIFIER_RE)) {
       const specifier = match[1] ?? ""
-      if (specifier.startsWith(".") || specifier.startsWith("/") || BUILTINS.has(specifier)) continue
+      if (!SPECIFIER_SHAPE_RE.test(specifier)) continue
+      if (specifier.startsWith(".") || specifier.startsWith("/")) continue
+      if (RUNTIME_MODULE_RE.test(specifier)) {
+        err(path, `imports "${specifier}", which is a module only one runtime provides; a skill ships no dependencies`)
+        continue
+      }
+      // The node: prefix is what makes a specifier a built-in reference,
+      // regardless of which runtime enumerated BUILTINS below, so it passes
+      // outright rather than being looked up. A typo such as node:fsx passes
+      // too; that false negative is the cost of not rejecting a valid import
+      // on whichever of the two blessed runtimes did not enumerate it.
+      if (specifier.startsWith("node:")) continue
+      if (BUILTINS.has(specifier)) continue
       err(path, `imports "${specifier}", which is not a Node built-in module; a skill ships no dependencies`)
     }
   }
@@ -597,7 +665,7 @@ export function validate(root) {
     try {
       text = readFileSync(abs, "utf8")
     } catch {
-      out.push({ severity: "warning", rule: null, file: rel, message: "could not read this file" })
+      out.push({ severity: "warning", rule: null, file: rel, message: UNREADABLE_FILE_MESSAGE })
       continue
     }
     const fm = parseFrontmatter(text)

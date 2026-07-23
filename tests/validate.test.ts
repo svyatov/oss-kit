@@ -569,4 +569,137 @@ test("a manifest or lockfile inside a skill is an R-SKL-05 error", () => {
 test("this repository passes its own validator", () => {
   const found = validate(process.cwd())
   expect(found.filter((f) => f.severity === "error")).toEqual([])
+  expect(findSkillFiles(process.cwd()).length).toBeGreaterThan(0)
+})
+
+// Fix 1: the built-in verdict must not depend on which runtime runs the check.
+
+test("importing node:test produces no finding", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addScript(dir, "ok.mjs", '#!/usr/bin/env node\nimport test from "node:test"\nconsole.log(test)\n')
+  expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("importing a module namespace only one runtime provides is an R-SKL-05 error naming that", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addScript(dir, "sqlite.mjs", '#!/usr/bin/env node\nimport db from "bun:sqlite"\nconsole.log(db)\n')
+  const found = errors(root).filter((f) => f.rule === "R-SKL-05")
+  expect(found[0]?.message).toContain("only one runtime provides")
+  rmSync(root, { recursive: true, force: true })
+})
+
+// No test asserts that importing "ws" is an R-SKL-05 error. Under Bun 1.3.14,
+// node:module's builtinModules bare-lists "ws" and "undici" with no marker
+// distinguishing them from a genuine Node core module, so RUNTIME_MODULE_RE
+// (which matches only a bun: or deno: prefixed specifier) cannot catch them,
+// and closing that gap would need a hardcoded denylist of the kind this fix
+// is meant to avoid. A test asserting "ws" is rejected would pass under Node
+// and fail under Bun, which is the exact runtime-dependent outcome this fix
+// exists to remove; see the task report for the by-hand verification.
+
+// Fix 2: prose in a comment must not read as a package import.
+
+test("a line comment reading like an import sentence produces no finding", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addScript(dir, "prose.mjs", '#!/usr/bin/env node\n// copied from "the upstream docs"\nconsole.log(1)\n')
+  expect(rules(errors(root))).not.toContain("R-SKL-05")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a regex literal that looks like an import capture produces no finding", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addScript(dir, "re.mjs", '#!/usr/bin/env node\nconst re = /from "(.*)"/\nconsole.log(re)\n')
+  expect(rules(errors(root))).not.toContain("R-SKL-05")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a block comment reading like an import sentence produces no finding", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addScript(dir, "block.mjs", '#!/usr/bin/env node\n/** Ported from "Agent Skills" spec. */\nconsole.log(1)\n')
+  expect(rules(errors(root))).not.toContain("R-SKL-05")
+  rmSync(root, { recursive: true, force: true })
+})
+
+// Fix 3: the manifest, lockfile, and node_modules ban applies at any depth.
+
+test("a manifest nested under a skill's references directory is an R-SKL-05 error", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  mkdirSync(join(dir, "references"), { recursive: true })
+  writeFileSync(join(dir, "references", "package.json"), "{}\n")
+  const found = errors(root).filter((f) => f.rule === "R-SKL-05")
+  expect(found).toHaveLength(1)
+  expect(found[0]?.message).toContain("no install step")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a node_modules directory nested under a skill's scripts directory is exactly one R-SKL-05 error", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  mkdirSync(join(dir, "scripts", "node_modules", "left-pad"), { recursive: true })
+  writeFileSync(join(dir, "scripts", "node_modules", "left-pad", "index.js"), "module.exports = {}\n")
+  const found = errors(root).filter((f) => f.rule === "R-SKL-05")
+  expect(found).toHaveLength(1)
+  expect(found[0]?.message).toContain("no node_modules")
+  rmSync(root, { recursive: true, force: true })
+})
+
+// Fix 4: the runtime-global pattern must not cross a line break, and must catch
+// optional-chaining and bracket access, not only a plain dot.
+
+test("an optional-chaining property access on a runtime global is an R-SKL-05 error", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  const runtimeName = "Bun"
+  addScript(dir, "opt.mjs", `#!/usr/bin/env node\nconst f = ${runtimeName}?.file('x')\nconsole.log(f)\n`)
+  const found = errors(root).filter((f) => f.rule === "R-SKL-05")
+  expect(found[0]?.message).toContain("runtime global")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a bracket property access on a runtime global is an R-SKL-05 error", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  const runtimeName = "Deno"
+  addScript(dir, "brk.mjs", `#!/usr/bin/env node\nconst f = ${runtimeName}['readFile']\nconsole.log(f)\n`)
+  const found = errors(root).filter((f) => f.rule === "R-SKL-05")
+  expect(found[0]?.message).toContain("runtime global")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a comment ending in a runtime name does not bind to a chained call on the next line", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  const runtimeName = "Bun"
+  addScript(
+    dir,
+    "safe.mjs",
+    `#!/usr/bin/env node\nconst value = {}\n// this mentions ${runtimeName}\n  .toString()\nconsole.log(value)\n`,
+  )
+  expect(rules(errors(root))).not.toContain("R-SKL-05")
+  rmSync(root, { recursive: true, force: true })
+})
+
+// Fix 5: an unreadable script file is a warning with a null rule, not an
+// R-SKL-05 violation.
+
+test("an unreadable script file warns instead of failing R-SKL-05", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  const path = addScript(dir, "locked.mjs", '#!/usr/bin/env node\nconsole.log(1)\n')
+  chmodSync(path, 0o000)
+  let found: ReturnType<typeof validate> = []
+  expect(() => {
+    found = validate(root)
+  }).not.toThrow()
+  expect(found.some((f) => f.severity === "warning" && f.rule === null && f.file.includes("locked.mjs"))).toBe(true)
+  expect(errors(root).some((f) => f.file.includes("locked.mjs"))).toBe(false)
+  chmodSync(path, 0o644)
+  rmSync(root, { recursive: true, force: true })
 })
