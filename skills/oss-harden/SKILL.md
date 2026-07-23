@@ -1,6 +1,6 @@
 ---
 name: oss-harden
-description: "Harden the security posture of an open source repository: pin CI actions to full commit SHAs, restrict workflow permissions, enable automated dependency updates, configure branch protection, enforce code owner review, and sign tags. Use when the user asks to harden a repo, improve supply chain security, fix an OpenSSF Scorecard finding, pin actions, or lock down CI. Covers GitHub and GitLab. Publishing belongs to oss-publish."
+description: "Harden the security posture of an open source repository: pin CI actions to full commit SHAs, restrict workflow permissions, keep untrusted input out of shell commands, enable automated dependency updates, lock dependency resolution, run static analysis on pull requests, configure branch protection, enforce code owner review, and sign tags. Use when the user asks to harden a repo, improve supply chain security, fix an OpenSSF Scorecard finding, pin actions, fix a workflow script injection, or lock down CI. Covers GitHub and GitLab. Publishing belongs to oss-publish."
 license: MIT
 ---
 
@@ -42,7 +42,9 @@ Whether the newest release tag is signed, if a release has shipped yet; a reposi
 
 On GitHub, every third-party `uses:` line in every workflow should resolve to a full 40-character commit SHA, with the version tag preserved in a trailing comment so both a human and Dependabot can still read what version is pinned; this is R-SEC-01, and it applies to third-party actions, not the actions GitHub itself publishes under `actions/` and `github/`, though pinning those too is never wrong. On GitLab, there is no `uses:` line to pin; the same mutable-reference problem arrives through `image:`, `services:`, and `include:`, so pin those instead, per R-SEC-06. The reference file for the detected forge gives the exact command to resolve a tag to the SHA or digest it names today, and the caveat that an annotated tag needs one extra step most naive lookups miss.
 
-A workflow or pipeline can also invoke a package installer or a tool installer directly, such as a `pip install` or a `uv tool install` of a package or a git source, with no version or commit pin. That has the same mutable-reference problem as an unpinned `uses:` line, but R-SEC-01 and R-SEC-06 check only `uses:`, `image:`, `services:`, and `include:`; they do not extend to an installer command run inside a step. Flag an unpinned installer command as a supply-chain observation in the summary this skill produces, separate from the rule findings, and suggest pinning it to a released version or, for a git source, a commit SHA. Do not cite a rule ID for this observation; none of the rules in `STANDARD.md` currently reach it.
+A workflow or pipeline can also invoke a package installer or a tool installer directly, such as a `pip install` or a `uv tool install` of a package or a git source. R-SEC-01 and R-SEC-06 check only `uses:`, `image:`, `services:`, and `include:`; they do not extend to an installer command run inside a step, and no rule in `STANDARD.md` reaches it, so do not cite a rule ID for what this paragraph produces.
+
+Where such a command installs from a registry, R-SEC-08 already governs it through the lockfile, so read Step 10 rather than treating it here. Where it installs from a git URL or a piped script, check that the upstream project actually publishes what the command fetches: read the project's own repository or documentation and confirm the install path came from there, rather than working backward from a registry page, whose author, homepage, and repository fields are text the publisher typed. Report a command whose upstream cannot be established as a supply-chain observation in the summary, separate from the rule findings, and say plainly that it should not be installed until a maintainer decides. Do not resolve it by pinning it to a commit SHA. Pinning code whose origin is unestablished gives the same code at a known revision, and a maintainer reading a pinned line will reasonably assume someone already vouched for it.
 
 ### Step 4: Set least-privilege permissions
 
@@ -64,13 +66,25 @@ R-SEC-06 also covers what a GitLab pipeline's job token can reach, which has no 
 
 R-SEC-05 applies the same way on both forges, because the evidence comes from git itself, not from a forge API: after `git fetch --tags` and importing the maintainer's published signing key, `git tag -v <tag>` on the newest release tag should succeed, and `git cat-file -t <tag>` should print `tag`, confirming it is annotated rather than lightweight. Neither forge's API reports signature validity, so do not substitute a forge UI badge for actually running these commands. A repository with no release tag yet has nothing to check; say that rather than reporting a gap, and revisit at the first release.
 
-### Step 9: Read OpenSSF Scorecard results
+### Step 9: Keep untrusted input out of privileged contexts
+
+R-SEC-07 applies to both forges through different mechanisms, so read the matching reference file rather than carrying the syntax across. On GitHub the risk is textual: a `${{ }}` expression is substituted into the script before any shell sees it, so `${{ github.event.issue.title }}` inside a `run:` block executes whatever its author wrote. Move every such value into an `env:` block and reference the environment variable from the shell, which the shell then treats as data. Separately, a `pull_request_target` or `workflow_run` workflow runs with the base repository's secrets, so it must not check out the contributor's head ref; where one does, that is the highest-severity finding this skill produces and it belongs at the top of the summary. On GitLab the same values arrive as `$CI_COMMIT_MESSAGE`, `$CI_COMMIT_REF_NAME`, and `$CI_MERGE_REQUEST_TITLE`, and GitLab's variable expansion resolves a `$` inside a value as another variable, so quote them and clear "Expand variable reference" on anything sensitive.
+
+### Step 10: Lockfile and frozen installs
+
+R-SEC-08 requires the package manager's lockfile to be committed and CI to install from it in a mode that fails rather than re-resolves. Read the project's manifest to learn which package manager it uses, confirm the lockfile is committed rather than gitignored, and check the install command in each workflow or pipeline job: `npm ci` rather than `npm install`, `uv sync --locked`, `cargo build --locked`, `bundle install --deployment`, or `pip install --require-hashes`. Where the project pins versions in a manifest but commits no lockfile, say that a version pin still trusts the registry to serve the same bytes while a recorded hash does not. A repository with no package manifest has nothing to lock; report that rather than a gap.
+
+### Step 11: Static analysis on pull requests
+
+R-SEC-09 applies only where the repository holds source in a language a static analyzer supports, so establish that first and say plainly that the rule does not reach the repository when it does not, rather than reporting a violation. Where it does apply, check that an analysis workflow runs on pull requests to the default branch and that its result is a required check, since an analyzer whose failure does not block merge is advisory. On GitHub, prefer CodeQL default setup, which is a repository setting rather than a workflow file the project has to maintain, and give the resolved settings URL the same way Step 6 does; the reference file names the endpoint that reports whether it is already enabled.
+
+### Step 12: Read OpenSSF Scorecard results
 
 Scorecard already implements checks that overlap several rules here; do not reimplement Pinned-Dependencies, Token-Permissions, Dependency-Update-Tool, Branch-Protection, or Signed-Releases by hand when Scorecard has already run them. Query the public API for the project's existing results rather than running the scan yourself; the reference file for the detected forge gives the exact endpoint and what an unscanned repository returns, which is common enough that the process here treats it as a normal outcome, not an error to work around. Where a result exists, map each check below the score Scorecard gives it to the rule ID in `STANDARD.md` that covers the same ground, using the check's own `reason` and `details` fields rather than re-deriving the finding from the repository. Where no result exists, say so, and offer to help the user add the Scorecard GitHub Action so a result exists next time, rather than guessing at a score.
 
-### Step 10: Present the result
+### Step 13: Present the result
 
-Show what Step 2 through Step 9 found and fixed, grouped by rule ID: which files this skill edited directly, which settings still need the user's confirmation with the resolved URL for each, and the supply-chain observation from Step 3 if one applies. Where a Scorecard result was read in Step 9, include its findings mapped to rule IDs alongside this skill's own. Do not mark a rule fixed until the file is written or the setting is confirmed and verified; a settings block the user has not yet confirmed stays listed as pending.
+Show what Step 2 through Step 12 found and fixed, grouped by rule ID: which files this skill edited directly, which settings still need the user's confirmation with the resolved URL for each, and the supply-chain observation from Step 3 if one applies. Where a Scorecard result was read in Step 9, include its findings mapped to rule IDs alongside this skill's own. Do not mark a rule fixed until the file is written or the setting is confirmed and verified; a settings block the user has not yet confirmed stays listed as pending.
 
 ## Rules this skill owns
 
@@ -85,3 +99,9 @@ R-SEC-04: The default branch requires review and passing checks before merge, an
 R-SEC-05: Release tags are signed and verifiable
 
 R-SEC-06: A GitLab pipeline pins every image and every included file, and limits what its job token reaches
+
+R-SEC-07: Untrusted input never reaches a privileged context
+
+R-SEC-08: Registry dependencies resolve through a committed lockfile
+
+R-SEC-09: Static analysis runs on pull requests where the language supports it

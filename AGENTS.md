@@ -68,6 +68,8 @@ Not applicable:
 - R-CI-03: no package manifest declares a supported runtime range, so there is no matrix to cover.
 - R-CI-04: no lockfile and no cache steps, so there is nothing to key.
 - R-SEC-06: GitLab-only rule; this repository is on GitHub.
+- R-SEC-08: no package manifest and no package manager, so there is no lockfile to commit.
+- R-SEC-09: the repository holds markdown and shell only, so no supported language brings it into scope.
 - R-PUB-01, R-PUB-02, R-PUB-03, R-PUB-04: oss-kit ships through git, `npx skills add`, and the Claude Code plugin marketplace, and publishes to no package registry, so there is no publish step, token, OIDC flow, or provenance to secure.
 - R-CHG-05: no API has been removed, so there is no deprecation to have preceded it.
 

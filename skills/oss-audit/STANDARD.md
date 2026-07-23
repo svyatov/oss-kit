@@ -212,6 +212,33 @@ Check: every `image:` and `services:` entry in `.gitlab-ci.yml` and its included
 Fixed by: oss-harden
 Forges: gitlab
 
+### R-SEC-07: Untrusted input never reaches a privileged context
+
+Forge-supplied text such as an issue title, a branch name, or a commit message is written by whoever opened the contribution. Interpolated into a shell command it runs as code, and a workflow that builds a fork's contribution while holding secrets hands those secrets to its author.
+
+Check: on GitHub, no `${{ github.event.* }}` or `${{ github.head_ref }}` expression appears inside a `run:` block, such values reach the shell through an `env:` block instead, and no `pull_request_target` or `workflow_run` workflow checks out the untrusted head ref; on GitLab, no job interpolates `$CI_COMMIT_MESSAGE`, `$CI_COMMIT_REF_NAME`, or `$CI_MERGE_REQUEST_TITLE` into a `script:` command, and every sensitive variable clears "Expand variable reference".
+
+Fixed by: oss-harden
+Forges: both
+
+### R-SEC-08: Registry dependencies resolve through a committed lockfile
+
+A version range re-resolves on every build, so what CI installs today is not what it installed yesterday. A lockfile records the exact artifact and its hash, which turns a silent substitution into a failed build. It costs a maintainer nothing, because the package manager writes it.
+
+Check: the lockfile the project's package manager produces is committed, records an integrity hash for each dependency, and every CI install runs in a mode that fails on a stale or missing lockfile rather than re-resolving, such as `npm ci`, `uv sync --locked`, `cargo build --locked`, `bundle install --deployment`, or `pip install --require-hashes`.
+
+Fixed by: oss-harden
+Forges: both
+
+### R-SEC-09: Static analysis runs on pull requests where the language supports it
+
+A reviewer catches what a reader notices. A static analyzer catches the injection and memory classes a reader skims past, and on GitHub the default setup is a repository setting rather than a workflow to maintain.
+
+Check: where the repository contains source in a language a static analyzer supports, a static analysis workflow runs on pull requests to the default branch and its result is a required check. A repository holding no source in a supported language falls outside this rule rather than failing it.
+
+Fixed by: oss-harden
+Forges: both
+
 ## Release and publishing
 
 ### R-PUB-01: Publishing happens in CI, triggered by a tag, never from a developer machine
