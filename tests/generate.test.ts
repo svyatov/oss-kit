@@ -1,6 +1,6 @@
 // tests/generate.test.ts
 import { expect, test } from "bun:test"
-import { parseRules, renderRulePage } from "../site/scripts/generate.mjs"
+import { agentNotice, parseRules, renderRulePage, renderSkillPage, rewriteLinks } from "../site/scripts/generate.mjs"
 
 const TWO_RULES = `# The oss-kit standard
 
@@ -73,4 +73,32 @@ test("every rule in the real standard parses", () => {
   expect(rules.some((r) => r.fixedBy === "oss-audit")).toBe(false)
   // The CI area is two letters, unlike the three-letter areas; the parser must accept both.
   expect(rules.filter((r) => r.area === "CI")).toHaveLength(5)
+})
+
+test("rewriteLinks replaces the targets the resolver claims", () => {
+  const md = "See [refs](references/npm.md) and [home](https://example.com) and [rule](#anchor)."
+  const out = rewriteLinks(md, (t) => (t === "references/npm.md" ? "/skills/oss-publish/npm/" : null))
+  expect(out).toContain("[refs](/skills/oss-publish/npm/)")
+  expect(out).toContain("[home](https://example.com)")
+  expect(out).toContain("[rule](#anchor)")
+})
+
+test("rewriteLinks throws when a relative markdown target resolves to nothing", () => {
+  expect(() => rewriteLinks("[x](missing.md)", () => null)).toThrow("missing.md")
+})
+
+test("agentNotice names the source file and links to it", () => {
+  const notice = agentNotice("skills/oss-readme/SKILL.md")
+  expect(notice).toContain("instruction text")
+  expect(notice).toContain("https://github.com/svyatov/oss-kit/blob/main/skills/oss-readme/SKILL.md")
+})
+
+test("renderSkillPage keeps the body verbatim under the notice", () => {
+  const source = `---\nname: oss-readme\ndescription: "Write a README."\nlicense: MIT\n---\n\n# Write a README\n\nBody line.\n`
+  const page = renderSkillPage("skills/oss-readme/SKILL.md", source)
+  expect(page).toContain('title: "oss-readme"')
+  expect(page).toContain("Write a README.")
+  expect(page).toContain("Body line.")
+  expect(page).not.toContain("license: MIT")
+  expect(page.indexOf("instruction text")).toBeLessThan(page.indexOf("Body line."))
 })

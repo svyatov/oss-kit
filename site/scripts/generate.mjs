@@ -82,3 +82,54 @@ ${rule.why}
     body,
   )
 }
+
+const BLOB = "https://github.com/svyatov/oss-kit/blob/main"
+const LINK = /\[([^\]]*)\]\(([^)\s]+)\)/g
+
+/** @param {string} markdown @param {(target: string) => string|null} resolve */
+export function rewriteLinks(markdown, resolve) {
+  return markdown.replace(LINK, (whole, /** @type {string} */ label, /** @type {string} */ target) => {
+    if (/^(https?:|mailto:|#|\/)/.test(target)) return whole
+    const replacement = resolve(target)
+    if (replacement) return `[${label}](${replacement})`
+    if (target.endsWith(".md")) throw new Error(`link target resolves to no page: ${target}`)
+    return whole
+  })
+}
+
+/** @param {string} sourcePath */
+export function agentNotice(sourcePath) {
+  return `:::note
+This page is the instruction text an agent loads, reproduced verbatim from [\`${sourcePath}\`](${BLOB}/${sourcePath}).
+:::`
+}
+
+/** @param {string} text */
+export function splitFrontmatter(text) {
+  const lines = text.split("\n")
+  if (lines[0] !== "---") return { fields: /** @type {Record<string, string>} */ ({}), body: text }
+  const close = lines.indexOf("---", 1)
+  if (close === -1) throw new Error("unterminated frontmatter")
+  /** @type {Record<string, string>} */
+  const fields = {}
+  for (const line of lines.slice(1, close)) {
+    const at = line.indexOf(":")
+    if (at === -1) continue
+    const key = line.slice(0, at).trim()
+    let value = line.slice(at + 1).trim()
+    if (/^".*"$/.test(value)) value = JSON.parse(value)
+    fields[key] = value
+  }
+  return { fields, body: lines.slice(close + 1).join("\n") }
+}
+
+/** @param {string} sourcePath @param {string} text */
+export function renderSkillPage(sourcePath, text) {
+  const { fields, body } = splitFrontmatter(text)
+  const title = fields.name ?? sourcePath
+  const description = fields.description ?? ""
+  return frontmatter(
+    { title, description },
+    `${agentNotice(sourcePath)}\n\n${body}`,
+  )
+}
