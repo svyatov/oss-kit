@@ -69,6 +69,12 @@ test("parseRules rejects a rule missing its check line", () => {
   expect(() => parseRules(broken)).toThrow("R-SEC-01: expected exactly one Check: line, found 0")
 })
 
+test("parseRules rejects an unknown Forges value", () => {
+  const broken = TWO_RULES.replace("Forges: github", "Forges: gitub")
+  expect(() => parseRules(broken)).toThrow("R-SEC-01")
+  expect(() => parseRules(broken)).toThrow("gitub")
+})
+
 test("parseRules rejects a malformed heading", () => {
   const broken = TWO_RULES.replace("### R-SEC-01: Pin", "### R-SEC-1: Pin")
   expect(() => parseRules(broken)).toThrow("R-SEC-1")

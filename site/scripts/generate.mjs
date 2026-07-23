@@ -58,7 +58,11 @@ export function parseRules(text) {
       .filter((l) => l.trim() !== "" && !/^(Check|Fixed by|Forges): /.test(l))
       .join(" ")
       .trim()
-    return { id, area, number, statement, why, check: one("Check"), fixedBy: one("Fixed by"), forges: one("Forges") }
+    const forges = one("Forges")
+    if (forges !== "github" && forges !== "gitlab" && forges !== "both") {
+      throw new Error(`${id}: Forges: must be github, gitlab, or both, found ${JSON.stringify(forges)}`)
+    }
+    return { id, area, number, statement, why, check: one("Check"), fixedBy: one("Fixed by"), forges }
   })
 }
 
@@ -222,6 +226,7 @@ export function writeAll(repoRoot, outDir) {
       const key = target.replace(/^\.\//, "").replace(/\.md$/, "")
       if (guideTargets.has(key)) return `/guides/${key}/`
       if (key === "CHANGELOG") return "/changelog/"
+      if (/^(\.\.\/)*skills\/oss-audit\/STANDARD$/.test(key)) return "/standard/"
       if (key.startsWith("skills/")) return `/${key.replace(/\/SKILL$/, "")}/`
       return resolve("")(target)
     }

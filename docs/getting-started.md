@@ -23,5 +23,5 @@ is `oss-harden`, releases are `oss-publish`, changelogs and versioning are
 `oss-changelog`, prose anywhere in a repository is `oss-writing`, and the
 structure of a repository that ships skills is `oss-skill`.
 
-Every opinion behind all of this is written down. Read [the standard](/standard/)
+Every opinion behind all of this is written down. Read [the standard](../skills/oss-audit/STANDARD.md)
 and disagree with it before you take any of it.
