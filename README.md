@@ -23,6 +23,22 @@ Claude Code and GitHub Copilot CLI both read `.claude-plugin/marketplace.json`, 
 /plugin install oss-kit@oss-kit
 ```
 
+## Use it
+
+Ask your agent, in Claude Code, GitHub Copilot CLI, or any agent that reads a `skills/` directory:
+
+```
+Use oss-audit on this repository and list every gap against STANDARD.md.
+```
+
+```
+oss-audit reads skills/oss-audit/STANDARD.md, scores the repository rule
+by rule, and returns a gap list routed to the skill that fixes each one:
+
+R-COM-04: SECURITY.md is missing. Fixed by oss-scaffold.
+R-SEC-01: 2 unpinned actions in .github/workflows/validate.yml. Fixed by oss-harden.
+```
+
 ## Skills
 
 | Skill | What it does |
@@ -39,6 +55,12 @@ Claude Code and GitHub Copilot CLI both read `.claude-plugin/marketplace.json`, 
 ## Read the standard without installing anything
 
 Every opinion these skills hold is written down in [STANDARD.md](skills/oss-audit/STANDARD.md), one numbered rule at a time. Each rule states what to do, why, what to check for, and which skill fixes it. Read it and disagree with it before you install anything.
+
+oss-kit meets every rule of its own [STANDARD.md](skills/oss-audit/STANDARD.md) that applies to it today. Branch protection, signed releases, and the release-tied changelog rules are pending the public repository and its first release.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the setup, test, and pull request steps.
 
 ## Changelog
 
