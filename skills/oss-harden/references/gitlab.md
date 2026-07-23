@@ -57,6 +57,8 @@ include:
     integrity: 'sha256-<base64-encoded-hash>'
 ```
 
+Resolve each of the three against the version that is current, not the one the file already names, for the reason `SKILL.md` Step 3 gives: a digest freezes whatever it was pointed at, including an image two majors behind, and the pin then reads as audited. For `include:component` and `include:project`, read the source project's releases with `GET /projects/:id/releases` and compare the newest against the `ref:` in the file. For `image:` and `services:`, compare the tag against the tags the image's own registry publishes, using whichever registry client the project already has rather than adding one for this. Name a lagging major to the user rather than pinning it.
+
 ## Job token scope (R-SEC-06)
 
 GitLab's job token access is project-only by default: a job's `CI_JOB_TOKEN` can only authenticate against the project the pipeline runs in unless the inbound allowlist explicitly names another project. Where `inbound_enabled` from the read above is `false`, the scope is already open to every project that trusts the token, which is broader than the default and worth narrowing; where it is `true`, confirm the allowlist names only the projects this pipeline actually calls into, at Settings > CI/CD > Job token permissions for the project, or with:

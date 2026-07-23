@@ -24,7 +24,17 @@ GitHub's own guidance is to prefer rulesets for a repository being configured to
 
 ## Pin third-party actions to a commit SHA (R-SEC-01)
 
-Resolve a tag to the commit it points at with `gh api`:
+Establish which tag is current before resolving one. R-SEC-01 checks that a `uses:` line names a 40-character SHA, so a pin to a major released three years ago satisfies it exactly as well as a pin to the current one, and neither the rule nor any later step in this skill will question it again. Read the action's newest release first:
+
+```bash
+gh api repos/{owner}/{repo}/releases/latest --jq '.tag_name'
+```
+
+This endpoint returns the newest non-draft, non-prerelease release, which is what you want even when the project backports to an older line. Verified against `actions/checkout` on 2026-07-23, where v7.0.1, v6.1.0, and v5.1.0 were all published within eighteen minutes of each other and the call still returned `v7.0.1`. A project that tags releases without cutting GitHub Releases returns 404 here; fall back to `git ls-remote --tags --refs --sort=-v:refname https://github.com/{owner}/{repo} | head`, and discard the moving major and minor aliases such as `v7` that this listing returns alongside the full versions.
+
+Where the current major is ahead of the one the workflow uses, say so and name both versions rather than pinning the old major to a SHA silently. The upgrade is the user's call, since a major bump can change the action's inputs, but a pin recorded without that observation buries the staleness under a line that now looks deliberate and audited.
+
+Resolve the chosen tag to the commit it points at with `gh api`:
 
 ```bash
 gh api repos/{owner}/{repo}/git/refs/tags/{tag} --jq '.object.sha'
