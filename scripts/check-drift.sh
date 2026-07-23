@@ -2,21 +2,23 @@
 # Checks STANDARD.md and skills/ agree, in both directions.
 set -uo pipefail
 
+STANDARD="skills/oss-audit/STANDARD.md"
+
 status=0
 err() { echo "drift: $*" >&2; status=1; }
 
-if [ ! -f STANDARD.md ] || [ ! -r STANDARD.md ]; then
-  err "STANDARD.md is missing or unreadable; restore the file or fix its permissions"
+if [ ! -f "$STANDARD" ] || [ ! -r "$STANDARD" ]; then
+  err "$STANDARD is missing or unreadable; restore the file or fix its permissions"
   exit $status
 fi
 
 # Strip CRLF once so neither the rule scan nor the "Fixed by:" field
 # split below ends up with a trailing \r glued to an id or a skill name.
-content="$(tr -d '\r' < STANDARD.md)"
+content="$(tr -d '\r' < "$STANDARD")"
 defined="$(grep -oE '^### (R-[A-Z]+-[0-9]{2})' <<<"$content" | awk '{print $2}' | sort -u)"
 
 if [ -z "$defined" ]; then
-  err "STANDARD.md defines no rules matching '### R-<AREA>-<NN>'; add at least one rule"
+  err "$STANDARD defines no rules matching '### R-<AREA>-<NN>'; add at least one rule"
   exit $status
 fi
 

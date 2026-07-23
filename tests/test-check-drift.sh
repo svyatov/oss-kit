@@ -39,8 +39,8 @@ run_case() {
 make_fixture() {
   local dir
   dir="$(mktemp -d)"
-  mkdir -p "$dir/skills/oss-readme"
-  cat > "$dir/STANDARD.md" <<'EOF'
+  mkdir -p "$dir/skills/oss-readme" "$dir/skills/oss-audit"
+  cat > "$dir/skills/oss-audit/STANDARD.md" <<'EOF'
 ### R-DOC-01: README states what the project does in one sentence
 
 Check: first paragraph names the problem.
@@ -69,54 +69,58 @@ run_case "citation of undefined rule fails" 1 "$d" "R-DOC-99"
 
 # defined but no owning skill directory
 d="$(make_fixture)"; fixtures+=("$d")
-sed -i.bak 's/Fixed by: oss-readme/Fixed by: oss-nonexistent/' "$d/STANDARD.md"
+sed -i.bak 's/Fixed by: oss-readme/Fixed by: oss-nonexistent/' "$d/skills/oss-audit/STANDARD.md"
 run_case "rule owned by missing skill fails" 1 "$d" "oss-nonexistent"
 
 # defined with no Fixed by line at all
 d="$(make_fixture)"; fixtures+=("$d")
-sed -i.bak '/Fixed by:/d' "$d/STANDARD.md"
+sed -i.bak '/Fixed by:/d' "$d/skills/oss-audit/STANDARD.md"
 run_case "rule with no owner fails" 1 "$d" "R-DOC-01"
 
-# skills/ has no citations at all: nothing to check in that direction.
-# This is not a vacuous case: without the "[ -z "$id" ] && continue" guard
-# on the empty read that <<<"" produces, the loop would treat the empty
-# string as a cited id and report a phantom "skills cite , which
-# STANDARD.md does not define" error, so a regression that drops the
-# guard fails this case.
+# No skill file adds a citation of its own: the only matches under
+# skills/ come from STANDARD.md's own "### R-DOC-01" header, now that the
+# standard lives inside skills/oss-audit/. That self-match is always a
+# defined id, so it must not trip the "cites X, which STANDARD.md does
+# not define" error. This also still exercises the
+# "[ -z "$id" ] && continue" guard indirectly: cited is a genuine
+# single-line value here, not the empty string a truly citation-free tree
+# would have produced before the move, so this case now proves a
+# self-match alone passes rather than proving the empty-read guard fires.
 d="$(make_fixture)"; fixtures+=("$d")
 : > "$d/skills/oss-readme/SKILL.md"
-run_case "no citations under skills/ still passes" 0 "$d"
+run_case "no external citations under skills/ still passes" 0 "$d"
 
-# A Check: line happens to mention a rule ID. That mention must never be
-# read as a citation, so the planted ID is undefined anywhere in the
-# fixture (not in STANDARD.md's own definitions, not under skills/): if
-# the citation scan ever widens to include STANDARD.md, this fails,
-# because the planted ID would then surface as "cites ..., which
-# STANDARD.md does not define". Asserting exit 0 stays correct because a
-# rule ID inside prose is not a citation.
+# Before the move, a rule ID mentioned in a Check: line never surfaced as
+# a citation, because STANDARD.md lived outside skills/ and the citation
+# grep only read skills/. Now that STANDARD.md sits inside
+# skills/oss-audit/, that same grep reads its own prose too, so a planted
+# id STANDARD.md does not define is correctly caught as a citation, the
+# same way a stray id in a skill file would be. This is the new correct
+# behavior, not a regression: it also catches a mistyped cross-reference
+# inside the standard's own text.
 d="$(make_fixture)"; fixtures+=("$d")
-sed -i.bak 's/Check: first paragraph names the problem./Check: first paragraph names the problem, as in R-ZZZ-99./' "$d/STANDARD.md"
-run_case "rule ID mentioned in Check: line does not break parsing" 0 "$d"
+sed -i.bak 's/Check: first paragraph names the problem./Check: first paragraph names the problem, as in R-ZZZ-99./' "$d/skills/oss-audit/STANDARD.md"
+run_case "rule ID mentioned in STANDARD.md's own Check: line is caught as a citation" 1 "$d" "R-ZZZ-99"
 
 # STANDARD.md missing entirely must fail loudly, not silently pass with
 # zero iterations in both directions. Citations are blanked so the only
 # way this case can exit non-zero is the missing-file guard itself, not
 # a side effect of the (also empty) citation loop.
 d="$(make_fixture)"; fixtures+=("$d")
-rm -f "$d/STANDARD.md"
+rm -f "$d/skills/oss-audit/STANDARD.md"
 : > "$d/skills/oss-readme/SKILL.md"
 run_case "missing STANDARD.md fails loudly" 1 "$d" "STANDARD.md"
 
 # STANDARD.md present but parses zero rules must also fail loudly.
 # Citations are blanked for the same isolation reason as above.
 d="$(make_fixture)"; fixtures+=("$d")
-echo "# Not a rules file" > "$d/STANDARD.md"
+echo "# Not a rules file" > "$d/skills/oss-audit/STANDARD.md"
 : > "$d/skills/oss-readme/SKILL.md"
 run_case "STANDARD.md with no rules fails loudly" 1 "$d" "no rules"
 
 # A rule with two Fixed by lines must be an error, not a silent first-match.
 d="$(make_fixture)"; fixtures+=("$d")
-cat > "$d/STANDARD.md" <<'EOF'
+cat > "$d/skills/oss-audit/STANDARD.md" <<'EOF'
 ### R-DOC-01: README states what the project does in one sentence
 
 Check: first paragraph names the problem.
@@ -130,7 +134,7 @@ run_case "rule with two Fixed by lines fails" 1 "$d" "R-DOC-01"
 # CRLF line endings in both STANDARD.md and the skill file must not
 # produce false drift against a repository that is otherwise correct.
 d="$(make_fixture)"; fixtures+=("$d")
-printf '### R-DOC-01: README states what the project does in one sentence\r\n\r\nCheck: first paragraph names the problem.\r\n\r\nFixed by: oss-readme\r\nForges: both\r\n' > "$d/STANDARD.md"
+printf '### R-DOC-01: README states what the project does in one sentence\r\n\r\nCheck: first paragraph names the problem.\r\n\r\nFixed by: oss-readme\r\nForges: both\r\n' > "$d/skills/oss-audit/STANDARD.md"
 printf -- '---\r\nname: oss-readme\r\ndescription: "test"\r\n---\r\nOwns R-DOC-01.\r\n' > "$d/skills/oss-readme/SKILL.md"
 run_case "CRLF line endings do not cause false drift" 0 "$d"
 

@@ -38,7 +38,7 @@ Claude Code and GitHub Copilot CLI both read `.claude-plugin/marketplace.json`, 
 
 ## Read the standard without installing anything
 
-Every opinion these skills hold is written down in [STANDARD.md](STANDARD.md), one numbered rule at a time. Each rule states what to do, why, what to check for, and which skill fixes it. Read it and disagree with it before you install anything.
+Every opinion these skills hold is written down in [STANDARD.md](skills/oss-audit/STANDARD.md), one numbered rule at a time. Each rule states what to do, why, what to check for, and which skill fixes it. Read it and disagree with it before you install anything.
 
 ## Changelog
 

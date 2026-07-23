@@ -12,11 +12,9 @@ This skill owns no rule. It reads what `STANDARD.md` says a rule needs, checks t
 
 ## Step 1: Find STANDARD.md
 
-`STANDARD.md` sits one directory above `skills/`, so from this file at `skills/oss-audit/SKILL.md` the path `../../STANDARD.md` resolves it in every install layout that keeps this skill's directory attached to the rest of the repository it came from: a git checkout, a Claude Code plugin install (the marketplace entry declares the plugin's source as the repository root, so the installed copy mirrors this layout), and a whole-kit install through a skills package manager that preserves the source repository's directory tree.
+`STANDARD.md` sits inside this skill's own directory, next to this file, at `skills/oss-audit/STANDARD.md`. The path `./STANDARD.md`, relative to `SKILL.md`, resolves it in every documented install, because an install that fetches this skill at all fetches its whole directory: a git checkout, the Claude Code plugin install, `npx skills add svyatov/oss-kit` for the whole kit, and `npx skills add svyatov/oss-kit --skill oss-audit` for this skill alone. There is no documented install that brings in this skill's directory but leaves one of its own files behind.
 
-If that path does not resolve, search outward from the current working directory and from this file's own location for a `STANDARD.md` that sits next to a `skills/` directory containing this skill, in case the kit was vendored at a different depth.
-
-If neither finds it, the most likely cause is that only this one skill was installed on its own: a single-skill install fetches this skill's own directory and nothing outside it, and `STANDARD.md` lives outside every skill's directory by design, so it does not travel with a single-skill install. Say this plainly, name the file that is missing and why an audit cannot proceed without it, and point at `STANDARD.md` in the oss-kit repository (the link `README.md` itself gives) as the source to fetch or to install the kit from in a way that includes it. Do not score against a remembered or reconstructed rule set. An audit with no rules to check against is not a smaller audit; it is no audit.
+If `./STANDARD.md` does not resolve, the file is genuinely missing: the skill's own directory did not install completely, or the file was moved or deleted afterward. Say this plainly, name the file that is missing, and stop rather than guessing at another path or scoring against a remembered or reconstructed rule set. An audit with no rules to check against is not a smaller audit; it is no audit.
 
 ## Step 2: Read the rules
 
@@ -40,7 +38,9 @@ Where you actually have the access a `Check:` line asks for, network reachable, 
 
 ## Step 5: OpenSSF Scorecard
 
-Several SEC rules overlap what OpenSSF Scorecard already checks. Do not query Scorecard or reimplement its checks from this skill; `skills/oss-harden` already reads Scorecard results, including what a repository with no scan yet returns, and maps its findings to the same rule IDs. Where a SEC rule's evidence would come from Scorecard, mark it unknown here and point at `oss-harden` to resolve it, rather than duplicating that lookup.
+Two SEC rules name evidence a plain checkout cannot produce and that OpenSSF Scorecard already checks: R-SEC-04, whose `Check:` line reads branch protection settings through a forge API, and R-SEC-05, whose `Check:` line needs the maintainer's signing key fetched from outside the repository to verify a signed tag. Do not query Scorecard or reimplement its checks from this skill; `skills/oss-harden` already reads Scorecard results, including what a repository with no scan yet returns, and maps its findings to the same rule IDs. Mark R-SEC-04 and R-SEC-05 unknown here and point at `oss-harden` to resolve them, rather than duplicating that lookup.
+
+R-SEC-01, R-SEC-02, and R-SEC-03 are not deferred here: their `Check:` lines name evidence a checkout already has, pinned SHAs in `.github/workflows/`, a `permissions:` block in each workflow file, and a dependency-update configuration file, so Step 3 scores them directly.
 
 ## Output format
 

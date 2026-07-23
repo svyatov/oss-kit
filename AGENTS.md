@@ -5,8 +5,8 @@ oss-kit ships eight agent skills that apply one opinionated quality bar to open 
 ## Layout
 
 ```
-STANDARD.md              every opinion, as R-<AREA>-<NN> rules
 skills/                  canonical location of all skill directories
+skills/oss-audit/STANDARD.md   every opinion, as R-<AREA>-<NN> rules
 .agents/skills           symlink to ../skills
 .claude/skills           symlink to ../skills
 .claude-plugin/          plugin.json and marketplace.json
