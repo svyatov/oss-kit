@@ -4,7 +4,7 @@ This document states every opinion oss-kit holds about an open source repository
 
 Some rules name a fallback marked below the bar. That marker means the blessed option is unavailable, not that the fallback is acceptable practice: a registry with no trusted publishing, a forge with no attestation support, a plan tier with no protected environments. Take the fallback only when the platform leaves you no other option, and revisit it when the platform catches up.
 
-Rule IDs are `R-<AREA>-<NN>`. Areas are DOC, COM, CI, SEC, PUB, and CHG. IDs are permanent: a retired rule keeps its number and is marked retired rather than reused.
+Rule IDs are `R-<AREA>-<NN>`. Areas are DOC, COM, CI, SEC, PUB, CHG, and SKL. IDs are permanent: a retired rule keeps its number and is marked retired rather than reused.
 
 ## Documentation
 
@@ -295,4 +295,44 @@ Removing an API without warning turns an upgrade into an outage. A deprecation s
 Check: every item under Removed in a release appears under Deprecated in an earlier release, and the deprecated API emits a runtime warning naming its replacement.
 
 Fixed by: oss-changelog
+Forges: both
+
+## Agent skills
+
+This area applies only to a repository that ships agent skills, meaning a repository holding at least one `SKILL.md`. Where none exists, the area is not applicable as a whole and its rules are not checked one at a time.
+
+### R-SKL-01: Skills live in a top-level `skills/` directory, one directory per skill
+
+The `skills` CLI installer and every plugin loader read that path. A repository that keeps its skills anywhere else cannot be installed by the commands its own README documents, so the skills reach nobody.
+
+Check: a `skills/` directory exists at the repository root, every skill is a direct child of it and holds a `SKILL.md`, and no other `SKILL.md` exists in the repository. Resolve a symlinked directory such as `.claude/skills` to its target before applying the check, so a committed symlink pointing at `skills/` does not read as a second copy.
+
+Fixed by: oss-skill
+Forges: both
+
+### R-SKL-02: Every skill conforms to the Agent Skills specification
+
+The specification is the one format every host reads. A skill that violates it fails to load, and most hosts fail silently, so the author sees a skill that never triggers and no error saying why.
+
+Check: a specification validator exits 0 for every directory under `skills/`. `agentskills validate <dir>`, from the `skills-ref` package, is one such validator.
+
+Fixed by: oss-skill
+Forges: both
+
+### R-SKL-03: A `SKILL.md` body stays under 500 lines, with depth in `references/`
+
+The whole body loads into context when the skill activates, competing there with the conversation and with every other active skill. The specification sets the ceiling at 500 lines and about 5000 tokens, and puts the rest under `references/`, loaded only when the task calls for it.
+
+Check: every `skills/*/SKILL.md` is under 500 lines, and any skill needing more material ships it under that skill's own `references/` directory.
+
+Fixed by: oss-skill
+Forges: both
+
+### R-SKL-04: Every `SKILL.md` declares a license
+
+Installers extract one skill directory at a time. The repository license file does not travel with it, so an extracted skill arrives with no terms attached and nobody downstream can tell whether they may use it.
+
+Check: the frontmatter of every `skills/*/SKILL.md` carries a `license:` field, and its value names the same license as the repository license file.
+
+Fixed by: oss-skill
 Forges: both
