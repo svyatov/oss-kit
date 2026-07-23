@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   spec:
-    name: agentskills validate
+    name: skills-ref validate
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6
         with:
           python-version: "3.13"
-      - run: pip install skills-ref
+      - run: pip install "skills-ref @ git+https://github.com/agentskills/agentskills.git@492e1b71046249d085444cad81d47985836c451b#subdirectory=skills-ref"
       - name: Validate every skill
         run: |
           set -u
@@ -35,7 +35,7 @@ jobs:
           status=0
           for dir in "${dirs[@]}"; do
             echo "== $dir"
-            agentskills validate "$dir" || status=1
+            skills-ref validate "$dir" || status=1
           done
           exit $status
 
@@ -55,5 +55,5 @@ jobs:
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
       - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78  # v7
-      - run: uv tool install git+https://github.com/NVIDIA/skillspector.git
+      - run: uv tool install git+https://github.com/NVIDIA/skillspector.git@a54947c307fe19a24a43db55f6148e181a987a67
       - run: skillspector scan ./skills/ --no-llm --format json

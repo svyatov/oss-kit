@@ -314,7 +314,7 @@ Forges: both
 
 The specification is the one format every host reads. A skill that violates it fails to load, and most hosts fail silently, so the author sees a skill that never triggers and no error saying why.
 
-Check: a specification validator exits 0 for every directory under `skills/`. `agentskills validate <dir>`, from the `skills-ref` package, is one such validator.
+Check: a specification validator exits 0 for every directory under `skills/`. `skills-ref validate <dir>` is one such validator, installed from the `skills-ref` directory of the upstream `agentskills/agentskills` repository.
 
 Fixed by: oss-skill
 Forges: both
