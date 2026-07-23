@@ -1,7 +1,7 @@
 {
   "name": "oss-kit",
   "displayName": "oss-kit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "An opinionated quality bar for open source projects: README, community files, CI, supply-chain hardening, secure releases, and changelogs.",
   "author": {
     "name": "Leonid Svyatov",

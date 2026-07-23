@@ -6,15 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-23
+
 ### Added
 
 - `oss-skill` bundles a validator at `scripts/validate.mjs` that checks a repository against R-SKL-01 through R-SKL-05. It needs Node 22 or later, or Bun, and nothing installed: it imports only Node built-in modules, reads files, and makes no network call.
 - `STANDARD.md` gains R-SKL-05: a script a skill ships uses `sh` or Node with no dependencies, because it runs on the reader's machine rather than the author's.
+- Native install manifests for Codex CLI, Cursor, Kimi Code, and OpenCode, and a cross-harness `marketplace.json`.
+- `docs/install.md`, one page covering every harness.
+- R-SKL-06: every host a repository claims support for has a committed manifest or a documented install command.
 
 ### Changed
 
 - R-SKL-02 now names the validator `oss-skill` bundles. The rule already accepted any specification validator, so what it requires has not changed.
 - `oss-harden` reads the upstream project's newest release before pinning an action, component, or image, and reports a lagging major to the user instead of freezing it. R-SEC-01 and R-SEC-06 accept a SHA regardless of the age of the tag behind it, so a stale pin used to pass unquestioned and then read as audited.
+- The README install section shows the two fastest commands and links to the install page.
+- `docs/` is tracked. Planning documents move to the gitignored `docs/superpowers/`.
 
 ### Removed
 
@@ -35,5 +42,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `oss-audit` scores a repository against `STANDARD.md`, reports each gap with the rule it fails, and names the skill that fixes it.
 - `oss-skill` fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` conformance to the Agent Skills specification, oversized bodies that belong in `references/`, and the license field an extracted skill carries with it.
 
-[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/svyatov/oss-kit/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/svyatov/oss-kit/releases/tag/v0.1.0
