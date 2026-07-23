@@ -30,6 +30,10 @@ No skill ships an executable file, and no skill contains a `scripts/` directory.
 
 No skill names a harness-specific tool such as `Task`, `TodoWrite`, or `Skill`, tells the reader to dispatch a subagent, or branches on which tools are available. Describe the structure of the work instead.
 
+Before adding, installing, or documenting a tool this repository depends on, follow the link from the upstream project to the install command that project publishes. Never work the other direction, from a search result or a registry page back to a project. Every field on a registry page except the package name and the maintainer account is text the publisher typed, so a repository URL there proves nothing until you open it and confirm it exists. If upstream documents no registry install, then there is no registry package, whatever the registry shows.
+
+When a tool fails that check, or when the installed artifact contradicts upstream documentation in any way, such as a different executable name or a different version, do not install it. Do not pin around it, and do not quietly substitute something else. Stop and bring it to the maintainer. Pinning code you have not established the origin of gives you the same code at a known revision, which is bookkeeping rather than a fix. A tool a project genuinely publishes passes in seconds, so this costs nothing in the normal case and fires only when something is wrong. Recording the contradiction in the gotchas below and carrying on is how `pip install skills-ref` reached this repository.
+
 Prose follows the `skills/oss-writing` skill in this repo: no em dashes, no en dashes, no ` -- `, no emoji, sentence-case headings, active voice, straight ASCII quotes, and no inline-header bullet lists such as `- **Thing:** text`.
 
 Forge scope is GitHub and GitLab. A rule that applies to only one says so in its `Forges:` line.
