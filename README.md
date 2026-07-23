@@ -16,12 +16,14 @@ One skill at a time:
 npx skills add svyatov/oss-kit --skill oss-readme
 ```
 
-Claude Code and GitHub Copilot CLI both read `.claude-plugin/marketplace.json`, so the same two commands work in either:
+Claude Code, GitHub Copilot CLI, and VS Code read `.claude-plugin/marketplace.json`, so the same two commands work in any of them:
 
 ```
 /plugin marketplace add svyatov/oss-kit
 /plugin install oss-kit@oss-kit
 ```
+
+Every other supported harness has a native install path in [docs/install.md](docs/install.md).
 
 ## Use it
 
