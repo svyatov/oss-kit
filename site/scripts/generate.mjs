@@ -177,7 +177,7 @@ export function writeAll(repoRoot, outDir) {
       "standard.md",
       frontmatter(
         { title: "The standard", description: "Every rule oss-kit holds, in one page." },
-        `${agentNotice(standardPath)}\n\n${standardText.replace(/^# .*\n/, "")}`,
+        `${agentNotice(standardPath)}\n\n${standardText.replace(/^# .*\n/m, "")}`,
       ),
     ),
   )
@@ -208,7 +208,7 @@ export function writeAll(repoRoot, outDir) {
     for (const ref of safeReaddir(join(repoRoot, "skills", name, "references"))) {
       const refSource = `skills/${name}/references/${ref}`
       const text = readFileSync(join(repoRoot, refSource), "utf8")
-      const body = `${agentNotice(refSource)}\n\n${text.replace(/^# (.*)\n/, "")}`
+      const body = `${agentNotice(refSource)}\n\n${text.replace(/^# (.*)\n/m, "")}`
       const title = /^# (.*)$/m.exec(text)?.[1] ?? ref.replace(/\.md$/, "")
       const refPage = frontmatter({ title, description: `Reference for ${name}.` }, body)
       written.push(write(outDir, `skills/${name}/${ref}`, rewriteLinks(refPage, resolve(name))))
@@ -221,7 +221,7 @@ export function writeAll(repoRoot, outDir) {
     const source = `docs/${guide}`
     const text = readFileSync(join(repoRoot, source), "utf8")
     const title = /^# (.*)$/m.exec(text)?.[1] ?? guide.replace(/\.md$/, "")
-    const page = frontmatter({ title, description: title }, text.replace(/^# .*\n/, ""))
+    const page = frontmatter({ title, description: title }, text.replace(/^# .*\n/m, ""))
     const resolveGuide = (/** @type {string} */ target) => {
       const key = target.replace(/^\.\//, "").replace(/\.md$/, "")
       if (guideTargets.has(key)) return `/guides/${key}/`
@@ -240,7 +240,7 @@ export function writeAll(repoRoot, outDir) {
       "changelog.md",
       frontmatter(
         { title: "Changelog", description: "Every notable change to oss-kit." },
-        changelog.replace(/^# .*\n/, ""),
+        changelog.replace(/^# .*\n/m, ""),
       ),
     ),
   )
