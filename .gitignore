@@ -6,3 +6,11 @@ CONCEPTS.md
 node_modules/
 dist/
 coverage/
+site/node_modules/
+site/dist/
+site/.astro/
+site/src/content/docs/rules/
+site/src/content/docs/skills/
+site/src/content/docs/guides/
+site/src/content/docs/standard.md
+site/src/content/docs/changelog.md
