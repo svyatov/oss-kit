@@ -1,6 +1,6 @@
 # oss-kit
 
-Eight agent skills that hold your open source repository to one written quality bar, and tell you where it falls short.
+Nine agent skills that hold your open source repository to one written quality bar, and tell you where it falls short.
 
 The bar covers GitHub and GitLab. Rules that apply to only one forge say so.
 
@@ -51,6 +51,7 @@ R-SEC-01: 2 unpinned actions in .github/workflows/validate.yml. Fixed by oss-har
 | `oss-publish` | Sets up registry publishing with trusted publishing, provenance, and an approval gate, for npm, RubyGems, PyPI, and crates.io. |
 | `oss-changelog` | Keeps CHANGELOG.md in Keep a Changelog format, decides the semver bump, and writes release notes and deprecation notices. |
 | `oss-writing` | Fixes the sentences in commits, pull requests, issues, docs, error messages, log lines, and code comments. |
+| `oss-skill` | Fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` frontmatter conformance, oversized bodies that belong in `references/`, and the license field an extracted skill carries with it. |
 
 ## Read the standard without installing anything
 

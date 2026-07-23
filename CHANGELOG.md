@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- `STANDARD.md` defines the 31 numbered rules the skills in this kit check a repository against, each with a check a tool can run and the skill that fixes a gap.
+- `STANDARD.md` defines the 38 numbered rules the skills in this kit check a repository against, each with a check a tool can run and the skill that fixes a gap.
 - `oss-writing` rewrites commit messages, pull requests, issues, and documentation prose into plain, active, marketing-free sentences.
 - `oss-readme` orders a README so the install command and a working example come before motivation, and links the license, changelog, and contributing guide.
 - `oss-ci` writes GitHub Actions or GitLab CI/CD configuration for lint, test, and build, matched to the runtime versions a project claims to support, with lockfile-keyed caching and job timeouts.
@@ -17,3 +17,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `oss-harden` pins GitHub Actions to commit SHAs, sets least-privilege workflow permissions, configures Dependabot or Renovate, and checks branch protection and signed release tags.
 - `oss-changelog` keeps a changelog in Keep a Changelog format, decides the semantic version bump for a change, and drafts release notes from merged work.
 - `oss-audit` scores a repository against `STANDARD.md`, reports each gap with the rule it fails, and names the skill that fixes it.
+- `oss-skill` fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` conformance to the Agent Skills specification, oversized bodies that belong in `references/`, and the license field an extracted skill carries with it.

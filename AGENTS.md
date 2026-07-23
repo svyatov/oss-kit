@@ -1,6 +1,6 @@
 # Working in this repository
 
-oss-kit ships eight agent skills that apply one opinionated quality bar to open source projects. Every opinion lives in `STANDARD.md` as a numbered rule. Skills cite rule IDs; they do not restate the opinions.
+oss-kit ships nine agent skills that apply one opinionated quality bar to open source projects. Every opinion lives in `STANDARD.md` as a numbered rule. Skills cite rule IDs; they do not restate the opinions.
 
 ## Layout
 
@@ -20,7 +20,7 @@ CLAUDE.md                symlink to AGENTS.md
 
 ## Repo rules
 
-Skill directory names are prefixed `oss-` and match the frontmatter `name` exactly. The eight are `oss-audit`, `oss-community`, `oss-readme`, `oss-ci`, `oss-harden`, `oss-publish`, `oss-changelog`, and `oss-writing`.
+Skill directory names are prefixed `oss-` and match the frontmatter `name` exactly. The nine are `oss-audit`, `oss-community`, `oss-readme`, `oss-ci`, `oss-harden`, `oss-publish`, `oss-changelog`, `oss-writing`, and `oss-skill`.
 
 A frontmatter `name` is 1 to 64 characters of `[a-z0-9-]` with no leading, trailing, or consecutive hyphens. A frontmatter `description` is quoted.
 
@@ -55,7 +55,7 @@ Fixed by: oss-harden
 Forges: github
 ```
 
-Each `###` line is exactly `### R-<AREA>-<NN>: <statement>`, where AREA is DOC, COM, CI, SEC, PUB, or CHG and NN is two digits. Each rule carries exactly one `Check:` line, exactly one `Fixed by:` line naming one of the eight skills, and exactly one `Forges:` line whose value is `github`, `gitlab`, or `both`. Numbering starts at 01 in each area and does not skip. Retired rules keep their number and are marked retired, so IDs are never reused.
+Each `###` line is exactly `### R-<AREA>-<NN>: <statement>`, where AREA is DOC, COM, CI, SEC, PUB, CHG, or SKL and NN is two digits. Each rule carries exactly one `Check:` line, exactly one `Fixed by:` line naming one of the nine skills, and exactly one `Forges:` line whose value is `github`, `gitlab`, or `both`. Numbering starts at 01 in each area and does not skip. Retired rules keep their number and are marked retired, so IDs are never reused. The SKL area carries a preamble scoping it to repositories that ship agent skills; no other area is scoped by repository type.
 
 `oss-audit` owns no rule and must not appear in a `Fixed by:` line. It scores the repository and routes each gap to the skill that fixes it, so a rule it owned would route to itself.
 
