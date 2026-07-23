@@ -26,7 +26,9 @@ A frontmatter `name` is 1 to 64 characters of `[a-z0-9-]` with no leading, trail
 
 A `SKILL.md` body stays under 500 lines. Depth goes in that skill's `references/` directory.
 
-No skill ships an executable file, and no skill contains a `scripts/` directory.
+Code splits by who runs it. A script a skill ships runs on a reader's machine, so it conforms to R-SKL-05: `sh` or Node, a shebang naming one of them, only Node built-in modules, no runtime-specific global, and no manifest, lockfile, or `node_modules` inside the skill. Node 22 is the floor, which rules out `import.meta.main` and TypeScript type stripping. Maintenance code under `scripts/` and `tests/` runs only here and may use Node or Bun freely.
+
+The Agent Skills specification permits a `scripts/` directory and lists Python among its common options. R-SKL-05 is deliberately stricter, and `STANDARD.md` carries the reason.
 
 No skill names a harness-specific tool such as `Task`, `TodoWrite`, or `Skill`, tells the reader to dispatch a subagent, or branches on which tools are available. Describe the structure of the work instead.
 
@@ -72,9 +74,7 @@ Not applicable:
 
 Pending, with the trigger that resolves each one:
 
-- R-SEC-04: branch protection is a forge setting and no remote exists yet. Resolves when the public repository exists; `oss-harden` sets it then.
-- R-SEC-05: no release tag exists yet. Applies at the first signed release.
-- R-CHG-03, R-CHG-04: no release tag or forge release exists yet. Apply at the first release.
+- R-SEC-04: the remote exists at `github.com/svyatov/oss-kit`, but `gh api repos/svyatov/oss-kit/branches/main/protection` returns 403, "Upgrade to GitHub Pro or make this repository public." Resolves when the repository becomes public; `oss-harden` sets it then.
 - R-SEC-09: the repository now holds JavaScript, which CodeQL supports, so the rule applies. Code scanning on a private repository needs a paid GitHub Code Security license. Resolves when the repository becomes public; `oss-harden` adds the workflow then, scanning `javascript-typescript` and `actions`.
 
 ## Checklist after any skill change
@@ -91,3 +91,5 @@ Pending, with the trigger that resolves each one:
 Specification conformance is checked by the validator this repository ships at `skills/oss-skill/scripts/validate.mjs`. It reads files, imports only Node built-in modules, and uses no runtime-specific global, so it runs on Node 22 or later and on Bun with nothing installed. `ubuntu-24.04` ships Node.js 22.23.1, so the CI step needs no setup action. `R-SKL-02` and `CONTRIBUTING.md` both name this validator. No third-party specification validator is installed here, in CI or locally.
 
 Dependabot has supported the `bun` ecosystem since February 2025, for the text `bun.lock` on Bun 1.1.39 or later. It ships version updates only. There are no Dependabot security updates for Bun, so a CVE in a dev dependency arrives through the weekly version bump rather than through a security alert.
+
+`skills-ref` was dropped from this repository entirely, not pinned differently, because `oss-skill` now bundles a validator this project maintains and CI runs. R-SKL-02 was already written to accept any specification validator, so the rule needed no change. The reason for removal rather than replacement is that `skills-ref`'s own upstream README calls it a library "intended for demonstration purposes only", not for production use. Do not restore the `skills-ref` install to CI or name it in any skill.
