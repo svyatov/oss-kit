@@ -14,30 +14,13 @@ concurrency:
 
 jobs:
   spec:
-    name: skills-ref validate
+    name: skill specification
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
-        with:
-          python-version: "3.13"
-      - run: pip install "skills-ref @ git+https://github.com/agentskills/agentskills.git@492e1b71046249d085444cad81d47985836c451b#subdirectory=skills-ref"
       - name: Validate every skill
-        run: |
-          set -u
-          shopt -s nullglob
-          dirs=(skills/*/)
-          if [ ${#dirs[@]} -eq 0 ]; then
-            echo "no skill directories under skills/; nothing to validate" >&2
-            exit 1
-          fi
-          status=0
-          for dir in "${dirs[@]}"; do
-            echo "== $dir"
-            skills-ref validate "$dir" || status=1
-          done
-          exit $status
+        run: node skills/oss-skill/scripts/validate.mjs .
 
   drift:
     name: STANDARD.md drift

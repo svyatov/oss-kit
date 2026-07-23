@@ -341,7 +341,7 @@ Forges: both
 
 The specification is the one format every host reads. A skill that violates it fails to load, and most hosts fail silently, so the author sees a skill that never triggers and no error saying why.
 
-Check: a specification validator exits 0 for every directory under `skills/`. `skills-ref validate <dir>` is one such validator, installed from the `skills-ref` directory of the upstream `agentskills/agentskills` repository.
+Check: a specification validator exits 0 for every directory under `skills/`. `oss-skill` ships one at `scripts/validate.mjs` in its own installed directory, which reads files, needs nothing installed, and runs on Node 22 or later and on Bun.
 
 Fixed by: oss-skill
 Forges: both

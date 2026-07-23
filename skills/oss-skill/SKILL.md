@@ -8,7 +8,7 @@ license: MIT
 
 Fix the four things that decide whether a skill loads at all: where it sits, whether its frontmatter conforms to the Agent Skills specification, how much context its body spends, and whether a copy of it carries its license. A skill that fails any of these is invisible or unusable no matter how good its instructions are.
 
-Most of what this skill fixes is mechanical, and a specification validator, `skills-ref validate`, from the upstream `agentskills/agentskills` repository (R-SKL-02), names the fault precisely. Run the validator before reading further into any repository; its output tells you which of the rules below is in play.
+Most of what this skill fixes is mechanical, and the validator this skill ships at `scripts/validate.mjs` in its own directory names the fault precisely (R-SKL-02). It reads files, needs nothing installed, and runs on Node or Bun: `node scripts/validate.mjs <repository>`. Run it before reading further into any repository; its output tells you which of the rules below is in play.
 
 ## Scope
 
