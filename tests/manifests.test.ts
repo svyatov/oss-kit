@@ -51,3 +51,13 @@ test("every skills symlink resolves to the one real skills directory", () => {
     expect(existsSync(`${link}/oss-audit/SKILL.md`), link).toBe(true)
   }
 })
+
+test("R-SKL-06 exists and oss-skill claims it", () => {
+  const standard = readFileSync("skills/oss-audit/STANDARD.md", "utf8")
+  const block = standard.split("### ").find((b) => b.startsWith("R-SKL-06:"))
+  expect(block).toBeDefined()
+  expect(block!.match(/^Check: /gm)).toHaveLength(1)
+  expect(block!).toContain("Fixed by: oss-skill")
+  expect(block!).toContain("Forges: both")
+  expect(readFileSync("skills/oss-skill/SKILL.md", "utf8")).toContain("R-SKL-06")
+})

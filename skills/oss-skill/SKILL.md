@@ -13,7 +13,7 @@ Most of what this skill fixes is mechanical, and the validator this skill ships 
 
 ## Scope
 
-The SKL rules belong here: R-SKL-01 layout, R-SKL-02 specification conformance, R-SKL-03 body size, R-SKL-04 the license field, and R-SKL-05 what a skill may ship as a script.
+The SKL rules belong here: R-SKL-01 layout, R-SKL-02 specification conformance, R-SKL-03 body size, R-SKL-04 the license field, R-SKL-05 what a skill may ship as a script, and R-SKL-06 the install path behind every host the repository claims.
 
 Neighbouring work belongs elsewhere. Wiring the validator into CI is R-CI-02, owned by `oss-ci`, because the rule already requires CI to run the same linter the contributing guide gives to humans, and for a skills repository that linter is the validator. Keeping every host manifest on one version is R-CHG-03, owned by `oss-changelog`. The README's install command and runnable example are R-DOC-02, and its links to the license, changelog, and contributing guide are R-DOC-03, both owned by `oss-readme`. The sentences inside any file are R-DOC-05, owned by `oss-writing`. Note what a repository needs and hand it to the owning skill rather than doing that work from here.
 
@@ -76,6 +76,10 @@ A script file needs a shebang naming `sh`, `bash`, or `node`; documentation and 
 The specification permits Python here and this rule does not. A Python script pins an interpreter version and, in practice, pulls dependencies, which is the failure this rule exists to prevent. Where a skill needs Python, say so plainly and let the maintainer decide, rather than rewriting working code.
 
 Fix a violation by rewriting the script against Node built-ins, or by moving the work into the skill's prose where an agent performs it directly.
+
+## Step 6: Check the install path behind every claimed host
+
+Read the README and the install documentation it links to, and list every host named there. For each one, find the manifest that host reads, at the path that host reads it from, or the documented command that installs without a manifest. A host with neither is an R-SKL-06 finding: either ship the manifest or stop naming the host. Do not accept a manifest at a path no host reads as evidence.
 
 ## Renaming a skill breaks installs
 

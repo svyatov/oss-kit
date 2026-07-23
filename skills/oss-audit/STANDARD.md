@@ -372,3 +372,12 @@ Check: within a skill's `scripts/` directory, at any depth, every file whose ext
 
 Fixed by: oss-skill
 Forges: both
+
+### R-SKL-06: Every host the repository claims support for has a working install path
+
+A README that names a host it has shipped nothing for sends a reader to a command that fails. Hosts read different manifests, so support is a file at a path, not a sentence.
+
+Check: for every host named in `README.md` or in the install documentation it links to, either the manifest that host reads is committed at the path the host reads it from, or a documented install command exists that needs no manifest; and no host is named that has neither.
+
+Fixed by: oss-skill
+Forges: both
