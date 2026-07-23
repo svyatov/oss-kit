@@ -62,7 +62,7 @@ This matters because of how skills travel. An installer that fetches one skill c
 
 Where a skill ships a `scripts/` directory, check what its files assume. A script runs on the reader's machine, so an interpreter they lack or a dependency they cannot install fails the task the skill was invoked for.
 
-Every file needs a shebang naming `sh`, `bash`, or `node`. A Node script imports only built-in modules, so no `package.json`, no lockfile, and no `node_modules` travels with the skill. Nothing may reference a runtime-specific global, because a script written against one runtime fails on the other.
+A script file needs a shebang naming `sh`, `bash`, or `node`; documentation and data files under `scripts/`, such as a README or a fixture a script reads, carry no such requirement. A JavaScript or TypeScript file imports only Node built-in modules, so no `package.json`, no lockfile, and no `node_modules` travels with the skill, and it references no runtime-specific global, because a script written against one runtime fails on the other.
 
 The specification permits Python here and this rule does not. A Python script pins an interpreter version and, in practice, pulls dependencies, which is the failure this rule exists to prevent. Where a skill needs Python, say so plainly and let the maintainer decide, rather than rewriting working code.
 
