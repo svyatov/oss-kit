@@ -4,7 +4,7 @@ This document states every opinion oss-kit holds about an open source repository
 
 Some rules name a fallback marked below the bar. That marker means the blessed option is unavailable, not that the fallback is acceptable practice: a registry with no trusted publishing, a forge with no attestation support, a plan tier with no protected environments. Take the fallback only when the platform leaves you no other option, and revisit it when the platform catches up.
 
-Rule IDs are `R-<AREA>-<NN>`. Areas are DOC, COM, CI, SEC, REL, and CHG. IDs are permanent: a retired rule keeps its number and is marked retired rather than reused.
+Rule IDs are `R-<AREA>-<NN>`. Areas are DOC, COM, CI, SEC, PUB, and CHG. IDs are permanent: a retired rule keeps its number and is marked retired rather than reused.
 
 ## Documentation
 
@@ -61,7 +61,7 @@ Without a license file the default is exclusive copyright, so nobody may legally
 
 Check: `LICENSE` or `LICENSE.md` exists at the repository root, and the license it contains matches the `license` field of the package manifest.
 
-Fixed by: oss-scaffold
+Fixed by: oss-community
 Forges: both
 
 ### R-COM-02: CONTRIBUTING.md tells a newcomer how to set up, test, and submit a change
@@ -70,7 +70,7 @@ A contributor who cannot run the tests sends a patch you have to fix yourself. T
 
 Check: `CONTRIBUTING.md` exists at the repository root, in `.github/`, or in `docs/` on GitHub, or at the repository root on GitLab, and states the setup command, the test command, and how to open a pull request or merge request.
 
-Fixed by: oss-scaffold
+Fixed by: oss-community
 Forges: both
 
 ### R-COM-03: CODE_OF_CONDUCT.md exists and names a working reporting contact
@@ -79,7 +79,7 @@ A code of conduct with `[INSERT CONTACT METHOD]` still in it is worse than none,
 
 Check: `CODE_OF_CONDUCT.md` exists at the repository root, in `.github/`, or in `docs/` on GitHub, or at the repository root on GitLab, and contains an email address or a reporting URL with no template placeholder text.
 
-Fixed by: oss-scaffold
+Fixed by: oss-community
 Forges: both
 
 ### R-COM-04: SECURITY.md states a private reporting channel and a response window
@@ -88,7 +88,7 @@ Without a stated channel, a finder either opens a public issue that discloses th
 
 Check: `SECURITY.md` exists at the repository root, in `.github/`, or in `docs/` on GitHub, or at the repository root on GitLab, and names a private channel (GitHub private vulnerability reporting, a GitLab confidential issue, or an email address) together with the time you commit to responding in.
 
-Fixed by: oss-scaffold
+Fixed by: oss-community
 Forges: both
 
 ### R-COM-05: Issue and change-request templates exist so reports arrive with the facts you need
@@ -97,7 +97,7 @@ Every free-form bug report costs a round trip to ask for the version and the rep
 
 Check: the repository has `.github/ISSUE_TEMPLATE/` with at least one template plus `.github/pull_request_template.md`, or `.gitlab/issue_templates/` with at least one template plus `.gitlab/merge_request_templates/`.
 
-Fixed by: oss-scaffold
+Fixed by: oss-community
 Forges: both
 
 ### R-COM-06: A CODEOWNERS file assigns a reviewer to every path
@@ -106,7 +106,7 @@ Without a catch-all owner, a change to an unclaimed directory waits for someone 
 
 Check: a `CODEOWNERS` file exists in the repository root, `.github/`, `.gitlab/`, or `docs/`, and it contains a `*` rule naming at least one owner.
 
-Fixed by: oss-scaffold
+Fixed by: oss-community
 Forges: both
 
 ## Continuous integration
@@ -214,40 +214,40 @@ Forges: gitlab
 
 ## Release and publishing
 
-### R-REL-01: Publishing happens in CI, triggered by a tag, never from a developer machine
+### R-PUB-01: Publishing happens in CI, triggered by a tag, never from a developer machine
 
 A local publish ships whatever is in the working tree, from a machine holding a long-lived registry token. A tag-triggered CI publish ships a commit that is in the repository and that CI has tested.
 
 Check: a release workflow or pipeline triggered by a tag push runs the publish command, and the publish command appears in no local script intended for manual use.
 
-Fixed by: oss-release
+Fixed by: oss-publish
 Forges: both
 
-### R-REL-02: The publish job authenticates to the registry with trusted publishing, not a stored token
+### R-PUB-02: The publish job authenticates to the registry with trusted publishing, not a stored token
 
 A long-lived registry token in CI secrets is the single credential that turns any workflow compromise into a supply-chain compromise. Trusted publishing exchanges a short-lived OIDC token per run, so there is nothing to steal between releases.
 
 Check: the publish job requests `id-token: write` and publishes through the registry's OIDC flow (npm trusted publishing, PyPI trusted publishers, RubyGems OIDC, crates.io trusted publishing). Where the registry offers no OIDC flow, a scoped token limited to one package is below the bar and permitted.
 
-Fixed by: oss-release
+Fixed by: oss-publish
 Forges: both
 
-### R-REL-03: Published artifacts carry build provenance
+### R-PUB-03: Published artifacts carry build provenance
 
 Provenance links the published artifact back to the commit and workflow that built it, so a consumer can tell a legitimate release from one uploaded by whoever held the token.
 
 Check: the publish step emits provenance (`npm publish --provenance`, PyPI attestations, or a build provenance attestation step), and the registry serves it for the newest version: `npm audit signatures` reports a verified attestation for the package, or `GET https://pypi.org/integrity/<project>/<version>/<filename>/provenance` returns a provenance object instead of a 404.
 
-Fixed by: oss-release
+Fixed by: oss-publish
 Forges: both
 
-### R-REL-04: A human approves the run before anything reaches a public registry
+### R-PUB-04: A human approves the run before anything reaches a public registry
 
 A registry publish cannot be undone. An approval gate is the last point where a compromised tag, a wrong version, or a bad artifact can be stopped.
 
 Check: the publish job targets a GitHub environment with required reviewers, or a GitLab protected environment with a manual job, and the environment lists at least one approver other than an automation account. Read `protection_rules` from `gh api repos/{owner}/{repo}/environments/{environment_name}` and look for a `required_reviewers` entry on GitHub, or read `approval_rules` and `deploy_access_levels` from `GET /projects/:id/protected_environments/:name` on GitLab.
 
-Fixed by: oss-release
+Fixed by: oss-publish
 Forges: both
 
 ## Changelog and versioning

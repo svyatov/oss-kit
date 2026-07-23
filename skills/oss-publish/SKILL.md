@@ -1,5 +1,5 @@
 ---
-name: oss-release
+name: oss-publish
 description: "Set up a secure release process for an open source package so no long-lived publishing token exists to steal. Covers trusted publishing with OIDC, build provenance, and approval-gated release workflows for npm, RubyGems, PyPI, and crates.io on both GitHub Actions and GitLab CI/CD. Use for any request to publish a package, secure or harden a release process, set up trusted publishing or provenance, or create a release workflow."
 license: MIT
 ---
@@ -40,7 +40,7 @@ Trigger the workflow on a version tag, matching the format found in Step 1. Isol
 
 ### Step 4: Gate on manual approval with two-factor authentication
 
-Pin the publish job to a GitHub environment with required reviewers, or a GitLab protected environment with a manual job and approval rules, naming at least one approver who is not an automation account. This is the gate R-REL-04 checks for, and it applies the same way regardless of registry. Where the registry itself offers an additional human gate, such as npm's staged publishing with a two-factor approval step, layer it on top of the environment gate rather than in place of it; the reference file for that registry says so explicitly where it applies.
+Pin the publish job to a GitHub environment with required reviewers, or a GitLab protected environment with a manual job and approval rules, naming at least one approver who is not an automation account. This is the gate R-PUB-04 checks for, and it applies the same way regardless of registry. Where the registry itself offers an additional human gate, such as npm's staged publishing with a two-factor approval step, layer it on top of the environment gate rather than in place of it; the reference file for that registry says so explicitly where it applies.
 
 ### Step 5: Verify provenance after the first release
 
@@ -48,7 +48,7 @@ Once the first tag-triggered release runs, verify what the reference file says t
 
 ## Scope
 
-This skill owns publishing: trusted publishing, build provenance, and the human approval gate on the release workflow, the R-REL rules below. It writes into the same workflow and pipeline files as two other skills, and the boundary between them is the rule area, not a description of files. `oss-ci` decides what runs on push and on every change request, including the test job this skill's publish job depends on; it does not decide how the publish job authenticates or who approves it. `oss-harden` owns the security posture of the same files: pinning third-party actions to a commit SHA, minimal workflow permissions, dependency updates, branch protection, and signed tags; it does not decide when a job runs or how a package is published. Do not pin an action to a SHA, add an unrelated `permissions:` scope, or configure branch protection from this skill; note that the project needs it and hand the work to `oss-harden`.
+This skill owns publishing: trusted publishing, build provenance, and the human approval gate on the release workflow, the R-PUB rules below. It writes into the same workflow and pipeline files as two other skills, and the boundary between them is the rule area, not a description of files. `oss-ci` decides what runs on push and on every change request, including the test job this skill's publish job depends on; it does not decide how the publish job authenticates or who approves it. `oss-harden` owns the security posture of the same files: pinning third-party actions to a commit SHA, minimal workflow permissions, dependency updates, branch protection, and signed tags; it does not decide when a job runs or how a package is published. Do not pin an action to a SHA, add an unrelated `permissions:` scope, or configure branch protection from this skill; note that the project needs it and hand the work to `oss-harden`.
 
 ## Routing table
 
@@ -61,10 +61,10 @@ This skill owns publishing: trusted publishing, build provenance, and the human 
 
 ## Rules this skill owns
 
-R-REL-01: Publishing happens in CI, triggered by a tag, never from a developer machine
+R-PUB-01: Publishing happens in CI, triggered by a tag, never from a developer machine
 
-R-REL-02: The publish job authenticates to the registry with trusted publishing, not a stored token
+R-PUB-02: The publish job authenticates to the registry with trusted publishing, not a stored token
 
-R-REL-03: Published artifacts carry build provenance
+R-PUB-03: Published artifacts carry build provenance
 
-R-REL-04: A human approves the run before anything reaches a public registry
+R-PUB-04: A human approves the run before anything reaches a public registry

@@ -1,5 +1,5 @@
 ---
-name: oss-scaffold
+name: oss-community
 description: "Create the community and governance files an open source project needs: CONTRIBUTING, CODE_OF_CONDUCT, SECURITY.md, issue and pull request templates, CODEOWNERS, FUNDING, and the license file. Use when starting a new open source project, opening a private repo to the public, or when a repo is missing its community health files. Covers GitHub and GitLab. README structure belongs to oss-readme."
 license: MIT
 ---

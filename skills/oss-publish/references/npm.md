@@ -126,7 +126,7 @@ If an existing workflow uses `secrets.NPM_TOKEN`, remove it from the YAML now an
 
 Two gates apply together, not as alternatives:
 
-The workflow-level gate is the `environment: release` on the publish job above, with required reviewers configured at `https://github.com/<owner>/<repo>/settings/environments`, or, on GitLab, a protected environment with approval rules at the project's Settings > CI/CD > Protected environments. This is the evidence R-REL-04 checks for on the workflow itself.
+The workflow-level gate is the `environment: release` on the publish job above, with required reviewers configured at `https://github.com/<owner>/<repo>/settings/environments`, or, on GitLab, a protected environment with approval rules at the project's Settings > CI/CD > Protected environments. This is the evidence R-PUB-04 checks for on the workflow itself.
 
 The registry-level gate is npm's staged publishing: the workflow runs `npm stage publish`, which uploads the package to a staging area without requiring 2FA, and a maintainer then runs `npm stage approve <stage-id>` from the CLI or approves it on npmjs.com, which does require 2FA. Because the trusted publisher above only allows `npm stage publish` and not `npm publish`, no run of this workflow, compromised or not, can ship a version without that 2FA step. Also set publishing access at `https://www.npmjs.com/package/<name>/access` to "Require two-factor authentication and disallow tokens", which revokes any existing publish token; warn the user first if another automation still uses one.
 

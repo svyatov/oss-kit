@@ -26,7 +26,7 @@ Detect which forge the repository under audit uses: look for `.github/workflows/
 
 ## Step 3: Check each rule, area by area
 
-`STANDARD.md`'s areas, DOC, COM, CI, SEC, REL, and CHG, are independent and share no state, so they can be checked in any order. More than one skill can own rules within one area, so read each rule's own `Fixed by:` line rather than assuming every rule in an area routes to the same place.
+`STANDARD.md`'s areas, DOC, COM, CI, SEC, PUB, and CHG, are independent and share no state, so they can be checked in any order. More than one skill can own rules within one area, so read each rule's own `Fixed by:` line rather than assuming every rule in an area routes to the same place.
 
 For every applicable rule, turn its `Check:` line into an observation against the repository: open the file or configuration it names, and record what is actually there. A `Check:` line asking whether the README's first paragraph is a single sentence before any heading is answered by reading `README.md`. A `Check:` line asking whether every `uses:` line resolves to a 40-character SHA is answered by reading every workflow file. Mark the rule pass when the evidence matches what the `Check:` line asks for, fail when it does not, and cite the concrete evidence either way: a fail with no evidence is a guess, not a finding.
 

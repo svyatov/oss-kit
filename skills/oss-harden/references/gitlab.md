@@ -91,7 +91,7 @@ Give the user the resolved URL: `https://gitlab.com/{namespace}/{project}/-/sett
 
 Protected branches, including blocking force pushes and restricting who can push or merge, are available on every GitLab tier. Enforced merge request approval rules, the setting that actually blocks a merge until a named number of people approve, need GitLab Premium or Ultimate; on Free, any Developer can approve a merge request but nothing stops a merge with zero approvals. Where the project is on Free, say plainly that required review is not available at the platform level, and give the strongest available substitute: restrict who can push directly to the protected branch to a small group under "Allowed to push and merge," so a merge request is the only path in even without an enforced approval count. Take this fallback only because GitLab Free leaves no other option for R-SEC-04, and revisit it if the project upgrades tier.
 
-Also on Free, GitLab does not read CODEOWNERS for merge request approval at all; both reading the file and enforcing it need Premium or Ultimate. On a tier that supports it, turn on "Require approval from code owners" in the same merge request approvals panel, enforcing the file `oss-scaffold` wrote.
+Also on Free, GitLab does not read CODEOWNERS for merge request approval at all; both reading the file and enforcing it need Premium or Ultimate. On a tier that supports it, turn on "Require approval from code owners" in the same merge request approvals panel, enforcing the file `oss-community` wrote.
 
 "Pipelines must succeed," the setting that blocks a merge while the pipeline is failing, is available on every tier, at Settings > Merge requests > Merge checks; turn it on regardless of what the approval rule situation allows.
 

@@ -20,7 +20,7 @@ CLAUDE.md                symlink to AGENTS.md
 
 ## Repo rules
 
-Skill directory names are prefixed `oss-` and match the frontmatter `name` exactly. The eight are `oss-audit`, `oss-scaffold`, `oss-readme`, `oss-ci`, `oss-harden`, `oss-release`, `oss-changelog`, and `oss-writing`.
+Skill directory names are prefixed `oss-` and match the frontmatter `name` exactly. The eight are `oss-audit`, `oss-community`, `oss-readme`, `oss-ci`, `oss-harden`, `oss-publish`, `oss-changelog`, and `oss-writing`.
 
 A frontmatter `name` is 1 to 64 characters of `[a-z0-9-]` with no leading, trailing, or consecutive hyphens. A frontmatter `description` is quoted.
 
@@ -51,7 +51,7 @@ Fixed by: oss-harden
 Forges: github
 ```
 
-Each `###` line is exactly `### R-<AREA>-<NN>: <statement>`, where AREA is DOC, COM, CI, SEC, REL, or CHG and NN is two digits. Each rule carries exactly one `Check:` line, exactly one `Fixed by:` line naming one of the eight skills, and exactly one `Forges:` line whose value is `github`, `gitlab`, or `both`. Numbering starts at 01 in each area and does not skip. Retired rules keep their number and are marked retired, so IDs are never reused.
+Each `###` line is exactly `### R-<AREA>-<NN>: <statement>`, where AREA is DOC, COM, CI, SEC, PUB, or CHG and NN is two digits. Each rule carries exactly one `Check:` line, exactly one `Fixed by:` line naming one of the eight skills, and exactly one `Forges:` line whose value is `github`, `gitlab`, or `both`. Numbering starts at 01 in each area and does not skip. Retired rules keep their number and are marked retired, so IDs are never reused.
 
 `oss-audit` owns no rule and must not appear in a `Fixed by:` line. It scores the repository and routes each gap to the skill that fixes it, so a rule it owned would route to itself.
 
@@ -64,7 +64,7 @@ Not applicable:
 - R-CI-03: no package manifest declares a supported runtime range, so there is no matrix to cover.
 - R-CI-04: no lockfile and no cache steps, so there is nothing to key.
 - R-SEC-06: GitLab-only rule; this repository is on GitHub.
-- R-REL-01, R-REL-02, R-REL-03, R-REL-04: oss-kit ships through git, `npx skills add`, and the Claude Code plugin marketplace, and publishes to no package registry, so there is no publish step, token, OIDC flow, or provenance to secure.
+- R-PUB-01, R-PUB-02, R-PUB-03, R-PUB-04: oss-kit ships through git, `npx skills add`, and the Claude Code plugin marketplace, and publishes to no package registry, so there is no publish step, token, OIDC flow, or provenance to secure.
 - R-CHG-05: no API has been removed, so there is no deprecation to have preceded it.
 
 Pending, with the trigger that resolves each one:

@@ -1,12 +1,12 @@
 ---
 name: oss-changelog
-description: "Maintain a changelog and make versioning decisions for an open source project: Keep a Changelog structure, semantic version choices, release notes generated from merged work, and deprecation policy. Use when the user asks to write or update a CHANGELOG, decide whether a change is major, minor, or patch, draft release notes, or deprecate an API. The prose style belongs to oss-writing; the publishing mechanics belong to oss-release."
+description: "Maintain a changelog and make versioning decisions for an open source project: Keep a Changelog structure, semantic version choices, release notes generated from merged work, and deprecation policy. Use when the user asks to write or update a CHANGELOG, decide whether a change is major, minor, or patch, draft release notes, or deprecate an API. The prose style belongs to oss-writing; the publishing mechanics belong to oss-publish."
 license: MIT
 ---
 
 # Changelog and versioning
 
-Keep `CHANGELOG.md` in Keep a Changelog format, decide the semver bump a set of merged changes forces, write the release entry from the merged work, and run a deprecation window before an API is removed. The sentences themselves follow `oss-writing`; this skill decides what goes in and what version it ships under. Publishing the tagged release, the workflow that builds and uploads it, belongs to `oss-release`.
+Keep `CHANGELOG.md` in Keep a Changelog format, decide the semver bump a set of merged changes forces, write the release entry from the merged work, and run a deprecation window before an API is removed. The sentences themselves follow `oss-writing`; this skill decides what goes in and what version it ships under. Publishing the tagged release, the workflow that builds and uploads it, belongs to `oss-publish`.
 
 ## The exception to describing what is
 
@@ -53,7 +53,7 @@ The deprecation warning names three things: what is deprecated, what replaces it
 
 ## Scope
 
-This skill owns the changelog and versioning rules below, the R-CHG rules. It does not own the sentences: once an entry's content is decided, phrasing it in plain, active prose free of marketing language is `oss-writing`'s rule, R-DOC-05. It does not own publishing: building the tagged artifact, authenticating to a registry, and gating the release behind approval are `oss-release`'s R-REL rules. Do not draft commit or pull request prose, or write a publish workflow, from this skill; note that the project needs it and hand the work to the owning skill.
+This skill owns the changelog and versioning rules below, the R-CHG rules. It does not own the sentences: once an entry's content is decided, phrasing it in plain, active prose free of marketing language is `oss-writing`'s rule, R-DOC-05. It does not own publishing: building the tagged artifact, authenticating to a registry, and gating the release behind approval are `oss-publish`'s R-PUB rules. Do not draft commit or pull request prose, or write a publish workflow, from this skill; note that the project needs it and hand the work to the owning skill.
 
 ## Rules this skill owns
 
