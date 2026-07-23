@@ -1,6 +1,6 @@
 ---
 name: oss-audit
-description: "Score an open source repository against the oss-kit standard and report what is missing. Checks documentation, community files, CI, security posture, release process, and changelog discipline, then names the skill that fixes each gap. Use when the user asks how healthy a repo is, what an open source project is missing, to audit or review a repository's open source practices, or where to start improving one."
+description: "Score an open source repository against the oss-kit standard and report what is missing. Checks documentation, community files, CI, security posture, release process, changelog discipline, and the structure of any agent skills the repository ships, then names the skill that fixes each gap. Use when the user asks how healthy a repo is, what an open source project is missing, to audit or review a repository's open source practices, or where to start improving one."
 license: MIT
 ---
 
@@ -24,9 +24,11 @@ Each rule in `STANDARD.md` is a block with an ID (`R-<AREA>-<NN>`), a statement,
 
 Detect which forge the repository under audit uses: look for `.github/workflows/` or `.gitlab-ci.yml`, check the git remote, or ask if neither signal is present. Skip a rule whose `Forges:` line names only the other forge, and report it as not applicable rather than folding it into the pass, fail, or unknown counts.
 
+One area is scoped by repository type rather than by forge. The SKL area carries a preamble scoping it to a repository that ships agent skills. Look for at least one `SKILL.md`, resolving any symlinked directory to its target so a committed symlink does not read as a second copy. Where none exists, mark the whole area not applicable in one step and report it that way, rather than checking its rules one at a time.
+
 ## Step 3: Check each rule, area by area
 
-`STANDARD.md`'s areas, DOC, COM, CI, SEC, PUB, and CHG, are independent and share no state, so they can be checked in any order. More than one skill can own rules within one area, so read each rule's own `Fixed by:` line rather than assuming every rule in an area routes to the same place.
+`STANDARD.md`'s areas, DOC, COM, CI, SEC, PUB, CHG, and SKL, are independent and share no state, so they can be checked in any order. SKL is the one area gated on a precondition, stated in its own preamble and resolved in Step 2. More than one skill can own rules within one area, so read each rule's own `Fixed by:` line rather than assuming every rule in an area routes to the same place.
 
 For every applicable rule, turn its `Check:` line into an observation against the repository: open the file or configuration it names, and record what is actually there. A `Check:` line asking whether the README's first paragraph is a single sentence before any heading is answered by reading `README.md`. A `Check:` line asking whether every `uses:` line resolves to a 40-character SHA is answered by reading every workflow file. Mark the rule pass when the evidence matches what the `Check:` line asks for, fail when it does not, and cite the concrete evidence either way: a fail with no evidence is a guess, not a finding.
 
