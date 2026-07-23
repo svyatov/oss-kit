@@ -42,7 +42,7 @@ State the setup command, the test command, and how to open a pull request or mer
 
 ### Step 4: CODE_OF_CONDUCT.md (R-COM-03)
 
-Use an established code of conduct, such as the Contributor Covenant, rather than drafting new standards of behavior; the content this skill owns for this file is the enforcement contact, not the community norms. Fill in the contact gathered in the ask-rather-than-invent step above. Confirm no placeholder text survives from the template before finishing.
+Use an established code of conduct, such as the Contributor Covenant, rather than drafting new standards of behavior; the content this skill owns for this file is the enforcement contact, not the community norms. Fill in the contact gathered in the ask-rather-than-invent step above. Confirm no placeholder text survives from the template before finishing. The Contributor Covenant ships its headings in Title Case (Our Pledge, Our Standards, Enforcement Responsibilities), which R-DOC-05 rejects: rewrite every heading in the adopted template to sentence case, keeping proper nouns like Contributor Covenant intact, so the file passes the same prose rule every other file here follows.
 
 ### Step 5: SECURITY.md (R-COM-04)
 
