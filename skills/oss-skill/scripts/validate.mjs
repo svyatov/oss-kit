@@ -39,6 +39,23 @@ const SKIP_DIRS = new Set([".git", "node_modules"])
 const NAME_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const QUOTED_RE = /^("(?:[^"\\]|\\.)*"|'(?:[^']|'')*')\s*(?:#.*)?$/
 
+// A distinctive phrase from each license's standard text, for identifiers whose
+// own name does not appear in that text. An identifier absent from this table
+// and absent from the file draws no finding: telling a project its own license
+// is wrong is worse than staying quiet about one this table does not know.
+const LICENSE_MARKERS = new Map([
+  ["apache-2.0", "apache license"],
+  ["bsd-2-clause", "redistributions of source code must retain"],
+  ["bsd-3-clause", "neither the name of the copyright holder"],
+  ["gpl-2.0", "gnu general public license"],
+  ["gpl-3.0", "gnu general public license"],
+  ["lgpl-3.0", "gnu lesser general public license"],
+  ["agpl-3.0", "gnu affero general public license"],
+  ["mpl-2.0", "mozilla public license"],
+  ["isc", "isc license"],
+  ["unlicense", "this is free and unencumbered software"],
+])
+
 /**
  * Yields every regular file under dir. Skips .git and node_modules. A symlinked
  * entry is already neither a file nor a directory as Node reports it, so the
@@ -85,14 +102,23 @@ export function findSkillFiles(root) {
 
 /**
  * Strips a leading byte order mark and splits on a line ending that tolerates
- * a carriage return, the same split parseFrontmatter uses to compute
- * bodyStart. Any other code that measures line counts against bodyStart must
- * split the same way, or a CRLF file throws the two counts out of step.
+ * a carriage return. Both parseFrontmatter and checkBody call this one
+ * function, so the frontmatter reader and the body-size check share a single
+ * definition of a line and can never disagree about where one ends.
  * @param {string} text
  * @returns {string[]}
  */
 function splitLines(text) {
   return text.replace(/^\uFEFF/, "").split(/\r?\n/)
+}
+
+/**
+ * @param {string[]} lines result of splitLines
+ * @returns {number} lines.length, minus one when a trailing newline in the
+ *   source text left a trailing empty element
+ */
+function countLines(lines) {
+  return lines.at(-1) === "" ? lines.length - 1 : lines.length
 }
 
 /**
@@ -297,47 +323,84 @@ export function checkSpec(rel, dirName, fm) {
 }
 
 /**
+ * Real path of the top-level skills directory, or null when there is none.
+ * Resolved because a repository may keep the real directory elsewhere and
+ * commit skills/ as a symlink to it, which R-SKL-01 permits.
+ * @param {string} root
+ * @returns {string|null}
+ */
+function realSkillsDir(root) {
+  try {
+    return realpathSync(join(root, "skills"))
+  } catch {
+    return null
+  }
+}
+
+/**
+ * True when abs is <skills>/<name>/SKILL.md, comparing real paths so a
+ * symlinked skills directory matches its target.
+ * @param {string} abs
+ * @param {string|null} realSkills
+ * @returns {boolean}
+ */
+function isSkillOfDir(abs, realSkills) {
+  if (realSkills === null) return false
+  try {
+    return realpathSync(dirname(dirname(abs))) === realSkills
+  } catch {
+    return false
+  }
+}
+
+/**
  * R-SKL-01: skills live in a top-level skills/ directory, one per skill, and
- * no other SKILL.md exists in the repository.
+ * no other SKILL.md exists in the repository. A repository with no SKILL.md
+ * anywhere ships no skills, so the whole SKL area is out of scope for it and
+ * this returns no findings rather than guessing at a directory it should have.
  * @param {string} root
  * @param {string[]} skillFiles absolute paths, as found by findSkillFiles
  * @returns {Finding[]}
  */
 export function checkLayout(root, skillFiles) {
+  if (skillFiles.length === 0) return []
+  const realSkills = realSkillsDir(root)
+  /** @type {import("node:fs").Dirent[]|null} */
+  let entries
+  try {
+    entries = realSkills === null ? null : readdirSync(realSkills, { withFileTypes: true })
+  } catch {
+    entries = null
+  }
   /** @type {Finding[]} */
   const out = []
-  const skillsDir = join(root, "skills")
-  if (!existsSync(skillsDir)) {
+  if (realSkills === null || entries === null) {
     out.push({
       severity: "error",
       rule: "R-SKL-01",
       file: `skills${sep}`,
       message: "no top-level skills/ directory; the skills CLI installer and every plugin loader read that path",
     })
+    return out
   }
   for (const abs of skillFiles) {
-    const rel = relative(root, abs)
-    const parts = rel.split(sep)
-    if (parts.length !== 3 || parts[0] !== "skills") {
+    if (isSkillOfDir(abs, realSkills)) continue
+    out.push({
+      severity: "error",
+      rule: "R-SKL-01",
+      file: relative(root, abs),
+      message: "not a direct child of a top-level skills/<name>/ directory; move the whole skill directory under skills/",
+    })
+  }
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue
+    if (!existsSync(join(realSkills, entry.name, "SKILL.md"))) {
       out.push({
         severity: "error",
         rule: "R-SKL-01",
-        file: rel,
-        message: "not a direct child of a top-level skills/<name>/ directory; move the whole skill directory under skills/",
+        file: `skills${sep}${entry.name}${sep}`,
+        message: "directory under skills/ holds no SKILL.md",
       })
-    }
-  }
-  if (existsSync(skillsDir)) {
-    for (const entry of readdirSync(skillsDir, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue
-      if (!existsSync(join(skillsDir, entry.name, "SKILL.md"))) {
-        out.push({
-          severity: "error",
-          rule: "R-SKL-01",
-          file: `skills${sep}${entry.name}${sep}`,
-          message: "directory under skills/ holds no SKILL.md",
-        })
-      }
     }
   }
   return out
@@ -351,7 +414,7 @@ export function checkLayout(root, skillFiles) {
  * @returns {Finding[]}
  */
 export function checkBody(rel, text, fm) {
-  const bodyLines = splitLines(text).length - fm.bodyStart
+  const bodyLines = countLines(splitLines(text)) - fm.bodyStart
   if (bodyLines < 500) return []
   return [
     {
@@ -368,11 +431,32 @@ export function checkBody(rel, text, fm) {
  * @returns {string|null} the opening text of the repository license file
  */
 export function readRepoLicense(root) {
-  for (const name of ["LICENSE", "LICENSE.md", "LICENSE.txt", "COPYING"]) {
-    const path = join(root, name)
-    if (existsSync(path)) return readFileSync(path, "utf8").slice(0, 400)
+  for (const name of [
+    "LICENSE",
+    "LICENSE.md",
+    "LICENSE.txt",
+    "COPYING",
+    "LICENCE",
+    "COPYING.txt",
+    "COPYING.md",
+    "LICENSE.rst",
+    "LICENSE-MIT",
+  ]) {
+    try {
+      return readFileSync(join(root, name), "utf8").slice(0, 400)
+    } catch {
+      // try the next candidate
+    }
   }
   return null
+}
+
+/**
+ * @param {string} value declared license identifier
+ * @returns {string} lower-cased, with a trailing -or-later, -only, or + removed
+ */
+function normalizeLicenseId(value) {
+  return value.toLowerCase().replace(/(-or-later|-only|\+)$/, "")
 }
 
 /**
@@ -403,17 +487,21 @@ export function checkLicense(rel, fm, repoLicense) {
       },
     ]
   }
-  if (repoLicense && !repoLicense.toLowerCase().includes(value.toLowerCase())) {
-    return [
-      {
-        severity: "warning",
-        rule: "R-SKL-04",
-        file: rel,
-        message: `license "${value}" does not appear in the repository license file; confirm both name the same license`,
-      },
-    ]
-  }
-  return []
+  if (!repoLicense) return []
+  const text = repoLicense.toLowerCase()
+  const id = normalizeLicenseId(value)
+  if (text.includes(id)) return []
+  const marker = LICENSE_MARKERS.get(id)
+  if (marker === undefined) return []
+  if (text.includes(marker)) return []
+  return [
+    {
+      severity: "warning",
+      rule: "R-SKL-04",
+      file: rel,
+      message: `license "${value}" does not appear in the repository license file; confirm both name the same license`,
+    },
+  ]
 }
 
 /**
@@ -423,9 +511,14 @@ export function checkLicense(rel, fm, repoLicense) {
 export function validate(root) {
   const skillFiles = findSkillFiles(root)
   const repoLicense = readRepoLicense(root)
+  const realSkills = realSkillsDir(root)
   /** @type {Finding[]} */
   const out = [...checkLayout(root, skillFiles)]
   for (const abs of skillFiles) {
+    // A file outside skills/<name>/ already drew its whole and correct
+    // report from checkLayout above; running the per-skill checks on it too
+    // would compare it against a directory it does not belong to.
+    if (!isSkillOfDir(abs, realSkills)) continue
     const rel = relative(root, abs)
     const dir = dirname(abs)
     let text

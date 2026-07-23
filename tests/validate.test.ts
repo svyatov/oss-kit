@@ -287,19 +287,53 @@ test("a SKILL.md outside skills/ is an R-SKL-01 error", () => {
   rmSync(root, { recursive: true, force: true })
 })
 
-test("a symlinked skills directory does not double-count", () => {
-  const root = makeRepo()
-  addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
-  mkdirSync(join(root, ".claude"))
-  symlinkSync("../skills", join(root, ".claude", "skills"))
-  expect(errors(root)).toEqual([])
-  rmSync(root, { recursive: true, force: true })
-})
-
 test("a missing skills directory is an R-SKL-01 error", () => {
   const root = makeRepo()
   rmdirSync(join(root, "skills"))
+  // A stray SKILL.md keeps the repository in scope for the SKL area; without
+  // one, an ordinary repository with no skills at all is out of scope and
+  // this assertion would be testing the wrong thing (see Fix 1 below).
+  addStraySkill(root, "elsewhere", goodFrontmatter("elsewhere"))
   expect(rules(errors(root))).toContain("R-SKL-01")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a repository with no SKILL.md anywhere produces no findings", () => {
+  const root = makeRepo()
+  writeFileSync(join(root, "README.md"), "# thing\n")
+  expect(validate(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a skills path that is a regular file produces an R-SKL-01 finding and does not throw", () => {
+  const root = makeRepo()
+  rmdirSync(join(root, "skills"))
+  writeFileSync(join(root, "skills"), "not a directory\n")
+  addStraySkill(root, "elsewhere", goodFrontmatter("elsewhere"))
+  let found: ReturnType<typeof errors> = []
+  expect(() => {
+    found = errors(root).filter((f) => f.rule === "R-SKL-01")
+  }).not.toThrow()
+  expect(found).toHaveLength(1)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a skills/ symlink pointing at its real target under .claude/skills produces no R-SKL-01 finding", () => {
+  const root = makeRepo()
+  rmdirSync(join(root, "skills"))
+  addStraySkill(root, ".claude/skills/oss-thing", goodFrontmatter("oss-thing"))
+  symlinkSync(join(root, ".claude", "skills"), join(root, "skills"), "dir")
+  const found = errors(root).filter((f) => f.rule === "R-SKL-01")
+  expect(found).toHaveLength(0)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a stray root-level SKILL.md produces exactly one finding, and it is R-SKL-01", () => {
+  const root = makeRepo()
+  addStraySkill(root, ".", "name: not-a-real-skill-name!!!\ndescription: \"x\"")
+  const found = validate(root)
+  expect(found).toHaveLength(1)
+  expect(found[0]?.rule).toBe("R-SKL-01")
   rmSync(root, { recursive: true, force: true })
 })
 
@@ -329,6 +363,32 @@ test("a body just under the ceiling passes", () => {
   rmSync(root, { recursive: true, force: true })
 })
 
+test("a body of exactly 499 lines passes", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", goodFrontmatter("oss-thing"), "x\n".repeat(499))
+  expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a body of exactly 500 lines errors, naming 500 and not 501", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", goodFrontmatter("oss-thing"), "x\n".repeat(500))
+  const found = errors(root).filter((f) => f.rule === "R-SKL-03")
+  expect(found).toHaveLength(1)
+  expect(found[0]?.message).toContain("500 lines")
+  expect(found[0]?.message).not.toContain("501")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a body of 499 lines with CRLF endings passes", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"), "x\n".repeat(499))
+  const path = join(dir, "SKILL.md")
+  writeFileSync(path, readFileSync(path, "utf8").replace(/\n/g, "\r\n"))
+  expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
 test("a missing license is an R-SKL-04 error", () => {
   const root = makeRepo()
   addSkill(root, "oss-thing", 'name: oss-thing\ndescription: "x"')
@@ -342,5 +402,57 @@ test("a license the repository file does not name is a warning, not an error", (
   expect(errors(root)).toEqual([])
   const warned = validate(root).filter((f) => f.rule === "R-SKL-04")
   expect(warned[0]?.severity).toBe("warning")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("an Apache-2.0 declaration against a license file holding Apache text produces no finding", () => {
+  const root = makeRepo()
+  // Not a full license, just the marker phrase a real Apache-2.0 file carries.
+  writeFileSync(join(root, "LICENSE"), "Apache License\nVersion 2.0, January 2004\n")
+  addSkill(root, "oss-thing", 'name: oss-thing\ndescription: "x"\nlicense: Apache-2.0')
+  expect(validate(root).some((f) => f.rule === "R-SKL-04")).toBe(false)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a GPL-3.0-or-later declaration against a license file naming the GPL produces no finding", () => {
+  const root = makeRepo()
+  // Not a full license, just the marker phrase a real GPL file carries.
+  writeFileSync(join(root, "LICENSE"), "GNU GENERAL PUBLIC LICENSE\nVersion 3, 29 June 2007\n")
+  addSkill(root, "oss-thing", 'name: oss-thing\ndescription: "x"\nlicense: GPL-3.0-or-later')
+  expect(validate(root).some((f) => f.rule === "R-SKL-04")).toBe(false)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("an identifier this validator does not know, absent from the license file, produces no finding", () => {
+  const root = makeRepo()
+  writeFileSync(join(root, "LICENSE"), "MIT License\n\nCopyright (c) 2026 Test\n")
+  addSkill(root, "oss-thing", 'name: oss-thing\ndescription: "x"\nlicense: CC0-1.0')
+  expect(validate(root).some((f) => f.rule === "R-SKL-04")).toBe(false)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("an unreadable license file still lets a skill's checks run without throwing", () => {
+  const root = makeRepo()
+  const licensePath = join(root, "LICENSE")
+  // Assumes a non-root user and a filesystem that honors mode bits. Running as
+  // root, or on a filesystem that ignores them, makes the chmod a no-op, the
+  // read succeeds, and this test passes without exercising the guard it names.
+  chmodSync(licensePath, 0o000)
+  addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  let found: ReturnType<typeof errors> = []
+  expect(() => {
+    found = errors(root)
+  }).not.toThrow()
+  expect(found).toEqual([])
+  chmodSync(licensePath, 0o644)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a block-scalar license produces no R-SKL-04 finding, only the R-SKL-02 unreadable-construct warning", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", 'name: oss-thing\ndescription: "x"\nlicense: >\n  MIT')
+  expect(validate(root).some((f) => f.rule === "R-SKL-04")).toBe(false)
+  const warned = validate(root).filter((f) => f.severity === "warning")
+  expect(warned.some((f) => f.message.includes("does not read"))).toBe(true)
   rmSync(root, { recursive: true, force: true })
 })
