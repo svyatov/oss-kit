@@ -12,7 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - `oss-skill` bundles a validator at `scripts/validate.mjs` that checks a repository against R-SKL-01 through R-SKL-05. It needs Node 22 or later, or Bun, and nothing installed: it imports only Node built-in modules, reads files, and makes no network call.
 - `STANDARD.md` gains R-SKL-05: a script a skill ships uses `sh` or Node with no dependencies, because it runs on the reader's machine rather than the author's.
-- Native install manifests for Codex CLI, Cursor, and OpenCode, and Codex's own `marketplace.json` at `.agents/plugins/`.
+- Plugin manifests for Codex CLI and Cursor, and Codex's own `marketplace.json` at `.agents/plugins/`.
+- An `.opencode/skills` symlink, so OpenCode finds the skills where it scans.
 - `docs/install.md`, one page covering every harness.
 - The documentation site, generated from `STANDARD.md`, the skills, and the tracked prose under `docs/`.
 - `docs/getting-started.md` and `docs/adoption-guide.md`.
