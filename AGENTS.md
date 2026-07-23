@@ -65,11 +65,8 @@ This repository is scored against `skills/oss-audit/STANDARD.md` like any other.
 
 Not applicable:
 
-- R-CI-03: no package manifest declares a supported runtime range, so there is no matrix to cover.
-- R-CI-04: no lockfile and no cache steps, so there is nothing to key.
+- R-CI-04: a lockfile now exists, but no CI step caches anything, so there is no cache key to get wrong.
 - R-SEC-06: GitLab-only rule; this repository is on GitHub.
-- R-SEC-08: no package manifest and no package manager, so there is no lockfile to commit.
-- R-SEC-09: the repository holds markdown and shell only, so no supported language brings it into scope.
 - R-PUB-01, R-PUB-02, R-PUB-03, R-PUB-04: oss-kit ships through git, `npx skills add`, and the Claude Code plugin marketplace, and publishes to no package registry, so there is no publish step, token, OIDC flow, or provenance to secure.
 - R-CHG-05: no API has been removed, so there is no deprecation to have preceded it.
 
@@ -78,6 +75,7 @@ Pending, with the trigger that resolves each one:
 - R-SEC-04: branch protection is a forge setting and no remote exists yet. Resolves when the public repository exists; `oss-harden` sets it then.
 - R-SEC-05: no release tag exists yet. Applies at the first signed release.
 - R-CHG-03, R-CHG-04: no release tag or forge release exists yet. Apply at the first release.
+- R-SEC-09: the repository now holds JavaScript, which CodeQL supports, so the rule applies. Code scanning on a private repository needs a paid GitHub Code Security license. Resolves when the repository becomes public; `oss-harden` adds the workflow then, scanning `javascript-typescript` and `actions`.
 
 ## Checklist after any skill change
 
@@ -95,3 +93,5 @@ The `skills-ref` validator has no official package on any registry. Install it f
 `skills-ref validate <dir>` exits 0 on a valid skill and 1 on a name and directory mismatch, with the mismatch named in text on stderr, so a CI step can test the exit status directly and does not need to grep the output. Verified on upstream commit `492e1b7`.
 
 At that same pinned commit, `skills-ref/README.md` in the upstream repository carries this notice: "This library is intended for demonstration purposes only. It is not meant to be used in production." Nothing else in this repository records that. `R-SKL-02` points every reader of the standard at this tool, and CI depends on it, with that notice unaddressed.
+
+Dependabot has supported the `bun` ecosystem since February 2025, for the text `bun.lock` on Bun 1.1.39 or later. It ships version updates only. There are no Dependabot security updates for Bun, so a CVE in a dev dependency arrives through the weekly version bump rather than through a security alert.

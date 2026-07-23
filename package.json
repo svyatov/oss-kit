@@ -1,0 +1,14 @@
+{
+  "private": true,
+  "description": "Maintenance tooling for oss-kit. Not published.",
+  "type": "module",
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "validate": "node skills/oss-skill/scripts/validate.mjs ."
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.14",
+    "typescript": "^7.0.2"
+  }
+}
