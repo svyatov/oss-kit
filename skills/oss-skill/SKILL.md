@@ -40,7 +40,7 @@ An over-long description means the field exceeds 1024 characters. Cut the parts 
 
 A missing required field means `name` or `description` is absent or empty. Both are required and neither has a default.
 
-Frontmatter that fails to parse usually means an unquoted description containing a colon, or an angle bracket. Quote the description.
+Frontmatter that fails to parse usually means an unquoted description, either containing a colon or opening with a character YAML reads as syntax, such as `>` or `|`. Quote the description.
 
 ## Step 3: Bring an oversized body under the ceiling (R-SKL-03)
 
