@@ -12,7 +12,8 @@
  * this file is held to it.
  */
 import { existsSync, readFileSync, readdirSync, realpathSync } from "node:fs"
-import { basename, dirname, join, relative, sep } from "node:path"
+import { builtinModules } from "node:module"
+import { basename, dirname, extname, join, relative, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 
 /**
@@ -55,6 +56,20 @@ const LICENSE_MARKERS = new Map([
   ["isc", "isc license"],
   ["unlicense", "this is free and unencumbered software"],
 ])
+
+const BUILTINS = new Set(builtinModules.flatMap((name) => [name, `node:${name}`]))
+const MANIFESTS = ["package.json", "bun.lock", "bun.lockb", "package-lock.json", "yarn.lock", "pnpm-lock.yaml"]
+const CODE_EXTENSIONS = new Set([".js", ".mjs", ".cjs", ".ts", ".mts", ".cts"])
+// Documentation and data a script's directory may carry alongside it. A file
+// with no extension is a script, not data, and stays in scope for the shebang
+// check below.
+const DATA_EXTENSIONS = new Set([".md", ".txt", ".json", ".yml", ".yaml", ".toml", ".csv"])
+// The interpreter may be named directly, at any path, or through env.
+const SHEBANG_RE = /^#!\s*(?:\S*\/)?(?:env\s+)?(?:sh|bash|node)(?:\s|$)/
+// A negative lookbehind keeps this from matching a property access on some
+// other identifier that merely ends in "Bun" or "Deno".
+const RUNTIME_GLOBAL_RE = /(?<![\w$.'"`])(Bun|Deno)\s*\./
+const SPECIFIER_RE = /\b(?:from|require|import)\s*\(?\s*["']([^"']+)["']/g
 
 /**
  * Yields every regular file under dir. Skips .git and node_modules. A symlinked
@@ -505,6 +520,61 @@ export function checkLicense(rel, fm, repoLicense) {
 }
 
 /**
+ * R-SKL-05: a shipped script uses sh or Node, with no dependencies.
+ *
+ * The specifier scan is textual, so a specifier-shaped string inside a
+ * comment reads as an import. That trade keeps the check to a few lines and
+ * errs toward asking a question rather than missing a dependency.
+ * @param {string} root
+ * @param {string} skillDir absolute path of the skill directory
+ * @returns {Finding[]}
+ */
+export function checkScripts(root, skillDir) {
+  /** @type {Finding[]} */
+  const out = []
+  /**
+   * @param {string} path
+   * @param {string} message
+   */
+  const err = (path, message) => out.push({ severity: "error", rule: "R-SKL-05", file: relative(root, path), message })
+
+  for (const name of MANIFESTS) {
+    const path = join(skillDir, name)
+    if (existsSync(path)) err(path, "a skill ships no manifest and no lockfile; its scripts run with no install step")
+  }
+  const modules = join(skillDir, "node_modules")
+  if (existsSync(modules)) err(modules, "a skill ships no node_modules; its scripts use only Node built-in modules")
+
+  const scriptsDir = join(skillDir, "scripts")
+  if (!existsSync(scriptsDir)) return out
+
+  for (const path of walk(scriptsDir)) {
+    const isData = DATA_EXTENSIONS.has(extname(path))
+    let source
+    try {
+      source = readFileSync(path, "utf8")
+    } catch {
+      err(path, "could not read this file")
+      continue
+    }
+    if (!isData && !SHEBANG_RE.test(source)) {
+      err(path, "no shebang naming sh, bash, or node; a reader's machine may have no other interpreter")
+    }
+    if (!CODE_EXTENSIONS.has(extname(path))) continue
+    const runtime = source.match(RUNTIME_GLOBAL_RE)
+    if (runtime?.[1]) {
+      err(path, `uses the ${runtime[1]} runtime global; a shipped script runs under whatever the reader already has`)
+    }
+    for (const match of source.matchAll(SPECIFIER_RE)) {
+      const specifier = match[1] ?? ""
+      if (specifier.startsWith(".") || specifier.startsWith("/") || BUILTINS.has(specifier)) continue
+      err(path, `imports "${specifier}", which is not a Node built-in module; a skill ships no dependencies`)
+    }
+  }
+  return out
+}
+
+/**
  * @param {string} root
  * @returns {Finding[]}
  */
@@ -532,6 +602,7 @@ export function validate(root) {
     out.push(...checkSpec(rel, basename(dir), fm))
     out.push(...checkBody(rel, text, fm))
     out.push(...checkLicense(rel, fm, repoLicense))
+    out.push(...checkScripts(root, dir))
   }
   return out
 }

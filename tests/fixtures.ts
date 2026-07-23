@@ -1,6 +1,6 @@
 import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 
 /** Creates a repository root with an MIT LICENSE and an empty skills/ directory. */
 export function makeRepo(): string {
@@ -34,4 +34,12 @@ export function addStraySkill(root: string, relativeDir: string, frontmatter: st
   mkdirSync(dir, { recursive: true })
   writeFileSync(join(dir, "SKILL.md"), `---\n${frontmatter}\n---\n# Heading\n\nText.\n`)
   return dir
+}
+
+/** Writes a file inside a skill's scripts/ directory. name may include subdirectories. */
+export function addScript(skillDir: string, name: string, source: string): string {
+  const path = join(skillDir, "scripts", name)
+  mkdirSync(dirname(path), { recursive: true })
+  writeFileSync(path, source)
+  return path
 }

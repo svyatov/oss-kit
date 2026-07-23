@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { chmodSync, mkdirSync, readFileSync, rmSync, rmdirSync, symlinkSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { findSkillFiles, parseFrontmatter, validate } from "../skills/oss-skill/scripts/validate.mjs"
-import { addSkill, addSkillsSymlink, addStraySkill, goodFrontmatter, makeRepo } from "./fixtures.ts"
+import { addScript, addSkill, addSkillsSymlink, addStraySkill, goodFrontmatter, makeRepo } from "./fixtures.ts"
 
 function errors(root: string) {
   return validate(root).filter((f) => f.severity === "error")
@@ -455,4 +455,110 @@ test("a block-scalar license produces no R-SKL-04 finding, only the R-SKL-02 unr
   const warned = validate(root).filter((f) => f.severity === "warning")
   expect(warned.some((f) => f.message.includes("does not read"))).toBe(true)
   rmSync(root, { recursive: true, force: true })
+})
+
+test("a skill with no scripts directory produces no R-SKL-05 finding", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  expect(rules(validate(root))).not.toContain("R-SKL-05")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a conforming node script passes", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addScript(dir, "ok.mjs", '#!/usr/bin/env node\nimport { join } from "node:path"\nconsole.log(join("a", "b"))\n')
+  expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a conforming shell script passes", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addScript(dir, "ok.sh", "#!/usr/bin/env bash\nset -eu\necho hello\n")
+  expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a shebang naming an interpreter directly, at a non-standard path, passes", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addScript(dir, "ok.sh", "#!/usr/local/bin/bash\nset -eu\necho hello\n")
+  expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a missing shebang is an R-SKL-05 error", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addScript(dir, "bare.mjs", 'console.log("hi")\n')
+  const found = errors(root).filter((f) => f.rule === "R-SKL-05")
+  expect(found[0]?.message).toContain("shebang")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a python shebang is an R-SKL-05 error", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addScript(dir, "tool.py", "#!/usr/bin/env python3\nprint('hi')\n")
+  expect(rules(errors(root))).toContain("R-SKL-05")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a scripts/README.md and a nested data file draw no R-SKL-05 finding", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addScript(dir, "README.md", "# Scripts\n\nNo shebang here, and that is fine.\n")
+  addScript(dir, join("fixtures", "sample.json"), "{}\n")
+  expect(rules(validate(root))).not.toContain("R-SKL-05")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("importing a package that is not a node builtin is an R-SKL-05 error", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addScript(dir, "dep.mjs", '#!/usr/bin/env node\nimport yaml from "yaml"\nconsole.log(yaml)\n')
+  const found = errors(root).filter((f) => f.rule === "R-SKL-05")
+  expect(found[0]?.message).toContain('"yaml"')
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a builtin imported without the node prefix passes", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addScript(dir, "bare-builtin.mjs", '#!/usr/bin/env node\nimport { join } from "path"\nconsole.log(join("a"))\n')
+  expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a relative import passes", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addScript(dir, "rel.mjs", '#!/usr/bin/env node\nimport { x } from "./other.mjs"\nconsole.log(x)\n')
+  expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a runtime-specific global is an R-SKL-05 error", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addScript(dir, "bunny.mjs", "#!/usr/bin/env node\nconst f = " + "Bun" + ".file('x')\nconsole.log(f)\n")
+  const found = errors(root).filter((f) => f.rule === "R-SKL-05")
+  expect(found[0]?.message).toContain("runtime global")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a manifest or lockfile inside a skill is an R-SKL-05 error", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  writeFileSync(join(dir, "package.json"), "{}\n")
+  const found = errors(root).filter((f) => f.rule === "R-SKL-05")
+  expect(found).toHaveLength(1)
+  expect(found[0]?.message).toContain("no install step")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("this repository passes its own validator", () => {
+  const found = validate(process.cwd())
+  expect(found.filter((f) => f.severity === "error")).toEqual([])
 })
