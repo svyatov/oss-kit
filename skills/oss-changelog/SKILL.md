@@ -37,7 +37,7 @@ A bug fix that changes documented behavior is the first case people get wrong. T
 
 A new required config value is the second case. The instinct is that adding something is growth, so it should be MINOR. But a config value with no default, one the project now refuses to start without, breaks every existing deployment the moment they upgrade without editing their config. Apply the test: a config file that worked, unmodified, on the previous version no longer starts the previous version. That forces MAJOR. A new config value with a default that preserves the old behavior is backward compatible and stays MINOR.
 
-R-CHG-02 is the check for the bump rule. R-CHG-03 is the check that the release tag, the manifest version, and the newest changelog heading agree; update all three together, not the changelog alone.
+R-CHG-02 is the check for the bump rule. R-CHG-03 is the check that the release tag, every manifest that declares a version, and the newest changelog heading agree; update all of them together, not the changelog alone. A repository that ships several manifests, one per host or one per package, has to bump every one of them.
 
 ## Writing release notes from merged work
 
@@ -61,7 +61,7 @@ R-CHG-01: The repository keeps CHANGELOG.md in Keep a Changelog format
 
 R-CHG-02: Versions follow semantic versioning, and any breaking change bumps the major
 
-R-CHG-03: The release tag, the manifest version, and the newest changelog entry are the same version
+R-CHG-03: The release tag, every versioned manifest, and the newest changelog entry are the same version
 
 R-CHG-04: Forge release notes reproduce the changelog entry for that version
 
