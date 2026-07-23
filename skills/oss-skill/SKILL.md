@@ -14,7 +14,7 @@ Most of what this skill fixes is mechanical, and a specification validator names
 
 The SKL rules belong here: R-SKL-01 layout, R-SKL-02 specification conformance, R-SKL-03 body size, and R-SKL-04 the license field.
 
-Neighbouring work belongs elsewhere. Wiring the validator into CI is R-CI-02, owned by `oss-ci`, because the rule already requires CI to run the same linter the contributing guide gives to humans, and for a skills repository that linter is the validator. Keeping every host manifest on one version is R-CHG-03, owned by `oss-changelog`. The install commands and the skills table in the README are R-DOC-02 and R-DOC-03, owned by `oss-readme`. The sentences inside any file are R-DOC-05, owned by `oss-writing`. Note what a repository needs and hand it to the owning skill rather than doing that work from here.
+Neighbouring work belongs elsewhere. Wiring the validator into CI is R-CI-02, owned by `oss-ci`, because the rule already requires CI to run the same linter the contributing guide gives to humans, and for a skills repository that linter is the validator. Keeping every host manifest on one version is R-CHG-03, owned by `oss-changelog`. The README's install command and runnable example are R-DOC-02, and its links to the license, changelog, and contributing guide are R-DOC-03, both owned by `oss-readme`. The sentences inside any file are R-DOC-05, owned by `oss-writing`. Note what a repository needs and hand it to the owning skill rather than doing that work from here.
 
 This skill holds no opinion about what a skill should teach, how prescriptive its instructions should be, or how its description should be tuned to trigger. Those are authoring judgments and `STANDARD.md` states none of them, so neither does this skill.
 
@@ -40,7 +40,7 @@ An over-long description means the field exceeds 1024 characters. Cut the parts 
 
 A missing required field means `name` or `description` is absent or empty. Both are required and neither has a default.
 
-Frontmatter that fails to parse usually means an unquoted description containing a colon, or an angle bracket. Quote the description. Keep `<` and `>` out of frontmatter entirely, since a client that interpolates the field into a system prompt can read them as markup.
+Frontmatter that fails to parse usually means an unquoted description containing a colon, or an angle bracket. Quote the description.
 
 ## Step 3: Bring an oversized body under the ceiling (R-SKL-03)
 
