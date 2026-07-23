@@ -363,3 +363,12 @@ Check: the frontmatter of every `skills/*/SKILL.md` carries a `license:` field, 
 
 Fixed by: oss-skill
 Forges: both
+
+### R-SKL-05: A skill that ships a script uses sh or Node, with no dependencies
+
+A script inside a skill runs on the reader's machine, not the author's. An interpreter the reader does not have, or a dependency install the skill cannot perform, turns a skill that loads into a skill that fails partway through the task it was invoked for.
+
+Check: every file under a skill's `scripts/` directory carries a shebang naming `sh`, `bash`, or `node`, imports or requires only Node built-in modules, references no runtime-specific global such as `Bun` or `Deno`, and the skill directory contains no `package.json`, no lockfile, and no `node_modules`. A skill that ships no script falls outside this rule rather than failing it.
+
+Fixed by: oss-skill
+Forges: both

@@ -12,7 +12,7 @@ Most of what this skill fixes is mechanical, and a specification validator, `ski
 
 ## Scope
 
-The SKL rules belong here: R-SKL-01 layout, R-SKL-02 specification conformance, R-SKL-03 body size, and R-SKL-04 the license field.
+The SKL rules belong here: R-SKL-01 layout, R-SKL-02 specification conformance, R-SKL-03 body size, R-SKL-04 the license field, and R-SKL-05 what a skill may ship as a script.
 
 Neighbouring work belongs elsewhere. Wiring the validator into CI is R-CI-02, owned by `oss-ci`, because the rule already requires CI to run the same linter the contributing guide gives to humans, and for a skills repository that linter is the validator. Keeping every host manifest on one version is R-CHG-03, owned by `oss-changelog`. The README's install command and runnable example are R-DOC-02, and its links to the license, changelog, and contributing guide are R-DOC-03, both owned by `oss-readme`. The sentences inside any file are R-DOC-05, owned by `oss-writing`. Note what a repository needs and hand it to the owning skill rather than doing that work from here.
 
@@ -57,6 +57,16 @@ Keep references one level deep. A reference file that sends the reader to a thir
 Add a `license:` line to the frontmatter of every `SKILL.md`, naming the same license as the repository license file. Where the two disagree, stop and ask which is correct rather than picking one.
 
 This matters because of how skills travel. An installer that fetches one skill copies that directory and nothing else, so the repository's `LICENSE` file stays behind and the copy arrives with no terms. The specification defines the field to solve exactly this, and it accepts either a license name or a reference to a bundled license file.
+
+## Step 5: Keep a shipped script runnable (R-SKL-05)
+
+Where a skill ships a `scripts/` directory, check what its files assume. A script runs on the reader's machine, so an interpreter they lack or a dependency they cannot install fails the task the skill was invoked for.
+
+Every file needs a shebang naming `sh`, `bash`, or `node`. A Node script imports only built-in modules, so no `package.json`, no lockfile, and no `node_modules` travels with the skill. Nothing may reference a runtime-specific global, because a script written against one runtime fails on the other.
+
+The specification permits Python here and this rule does not. A Python script pins an interpreter version and, in practice, pulls dependencies, which is the failure this rule exists to prevent. Where a skill needs Python, say so plainly and let the maintainer decide, rather than rewriting working code.
+
+Fix a violation by rewriting the script against Node built-ins, or by moving the work into the skill's prose where an agent performs it directly.
 
 ## Renaming a skill breaks installs
 
