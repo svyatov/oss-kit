@@ -12,8 +12,7 @@ skills/oss-audit/STANDARD.md   every opinion, as R-<AREA>-<NN> rules
 .claude-plugin/          plugin.json and marketplace.json
 .codex-plugin/           plugin.json for Codex
 .cursor-plugin/          plugin.json for Cursor
-.kimi-plugin/            plugin.json for Kimi Code
-.agents/plugins/         cross-harness marketplace.json
+.agents/plugins/         marketplace.json for Codex's own marketplace format
 .opencode/skills         symlink to ../skills
 docs/                    tracked prose the site renders
 site/                    the docs site, own dependency tree
