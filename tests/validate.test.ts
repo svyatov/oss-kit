@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
-import { chmodSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { chmodSync, mkdirSync, readFileSync, rmSync, rmdirSync, symlinkSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { findSkillFiles, parseFrontmatter, validate } from "../skills/oss-skill/scripts/validate.mjs"
-import { addSkill, addSkillsSymlink, goodFrontmatter, makeRepo } from "./fixtures.ts"
+import { addSkill, addSkillsSymlink, addStraySkill, goodFrontmatter, makeRepo } from "./fixtures.ts"
 
 function errors(root: string) {
   return validate(root).filter((f) => f.severity === "error")
@@ -274,5 +274,73 @@ test("a block-scalar description followed by a second description line warns of 
   addSkill(root, "oss-thing", 'name: oss-thing\ndescription: >\n  folded text\ndescription: "x"\nlicense: MIT')
   const warned = validate(root).filter((f) => f.severity === "warning")
   expect(warned.some((f) => f.message.includes("duplicate") && f.message.includes("strict YAML parser"))).toBe(true)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a SKILL.md outside skills/ is an R-SKL-01 error", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addStraySkill(root, ".claude/skills/oss-elsewhere", goodFrontmatter("oss-elsewhere"))
+  const found = errors(root).filter((f) => f.rule === "R-SKL-01")
+  expect(found).toHaveLength(1)
+  expect(found[0]?.file).toContain(".claude")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a symlinked skills directory does not double-count", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  mkdirSync(join(root, ".claude"))
+  symlinkSync("../skills", join(root, ".claude", "skills"))
+  expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a missing skills directory is an R-SKL-01 error", () => {
+  const root = makeRepo()
+  rmdirSync(join(root, "skills"))
+  expect(rules(errors(root))).toContain("R-SKL-01")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a directory under skills with no SKILL.md is an R-SKL-01 error", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  mkdirSync(join(root, "skills", "oss-empty"))
+  const found = errors(root).filter((f) => f.rule === "R-SKL-01")
+  expect(found).toHaveLength(1)
+  expect(found[0]?.message).toContain("no SKILL.md")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a body of 500 lines or more is an R-SKL-03 error", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", goodFrontmatter("oss-thing"), "x\n".repeat(500))
+  const found = errors(root).filter((f) => f.rule === "R-SKL-03")
+  expect(found).toHaveLength(1)
+  expect(found[0]?.message).toContain("under 500")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a body just under the ceiling passes", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", goodFrontmatter("oss-thing"), "x\n".repeat(498))
+  expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a missing license is an R-SKL-04 error", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", 'name: oss-thing\ndescription: "x"')
+  expect(rules(errors(root))).toContain("R-SKL-04")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a license the repository file does not name is a warning, not an error", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", 'name: oss-thing\ndescription: "x"\nlicense: Apache-2.0')
+  expect(errors(root)).toEqual([])
+  const warned = validate(root).filter((f) => f.rule === "R-SKL-04")
+  expect(warned[0]?.severity).toBe("warning")
   rmSync(root, { recursive: true, force: true })
 })

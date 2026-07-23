@@ -27,3 +27,11 @@ export function goodFrontmatter(name: string): string {
 export function addSkillsSymlink(root: string, linkName: string): void {
   symlinkSync(join(root, "skills"), join(root, linkName), "dir")
 }
+
+/** Writes a SKILL.md at an arbitrary path relative to the repository root. */
+export function addStraySkill(root: string, relativeDir: string, frontmatter: string): string {
+  const dir = join(root, relativeDir)
+  mkdirSync(dir, { recursive: true })
+  writeFileSync(join(dir, "SKILL.md"), `---\n${frontmatter}\n---\n# Heading\n\nText.\n`)
+  return dir
+}

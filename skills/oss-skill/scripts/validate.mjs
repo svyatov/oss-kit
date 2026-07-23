@@ -11,8 +11,8 @@
  * ships to whatever the reader already has. R-SKL-05 says the same thing, and
  * this file is held to it.
  */
-import { readFileSync, readdirSync, realpathSync } from "node:fs"
-import { basename, dirname, join, relative } from "node:path"
+import { existsSync, readFileSync, readdirSync, realpathSync } from "node:fs"
+import { basename, dirname, join, relative, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 
 /**
@@ -84,6 +84,18 @@ export function findSkillFiles(root) {
 }
 
 /**
+ * Strips a leading byte order mark and splits on a line ending that tolerates
+ * a carriage return, the same split parseFrontmatter uses to compute
+ * bodyStart. Any other code that measures line counts against bodyStart must
+ * split the same way, or a CRLF file throws the two counts out of step.
+ * @param {string} text
+ * @returns {string[]}
+ */
+function splitLines(text) {
+  return text.replace(/^\uFEFF/, "").split(/\r?\n/)
+}
+
+/**
  * @param {string} value
  * @returns {string}
  */
@@ -109,7 +121,7 @@ function unquote(value) {
  * @returns {Frontmatter}
  */
 export function parseFrontmatter(text) {
-  const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/)
+  const lines = splitLines(text)
   /** @type {Map<string,string>} */
   const entries = new Map()
   /** @type {number[]} */
@@ -285,13 +297,135 @@ export function checkSpec(rel, dirName, fm) {
 }
 
 /**
+ * R-SKL-01: skills live in a top-level skills/ directory, one per skill, and
+ * no other SKILL.md exists in the repository.
+ * @param {string} root
+ * @param {string[]} skillFiles absolute paths, as found by findSkillFiles
+ * @returns {Finding[]}
+ */
+export function checkLayout(root, skillFiles) {
+  /** @type {Finding[]} */
+  const out = []
+  const skillsDir = join(root, "skills")
+  if (!existsSync(skillsDir)) {
+    out.push({
+      severity: "error",
+      rule: "R-SKL-01",
+      file: `skills${sep}`,
+      message: "no top-level skills/ directory; the skills CLI installer and every plugin loader read that path",
+    })
+  }
+  for (const abs of skillFiles) {
+    const rel = relative(root, abs)
+    const parts = rel.split(sep)
+    if (parts.length !== 3 || parts[0] !== "skills") {
+      out.push({
+        severity: "error",
+        rule: "R-SKL-01",
+        file: rel,
+        message: "not a direct child of a top-level skills/<name>/ directory; move the whole skill directory under skills/",
+      })
+    }
+  }
+  if (existsSync(skillsDir)) {
+    for (const entry of readdirSync(skillsDir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue
+      if (!existsSync(join(skillsDir, entry.name, "SKILL.md"))) {
+        out.push({
+          severity: "error",
+          rule: "R-SKL-01",
+          file: `skills${sep}${entry.name}${sep}`,
+          message: "directory under skills/ holds no SKILL.md",
+        })
+      }
+    }
+  }
+  return out
+}
+
+/**
+ * R-SKL-03: the body loads into context whole, so it stays under 500 lines.
+ * @param {string} rel
+ * @param {string} text
+ * @param {Frontmatter} fm
+ * @returns {Finding[]}
+ */
+export function checkBody(rel, text, fm) {
+  const bodyLines = splitLines(text).length - fm.bodyStart
+  if (bodyLines < 500) return []
+  return [
+    {
+      severity: "error",
+      rule: "R-SKL-03",
+      file: rel,
+      message: `body is ${bodyLines} lines; keep it under 500 and move depth into that skill's references/ directory`,
+    },
+  ]
+}
+
+/**
+ * @param {string} root
+ * @returns {string|null} the opening text of the repository license file
+ */
+export function readRepoLicense(root) {
+  for (const name of ["LICENSE", "LICENSE.md", "LICENSE.txt", "COPYING"]) {
+    const path = join(root, name)
+    if (existsSync(path)) return readFileSync(path, "utf8").slice(0, 400)
+  }
+  return null
+}
+
+/**
+ * R-SKL-04: an installer copies one skill directory, so LICENSE stays behind.
+ *
+ * A missing field is an error. A field the license file does not name is a
+ * warning, because license naming varies enough that a strict comparison
+ * would report false failures. A license value this reader could not parse,
+ * such as a block scalar, is skipped here too: checkSpec already warns about
+ * the unreadable construct on that line, and the field is not actually
+ * absent, so reporting it missing here would be a second, misleading finding
+ * for the same cause.
+ * @param {string} rel
+ * @param {Frontmatter} fm
+ * @param {string|null} repoLicense
+ * @returns {Finding[]}
+ */
+export function checkLicense(rel, fm, repoLicense) {
+  if (fm.unreadableKeys.has("license")) return []
+  const value = fm.entries.get("license")
+  if (value === undefined || value === "") {
+    return [
+      {
+        severity: "error",
+        rule: "R-SKL-04",
+        file: rel,
+        message: "frontmatter declares no license; an installer copies one skill directory and leaves the repository license behind",
+      },
+    ]
+  }
+  if (repoLicense && !repoLicense.toLowerCase().includes(value.toLowerCase())) {
+    return [
+      {
+        severity: "warning",
+        rule: "R-SKL-04",
+        file: rel,
+        message: `license "${value}" does not appear in the repository license file; confirm both name the same license`,
+      },
+    ]
+  }
+  return []
+}
+
+/**
  * @param {string} root
  * @returns {Finding[]}
  */
 export function validate(root) {
+  const skillFiles = findSkillFiles(root)
+  const repoLicense = readRepoLicense(root)
   /** @type {Finding[]} */
-  const out = []
-  for (const abs of findSkillFiles(root)) {
+  const out = [...checkLayout(root, skillFiles)]
+  for (const abs of skillFiles) {
     const rel = relative(root, abs)
     const dir = dirname(abs)
     let text
@@ -303,6 +437,8 @@ export function validate(root) {
     }
     const fm = parseFrontmatter(text)
     out.push(...checkSpec(rel, basename(dir), fm))
+    out.push(...checkBody(rel, text, fm))
+    out.push(...checkLicense(rel, fm, repoLicense))
   }
   return out
 }
