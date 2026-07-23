@@ -7,6 +7,7 @@ export default defineConfig({
     starlight({
       title: "oss-kit",
       description: "One opinionated quality bar for open source repositories.",
+      favicon: "/favicon.svg",
       sidebar: [
         { label: "Guides", items: [{ autogenerate: { directory: "guides" } }] },
         { label: "The standard", link: "/standard/" },

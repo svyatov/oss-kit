@@ -1,6 +1,36 @@
 ---
 title: oss-kit
-description: One opinionated quality bar for open source repositories.
+description: One opinionated quality bar for open source repositories, and nine agent skills that hold you to it.
+template: splash
+hero:
+  tagline: Nine agent skills that hold your open source repository to one written quality bar, and tell you where it falls short.
+  actions:
+    - text: Install
+      link: /guides/install/
+      icon: right-arrow
+    - text: Read the standard
+      link: /standard/
+      variant: minimal
 ---
 
-Placeholder. Task 10 replaces this page.
+import { Card, CardGrid } from "@astrojs/starlight/components"
+
+<CardGrid stagger>
+  <Card title="Every opinion is written down">
+    40 numbered rules. Each one states what to do, why, the evidence a checker
+    looks for, and the skill that fixes it. Read it and disagree with it before
+    you install anything.
+  </Card>
+  <Card title="An audit that routes">
+    `oss-audit` scores a repository rule by rule and hands each gap to the skill
+    that fixes it, in an order that puts blocking rules first.
+  </Card>
+  <Card title="GitHub and GitLab">
+    A rule that applies to one forge says so. Nothing assumes you are on GitHub.
+  </Card>
+  <Card title="Install anywhere">
+    One command through the `skills` CLI, or a native manifest for Claude Code,
+    Codex, Cursor, Kimi Code, OpenCode, VS Code, and Copilot.
+  </Card>
+</CardGrid>
+
