@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
-import { readFileSync, rmSync, writeFileSync } from "node:fs"
+import { chmodSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { parseFrontmatter, validate } from "../skills/oss-skill/scripts/validate.mjs"
-import { addSkill, goodFrontmatter, makeRepo } from "./fixtures.ts"
+import { findSkillFiles, parseFrontmatter, validate } from "../skills/oss-skill/scripts/validate.mjs"
+import { addSkill, addSkillsSymlink, goodFrontmatter, makeRepo } from "./fixtures.ts"
 
 function errors(root: string) {
   return validate(root).filter((f) => f.severity === "error")
@@ -78,10 +78,62 @@ test("a name that does not match its directory is an R-SKL-02 error", () => {
   rmSync(root, { recursive: true, force: true })
 })
 
-test("consecutive hyphens and uppercase in a name are R-SKL-02 errors", () => {
+test("consecutive hyphens in a name are an R-SKL-02 error", () => {
   const root = makeRepo()
   addSkill(root, "oss--thing", 'name: oss--thing\ndescription: "x"\nlicense: MIT')
   expect(rules(errors(root))).toContain("R-SKL-02")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("an uppercase name is an R-SKL-02 error", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", 'name: OSS-thing\ndescription: "x"\nlicense: MIT')
+  const found = errors(root).filter((f) => f.rule === "R-SKL-02")
+  expect(found.some((f) => f.message.includes("lowercase letters"))).toBe(true)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a 65-character name is an R-SKL-02 error naming the limit", () => {
+  const root = makeRepo()
+  const longName = `oss-${"a".repeat(61)}`
+  expect(longName).toHaveLength(65)
+  addSkill(root, longName, `name: ${longName}\ndescription: "x"\nlicense: MIT`)
+  const found = errors(root).filter((f) => f.rule === "R-SKL-02")
+  expect(found.some((f) => f.message.includes("65 characters") && f.message.includes("limit is 64"))).toBe(true)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a 501-character compatibility is an R-SKL-02 error naming the limit", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", `name: oss-thing\ndescription: "x"\nlicense: MIT\ncompatibility: "${"x".repeat(501)}"`)
+  const found = errors(root).filter((f) => f.rule === "R-SKL-02")
+  expect(found.some((f) => f.message.includes("501 characters") && f.message.includes("limit is 500"))).toBe(true)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a symlinked skills directory is not walked, so a skill is found once", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addSkillsSymlink(root, "linked-skills")
+  expect(findSkillFiles(root)).toHaveLength(1)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("an unreadable SKILL.md warns and does not stop the run", () => {
+  const root = makeRepo()
+  const unreadableDir = addSkill(root, "oss-broken", goodFrontmatter("oss-broken"))
+  const unreadablePath = join(unreadableDir, "SKILL.md")
+  chmodSync(unreadablePath, 0o000)
+  addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  let findings: ReturnType<typeof validate> = []
+  expect(() => {
+    findings = validate(root)
+  }).not.toThrow()
+  expect(findings.some((f) => f.severity === "warning" && f.rule === null && f.file.includes("oss-broken"))).toBe(
+    true,
+  )
+  expect(errors(root).some((f) => f.file.includes("oss-thing"))).toBe(false)
+  chmodSync(unreadablePath, 0o644)
   rmSync(root, { recursive: true, force: true })
 })
 
@@ -99,5 +151,69 @@ test("an unknown key is a warning with a suggestion, not an error", () => {
   expect(errors(root)).toEqual([])
   const warned = validate(root).filter((f) => f.severity === "warning")
   expect(warned[0]?.message).toContain('did you mean "description"')
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("CRLF line endings throughout a SKILL.md produce no error", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  const path = join(dir, "SKILL.md")
+  const crlf = readFileSync(path, "utf8").replace(/\n/g, "\r\n")
+  writeFileSync(path, crlf)
+  expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a byte order mark at the start of a SKILL.md produces no error", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  const path = join(dir, "SKILL.md")
+  writeFileSync(path, `﻿${readFileSync(path, "utf8")}`)
+  expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("delimiter lines with trailing whitespace produce no error", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  const path = join(dir, "SKILL.md")
+  writeFileSync(path, `--- \n${goodFrontmatter("oss-thing")}\n--- \n# Heading\n\nText.\n`)
+  expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a folded block scalar description produces no error and one warning naming its line", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", "name: oss-thing\ndescription: >\nlicense: MIT")
+  expect(errors(root)).toEqual([])
+  const warned = validate(root).filter((f) => f.severity === "warning")
+  expect(warned).toHaveLength(1)
+  expect(warned[0]?.message).toContain("line 3")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("an empty description value still errors, with no unreadable-construct warning", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", "name: oss-thing\ndescription:\nlicense: MIT")
+  const found = errors(root).filter((f) => f.rule === "R-SKL-02")
+  expect(found.some((f) => f.message.includes("declares no description"))).toBe(true)
+  const warned = validate(root).filter((f) => f.severity === "warning")
+  expect(warned.some((f) => f.message.includes("does not read"))).toBe(false)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("an inline comment on a plain scalar name produces no error", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", 'name: oss-thing # the name\ndescription: "x"\nlicense: MIT')
+  expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a duplicate key warns and the last value drives the outcome", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", 'name: oss-other\nname: oss-thing\ndescription: "x"\nlicense: MIT')
+  const warned = validate(root).filter((f) => f.severity === "warning")
+  expect(warned.some((f) => f.message.includes("duplicate") && f.message.includes("strict YAML parser"))).toBe(true)
+  expect(errors(root)).toEqual([])
   rmSync(root, { recursive: true, force: true })
 })

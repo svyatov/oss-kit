@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
@@ -21,4 +21,9 @@ export function addSkill(root: string, name: string, frontmatter: string, body =
 /** Frontmatter that satisfies every rule, for a skill of the given name. */
 export function goodFrontmatter(name: string): string {
   return `name: ${name}\ndescription: "Does a thing. Use when a thing needs doing."\nlicense: MIT`
+}
+
+/** Creates a symlink at root/linkName pointing at root/skills, mirroring .agents/skills and .claude/skills. */
+export function addSkillsSymlink(root: string, linkName: string): void {
+  symlinkSync(join(root, "skills"), join(root, linkName), "dir")
 }

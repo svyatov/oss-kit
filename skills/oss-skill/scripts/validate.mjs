@@ -11,8 +11,8 @@
  * ships to whatever the reader already has. R-SKL-05 says the same thing, and
  * this file is held to it.
  */
-import { readFileSync, readdirSync } from "node:fs"
-import { basename, dirname, join, relative, resolve } from "node:path"
+import { readFileSync, readdirSync, realpathSync } from "node:fs"
+import { basename, dirname, join, relative } from "node:path"
 import { fileURLToPath } from "node:url"
 
 /**
@@ -29,6 +29,8 @@ import { fileURLToPath } from "node:url"
  * @property {"missing"|"unterminated"|null} reason
  * @property {Map<string,string>} entries
  * @property {number[]} unreadable 1-based line numbers this reader could not parse
+ * @property {Set<string>} unreadableKeys keys whose value this reader could not read
+ * @property {number[]} duplicates 1-based line numbers that repeat a key already set
  * @property {number} bodyStart 0-based index of the first body line
  */
 
@@ -100,23 +102,27 @@ function unquote(value) {
  * @returns {Frontmatter}
  */
 export function parseFrontmatter(text) {
-  const lines = text.split("\n")
+  const lines = text.replace(/^﻿/, "").split(/\r?\n/)
   /** @type {Map<string,string>} */
   const entries = new Map()
   /** @type {number[]} */
   const unreadable = []
-  if (lines[0] !== "---") {
-    return { ok: false, reason: "missing", entries, unreadable, bodyStart: 0 }
+  /** @type {Set<string>} */
+  const unreadableKeys = new Set()
+  /** @type {number[]} */
+  const duplicates = []
+  if ((lines[0] ?? "").trimEnd() !== "---") {
+    return { ok: false, reason: "missing", entries, unreadable, unreadableKeys, duplicates, bodyStart: 0 }
   }
   let end = -1
   for (let i = 1; i < lines.length; i++) {
-    if (lines[i] === "---") {
+    if ((lines[i] ?? "").trimEnd() === "---") {
       end = i
       break
     }
   }
   if (end === -1) {
-    return { ok: false, reason: "unterminated", entries, unreadable, bodyStart: 0 }
+    return { ok: false, reason: "unterminated", entries, unreadable, unreadableKeys, duplicates, bodyStart: 0 }
   }
   let inMap = false
   for (let i = 1; i < end; i++) {
@@ -133,23 +139,24 @@ export function parseFrontmatter(text) {
       continue
     }
     const [, key = "", rest = ""] = match
+    if (entries.has(key)) duplicates.push(i + 1)
     const raw = rest.trim()
     if (raw === "") {
       if (key === "metadata") {
         inMap = true
-        entries.set(key, "")
-      } else {
-        unreadable.push(i + 1)
       }
+      entries.set(key, "")
       continue
     }
     if (/^[>|&*]/.test(raw)) {
       unreadable.push(i + 1)
+      unreadableKeys.add(key)
       continue
     }
-    entries.set(key, unquote(raw))
+    const value = raw.startsWith('"') || raw.startsWith("'") ? raw : raw.replace(/\s+#.*$/, "").trimEnd()
+    entries.set(key, unquote(value))
   }
-  return { ok: true, reason: null, entries, unreadable, bodyStart: end + 1 }
+  return { ok: true, reason: null, entries, unreadable, unreadableKeys, duplicates, bodyStart: end + 1 }
 }
 
 /**
@@ -215,30 +222,39 @@ export function checkSpec(rel, dirName, fm) {
   for (const line of fm.unreadable) {
     warn(`line ${line} uses a construct this validator does not read; check it with a YAML parser`)
   }
+  for (const line of fm.duplicates) {
+    warn(`line ${line} repeats a key already set; a strict YAML parser rejects a duplicate key`)
+  }
 
-  const name = fm.entries.get("name")
-  if (name === undefined || name === "") {
-    err("frontmatter declares no name, which the specification requires")
-  } else {
-    if (name.length > 64) err(`name is ${name.length} characters; the limit is 64`)
-    if (!NAME_RE.test(name)) {
-      err(`name "${name}" must be lowercase letters, digits, and single hyphens, with no leading or trailing hyphen`)
-    }
-    if (name !== dirName) {
-      err(`name "${name}" does not match its directory "${dirName}"; the specification requires them to match`)
+  if (!fm.unreadableKeys.has("name")) {
+    const name = fm.entries.get("name")
+    if (name === undefined || name === "") {
+      err("frontmatter declares no name, which the specification requires")
+    } else {
+      if (name.length > 64) err(`name is ${name.length} characters; the limit is 64`)
+      if (!NAME_RE.test(name)) {
+        err(`name "${name}" must be lowercase letters, digits, and single hyphens, with no leading or trailing hyphen`)
+      }
+      if (name !== dirName) {
+        err(`name "${name}" does not match its directory "${dirName}"; the specification requires them to match`)
+      }
     }
   }
 
-  const description = fm.entries.get("description")
-  if (description === undefined || description === "") {
-    err("frontmatter declares no description, which the specification requires")
-  } else if (description.length > 1024) {
-    err(`description is ${description.length} characters; the limit is 1024`)
+  if (!fm.unreadableKeys.has("description")) {
+    const description = fm.entries.get("description")
+    if (description === undefined || description === "") {
+      err("frontmatter declares no description, which the specification requires")
+    } else if (description.length > 1024) {
+      err(`description is ${description.length} characters; the limit is 1024`)
+    }
   }
 
-  const compatibility = fm.entries.get("compatibility")
-  if (compatibility !== undefined && compatibility.length > 500) {
-    err(`compatibility is ${compatibility.length} characters; the limit is 500`)
+  if (!fm.unreadableKeys.has("compatibility")) {
+    const compatibility = fm.entries.get("compatibility")
+    if (compatibility !== undefined && compatibility.length > 500) {
+      err(`compatibility is ${compatibility.length} characters; the limit is 500`)
+    }
   }
 
   for (const key of fm.entries.keys()) {
@@ -263,7 +279,13 @@ export function validate(root) {
   for (const abs of findSkillFiles(root)) {
     const rel = relative(root, abs)
     const dir = dirname(abs)
-    const text = readFileSync(abs, "utf8")
+    let text
+    try {
+      text = readFileSync(abs, "utf8")
+    } catch {
+      out.push({ severity: "warning", rule: null, file: rel, message: "could not read this file" })
+      continue
+    }
     const fm = parseFrontmatter(text)
     out.push(...checkSpec(rel, basename(dir), fm))
   }
@@ -282,5 +304,20 @@ function main() {
   process.exitCode = errorCount > 0 ? 1 : 0
 }
 
-// import.meta.main landed in Node 24 and this file supports Node 22.
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main()
+/**
+ * True when this file is the script the runtime was asked to run. Compares real
+ * paths because a reader may link this file into their PATH, and resolve() is
+ * lexical. import.meta.main landed in Node 24 and this file supports Node 22.
+ * @returns {boolean}
+ */
+function isMain() {
+  const invoked = process.argv[1]
+  if (invoked === undefined) return false
+  try {
+    return realpathSync(invoked) === realpathSync(fileURLToPath(import.meta.url))
+  } catch {
+    return false
+  }
+}
+
+if (isMain()) main()
