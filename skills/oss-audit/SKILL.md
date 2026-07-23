@@ -24,7 +24,7 @@ Each rule in `STANDARD.md` is a block with an ID (`R-<AREA>-<NN>`), a statement,
 
 Detect which forge the repository under audit uses: look for `.github/workflows/` or `.gitlab-ci.yml`, check the git remote, or ask if neither signal is present. Skip a rule whose `Forges:` line names only the other forge, and report it as not applicable rather than folding it into the pass, fail, or unknown counts.
 
-One area is scoped by repository type rather than by forge. The SKL area carries a preamble scoping it to a repository that ships agent skills. Look for at least one `SKILL.md`, resolving any symlinked directory to its target so a committed symlink does not read as a second copy. Where none exists, mark the whole area not applicable in one step and report it that way, rather than checking its rules one at a time.
+One area is scoped by repository type rather than by forge. The SKL area carries a preamble scoping it to a repository that ships agent skills. Look for at least one `SKILL.md`, resolving symlinked directories as R-SKL-01's check requires. Where none exists, mark the whole area not applicable in one step and report it that way, rather than checking its rules one at a time.
 
 ## Step 3: Check each rule, area by area
 
