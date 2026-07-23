@@ -47,6 +47,8 @@ while read -r id; do
     err "$id has $count 'Fixed by:' lines; keep exactly one"
   elif [ ! -d "skills/$owner" ]; then
     err "$id is fixed by '$owner', which is not a directory under skills/; create skills/$owner or correct the 'Fixed by:' line"
+  elif ! grep -rqF "$id" "skills/$owner" 2>/dev/null; then
+    err "$id is fixed by '$owner', which never cites it; cite $id in skills/$owner or correct the 'Fixed by:' line"
   fi
 done <<<"$defined"
 

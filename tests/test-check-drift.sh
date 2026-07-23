@@ -77,18 +77,19 @@ d="$(make_fixture)"; fixtures+=("$d")
 sed -i.bak '/Fixed by:/d' "$d/skills/oss-audit/STANDARD.md"
 run_case "rule with no owner fails" 1 "$d" "R-DOC-01"
 
-# No skill file adds a citation of its own: the only matches under
-# skills/ come from STANDARD.md's own "### R-DOC-01" header, now that the
-# standard lives inside skills/oss-audit/. That self-match is always a
-# defined id, so it must not trip the "cites X, which STANDARD.md does
-# not define" error. This also still exercises the
-# "[ -z "$id" ] && continue" guard indirectly: cited is a genuine
-# single-line value here, not the empty string a truly citation-free tree
-# would have produced before the move, so this case now proves a
-# self-match alone passes rather than proving the empty-read guard fires.
+# Two things at once. STANDARD.md lives inside skills/oss-audit/, so the
+# citation grep reads the standard's own "### R-DOC-01" header; that
+# self-match is always a defined id and must never surface as "cites X,
+# which STANDARD.md does not define". Blanking the owning skill proves
+# it, because the single error reported is the ownership one, which means
+# the self-match cleared the citation direction. This case expected exit
+# 0 before the ownership check existed; a repository whose owning skill
+# cites nothing is now genuinely invalid, so it asserts that error
+# instead. The happy path for a self-match is covered by the first case,
+# where oss-readme does cite R-DOC-01 and the run exits 0.
 d="$(make_fixture)"; fixtures+=("$d")
 : > "$d/skills/oss-readme/SKILL.md"
-run_case "no external citations under skills/ still passes" 0 "$d"
+run_case "owning skill that never cites its rule fails" 1 "$d" "never cites"
 
 # Before the move, a rule ID mentioned in a Check: line never surfaced as
 # a citation, because STANDARD.md lived outside skills/ and the citation
