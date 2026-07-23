@@ -2,6 +2,7 @@
 name: oss-skill
 description: "Fix the structure and packaging of a repository that ships agent skills, so every skill loads in every host that reads the Agent Skills format. Covers the top-level skills directory layout, SKILL.md frontmatter conformance, splitting an oversized skill into references, and the license field an extracted skill carries with it. Use when a skill fails to load or never triggers, when a repository keeps its skills somewhere an installer does not read, when a SKILL.md has grown too long to load cheaply, or when auditing a repository whose product is agent skills. What a skill teaches and how its sentences read is out of scope: prose belongs to oss-writing, README structure belongs to oss-readme."
 license: MIT
+compatibility: Requires Node 22+ or Bun to run the bundled validator
 ---
 
 # Structure of a repository that ships agent skills
@@ -30,7 +31,15 @@ Where a repository ships skills only as a plugin and keeps them under a nested p
 
 ## Step 2: Validate against the specification (R-SKL-02)
 
-Run the validator over every directory under `skills/` and fix what it names. The faults it reports come in a small set.
+Run the bundled validator over the repository and fix what it names:
+
+```bash
+node scripts/validate.mjs /path/to/repository
+```
+
+It needs Node 22 or later, or Bun, and nothing installed. It reads files: it writes nothing, spawns nothing, and makes no network call. It reports an error for every violation of R-SKL-01 through R-SKL-05, warns where a frontmatter construct is one it does not read, and exits 1 if any error was found.
+
+The faults come in a small set.
 
 A name and directory mismatch means the frontmatter `name` and the directory name differ. The specification requires them to match exactly. Decide which one is correct by looking at what already references the skill: a name in the README table, in a plugin manifest, or in another skill's prose is a name people already use. Rename the other one.
 
