@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
+    "prebuild": "node scripts/generate.mjs .. src/content/docs",
+    "generate": "node scripts/generate.mjs .. src/content/docs",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"

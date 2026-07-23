@@ -1,6 +1,16 @@
 // tests/generate.test.ts
 import { expect, test } from "bun:test"
-import { agentNotice, parseRules, renderRulePage, renderSkillPage, rewriteLinks } from "../site/scripts/generate.mjs"
+import {
+  agentNotice,
+  parseRules,
+  renderRulePage,
+  renderSkillPage,
+  rewriteLinks,
+  writeAll,
+} from "../site/scripts/generate.mjs"
+import { existsSync, mkdtempSync, readFileSync as read, rmSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 
 const TWO_RULES = `# The oss-kit standard
 
@@ -101,4 +111,30 @@ test("renderSkillPage keeps the body verbatim under the notice", () => {
   expect(page).toContain("Body line.")
   expect(page).not.toContain("license: MIT")
   expect(page.indexOf("instruction text")).toBeLessThan(page.indexOf("Body line."))
+})
+
+test("writeAll produces every page the site needs", () => {
+  const out = mkdtempSync(join(tmpdir(), "oss-kit-site-"))
+  const { written } = writeAll(".", out)
+
+  expect(written.filter((p) => p.startsWith("rules/"))).toHaveLength(40)
+  expect(existsSync(join(out, "rules/r-sec-01.md"))).toBe(true)
+  expect(existsSync(join(out, "standard.md"))).toBe(true)
+  expect(existsSync(join(out, "changelog.md"))).toBe(true)
+  expect(existsSync(join(out, "skills/oss-audit.md"))).toBe(true)
+  expect(existsSync(join(out, "skills/oss-publish/npm.md"))).toBe(true)
+  expect(existsSync(join(out, "guides/install.md"))).toBe(true)
+  expect(existsSync(join(out, "guides/superpowers"))).toBe(false)
+
+  expect(read(join(out, "rules/r-sec-01.md"), "utf8")).toContain("/skills/oss-harden/")
+  rmSync(out, { recursive: true, force: true })
+})
+
+test("writeAll clears stale output so a renamed page cannot linger", () => {
+  const out = mkdtempSync(join(tmpdir(), "oss-kit-site-"))
+  require("node:fs").mkdirSync(join(out, "rules"), { recursive: true })
+  require("node:fs").writeFileSync(join(out, "rules/r-zzz-99.md"), "stale")
+  writeAll(".", out)
+  expect(existsSync(join(out, "rules/r-zzz-99.md"))).toBe(false)
+  rmSync(out, { recursive: true, force: true })
 })

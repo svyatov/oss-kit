@@ -9,6 +9,9 @@
  * run it.
  */
 
+import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs"
+import { dirname, join } from "node:path"
+
 const HEADING = /^### (R-([A-Z]{2,3})-(\d{2})): (.+)$/ // areas are 2 or 3 letters (CI is two)
 /** @type {Record<string, string>} */
 const FORGE_LABEL = { github: "GitHub only", gitlab: "GitLab only", both: "GitHub and GitLab" }
@@ -78,7 +81,7 @@ ${rule.why}
 [Read the whole standard](/standard/)
 `
   return frontmatter(
-    { title: rule.id, description: rule.statement, tableOfContents: "false" },
+    { title: rule.id, description: rule.statement },
     body,
   )
 }
@@ -132,4 +135,122 @@ export function renderSkillPage(sourcePath, text) {
     { title, description },
     `${agentNotice(sourcePath)}\n\n${body}`,
   )
+}
+
+const GENERATED = ["rules", "skills", "guides", "standard.md", "changelog.md"]
+
+/**
+ * @param {string} outDir
+ * @param {string} relative
+ * @param {string} contents
+ */
+function write(outDir, relative, contents) {
+  const path = join(outDir, relative)
+  mkdirSync(dirname(path), { recursive: true })
+  writeFileSync(path, contents)
+  return relative
+}
+
+/** @param {string} repoRoot @param {string} outDir */
+export function writeAll(repoRoot, outDir) {
+  for (const entry of GENERATED) rmSync(join(outDir, entry), { recursive: true, force: true })
+  /** @type {string[]} */
+  const written = []
+
+  const standardPath = "skills/oss-audit/STANDARD.md"
+  const standardText = readFileSync(join(repoRoot, standardPath), "utf8")
+  const rules = parseRules(standardText)
+  for (const rule of rules) {
+    written.push(write(outDir, `rules/${rule.id.toLowerCase()}.md`, renderRulePage(rule)))
+  }
+  written.push(
+    write(
+      outDir,
+      "standard.md",
+      frontmatter(
+        { title: "The standard", description: "Every rule oss-kit holds, in one page." },
+        `${agentNotice(standardPath)}\n\n${standardText.replace(/^# .*\n/, "")}`,
+      ),
+    ),
+  )
+
+  const skillNames = readdirSync(join(repoRoot, "skills"), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+  /** @type {Map<string, string>} */
+  const refTargets = new Map()
+  for (const name of skillNames) {
+    for (const ref of safeReaddir(join(repoRoot, "skills", name, "references"))) {
+      refTargets.set(`${name}/references/${ref}`, `/skills/${name}/${ref.replace(/\.md$/, "")}/`)
+    }
+  }
+  const resolve = (/** @type {string} */ owner) => (/** @type {string} */ target) => {
+    const key = target.replace(/^\.\//, "")
+    if (refTargets.has(`${owner}/${key}`)) return refTargets.get(`${owner}/${key}`) ?? null
+    if (key === "STANDARD.md") return "/standard/"
+    const rule = /^#?(R-[A-Z]{2,3}-\d{2})$/.exec(key)
+    if (rule) return `/rules/${(rule[1] ?? "").toLowerCase()}/`
+    return null
+  }
+
+  for (const name of skillNames) {
+    const source = `skills/${name}/SKILL.md`
+    const page = renderSkillPage(source, readFileSync(join(repoRoot, source), "utf8"))
+    written.push(write(outDir, `skills/${name}.md`, rewriteLinks(page, resolve(name))))
+    for (const ref of safeReaddir(join(repoRoot, "skills", name, "references"))) {
+      const refSource = `skills/${name}/references/${ref}`
+      const text = readFileSync(join(repoRoot, refSource), "utf8")
+      const body = `${agentNotice(refSource)}\n\n${text.replace(/^# (.*)\n/, "")}`
+      const title = /^# (.*)$/m.exec(text)?.[1] ?? ref.replace(/\.md$/, "")
+      const refPage = frontmatter({ title, description: `Reference for ${name}.` }, body)
+      written.push(write(outDir, `skills/${name}/${ref}`, rewriteLinks(refPage, resolve(name))))
+    }
+  }
+
+  const guides = safeReaddir(join(repoRoot, "docs")).filter((n) => n.endsWith(".md"))
+  const guideTargets = new Set(guides.map((n) => n.replace(/\.md$/, "")))
+  for (const guide of guides) {
+    const source = `docs/${guide}`
+    const text = readFileSync(join(repoRoot, source), "utf8")
+    const title = /^# (.*)$/m.exec(text)?.[1] ?? guide.replace(/\.md$/, "")
+    const page = frontmatter({ title, description: title }, text.replace(/^# .*\n/, ""))
+    const resolveGuide = (/** @type {string} */ target) => {
+      const key = target.replace(/^\.\//, "").replace(/\.md$/, "")
+      if (guideTargets.has(key)) return `/guides/${key}/`
+      if (key === "CHANGELOG") return "/changelog/"
+      if (key.startsWith("skills/")) return `/${key.replace(/\/SKILL$/, "")}/`
+      return resolve("")(target)
+    }
+    written.push(write(outDir, `guides/${guide}`, rewriteLinks(page, resolveGuide)))
+  }
+
+  const changelog = readFileSync(join(repoRoot, "CHANGELOG.md"), "utf8")
+  written.push(
+    write(
+      outDir,
+      "changelog.md",
+      frontmatter(
+        { title: "Changelog", description: "Every notable change to oss-kit." },
+        changelog.replace(/^# .*\n/, ""),
+      ),
+    ),
+  )
+
+  return { written }
+}
+
+/** @param {string} path */
+function safeReaddir(path) {
+  try {
+    return readdirSync(path)
+  } catch {
+    return []
+  }
+}
+
+if (process.argv[1] && process.argv[1].endsWith("generate.mjs")) {
+  const repoRoot = process.argv[2] ?? ".."
+  const outDir = process.argv[3] ?? "src/content/docs"
+  const { written } = writeAll(repoRoot, outDir)
+  console.log(`${written.length} page(s) written`)
 }
