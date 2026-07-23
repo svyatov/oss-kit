@@ -123,6 +123,9 @@ test("an unreadable SKILL.md warns and does not stop the run", () => {
   const root = makeRepo()
   const unreadableDir = addSkill(root, "oss-broken", goodFrontmatter("oss-broken"))
   const unreadablePath = join(unreadableDir, "SKILL.md")
+  // Assumes a non-root user and a filesystem that honors mode bits. Running as
+  // root, or on a filesystem that ignores them, makes the chmod a no-op, the
+  // read succeeds, and this test passes without exercising the guard it names.
   chmodSync(unreadablePath, 0o000)
   addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
   let findings: ReturnType<typeof validate> = []
@@ -209,11 +212,67 @@ test("an inline comment on a plain scalar name produces no error", () => {
   rmSync(root, { recursive: true, force: true })
 })
 
+test("a double-quoted name with a trailing inline comment produces no error", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", 'name: "oss-thing" # the name\ndescription: "x"\nlicense: MIT')
+  expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a single-quoted name with a trailing inline comment produces no error", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", "name: 'oss-thing' # c\ndescription: \"x\"\nlicense: MIT")
+  expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a quoted 1020-character description with a trailing inline comment produces no error", () => {
+  const root = makeRepo()
+  const description = "x".repeat(1020)
+  addSkill(root, "oss-thing", `name: oss-thing\ndescription: "${description}" # note\nlicense: MIT`)
+  expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a description whose value is only a comment is reported as absent", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", "name: oss-thing\ndescription:   # nothing here\nlicense: MIT")
+  const found = errors(root).filter((f) => f.rule === "R-SKL-02")
+  expect(found.some((f) => f.message.includes("declares no description"))).toBe(true)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a description containing a hash with no space before it survives intact", () => {
+  const fm = parseFrontmatter('---\nname: a\ndescription: uses C# syntax # note\n---\nbody\n')
+  expect(fm.entries.get("description")).toBe("uses C# syntax")
+})
+
 test("a duplicate key warns and the last value drives the outcome", () => {
   const root = makeRepo()
   addSkill(root, "oss-thing", 'name: oss-other\nname: oss-thing\ndescription: "x"\nlicense: MIT')
   const warned = validate(root).filter((f) => f.severity === "warning")
   expect(warned.some((f) => f.message.includes("duplicate") && f.message.includes("strict YAML parser"))).toBe(true)
   expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a readable description after a block-scalar description of the same key is still checked", () => {
+  const root = makeRepo()
+  const longDescription = "x".repeat(1025)
+  addSkill(
+    root,
+    "oss-thing",
+    `name: oss-thing\ndescription: >\n  folded text\ndescription: "${longDescription}"\nlicense: MIT`,
+  )
+  const found = errors(root).filter((f) => f.rule === "R-SKL-02")
+  expect(found.some((f) => f.message.includes("1025 characters") && f.message.includes("limit is 1024"))).toBe(true)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a block-scalar description followed by a second description line warns of a duplicate", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", 'name: oss-thing\ndescription: >\n  folded text\ndescription: "x"\nlicense: MIT')
+  const warned = validate(root).filter((f) => f.severity === "warning")
+  expect(warned.some((f) => f.message.includes("duplicate") && f.message.includes("strict YAML parser"))).toBe(true)
   rmSync(root, { recursive: true, force: true })
 })

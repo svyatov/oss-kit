@@ -37,12 +37,17 @@ import { fileURLToPath } from "node:url"
 const SPEC_KEYS = ["name", "description", "license", "compatibility", "metadata", "allowed-tools"]
 const SKIP_DIRS = new Set([".git", "node_modules"])
 const NAME_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+const QUOTED_RE = /^("(?:[^"\\]|\\.)*"|'(?:[^']|'')*')\s*(?:#.*)?$/
 
 /**
- * Yields every regular file under dir. Skips .git and node_modules, and never
- * follows a symlink: a repository may commit .claude/skills and .agents/skills
- * pointing at one real skills/ directory, and following them reports every
- * skill two or three times.
+ * Yields every regular file under dir. Skips .git and node_modules. A symlinked
+ * entry is already neither a file nor a directory as Node reports it, so the
+ * walk declines it twice over below; the explicit isSymbolicLink() check exists
+ * to state that intent at the point where a future edit, such as switching to a
+ * recursive readdir or adding a call that resolves the target, would otherwise
+ * reintroduce the fault. This matters because a repository may commit
+ * .claude/skills and .agents/skills pointing at one real skills/ directory, and
+ * following them would report every skill two or three times.
  * @param {string} dir
  * @returns {Generator<string>}
  */
@@ -54,6 +59,8 @@ function* walk(dir) {
     return
   }
   for (const entry of entries) {
+    // Node reports a symlink as neither a file nor a directory, so this is
+    // usually redundant with the checks below; it stays explicit as a guard.
     if (entry.isSymbolicLink()) continue
     const path = join(dir, entry.name)
     if (entry.isDirectory()) {
@@ -102,7 +109,7 @@ function unquote(value) {
  * @returns {Frontmatter}
  */
 export function parseFrontmatter(text) {
-  const lines = text.replace(/^﻿/, "").split(/\r?\n/)
+  const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/)
   /** @type {Map<string,string>} */
   const entries = new Map()
   /** @type {number[]} */
@@ -139,13 +146,14 @@ export function parseFrontmatter(text) {
       continue
     }
     const [, key = "", rest = ""] = match
-    if (entries.has(key)) duplicates.push(i + 1)
+    if (entries.has(key) || unreadableKeys.has(key)) duplicates.push(i + 1)
     const raw = rest.trim()
     if (raw === "") {
       if (key === "metadata") {
         inMap = true
       }
       entries.set(key, "")
+      unreadableKeys.delete(key)
       continue
     }
     if (/^[>|&*]/.test(raw)) {
@@ -153,8 +161,15 @@ export function parseFrontmatter(text) {
       unreadableKeys.add(key)
       continue
     }
-    const value = raw.startsWith('"') || raw.startsWith("'") ? raw : raw.replace(/\s+#.*$/, "").trimEnd()
+    let value
+    if (raw.startsWith('"') || raw.startsWith("'")) {
+      const quoted = raw.match(QUOTED_RE)
+      value = quoted ? quoted[1] ?? raw : raw
+    } else {
+      value = raw.replace(/(^|\s)#.*$/, "")
+    }
     entries.set(key, unquote(value))
+    unreadableKeys.delete(key)
   }
   return { ok: true, reason: null, entries, unreadable, unreadableKeys, duplicates, bodyStart: end + 1 }
 }
