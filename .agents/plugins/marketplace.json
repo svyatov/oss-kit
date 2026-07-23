@@ -1,0 +1,21 @@
+{
+  "name": "oss-kit",
+  "interface": {
+    "displayName": "oss-kit"
+  },
+  "plugins": [
+    {
+      "name": "oss-kit",
+      "description": "An opinionated quality bar for open source projects: README, community files, CI, supply-chain hardening, secure releases, and changelogs.",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

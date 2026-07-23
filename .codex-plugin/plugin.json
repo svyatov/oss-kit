@@ -1,0 +1,23 @@
+{
+  "name": "oss-kit",
+  "version": "0.1.0",
+  "description": "An opinionated quality bar for open source projects: README, community files, CI, supply-chain hardening, secure releases, and changelogs.",
+  "author": {
+    "name": "Leonid Svyatov",
+    "email": "leonid@svyatov.com",
+    "url": "https://www.svyatov.com"
+  },
+  "homepage": "https://github.com/svyatov/oss-kit",
+  "repository": "https://github.com/svyatov/oss-kit",
+  "license": "MIT",
+  "keywords": ["open-source", "readme", "changelog", "ci", "security", "release"],
+  "skills": "./skills/",
+  "hooks": {},
+  "interface": {
+    "displayName": "oss-kit",
+    "shortDescription": "One opinionated quality bar for open source repositories",
+    "developerName": "Leonid Svyatov",
+    "category": "Developer Tools",
+    "websiteURL": "https://github.com/svyatov/oss-kit"
+  }
+}
