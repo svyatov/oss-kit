@@ -270,11 +270,11 @@ Check: every version in `CHANGELOG.md` and every release tag matches `v?MAJOR.MI
 Fixed by: oss-changelog
 Forges: both
 
-### R-CHG-03: The release tag, the manifest version, and the newest changelog entry are the same version
+### R-CHG-03: The release tag, every versioned manifest, and the newest changelog entry are the same version
 
-When these three disagree, nobody can tell which one describes the artifact users installed, and the changelog stops being a reliable upgrade record.
+When these disagree, nobody can tell which one describes the artifact users installed, and the changelog stops being a reliable upgrade record. A repository that ships several manifests, one per host or one per package, multiplies the ways they can drift apart.
 
-Check: for the newest release tag, the tag name, the `version` field of the package manifest at that commit, and the topmost release heading in `CHANGELOG.md` all name the same version.
+Check: for the newest release tag, the tag name, the `version` field of every manifest in the repository that declares one, and the topmost release heading in `CHANGELOG.md` all name the same version.
 
 Fixed by: oss-changelog
 Forges: both
