@@ -55,7 +55,7 @@ Fixed by: oss-harden
 Forges: github
 ```
 
-Each `###` line is exactly `### R-<AREA>-<NN>: <statement>`, where AREA is DOC, COM, CI, SEC, PUB, CHG, or SKL and NN is two digits. Each rule carries exactly one `Check:` line, exactly one `Fixed by:` line naming one of the nine skills, and exactly one `Forges:` line whose value is `github`, `gitlab`, or `both`. Numbering starts at 01 in each area and does not skip. Retired rules keep their number and are marked retired, so IDs are never reused. The SKL area carries a preamble scoping it to repositories that ship agent skills; no other area is scoped by repository type.
+Each `###` line is exactly `### R-<AREA>-<NN>: <statement>`, where AREA is DOC, COM, CI, SEC, PUB, CHG, or SKL and NN is two digits. Each rule carries exactly one `Check:` line, exactly one `Fixed by:` line naming one of the eight skills that fix rules, and exactly one `Forges:` line whose value is `github`, `gitlab`, or `both`. Numbering starts at 01 in each area and does not skip. Retired rules keep their number and are marked retired, so IDs are never reused. The SKL area carries a preamble scoping it to repositories that ship agent skills; no other area is scoped by repository type.
 
 `oss-audit` owns no rule and must not appear in a `Fixed by:` line. It scores the repository and routes each gap to the skill that fixes it, so a rule it owned would route to itself.
 
@@ -93,3 +93,5 @@ Pending, with the trigger that resolves each one:
 The `skills-ref` validator has no official package on any registry. Install it from the `skills-ref` directory of the upstream repository, pinned to a full commit SHA, as `CONTRIBUTING.md` and `.github/workflows/validate.yml` both do. The PyPI package named `skills-ref` is published by an account unaffiliated with the project, and its metadata names a GitHub repository that does not exist. Do not install it, and do not restore `pip install skills-ref` to any file here.
 
 `skills-ref validate <dir>` exits 0 on a valid skill and 1 on a name and directory mismatch, with the mismatch named in text on stderr, so a CI step can test the exit status directly and does not need to grep the output. Verified on upstream commit `492e1b7`.
+
+At that same pinned commit, `skills-ref/README.md` in the upstream repository carries this notice: "This library is intended for demonstration purposes only. It is not meant to be used in production." Nothing else in this repository records that. `R-SKL-02` points every reader of the standard at this tool, and CI depends on it, with that notice unaddressed.
