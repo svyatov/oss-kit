@@ -64,8 +64,10 @@ const CODE_EXTENSIONS = new Set([".js", ".mjs", ".cjs", ".ts", ".mts", ".cts"])
 // with no extension is a script, not data, and stays in scope for the shebang
 // check below.
 const DATA_EXTENSIONS = new Set([".md", ".txt", ".json", ".yml", ".yaml", ".toml", ".csv"])
-// The interpreter may be named directly, at any path, or through env.
-const SHEBANG_RE = /^#!\s*(?:\S*\/)?(?:env\s+)?(?:sh|bash|node)(?:\s|$)/
+// The interpreter may be named directly, at any path, or through env. The -S
+// flag is how a portable shebang passes arguments through env, so a script
+// written as env -S node --flag names node just as plainly as env node does.
+const SHEBANG_RE = /^#!\s*(?:\S*\/)?(?:env\s+(?:-S\s+)?)?(?:sh|bash|node)(?:\s|$)/
 // A negative lookbehind keeps this from matching a property access on some
 // other identifier that merely ends in "Bun" or "Deno".
 const RUNTIME_GLOBAL_RE = /(?<![\w$.'"`])(Bun|Deno)\s*\./

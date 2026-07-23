@@ -488,6 +488,14 @@ test("a shebang naming an interpreter directly, at a non-standard path, passes",
   rmSync(root, { recursive: true, force: true })
 })
 
+test("a shebang passing flags through env -S passes", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addScript(dir, "ok.mjs", '#!/usr/bin/env -S node --no-warnings\nimport { join } from "node:path"\nconsole.log(join("a"))\n')
+  expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
 test("a missing shebang is an R-SKL-05 error", () => {
   const root = makeRepo()
   const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
