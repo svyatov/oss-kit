@@ -16,6 +16,18 @@ Both `.claude/skills/` and `.agents/skills/` are among the source-side directori
 
 Verified 2026-07-23 against the `main` branch of `antfu/skills-cli`.
 
+## Antigravity
+
+Source: `antigravity.google/docs/skills` and `antigravity.google/docs/cli/plugins`.
+
+Antigravity scans `<workspace>/.agents/skills/` for project skills, the current default, and keeps `<workspace>/.agent/skills/` working for backward compatibility. At the user level it reads `~/.gemini/config/skills/`.
+
+Antigravity's CLI is `agy`. `agy plugin install` accepts a local filesystem path only; there is no documented git-URL form, so a repository has no command-line install path through Antigravity's plugin system.
+
+Antigravity scans `.agents/skills/`, not `.claude/skills/`.
+
+Verified 2026-07-23.
+
 ## Claude Code
 
 Source: `code.claude.com/docs/en/skills.md` and `code.claude.com/docs/en/plugins-reference.md`.
@@ -36,11 +48,13 @@ Verified 2026-07-23 against the current `code.claude.com` documentation.
 
 ## Codex
 
-Source: `developers.openai.com/codex/skills`, which redirects to `learn.chatgpt.com/docs/build-skills.md`.
+Source: `developers.openai.com/codex/skills`, which redirects to `learn.chatgpt.com/docs/build-skills.md`, and `learn.chatgpt.com/docs/build-plugins.md`.
 
 Codex reads skills from repository, user, admin, and system locations. For repositories it scans `.agents/skills/` in the current working directory, in the parent directory above it, and at the repository root, when run inside a git repository. At the user level it reads `~/.agents/skills/`. At the machine or container level it reads `/etc/codex/skills/`. It also ships a set of its own skills, bundled with Codex by OpenAI. Codex follows a symlinked skill folder to its target when scanning any of these locations. Each skill is a directory holding a `SKILL.md`.
 
 Separately, `~/.codex/config.toml` can carry `[[skills.config]]` entries with `path` and `enabled` keys. This is documented as the way to disable a discovered skill without deleting it, not as a way to declare a new discovery path.
+
+Codex's plugin system is separate from skills discovery. Its manifest is `.codex-plugin/plugin.json`, installed with `codex plugin marketplace add svyatov/oss-kit`. That command reads the marketplace list at `$REPO_ROOT/.agents/plugins/marketplace.json`.
 
 Codex scans `.agents/skills/`, not `.claude/skills/`.
 
@@ -48,9 +62,11 @@ Verified 2026-07-23.
 
 ## Cursor
 
-Source: `cursor.com/help/customization/skills`.
+Source: `cursor.com/help/customization/skills` and `cursor.com/docs/reference/plugins`.
 
-Cursor loads skills automatically from `.cursor/skills/` and `.agents/skills/` in the project (including nested directories such as `apps/web/.cursor/skills/` in a monorepo), and from `~/.cursor/skills/` and `~/.agents/skills/` for skills available across all projects. It also reads `.claude/skills/` and `.codex/skills/`, and their `~/`-rooted equivalents, for compatibility with skills placed for those other hosts. There is no manifest file: discovery is directory scanning, and each skill is a directory holding a `SKILL.md`.
+Cursor loads skills automatically from `.cursor/skills/` and `.agents/skills/` in the project (including nested directories such as `apps/web/.cursor/skills/` in a monorepo), and from `~/.cursor/skills/` and `~/.agents/skills/` for skills available across all projects. It also reads `.claude/skills/` and `.codex/skills/`, and their `~/`-rooted equivalents, for compatibility with skills placed for those other hosts. Each skill is a directory holding a `SKILL.md`, with no manifest.
+
+Cursor's plugin system is separate from skills discovery and does carry a manifest: every plugin requires a `.cursor-plugin/plugin.json` file. Installation has no CLI or slash command; it is interface-only, through the Customize panel inside Cursor or through `cursor.com/marketplace`. A team admin can also add a plugin from the Dashboard, under Plugins, Add Marketplace, Import from Repo.
 
 Cursor scans both `.claude/skills/` and `.agents/skills/`.
 
@@ -68,13 +84,49 @@ Gemini CLI scans `.agents/skills/` (as its alias for `.gemini/skills/`), not `.c
 
 Verified 2026-07-23.
 
+## GitHub Copilot CLI
+
+Source: `docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-marketplace`.
+
+Copilot CLI reads a plugin marketplace manifest, `marketplace.json`, from either of two locations: `.github/plugin/` or `.claude-plugin/`. Either satisfies it, so this repository's `.claude-plugin/marketplace.json` serves Copilot CLI with no separate file.
+
+Add the marketplace with `copilot plugin marketplace add OWNER/REPO` in the shell, or `/plugin marketplace add OWNER/REPO` interactively, then install with `copilot plugin install PLUGIN-NAME@MARKETPLACE-NAME`.
+
+Verified 2026-07-23.
+
 ## Kimi Code CLI
 
-Source: `www.kimi.com/code/docs/en/kimi-code-cli/customization/skills.html`.
+Source: `www.kimi.com/code/docs/en/kimi-code-cli/customization/skills.html` and `github.com/MoonshotAI/kimi-cli/blob/main/docs/en/customization/plugins.md`.
 
 Kimi Code CLI scans four tiers, most specific first: project (`.kimi-code/skills/` and `.agents/skills/`), user (`$KIMI_CODE_HOME/skills/`, defaulting to `~/.kimi-code/skills/`, and `~/.agents/skills/`), extra directories, and built-in skills bundled with the CLI. Extra directories are not a fixed path: they are declared as a list under the `extra_skill_dirs` key at the top level of `config.toml`. A skill is either a directory holding `SKILL.md` or a flat `.md` file.
 
+Kimi Code CLI also has a plugin system, separate from skills. Its manifest is `plugin.json` at the plugin root, not under any `.kimi-plugin/` directory. Install a plugin with the terminal command `kimi plugin install <url>`; there is no `/plugins` slash command.
+
 Kimi Code CLI scans `.agents/skills/`, not `.claude/skills/`.
+
+Verified 2026-07-23.
+
+## OpenCode
+
+Source: `opencode.ai/docs/skills` and `opencode.ai/docs/plugins`.
+
+OpenCode scans `.opencode/skills/`, `.claude/skills/`, and `.agents/skills/` at the project level, walking up to the git worktree root, and `~/.config/opencode/skills/`, `~/.claude/skills/`, and `~/.agents/skills/` globally. There is no manifest file and no git-URL install command; placing a skills directory at one of these paths is the install.
+
+The `plugin` array in `opencode.json` is a different system: it loads npm-published JavaScript and TypeScript code plugins, and has nothing to do with skills.
+
+OpenCode scans `.agents/skills/` and `.claude/skills/`, not only `.opencode/skills/`.
+
+Verified 2026-07-23.
+
+## VS Code
+
+Source: `code.visualstudio.com/docs/agent-customization/agent-plugins` and `code.visualstudio.com/docs/agent-customization/agent-skills`.
+
+VS Code's Agent plugins feature (Preview) reads `plugin.json` from `.plugin/`, the repository root, `.github/plugin/`, or `.claude-plugin/`, checked in that priority order. Install with the Command Palette command `Chat: Install Plugin From Source`, entering a Git repository URL.
+
+Separately, VS Code scans skills at `.github/skills/`, `.claude/skills/`, and `.agents/skills/` at the project level, and `~/.copilot/skills/`, `~/.claude/skills/`, and `~/.agents/skills/` at the user level.
+
+VS Code scans `.claude/skills/` and `.agents/skills/`, not only `.github/skills/`.
 
 Verified 2026-07-23.
 
