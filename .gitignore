@@ -3,6 +3,8 @@
 docs/superpowers/
 STRATEGY.md
 CONCEPTS.md
+PRODUCT.md
+.impeccable/
 node_modules/
 dist/
 coverage/

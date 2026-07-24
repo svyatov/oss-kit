@@ -23,11 +23,16 @@ export default defineConfig({
   integrations: [
     starlight({
       title: "oss-kit",
+      logo: { src: "./public/favicon.svg", alt: "" },
       description: "One opinionated quality bar for open source repositories.",
-      favicon: "/favicon.svg",
+      favicon: "/icon.svg",
+      customCss: ["./src/styles/custom.css"],
       social: [{ icon: "github", label: "GitHub", href: REPO }],
       editLink: { baseUrl: `${REPO}/edit/main/site/` },
       head: [
+        { tag: "link", attrs: { rel: "icon", href: "/favicon.ico", sizes: "32x32" } },
+        { tag: "link", attrs: { rel: "apple-touch-icon", href: "/apple-touch-icon.png" } },
+        { tag: "link", attrs: { rel: "manifest", href: "/manifest.webmanifest" } },
         meta("og:image", `${SITE}/og.png`),
         meta("og:image:width", "1200"),
         meta("og:image:height", "630"),
@@ -39,8 +44,16 @@ export default defineConfig({
         defaultProps: { wrap: true },
       },
       sidebar: [
-        { label: "Guides", items: [{ autogenerate: { directory: "guides" } }] },
-        { label: "The standard", link: "/standard/" },
+        {
+          label: "Start here",
+          items: [
+            { label: "Getting started", link: "/guides/getting-started/" },
+            { label: "Install", link: "/guides/install/" },
+            { label: "Adoption guide", link: "/guides/adoption-guide/" },
+          ],
+        },
+        { label: "Standard", link: "/standard/" },
+        { label: "Skills", items: [{ autogenerate: { directory: "skills" } }] },
         {
           label: "Rules",
           items: areas.map((section) => ({
@@ -49,7 +62,6 @@ export default defineConfig({
             items: rules.filter((rule) => rule.section === section).map((rule) => `rules/${rule.id.toLowerCase()}`),
           })),
         },
-        { label: "Skills", items: [{ autogenerate: { directory: "skills" } }] },
         { label: "Changelog", link: "/changelog/" },
       ],
     }),

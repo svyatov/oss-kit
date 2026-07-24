@@ -2,36 +2,89 @@
 title: oss-kit
 description: One opinionated quality bar for open source repositories, and nine agent skills that hold you to it.
 template: splash
+head:
+  - tag: title
+    content: oss-kit
 hero:
-  tagline: Nine agent skills that hold your open source repository to one written quality bar, and tell you where it falls short.
+  tagline: Opinionated agent skills for healthier open source projects.
+  image:
+    html: '<img class="home-hero-mark" src="/icon.svg" width="640" height="640" alt="">'
   actions:
+    - text: Get started
+      link: /guides/getting-started/
+      icon: right-arrow
     - text: Install
       link: /guides/install/
-      icon: right-arrow
-    - text: Read the standard
-      link: /standard/
-      variant: minimal
+      variant: secondary
 ---
 
-import { Card, CardGrid } from "@astrojs/starlight/components"
+<section className="home-intro" aria-labelledby="how-it-works">
+  <div className="home-section-heading">
+    <p className="home-kicker">How it works</p>
+    <h2 id="how-it-works">From repository audit to verified fix.</h2>
+    <p>The audit checks one standard, routes each gap to the skill that owns it, and checks the evidence again.</p>
+  </div>
 
-<CardGrid stagger>
-  <Card title="Every opinion is written down">
-    40 numbered rules. Each one states what to do, why, the evidence a checker
-    looks for, and the skill that fixes it. Read it and disagree with it before
-    you install anything.
-  </Card>
-  <Card title="An audit that routes">
-    `oss-audit` scores a repository rule by rule and hands each gap to the skill
-    that fixes it, in an order that puts blocking rules first.
-  </Card>
-  <Card title="GitHub and GitLab">
-    A rule that applies to one forge says so. Nothing assumes you are on GitHub.
-  </Card>
-  <Card title="Install anywhere">
-    One command through the `skills` CLI, a plugin manifest for Claude Code,
-    Codex, Cursor, VS Code, and Copilot CLI, or directory-scan discovery for
-    every other host.
-  </Card>
-</CardGrid>
+  <ol className="home-route">
+    <li>
+      <span className="home-route-number" aria-hidden="true">01</span>
+      <div>
+        <h3>Audit the repository</h3>
+        <p><code>oss-audit</code> checks every applicable rule, records the evidence, and puts confirmed gaps before unknowns.</p>
+        <a href="/skills/oss-audit/">See how the audit works</a>
+      </div>
+    </li>
+    <li>
+      <span className="home-route-number" aria-hidden="true">02</span>
+      <div>
+        <h3>Hand each gap to its skill</h3>
+        <p>Eight focused skills fix documentation, community files, CI, security, releases, changelogs, prose, and skill packaging.</p>
+        <a href="/guides/getting-started/">Start fixing gaps</a>
+      </div>
+    </li>
+    <li>
+      <span className="home-route-number" aria-hidden="true">03</span>
+      <div>
+        <h3>Run the audit again</h3>
+        <p>The next audit checks the same evidence. Repeat the loop until no gaps remain.</p>
+        <span className="home-route-loop" aria-label="Audit, fix, rerun">
+          <code>audit</code><span aria-hidden="true">→</span><code>fix</code><span aria-hidden="true">→</span><code>rerun</code><span aria-hidden="true">✓</span>
+        </span>
+      </div>
+    </li>
+  </ol>
 
+  <p className="home-standard-link">Curious about the bar? <a href="/standard/">Read all 40 rules.</a></p>
+</section>
+
+<section className="home-proof" aria-labelledby="one-rule">
+  <div className="home-section-heading">
+    <p className="home-kicker">One rule, end to end</p>
+    <h2 id="one-rule">The standard makes every recommendation traceable.</h2>
+  </div>
+
+  <article className="home-rule">
+    <div className="home-rule-id">
+      <span>R-SEC-01</span>
+      <span>GitHub</span>
+    </div>
+    <div className="home-rule-body">
+      <h3>Pin every third-party action to a full commit SHA</h3>
+      <p>The audit checks every third-party <code>uses:</code> line for a 40-character SHA. A failure routes to <code>oss-harden</code>.</p>
+    </div>
+    <a className="home-rule-link" href="/rules/r-sec-01/">Read the full rule</a>
+  </article>
+</section>
+
+<section className="home-support" aria-labelledby="works-with">
+  <div>
+    <p className="home-kicker">Forge support</p>
+    <h2 id="works-with">GitHub and GitLab stay explicit.</h2>
+    <p>Every rule names its forge scope. A GitHub-only recommendation never presents itself as a universal requirement.</p>
+  </div>
+  <div>
+    <p className="home-kicker">Agent support</p>
+    <h2>Install the same skills in every host.</h2>
+    <p>Use the <code>skills</code> CLI, a supported plugin manifest, or the directory your agent already scans.</p>
+  </div>
+</section>
