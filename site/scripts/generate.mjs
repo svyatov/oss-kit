@@ -23,6 +23,7 @@ const FORGE_LABEL = { github: "GitHub only", gitlab: "GitLab only", both: "GitHu
  * @property {string} area
  * @property {string} number
  * @property {string} statement
+ * @property {string} section
  * @property {string} why
  * @property {string} check
  * @property {string} fixedBy
@@ -36,9 +37,17 @@ export function parseRules(text) {
   const starts = []
   /** @type {number[]} */
   const headings = []
+  /** @type {Map<number, string>} */
+  const sections = new Map()
+  let section = ""
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i]?.startsWith("### ")) starts.push(i)
-    if (ANY_HEADING.test(lines[i] ?? "")) headings.push(i)
+    const line = lines[i] ?? ""
+    if (line.startsWith("## ") && !line.startsWith("### ")) section = line.slice(3).trim()
+    if (line.startsWith("### ")) {
+      starts.push(i)
+      sections.set(i, section)
+    }
+    if (ANY_HEADING.test(line)) headings.push(i)
   }
   return starts.map((start) => {
     const end = headings.find((h) => h > start) ?? lines.length
@@ -62,11 +71,21 @@ export function parseRules(text) {
     if (forges !== "github" && forges !== "gitlab" && forges !== "both") {
       throw new Error(`${id}: Forges: must be github, gitlab, or both, found ${JSON.stringify(forges)}`)
     }
-    return { id, area, number, statement, why, check: one("Check"), fixedBy: one("Fixed by"), forges }
+    return {
+      id,
+      area,
+      number,
+      statement,
+      section: sections.get(start) ?? "",
+      why,
+      check: one("Check"),
+      fixedBy: one("Fixed by"),
+      forges,
+    }
   })
 }
 
-/** @param {Record<string,string>} fields @param {string} body */
+/** @param {Record<string,unknown>} fields @param {string} body */
 export function frontmatter(fields, body) {
   const head = Object.entries(fields)
     .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
@@ -74,27 +93,60 @@ export function frontmatter(fields, body) {
   return `---\n${head}\n---\n\n${body.trimStart()}`
 }
 
-/** @param {Rule} rule */
-export function renderRulePage(rule) {
-  const body = `## ${rule.statement}
+const LIMIT = 160
+
+/**
+ * Condenses prose into a meta description: one sentence, no markup, capped at
+ * a length search engines and social cards will actually show.
+ * @param {string} text
+ */
+export function summarize(text) {
+  const flat = text
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/[`*_]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+  const sentence = /^.*?[.!?](?=\s|$)/.exec(flat)?.[0] ?? flat
+  if (sentence.length <= LIMIT) return sentence
+  return `${sentence.slice(0, LIMIT - 1).replace(/\s+\S*$/, "")}...`
+}
+
+/** @param {string} markdown */
+export function firstParagraph(markdown) {
+  const blocks = markdown.split(/\n\s*\n/).map((block) => block.trim())
+  return blocks.find((block) => block !== "" && !/^([#>|:`-]|\d+\.\s|\*\s)/.test(block)) ?? ""
+}
+
+/** @param {string} markdown @param {string} fallback */
+export function pageDescription(markdown, fallback) {
+  return summarize(firstParagraph(markdown)) || fallback
+}
+
+/** @param {Rule} rule @param {string} sourcePath */
+export function renderRulePage(rule, sourcePath) {
+  const body = `**${rule.id}** applies to ${FORGE_LABEL[rule.forges]} and is fixed by [${rule.fixedBy}](/skills/${rule.fixedBy}/).
 
 ${rule.why}
 
 **Check:** ${rule.check}
 
-**Fixed by:** [${rule.fixedBy}](/skills/${rule.fixedBy}/)
-
-**Applies to:** ${FORGE_LABEL[rule.forges]}
-
 [Read the whole standard](/standard/)
 `
   return frontmatter(
-    { title: rule.id, description: rule.statement },
+    {
+      title: rule.statement,
+      description: summarize(rule.why),
+      sidebar: { label: rule.statement, badge: rule.id },
+      editUrl: `${EDIT}/${sourcePath}`,
+      // One rule, no headings under it, so a table of contents would list only itself.
+      tableOfContents: false,
+    },
     body,
   )
 }
 
 const BLOB = "https://github.com/svyatov/oss-kit/blob/main"
+const EDIT = "https://github.com/svyatov/oss-kit/edit/main"
 const LINK = /\[([^\]]*)\]\(([^)\s]+)\)/g
 
 /** @param {string} markdown @param {(target: string) => string|null} resolve */
@@ -140,7 +192,7 @@ export function renderSkillPage(sourcePath, text) {
   const title = fields.name ?? sourcePath
   const description = fields.description ?? ""
   return frontmatter(
-    { title, description },
+    { title, description, editUrl: `${EDIT}/${sourcePath}` },
     `${agentNotice(sourcePath)}\n\n${body}`,
   )
 }
@@ -169,14 +221,21 @@ export function writeAll(repoRoot, outDir) {
   const standardText = readFileSync(join(repoRoot, standardPath), "utf8")
   const rules = parseRules(standardText)
   for (const rule of rules) {
-    written.push(write(outDir, `rules/${rule.id.toLowerCase()}.md`, renderRulePage(rule)))
+    written.push(write(outDir, `rules/${rule.id.toLowerCase()}.md`, renderRulePage(rule, standardPath)))
   }
   written.push(
     write(
       outDir,
       "standard.md",
       frontmatter(
-        { title: "The standard", description: "Every rule oss-kit holds, in one page." },
+        {
+          title: "The standard",
+          description: "Every rule oss-kit holds, in one page.",
+          editUrl: `${EDIT}/${standardPath}`,
+          // Every rule here also has its own page. Indexing both returns the
+          // same rule twice for one query, so search resolves to the rule page.
+          pagefind: false,
+        },
         `${agentNotice(standardPath)}\n\n${standardText.replace(/^# .*\n/m, "")}`,
       ),
     ),
@@ -209,8 +268,18 @@ export function writeAll(repoRoot, outDir) {
       const refSource = `skills/${name}/references/${ref}`
       const text = readFileSync(join(repoRoot, refSource), "utf8")
       const body = `${agentNotice(refSource)}\n\n${text.replace(/^# (.*)\n/m, "")}`
-      const title = /^# (.*)$/m.exec(text)?.[1] ?? ref.replace(/\.md$/, "")
-      const refPage = frontmatter({ title, description: `Reference for ${name}.` }, body)
+      const heading = /^# (.*)$/m.exec(text)?.[1] ?? ref.replace(/\.md$/, "")
+      // Two skills both ship a "GitHub reference"; the owning skill disambiguates them.
+      const title = `${name}: ${heading}`
+      const refPage = frontmatter(
+        {
+          title,
+          description: pageDescription(text.replace(/^# .*\n/m, ""), `Reference for ${name}.`),
+          sidebar: { label: heading },
+          editUrl: `${EDIT}/${refSource}`,
+        },
+        body,
+      )
       written.push(write(outDir, `skills/${name}/${ref}`, rewriteLinks(refPage, resolve(name))))
     }
   }
@@ -221,7 +290,11 @@ export function writeAll(repoRoot, outDir) {
     const source = `docs/${guide}`
     const text = readFileSync(join(repoRoot, source), "utf8")
     const title = /^# (.*)$/m.exec(text)?.[1] ?? guide.replace(/\.md$/, "")
-    const page = frontmatter({ title, description: title }, text.replace(/^# .*\n/m, ""))
+    const prose = text.replace(/^# .*\n/m, "")
+    const page = frontmatter(
+      { title, description: pageDescription(prose, title), editUrl: `${EDIT}/${source}` },
+      prose,
+    )
     const resolveGuide = (/** @type {string} */ target) => {
       const key = target.replace(/^\.\//, "").replace(/\.md$/, "")
       if (guideTargets.has(key)) return `/guides/${key}/`
@@ -239,7 +312,11 @@ export function writeAll(repoRoot, outDir) {
       outDir,
       "changelog.md",
       frontmatter(
-        { title: "Changelog", description: "Every notable change to oss-kit." },
+        {
+          title: "Changelog",
+          description: "Every notable change to oss-kit.",
+          editUrl: `${EDIT}/CHANGELOG.md`,
+        },
         changelog.replace(/^# .*\n/m, ""),
       ),
     ),

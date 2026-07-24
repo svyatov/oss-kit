@@ -98,4 +98,8 @@ Specification conformance is checked by the validator this repository ships at `
 
 Dependabot has supported the `bun` ecosystem since February 2025, for the text `bun.lock` on Bun 1.1.39 or later. It ships version updates only. There are no Dependabot security updates for Bun, so a CVE in a dev dependency arrives through the weekly version bump rather than through a security alert.
 
-`skills-ref` was dropped from this repository entirely, not pinned differently, because `oss-skill` now bundles a validator this project maintains and CI runs. R-SKL-02 was already written to accept any specification validator, so the rule needed no change. The reason for removal rather than replacement is that `skills-ref`'s own upstream README calls it a library "intended for demonstration purposes only", not for production use. Do not restore the `skills-ref` install to CI or name it in any skill.
+`site/astro.config.mjs` imports `parseRules` from `site/scripts/generate.mjs` and builds the rules sidebar from `STANDARD.md` at config load. That is what keeps the sidebar in the order the standard argues, grouped under its own `##` headings, with no rule list duplicated in the config. Adding a rule needs no site change; renaming a `##` section in `STANDARD.md` renames a sidebar group. Autogeneration cannot do this, because it sorts by filename and would interleave the areas.
+
+Generated pages carry an `editUrl` pointing at the source they came from, because the generated Markdown under `site/src/content/docs/` is gitignored and has no file to edit. The global `editLink.baseUrl` is correct only for `index.mdx`, the one authored page.
+
+`lastUpdated` is deliberately off. It reads git commit dates for the content file, and the content files are generated and untracked; CI's shallow checkout would date them all to the same commit anyway.

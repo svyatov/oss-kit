@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- CI builds the documentation site. The site is generated from `STANDARD.md` and the skills, so a rule or a reference link that stops resolving now fails a check rather than reaching `main`.
+- A social card at `site/public/og.png`, and the `og:image` and `twitter:image` tags that point at it. The site already declared `twitter:card=summary_large_image`, so every share rendered an empty card.
+- `site/public/robots.txt`, naming the sitemap the site already generates.
+- A link to the repository in the site header, and an edit link on every page. Generated pages point at the file they were generated from, not at the generated copy.
+
+### Changed
+
+- A rule page is titled by the rule, not by its ID. The ID moves to a badge in the sidebar. The title drove the browser tab, the sidebar label, the pagination card, and the search result, so all four used to read `R-SEC-01` and say nothing.
+- The site sidebar groups rules by area in the order `STANDARD.md` argues them. It is built from `STANDARD.md` rather than from filenames, which sorted the areas alphabetically and split each one.
+- Guide and reference pages get a description drawn from their own first sentence. Guides used to repeat their title, and every reference page shared one generic line.
+- A reference page title names the skill that owns it, so the two `GitHub reference` pages and the two `GitLab reference` pages are distinguishable in search results.
+- Code blocks wrap, so an install command is readable on a phone without scrolling sideways.
+- `/standard/` is no longer in the search index. Every rule on it has its own page, so a query used to return the same rule twice.
+
+### Removed
+
+- The explicit `sharp` dependency in `site/package.json`. Astro already declares it as an optional dependency, and the site has no images.
+
 ## [0.2.0] - 2026-07-23
 
 ### Added

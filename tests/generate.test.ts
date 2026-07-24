@@ -2,10 +2,13 @@
 import { expect, test } from "bun:test"
 import {
   agentNotice,
+  pageDescription,
   parseRules,
+  summarize,
   renderRulePage,
   renderSkillPage,
   rewriteLinks,
+  splitFrontmatter,
   writeAll,
 } from "../site/scripts/generate.mjs"
 import { existsSync, mkdtempSync, readFileSync as read, rmSync } from "node:fs"
@@ -49,6 +52,7 @@ test("parseRules reads every field of every rule", () => {
     area: "DOC",
     number: "01",
     statement: "The README opens with one sentence saying what the project does",
+    section: "Documentation",
     why: "A reader decides in about five seconds whether to keep reading.",
     check: "the first paragraph of `README.md` after the title is a single sentence.",
     fixedBy: "oss-readme",
@@ -80,15 +84,30 @@ test("parseRules rejects a malformed heading", () => {
   expect(() => parseRules(broken)).toThrow("R-SEC-1")
 })
 
-test("renderRulePage writes frontmatter and every field", () => {
-  const page = renderRulePage(parseRules(TWO_RULES)[1]!)
+test("renderRulePage titles the page by the rule, not by its ID", () => {
+  const page = renderRulePage(parseRules(TWO_RULES)[1]!, "skills/oss-audit/STANDARD.md")
   expect(page.startsWith("---\n")).toBe(true)
-  expect(page).toContain('title: "R-SEC-01"')
-  expect(page).toContain("Pin every third-party action to a full commit SHA")
+  expect(page).toContain('title: "Pin every third-party action to a full commit SHA"')
+  expect(page).toContain('description: "A tag moves."')
+  expect(page).toContain('"badge":"R-SEC-01"')
+  expect(page).toContain("edit/main/skills/oss-audit/STANDARD.md")
   expect(page).toContain("A tag moves.")
   expect(page).toContain("every `uses:` line resolves to a 40-character SHA.")
   expect(page).toContain("/skills/oss-harden/")
   expect(page).toContain("GitHub only")
+})
+
+test("summarize cuts prose to one sentence a search result can show", () => {
+  expect(summarize("A tag moves. A SHA does not.")).toBe("A tag moves.")
+  expect(summarize("Needs npm 11.5.1 or newer. More.")).toBe("Needs npm 11.5.1 or newer.")
+  expect(summarize("See [the docs](https://x.test) and `code`.")).toBe("See the docs and code.")
+  expect(summarize(`${"word ".repeat(60)}end.`).length).toBeLessThanOrEqual(160)
+})
+
+test("pageDescription skips headings and directives to reach real prose", () => {
+  const doc = "# Title\n\n:::note\nAside.\n:::\n\nThe real first paragraph. Second sentence.\n"
+  expect(pageDescription(doc, "fallback")).toBe("The real first paragraph.")
+  expect(pageDescription("# Title only\n", "fallback")).toBe("fallback")
 })
 
 test("every rule in the real standard parses", () => {
@@ -143,6 +162,23 @@ test("writeAll produces every page the site needs", () => {
   expect(existsSync(join(out, "guides/superpowers"))).toBe(false)
 
   expect(read(join(out, "rules/r-sec-01.md"), "utf8")).toContain("/skills/oss-harden/")
+  rmSync(out, { recursive: true, force: true })
+})
+
+test("every page has a unique title and a description that is not a copy of it", () => {
+  const out = mkdtempSync(join(tmpdir(), "oss-kit-site-"))
+  const { written } = writeAll(".", out)
+  const pages = written
+    .filter((p) => p.endsWith(".md"))
+    .map((p) => {
+      const { fields } = splitFrontmatter(read(join(out, p), "utf8"))
+      return { path: p, title: fields.title, description: fields.description }
+    })
+
+  const titles = pages.map((p) => p.title)
+  expect(new Set(titles).size).toBe(titles.length)
+  expect(pages.filter((p) => p.description === p.title)).toEqual([])
+  expect(pages.filter((p) => !p.description)).toEqual([])
   rmSync(out, { recursive: true, force: true })
 })
 
