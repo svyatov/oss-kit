@@ -24,7 +24,8 @@
     "Cache policy now prefers official setup-action caching, hashes lockfiles, separates compatibility boundaries, and treats stale fallback restoration as optional because GitHub defines restore-keys as stale-cache prefixes. Matrix coverage now follows every supported release line, applicable project checks replace a mandatory lint-test-build trio, and GitLab no longer cancels diagnostic jobs on the first failure."
   ],
   "license": "MIT",
-  "copyright": "Copyright (c) 2025 Viktor Farcic",
-  "license_override": false,
-  "license_override_reason": null
+  "copyright": [
+    "Copyright (c) 2026 Leonid Svyatov",
+    "Copyright (c) 2025 Viktor Farcic"
+  ]
 }

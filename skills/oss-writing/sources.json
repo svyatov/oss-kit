@@ -34,7 +34,9 @@
     "Renamed from repo-prose to oss-writing on migration into oss-kit."
   ],
   "license": "MIT",
-  "copyright": "Copyright (c) blader; Copyright (c) softaworks",
-  "license_override": false,
-  "license_override_reason": null
+  "copyright": [
+    "Copyright (c) 2026 Leonid Svyatov",
+    "Copyright (c) blader",
+    "Copyright (c) softaworks"
+  ]
 }

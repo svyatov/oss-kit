@@ -99,15 +99,8 @@ requires is an incompatible change: a repository that passed yesterday can fail
 today. Adding a skill or a rule is not. While the version stays below 1.0.0, an
 incompatible change ships in a MINOR release.
 
-## Credits
-
-Four upstream projects this kit borrows from:
-
-- [Evil Martians](https://github.com/evilmartians/agent-skills), source of `oss-readme` and part of `oss-publish`
-- [vfarcic](https://github.com/vfarcic/dot-ai), source of `oss-ci`
-- [blader](https://github.com/blader/humanizer), source of part of `oss-writing`
-- [softaworks](https://github.com/softaworks/agent-toolkit), source of part of `oss-writing`
-
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE). A skill that derives from third-party work carries
+a `sources.json` naming what it came from and who holds copyright alongside the
+maintainer.
