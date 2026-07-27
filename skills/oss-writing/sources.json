@@ -31,7 +31,13 @@
     "Added a content rule (carry why, not what), length-and-silence rules, git-shaped worked examples, guidance for error messages, log lines, and code comments, and anti-patterns specific to agent-written git prose. None of these exist upstream.",
     "Inverted upstream's diff-anchored-writing rule for commits, changelogs, and migration guides, where narrating the change is correct.",
     "DO NOT TOUCH condensed to five lines and extended to identifiers, CLI flags, and file paths.",
-    "Renamed from repo-prose to oss-writing on migration into oss-kit."
+    "Renamed from repo-prose to oss-writing on migration into oss-kit.",
+    "Split into a core and one reference file. The tell catalog moved to references/tells.md and loads only when a draft is suspect, per R-SKL-07; the core keeps a single link to it.",
+    "Added four composition rules paraphrased from ASD-STE100 Issue 9 (name the referent, cap noun stacks at three, one instruction per step, keep the articles) and sentence length as a signal to split rather than a limit to count. ASD-STE100 is copyright ASD and an EU registered trademark; it is cited here and never reproduced, so no rule text or dictionary entry is copied and no attribution is owed in the copyright block. Its approved-word dictionary and no-gerund rule were rejected as a poor fit for software prose.",
+    "Added a normative statements section for the RFC 2119 and RFC 8174 uppercase keywords.",
+    "Attached a reason to every hard constraint and moved the worked examples into <example> tags, following Anthropic's Claude 5 context engineering post, the Opus 5 prompting page, and the prompting best practices page.",
+    "Added a nominalized gerund chain row to the catalog. Prefer-the-common-word folded into the AI-vocabulary row and synonym drift into elegant variation, because both already existed there under other names.",
+    "Dropped the duplicate commit-body example and shortened the bad half of each remaining pair."
   ],
   "license": "MIT",
   "copyright": [
