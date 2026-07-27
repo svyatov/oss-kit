@@ -64,7 +64,7 @@ Length is not effort. Padding a trivial change into a structured document wastes
 
 A sentence past roughly 20 words in an instruction, or 25 in an explanation, is a signal to split it, not a limit to count against.
 
-Machine-written prose also carries a lexicon these rules do not cover: inflated significance, promotional adjectives, tacked-on `-ing` clauses, empty contrast, signposting, hedging stacks. When a draft reads as padded, generic, or promotional, and before returning anything longer than a sentence, check it against [references/tells.md](references/tells.md), which names each pattern and what to write instead.
+Machine-written prose also carries a lexicon these rules do not cover: inflated significance, promotional adjectives, tacked-on `-ing` clauses, empty contrast, signposting, hedging stacks. When a draft reads as padded, generic, or promotional, check it against [references/tells.md](references/tells.md), which names each pattern and what to write instead.
 
 ## Normative statements
 
@@ -74,10 +74,10 @@ Uppercase MUST, SHOULD, and MAY carry their RFC 2119 and RFC 8174 meanings, and 
 
 Check these before returning any text:
 
-- No em dashes, en dashes, or ` -- `: in short technical prose they are the strongest single machine-written tell, and a period, comma, colon, or pair of parentheses carries the same break.
-- No emoji anywhere, including headings and bullets: they survive neither a plain terminal nor a screen reader cleanly, and they decorate a file someone will grep.
+- No em dashes, en dashes, or ` -- `: in short technical prose they are a reliable machine-written tell, and a period, comma, colon, or pair of parentheses carries the same break.
+- No emoji anywhere, including headings and bullets: their width and glyph vary by terminal and font, so they break alignment in the fixed-width contexts a repository lives in.
 - No inline-header bullet lists (`- **Performance:** it is faster`): the bolded stub replaces the sentence that would have said what changed, so the reader gets a label instead of a claim.
-- Headings in sentence case, not Title Case: it is what the Google developer style guide prescribes and what most repositories already use, so Title Case reads as imported from elsewhere.
+- Headings in sentence case, not Title Case: it is what the Google developer style guide prescribes, and mixing the two inside one document reads as text assembled from two sources.
 - No recap section restating what the text just said: the reader just read it, and a recap marks text written to a length rather than to a point.
 - No `Generated with`, `Co-Authored-By: Claude`, or tool attribution footers: a trailer records who is accountable for the change, and a tool cannot be.
 - No boilerplate caveats. State a precondition, limitation, or risk when it changes what the reader should do: a caveat that changes nothing trains the reader to skip the one that matters.
@@ -124,7 +124,8 @@ Bad:  refactor(auth): improve token handling
 Good: fix(auth): refresh tokens 30s before expiry
 
       Clock skew against the IdP reached 12s, so tokens refreshed exactly
-      at expiry were rejected about 1 in 400 times. 30s covers it.
+      at expiry were rejected about 1 in 400 times. 30s covers the
+      observed skew with margin, and the extra refresh cost is negligible.
 ```
 
 </example>
@@ -141,8 +142,10 @@ Bad:  ## Summary
 
 Good: Search results were recomputed on every keystroke, which pinned a CPU
       core during peak hours. Results are now cached per normalized query
-      for 5 minutes. The cache is in-process, so a deploy clears it: fine
-      at one replica, needs Redis if we scale out.
+      for 5 minutes.
+
+      The cache is in-process, so a deploy clears it. That is fine at one
+      replica, and needs Redis if we scale out.
 
       Verified with bench/load.sh: p99 drops from 1.4s to 210ms.
 ```

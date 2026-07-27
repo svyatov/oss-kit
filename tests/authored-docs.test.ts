@@ -25,17 +25,24 @@ test("no authored page uses a dash character the house style forbids", () => {
   }
 })
 
-// Scans for the two dash characters only. It cannot scan for " -- ", because
-// oss-writing names that pattern inside backticks in the rule that forbids it.
-test("no skill file uses a dash character the house style forbids", () => {
-  const files = readdirSync("skills", { recursive: true, encoding: "utf8" }).filter((f) =>
-    f.endsWith(".md"),
-  )
-  expect(files.length).toBeGreaterThan(9)
-  for (const file of files) {
-    const text = readFileSync(`skills/${file}`, "utf8")
-    expect(text.includes("—"), `em dash in ${file}`).toBe(false)
-    expect(text.includes("–"), `en dash in ${file}`).toBe(false)
+// Strips fenced blocks and inline code, so the scan reads only prose. This is
+// the skill's own exception: quoted code, output, and config are reproduced
+// verbatim, and a rule may name the pattern it forbids inside backticks.
+const proseOnly = (text: string) => text.replace(/```[\s\S]*?```/g, "").replace(/`[^`\n]*`/g, "")
+
+test("no repository prose uses a dash the house style forbids", () => {
+  const skillFiles = readdirSync("skills", { recursive: true, encoding: "utf8" })
+    .filter((f) => f.endsWith(".md"))
+    .map((f) => `skills/${f}`)
+  expect(skillFiles.length).toBeGreaterThan(9)
+
+  const rootDocs = ["README.md", "CONTRIBUTING.md", "AGENTS.md", "CHANGELOG.md", "SECURITY.md"]
+
+  for (const file of [...skillFiles, ...rootDocs]) {
+    const prose = proseOnly(readFileSync(file, "utf8"))
+    expect(prose.includes("—"), `em dash in ${file}`).toBe(false)
+    expect(prose.includes("–"), `en dash in ${file}`).toBe(false)
+    expect(prose.includes(" -- "), `" -- " in ${file}`).toBe(false)
   }
 })
 
