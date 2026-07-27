@@ -78,10 +78,10 @@ This repository is scored against `skills/oss-audit/STANDARD.md` like any other.
 
 Not applicable:
 
-- R-CI-04: a lockfile now exists, but no CI step caches anything, so there is no cache key to get wrong.
+- R-CI-04: no CI step caches anything, and the rule now says a CI configuration defining no dependency cache falls outside it rather than satisfying it with nothing to check.
 - R-SEC-06: GitLab-only rule; this repository is on GitHub.
-- R-PUB-01, R-PUB-02, R-PUB-03, R-PUB-04: oss-kit ships through git, `npx skills add`, and the Claude Code plugin marketplace, and publishes to no package registry, so there is no publish step, token, OIDC flow, or provenance to secure.
-- R-CHG-05: no API has been removed, so there is no deprecation to have preceded it.
+- R-PUB-01, R-PUB-02, R-PUB-03, R-PUB-04: oss-kit ships through git, `npx skills add`, and the Claude Code plugin marketplace, and publishes to no package registry, so the whole PUB area is out of scope by its preamble and its rules are not checked one at a time.
+- R-CHG-05: no public item has been removed, and the rule now says a project that has removed none falls outside it.
 
 Nothing is pending. R-COM-07 is met: the description, the homepage, and eight topics are set, all three readable with `gh repo view --json description,homepageUrl,repositoryTopics`. They are forge settings, so no file records them and no diff shows them changing. The social preview image is still unset, and R-COM-07 does not ask for one.
 
@@ -91,7 +91,7 @@ The public API that R-CHG-02 requires is declared in the README under Versioning
 
 `CHANGELOG.md` pins Keep a Changelog 2.0.0, which was published on 2026-06-07 and is what `oss-changelog` prescribes. The file used to pin 1.1.0.
 
-R-SEC-05 is met: `git cat-file -t v0.1.0` prints `tag`, and `git tag -v v0.1.0` reports a good SSH signature for the ED25519 key published at `gh api users/svyatov/ssh_signing_keys`. Verification needs `gpg.ssh.allowedSignersFile` pointed at that key; without it `git tag -v` fails with a configuration error rather than a bad signature, which reads like an unsigned tag and is not one.
+R-SEC-05 is met: `git cat-file -t v0.2.0` prints `tag`, and `git tag -v v0.2.0` reports a good SSH signature for the ED25519 key published at `gh api users/svyatov/ssh_signing_keys`. Verification needs `gpg.ssh.allowedSignersFile` pointed at an allowed-signers file naming that key with the tagger's email; without it `git tag -v` fails with a configuration error rather than a bad signature, which reads like an unsigned tag and is not one. The rule now carries both the fetch command and that distinction, so an audit on a fresh checkout can resolve it instead of reporting unknown.
 
 R-SEC-04 and R-SEC-09 were both pending on the repository becoming public. It is public now, and both are set. The default branch is guarded by a repository ruleset named `main`, scoped to `~DEFAULT_BRANCH` rather than the literal branch name so renaming the branch cannot unguard it. It requires a pull request with one approving review, code owner review, approval of the newest push by somebody other than its pusher, resolved review threads, squash as the only merge method, and the four checks CI reports, and it rejects force pushes, deletion, and non-linear history. Read it with `gh api repos/svyatov/oss-kit/rulesets`, not with the classic `branches/main/protection` endpoint: this repository has no classic branch protection rule, so that endpoint answers `404 Branch not protected`, which reads like an unguarded branch and is not one. Code scanning runs through CodeQL default setup rather than a workflow file, scanning `actions`, `javascript`, `javascript-typescript`, and `typescript`, so nothing under `.github/workflows/` implements it and nothing there needs maintaining for it.
 

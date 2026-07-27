@@ -169,7 +169,7 @@ Forges: both
 
 When CI runs a different command than `CONTRIBUTING.md` documents, a contributor passes locally and fails in CI, and neither of you can tell which is authoritative.
 
-Check: the CI configuration invokes every applicable lint, typecheck, test, and build command defined by the project's automation, and each command string agrees with `CONTRIBUTING.md`.
+Check: the CI configuration invokes every applicable lint, typecheck, test, and build command defined by the project's automation, and every command `CONTRIBUTING.md` gives a contributor runs in CI as the same underlying check. A CI job may reach a check through a different entry point than the documented one, such as a second runtime or a script the documented alias wraps, as long as the check itself runs; a documented command with no CI job behind it fails the rule.
 
 Fixed by: oss-ci
 Forges: both
@@ -187,7 +187,7 @@ Forges: both
 
 A cache key that ignores the lockfile serves stale dependencies after an upgrade, so CI tests a dependency set nobody has. A key that changes on every run caches nothing and pays the restore cost anyway.
 
-Check: every dependency cache in the CI configuration caches only reusable package-manager data, derives its primary key from the lockfile, and separates every operating system, architecture, runtime, or package-manager boundary that makes the cached contents incompatible. Any fallback key preserves those compatibility boundaries.
+Check: every dependency cache in the CI configuration caches only reusable package-manager data, derives its primary key from the lockfile, and separates every operating system, architecture, runtime, or package-manager boundary that makes the cached contents incompatible. Any fallback key preserves those compatibility boundaries. A CI configuration that defines no dependency cache falls outside this rule rather than satisfying it with nothing to check.
 
 Fixed by: oss-ci
 Forges: both
@@ -243,7 +243,7 @@ Forges: both
 
 An unsigned tag proves nothing about who cut the release. Anyone with write access, or anyone who takes it, can point a tag at any commit. Forge verification reflects keys and identities registered with that forge and differs by signature format, so the portable evidence comes from git itself against a maintainer-controlled trust source.
 
-Check: after `git fetch --tags` and importing the maintainer's published signing key, `git tag -v <tag>` on the newest release tag succeeds, and `git cat-file -t <tag>` prints `tag`, which means the tag is annotated rather than lightweight.
+Check: after `git fetch --tags` and importing the maintainer's published signing key, `git tag -v <tag>` on the newest release tag succeeds, and `git cat-file -t <tag>` prints `tag`, which means the tag is annotated rather than lightweight. Fetch the key from the forge the maintainer publishes it on: `gh api users/{owner}/ssh_signing_keys` or `gh api users/{owner}/gpg_keys` on GitHub, `GET /users/:id/keys` or `/users/:id/gpg_keys` on GitLab. An SSH signature verifies only against an allowed-signers file naming that key with the tagger's email, pointed at by `gpg.ssh.allowedSignersFile`; without it `git tag -v` reports a configuration error, which is the check failing to run rather than the tag failing to verify.
 
 Fixed by: oss-harden
 Forges: both
@@ -285,6 +285,8 @@ Fixed by: oss-harden
 Forges: both
 
 ## Release and publishing
+
+This area applies only to a repository that publishes an artifact to a package registry, evidenced by a manifest declaring a public package, a release workflow naming a publish command, or an existing registry page. Where none exists, the area is not applicable as a whole and its rules are not checked one at a time. A repository that ships through git tags, a forge release, or an installer that reads its source tree publishes nothing to secure here.
 
 ### R-PUB-01: Publishing happens in CI, triggered by a tag, never from a developer machine
 
@@ -364,7 +366,7 @@ Forges: both
 
 Removing an API without warning turns an upgrade into an outage. Users need a released version where the old path still works and the interface they use directs them to the replacement.
 
-Check: every public item under Removed appeared under Deprecated in an earlier release, stayed usable for the project's stated deprecation window, and produced an interface-appropriate notice naming the replacement or migration path and earliest removal version. For stable SemVer, deprecation ships in a MINOR release and removal waits for a later MAJOR release.
+Check: every public item under Removed appeared under Deprecated in an earlier release, stayed usable for the project's stated deprecation window, and produced an interface-appropriate notice naming the replacement or migration path and earliest removal version. For stable SemVer, deprecation ships in a MINOR release and removal waits for a later MAJOR release. A project that has removed no public item falls outside this rule rather than satisfying it with nothing to check.
 
 Fixed by: oss-changelog
 Forges: both

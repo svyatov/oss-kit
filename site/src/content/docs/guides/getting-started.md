@@ -21,9 +21,10 @@ Start with an audit when you want the broadest view:
 Use oss-audit on this repository and list every gap against STANDARD.md.
 ```
 
-The audit returns one row per rule, with the evidence it found and the skill
-that fixes each gap. Work down the prioritized list it gives you, handing each
-item to the skill it names:
+The audit returns a count line and then one line per gap, most important
+first, each with the evidence it found and the skill that fixes it. Rules that
+already pass do not appear. Work down the list, handing each item to the skill
+it names:
 
 ```
 Fix the R-SEC findings from that audit with oss-harden.
