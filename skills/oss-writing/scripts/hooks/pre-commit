@@ -21,13 +21,16 @@ if [ "$(git config --bool osskit.precommit)" = "false" ]; then
   exit 0
 fi
 
-files=$(git diff --cached --name-only --diff-filter=ACM -- '*.md')
+# core.quotePath=false stops git escaping a non-ASCII path into a quoted form
+# that names no file on disk, which would fail the commit rather than check it.
+files=$(git -c core.quotePath=false diff --cached --name-only --diff-filter=ACM -- '*.md')
 [ -n "$files" ] || exit 0
 
 # A newline is the only separator git used above, and globbing is off, so a
-# path with a space in it still arrives as one argument.
+# path with a space in it still arrives as one argument. The -- keeps a path
+# that begins with a hyphen from being read as an option and skipped.
 IFS='
 '
 set -f
 # shellcheck disable=SC2086
-node "$checker" $files
+node "$checker" -- $files

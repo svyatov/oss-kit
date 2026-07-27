@@ -14,8 +14,8 @@
  * this file is held to it.
  */
 import { execFileSync } from "node:child_process"
-import { readFileSync, readdirSync, realpathSync, statSync } from "node:fs"
-import { basename, dirname, extname, join, relative, resolve, sep } from "node:path"
+import { readFileSync, realpathSync, statSync } from "node:fs"
+import { basename, dirname, join, resolve, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 
 /**
@@ -165,10 +165,14 @@ export const PATTERNS = [
   {
     // A colon inside or straight after the bold marks a label. A period marks a
     // claim, which SKILL.md allows, so `- **Fast.** 50% faster` does not match.
+    //
+    // `**Breaking:**` is exempt because R-CHG-01 requires it on every
+    // incompatible changelog entry. Without the exemption the two rules
+    // contradict each other and a correctly marked entry cannot be written.
     id: "inline-header-bullet",
     severity: "offence",
     token: "inline-header bullet",
-    match: /^[ \t]*[-*+][ \t]+\*\*[^*\n]*(?::\*\*|\*\*[ \t]*:)/gm,
+    match: /^[ \t]*[-*+][ \t]+\*\*(?!Breaking:\*\*)[^*\n]*(?::\*\*|\*\*[ \t]*:)/gm,
     instead: "a sentence that makes the claim the label is standing in for",
   },
   {
@@ -365,7 +369,12 @@ function maskSpans(chars, text) {
  */
 export function maskProse(text) {
   const normalized = text.replace(/\r\n/g, "\n")
-  const chars = [...normalized]
+  // split rather than spread. Spreading yields one element per code point, but
+  // every offset here comes from `line.length` and from a regex `index`, which
+  // count UTF-16 units. One emoji would put the two a slot apart, and from
+  // there masking lands off its target: a fence stops being blanked and the
+  // code inside it is scanned as prose.
+  const chars = normalized.split("")
   maskBlocks(chars, normalized.split("\n"))
   const blocked = chars.join("")
   maskSpans(chars, blocked)
@@ -540,6 +549,11 @@ export function readConfigAllow(path) {
 /**
  * Walks up from dir looking for `.oss-kit.json`, so a hook running against one
  * file still finds the repository's own allowlist.
+ *
+ * The walk stops at the repository root, the directory holding `.git`. A
+ * repository's allowlist decides what counts as an offence, so one lying above
+ * the checkout would let a directory nobody in the repository can see change
+ * how the repository scores.
  * @param {string} dir
  * @returns {string|null}
  */
@@ -551,6 +565,11 @@ export function findConfig(dir) {
       if (statSync(candidate).isFile()) return candidate
     } catch {
       // Nothing at that path. Fall through to the parent.
+    }
+    try {
+      if (statSync(join(current, ".git"))) return null
+    } catch {
+      // Not the repository root. Keep walking.
     }
     const parent = dirname(current)
     if (parent === current) return null
@@ -603,39 +622,22 @@ function trackedMarkdown(root) {
 }
 
 /**
- * @param {string} dir
- * @param {string} base
- * @returns {Generator<string>}
- */
-function* walkMarkdown(dir, base) {
-  let entries
-  try {
-    entries = readdirSync(dir, { withFileTypes: true })
-  } catch {
-    return
-  }
-  for (const entry of entries) {
-    if (entry.isSymbolicLink()) continue
-    const path = join(dir, entry.name)
-    if (entry.isDirectory()) {
-      if (entry.name !== ".git" && entry.name !== "node_modules") yield* walkMarkdown(path, base)
-    } else if (entry.isFile() && extname(entry.name) === ".md") {
-      yield relative(base, path)
-    }
-  }
-}
-
-/**
- * The rule's file set under root, as repository-relative paths, sorted.
- * readdir order is not stable across platforms, and the same audit run twice
- * has to produce the same output.
+ * The rule's file set under root, as repository-relative paths, sorted, or null
+ * outside a git checkout. readdir order is not stable across platforms, and the
+ * same audit run twice has to produce the same output.
+ *
+ * There is deliberately no filesystem fallback. Walking the tree would report a
+ * file the repository ignores, so the same tree would score one way inside a
+ * checkout and another way outside it, which is the disagreement this mode
+ * exists to prevent. Without git the honest answer is that the rule is unknown.
  * @param {string} root
  * @param {keyof typeof RULES} rule
- * @returns {string[]}
+ * @returns {string[]|null}
  */
 export function ruleFiles(root, rule) {
   const pattern = RULES[rule]
-  const listed = trackedMarkdown(root) ?? [...walkMarkdown(root, root)]
+  const listed = trackedMarkdown(root)
+  if (listed === null) return null
   return listed
     .map((path) => path.split(sep).join("/"))
     .filter((path) => pattern.test(path))
@@ -746,7 +748,18 @@ export function main(argv) {
     }
     const rule = /** @type {keyof typeof RULES} */ (ruleId)
     const patterns = PATTERNS.filter((pattern) => pattern.rules?.includes(rule))
-    for (const rel of ruleFiles(root, rule)) {
+    const files = ruleFiles(root, rule)
+    if (files === null) {
+      process.stderr.write(`${root} is not a git checkout; ${rule} evidence comes from git ls-files, so the rule is unknown here\n`)
+      return 2
+    }
+    if (files.length === 0) {
+      // A silent exit 0 reads as a clean pass. It is not one: the rule found
+      // nothing to check, and an auditor scoring on that would report a pass
+      // with no evidence behind it.
+      process.stderr.write(`no file in ${rule}'s set is tracked under ${root}; nothing was checked\n`)
+    }
+    for (const rel of files) {
       let text
       try {
         text = readFileSync(join(root, rel), "utf8")

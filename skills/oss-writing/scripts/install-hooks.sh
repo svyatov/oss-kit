@@ -6,10 +6,16 @@
 #
 # Usage: sh skills/oss-writing/scripts/install-hooks.sh [--force]
 
-dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+# pwd -P resolves symlinks. Agents load this skill through a linked path such as
+# .claude/skills, and recording that path in core.hooksPath leaves the caller
+# comparing it against the real directory, deciding the hooks are not installed,
+# and offering again on every run.
+dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
 hooks="$dir/hooks"
 checker="$dir/check-tells.mjs"
-command="git ls-files -z '*.md' | xargs -0 node $checker"
+# The -- stops a Markdown file whose name begins with a hyphen being read as an
+# option and skipped without a word.
+command="git ls-files -z '*.md' | xargs -0 node $checker --"
 
 if ! git rev-parse --git-dir >/dev/null 2>&1; then
   echo "install-hooks.sh: run this inside a git repository" >&2
@@ -49,7 +55,7 @@ clean=yes
 if [ ! -f "$checker" ] || ! command -v node >/dev/null 2>&1; then
   clean=no
 elif [ -n "$(git ls-files '*.md')" ]; then
-  git ls-files -z '*.md' | xargs -0 node "$checker" >/dev/null 2>&1 || clean=no
+  git ls-files -z '*.md' | xargs -0 node "$checker" -- >/dev/null 2>&1 || clean=no
 fi
 
 if [ "$clean" = "yes" ]; then

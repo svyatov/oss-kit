@@ -7,8 +7,16 @@ import { PATTERNS, maskProse, scan } from "../skills/oss-writing/scripts/check-t
 
 const CHECKER = "skills/oss-writing/scripts/check-tells.mjs"
 
+// Run from a directory with no .oss-kit.json above it. With the repository root
+// as the working directory the checker would find this repository's own
+// allowlist, and a heading test would pass on a word it never declared.
+const SANDBOX = mkdtempSync(join(tmpdir(), "check-tells-cwd-"))
+
 const run = (args: string[], stdin?: string) =>
-  Bun.spawnSync(["node", CHECKER, ...args], { stdin: stdin === undefined ? "ignore" : Buffer.from(stdin) })
+  Bun.spawnSync(["node", join(process.cwd(), CHECKER), ...args], {
+    cwd: SANDBOX,
+    stdin: stdin === undefined ? "ignore" : Buffer.from(stdin),
+  })
 
 const out = (result: ReturnType<typeof run>) => result.stdout.toString() + result.stderr.toString()
 
@@ -424,9 +432,39 @@ test("--rule names the rules it implements when given one it does not", () => {
   expect(result.stderr.toString()).toContain("R-DOC-05")
 })
 
-test("--rule falls back to a filesystem walk outside a git checkout", () => {
+test("--rule reports the rule unknown outside a git checkout", () => {
   const dir = fixture({ "README.md": "an em — dash\n", "docs/a.md": "an em — dash\n" }, false)
   const result = rule(dir)
-  expect(result.stdout.toString().trim().split("\n")).toHaveLength(2)
+  expect(result.exitCode).toBe(2)
+  expect(result.stdout.toString()).toBe("")
+  expect(result.stderr.toString()).toContain("git ls-files")
+})
+
+test("--rule says so when the rule's file set is empty", () => {
+  const dir = fixture({ "src/notes.md": "an em — dash\n" })
+  const result = rule(dir)
+  expect(result.exitCode).toBe(0)
+  expect(result.stdout.toString()).toBe("")
+  expect(result.stderr.toString()).toContain("nothing was checked")
+})
+
+test("a file named like an option is checked, not swallowed", () => {
+  const dir = mkdtempSync(join(tmpdir(), "check-tells-"))
+  const file = join(dir, "--allow=x.md")
+  writeFileSync(file, "an em — dash\n")
+  const result = run(["--", file])
   expect(result.exitCode).toBe(1)
+  expect(result.stdout.toString()).toContain("--allow=x.md")
+})
+
+test("an astral character does not shift the mask off its target", () => {
+  const withEmoji = "\u{1F600}\u{1F600}\u{1F600} hi\n\n```sh\nleverage the robust thing\n```\n"
+  expect(maskProse(withEmoji)).toHaveLength(withEmoji.length)
+  // Only the three emoji, nothing out of the fence.
+  expect(tell(withEmoji).map((finding) => finding.tell)).toEqual(["\u{1F600}", "\u{1F600}", "\u{1F600}"])
+})
+
+test("the Breaking marker R-CHG-01 requires is not an inline-header bullet", () => {
+  expect(tell("- **Breaking:** dropped X. Use Y.\n")).toHaveLength(0)
+  expect(tell("- **Note:** dropped X.\n")).toHaveLength(1)
 })
