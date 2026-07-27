@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
-import { mkdtempSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 
 import { PATTERNS, maskProse, scan } from "../skills/oss-writing/scripts/check-tells.mjs"
 
@@ -298,4 +298,135 @@ test("a code of conduct with no attribution has its headings checked", () => {
 
 test("another file mentioning the Contributor Covenant still has its headings checked", () => {
   expect(scan(COC, "CONTRIBUTING.md").map((f) => f.tell)).toEqual(["Pledge"])
+})
+
+const fixture = (files: Record<string, string>, init = true) => {
+  const dir = mkdtempSync(join(tmpdir(), "tells-repo-"))
+  for (const [name, body] of Object.entries(files)) {
+    mkdirSync(dirname(join(dir, name)), { recursive: true })
+    writeFileSync(join(dir, name), body)
+  }
+  if (init) {
+    Bun.spawnSync(["git", "init", "-q"], { cwd: dir })
+    Bun.spawnSync(["git", "add", "-A"], { cwd: dir })
+  }
+  return dir
+}
+
+const rule = (dir: string, args: string[] = ["R-DOC-05"], cwd = process.cwd()) =>
+  Bun.spawnSync(["node", join(process.cwd(), CHECKER), "--rule", ...args, dir], { cwd })
+
+test("--rule reports only the locations R-DOC-05 names", () => {
+  const dir = fixture({
+    "README.md": "an em — dash\n",
+    "docs/guide.md": "an em — dash\n",
+    "CONTRIBUTING.md": "an em — dash\n",
+    "SECURITY.md": "an em — dash\n",
+    "CODE_OF_CONDUCT.md": "an em — dash\n",
+    "skills/oss-thing/SKILL.md": "an em — dash\n",
+    "src/notes.md": "an em — dash\n",
+  })
+  const lines = rule(dir).stdout.toString().trim().split("\n")
+  expect(lines).toHaveLength(5)
+  expect(lines.join("\n")).not.toContain("SKILL.md")
+  expect(lines.join("\n")).not.toContain("notes.md")
+})
+
+test("--rule reports only the patterns R-DOC-05 names", () => {
+  const dir = fixture({ "README.md": "a -- break and a robust design\n" })
+  const result = rule(dir)
+  expect(result.stdout.toString()).toContain("robust")
+  expect(result.stdout.toString()).not.toContain(" -- ")
+  expect(run([join(dir, "README.md")]).stdout.toString()).toContain(" -- ")
+})
+
+test("--rule promotes every finding to an offence", () => {
+  const dir = fixture({ "README.md": "a robust design\n" })
+  const result = rule(dir)
+  expect(result.stdout.toString()).toContain("offence")
+  expect(result.stdout.toString()).not.toContain("suspicion")
+  expect(result.exitCode).toBe(1)
+})
+
+test("--rule ignores a suspicion outside R-DOC-05's pattern set", () => {
+  const dir = fixture({ "README.md": "the cache key is critical\n" })
+  expect(rule(dir).stdout.toString()).toBe("")
+  expect(rule(dir).exitCode).toBe(0)
+})
+
+test("--rule skips a gitignored file and a non-Markdown file under docs/", () => {
+  const dir = fixture({
+    ".gitignore": "docs/ignored.md\n",
+    "docs/ignored.md": "an em — dash\n",
+    "docs/page.html": "an em — dash\n",
+    "README.md": "clean.\n",
+  })
+  expect(rule(dir).stdout.toString()).toBe("")
+  expect(rule(dir).exitCode).toBe(0)
+})
+
+const CHANGELOG = `# Changelog
+
+An em — dash in the preamble is outside the entry text.
+
+## [Unreleased]
+
+- an em — dash in an entry
+
+## [1.2.0 – 1.2.1] - 2026-01-01
+
+- a clean entry
+
+[Unreleased]: https://example.com/compare/v1.2.0–HEAD
+`
+
+test("--rule reads the entry text of a changelog and nothing else", () => {
+  const dir = fixture({ "CHANGELOG.md": CHANGELOG, "README.md": "clean.\n" })
+  const lines = rule(dir).stdout.toString().trim().split("\n")
+  expect(lines).toHaveLength(1)
+  expect(lines[0]).toContain("CHANGELOG.md:7:")
+})
+
+test("--rule runs clean on a repository with no docs directory", () => {
+  const dir = fixture({ "README.md": "clean prose.\n" })
+  expect(rule(dir).exitCode).toBe(0)
+})
+
+test("--rule gives the same answer from any working directory", () => {
+  const dir = fixture({ "README.md": "an em — dash\n", "docs/a.md": "an em — dash\n" })
+  const here = rule(dir).stdout.toString()
+  const there = rule(dir, ["R-DOC-05"], tmpdir()).stdout.toString()
+  expect(there).toBe(here)
+  expect(rule(dir).stdout.toString()).toBe(here)
+})
+
+test("--rule reads a root-level allowlist rather than a flag", () => {
+  const dir = fixture({
+    "README.md": "## build with Astro\n",
+    ".oss-kit.json": JSON.stringify({ "oss-writing": { allow: ["Astro"] } }),
+  })
+  expect(rule(dir).exitCode).toBe(0)
+  const rejected = rule(dir, ["R-DOC-05", "--allow", "Astro"])
+  expect(rejected.exitCode).toBe(2)
+  expect(rejected.stderr.toString()).toContain("--allow")
+})
+
+test("--rule takes at most one root", () => {
+  const dir = fixture({ "README.md": "clean.\n" })
+  const result = Bun.spawnSync(["node", join(process.cwd(), CHECKER), "--rule", "R-DOC-05", dir, dir])
+  expect(result.exitCode).toBe(2)
+})
+
+test("--rule names the rules it implements when given one it does not", () => {
+  const dir = fixture({ "README.md": "clean.\n" })
+  const result = rule(dir, ["R-DOC-99"])
+  expect(result.exitCode).toBe(2)
+  expect(result.stderr.toString()).toContain("R-DOC-05")
+})
+
+test("--rule falls back to a filesystem walk outside a git checkout", () => {
+  const dir = fixture({ "README.md": "an em — dash\n", "docs/a.md": "an em — dash\n" }, false)
+  const result = rule(dir)
+  expect(result.stdout.toString().trim().split("\n")).toHaveLength(2)
+  expect(result.exitCode).toBe(1)
 })

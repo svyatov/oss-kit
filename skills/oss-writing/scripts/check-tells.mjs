@@ -13,8 +13,9 @@
  * ships to whatever the reader already has. R-SKL-05 says the same thing, and
  * this file is held to it.
  */
-import { readFileSync, realpathSync } from "node:fs"
-import { basename, dirname, join, resolve } from "node:path"
+import { execFileSync } from "node:child_process"
+import { readFileSync, readdirSync, realpathSync } from "node:fs"
+import { basename, dirname, extname, join, relative, resolve, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 
 /**
@@ -556,11 +557,14 @@ export function findConfig(dir) {
 }
 
 /**
+ * Ordered by code point rather than by locale, because an auditor scoring the
+ * same repository twice has to get the same bytes both times.
  * @param {Finding[]} findings
  * @returns {Finding[]}
  */
 export function sortFindings(findings) {
-  return findings.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line || a.col - b.col || a.tell.localeCompare(b.tell))
+  const order = (/** @type {string} */ a, /** @type {string} */ b) => (a < b ? -1 : a > b ? 1 : 0)
+  return findings.sort((a, b) => order(a.file, b.file) || a.line - b.line || a.col - b.col || order(a.tell, b.tell))
 }
 
 /**
@@ -569,6 +573,95 @@ export function sortFindings(findings) {
  */
 export function formatFinding(finding) {
   return `${finding.file}:${finding.line}:${finding.col}  ${finding.severity}  ${finding.tell}  ->  ${finding.instead}`
+}
+
+// The file set of every rule this script can score, as repository-relative
+// paths. R-DOC-05's pattern set is the entries of PATTERNS that carry its ID.
+const RULES = {
+  "R-DOC-05": /^(?:README\.md|CONTRIBUTING\.md|SECURITY\.md|CODE_OF_CONDUCT\.md|CHANGELOG\.md|docs\/.+\.md)$/,
+}
+
+/**
+ * Markdown git tracks under root, or null outside a git checkout. Reading git
+ * rather than the filesystem is what keeps the mode off ignored and untracked
+ * paths, which is where a repository keeps material its own standard excludes.
+ * @param {string} root
+ * @returns {string[]|null}
+ */
+function trackedMarkdown(root) {
+  try {
+    const listed = execFileSync("git", ["-C", root, "ls-files", "-z", "--", "*.md"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    })
+    return listed.split("\0").filter((path) => path !== "")
+  } catch {
+    return null
+  }
+}
+
+/**
+ * @param {string} dir
+ * @param {string} base
+ * @returns {Generator<string>}
+ */
+function* walkMarkdown(dir, base) {
+  let entries
+  try {
+    entries = readdirSync(dir, { withFileTypes: true })
+  } catch {
+    return
+  }
+  for (const entry of entries) {
+    if (entry.isSymbolicLink()) continue
+    const path = join(dir, entry.name)
+    if (entry.isDirectory()) {
+      if (entry.name !== ".git" && entry.name !== "node_modules") yield* walkMarkdown(path, base)
+    } else if (entry.isFile() && extname(entry.name) === ".md") {
+      yield relative(base, path)
+    }
+  }
+}
+
+/**
+ * The rule's file set under root, as repository-relative paths, sorted.
+ * readdir order is not stable across platforms, and the same audit run twice
+ * has to produce the same output.
+ * @param {string} root
+ * @param {keyof typeof RULES} rule
+ * @returns {string[]}
+ */
+export function ruleFiles(root, rule) {
+  const pattern = RULES[rule]
+  const listed = trackedMarkdown(root) ?? [...walkMarkdown(root, root)]
+  return listed
+    .map((path) => path.split(sep).join("/"))
+    .filter((path) => pattern.test(path))
+    .sort()
+}
+
+/**
+ * A changelog with everything but its entry text blanked: the preamble above
+ * the first `##` heading, every heading line, and the link reference
+ * definitions at the foot. Blanking keeps each remaining offset equal to the
+ * source, so a finding still names the line a reader sees.
+ * @param {string} text
+ * @returns {string}
+ */
+export function changelogEntries(text) {
+  let started = false
+  return text
+    .split("\n")
+    .map((line) => {
+      const blanked = " ".repeat(line.length)
+      if (/^#{1,6}[ \t]/.test(line)) {
+        if (/^##[ \t]/.test(line)) started = true
+        return blanked
+      }
+      if (!started || /^\[[^\]]+\]:[ \t]/.test(line)) return blanked
+      return line
+    })
+    .join("\n")
 }
 
 /**
@@ -588,6 +681,8 @@ export function main(argv) {
   const paths = []
   /** @type {string[]} */
   const allow = []
+  /** @type {string|null} */
+  let ruleId = null
   let flags = true
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i] ?? ""
@@ -605,14 +700,69 @@ export function main(argv) {
       allow.push(...value.split(",").filter((word) => word !== ""))
       continue
     }
+    if (flags && (arg === "--rule" || arg.startsWith("--rule="))) {
+      const value = arg.startsWith("--rule=") ? arg.slice("--rule=".length) : argv[++i]
+      if (value === undefined) {
+        process.stderr.write(`--rule needs a rule ID, one of ${Object.keys(RULES).join(", ")}\n`)
+        return 2
+      }
+      ruleId = value
+      continue
+    }
     if (flags && arg !== "-" && arg.startsWith("-")) {
       process.stderr.write(`unknown option ${arg}\n`)
       return 2
     }
     paths.push(arg)
   }
+
+  /** @type {Finding[]} */
+  const findings = []
+
+  if (ruleId !== null) {
+    if (!(ruleId in RULES)) {
+      process.stderr.write(`unknown rule ${ruleId}; this script implements ${Object.keys(RULES).join(", ")}\n`)
+      return 2
+    }
+    if (allow.length > 0) {
+      // Two auditors passing different flags would otherwise score the same
+      // repository differently, which is the failure R-DOC-05 exists to prevent.
+      process.stderr.write(`--allow is not accepted in --rule mode; declare the words in ${CONFIG_FILE} at the repository root\n`)
+      return 2
+    }
+    if (paths.length > 1) {
+      process.stderr.write("--rule takes at most one repository root\n")
+      return 2
+    }
+    const root = paths[0] ?? "."
+    let configured
+    try {
+      configured = readConfigAllow(join(root, CONFIG_FILE))
+    } catch (error) {
+      process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+      return 2
+    }
+    const rule = /** @type {keyof typeof RULES} */ (ruleId)
+    const patterns = PATTERNS.filter((pattern) => pattern.rules?.includes(rule))
+    for (const rel of ruleFiles(root, rule)) {
+      let text
+      try {
+        text = readFileSync(join(root, rel), "utf8")
+      } catch {
+        process.stderr.write(`could not read ${rel}\n`)
+        return 2
+      }
+      if (rel === "CHANGELOG.md") text = changelogEntries(text)
+      findings.push(...scan(text, rel, { patterns, promote: true, allow: configured }))
+    }
+    for (const finding of findings) {
+      process.stdout.write(`${formatFinding(finding)}\n`)
+    }
+    return findings.length > 0 ? 1 : 0
+  }
+
   if (paths.length === 0) {
-    process.stderr.write("usage: check-tells.mjs [--allow Word,Word] <file>... | -\n")
+    process.stderr.write("usage: check-tells.mjs [--allow Word,Word] <file>... | - | --rule R-DOC-05 [root]\n")
     return 2
   }
 
@@ -625,8 +775,6 @@ export function main(argv) {
     return 2
   }
 
-  /** @type {Finding[]} */
-  const findings = []
   for (const path of paths) {
     let text
     try {
