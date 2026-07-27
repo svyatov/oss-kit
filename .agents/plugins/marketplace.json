@@ -1,0 +1,21 @@
+{
+  "name": "oss-kit",
+  "interface": {
+    "displayName": "oss-kit"
+  },
+  "plugins": [
+    {
+      "name": "oss-kit",
+      "description": "Curated agent skills for open source maintainers",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

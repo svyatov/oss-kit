@@ -8,16 +8,33 @@ license: MIT
 
 Technical register: neutral, specific, short. No personality injection, no marketing.
 
-## Say why, not what
+## Establish the local contract
 
-The subject line names what changed: imperative, specific enough to scan in a `git log`. Everything after it answers why, because the diff already covers what. Prose earns its place only by carrying what the diff cannot:
+Before drafting, read the repository's instructions, contribution guide, templates, nearby documents, and recent accepted examples of the same artifact. Local requirements decide commit structure, required pull request sections, terminology, line length, and audience. Preserve required template sections and legal or security wording. Verify every factual claim against the diff, source, command output, issue, or cited upstream source.
 
-- the reason the change exists
-- the alternative you rejected, and why
+For commit messages, inspect `git log --no-merges` for the files in scope. If the repository requires Conventional Commits, use `<type>[optional scope]: <description>`, `!` or a `BREAKING CHANGE:` footer for incompatible changes, and any required trailers. Do not infer a convention from this skill's examples.
+
+Sources: [Git, Submitting patches](https://git-scm.com/docs/SubmittingPatches), [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/), [GitHub, Helping others review your changes](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/getting-started/helping-others-review-your-changes), and [Google developer documentation style guide](https://developers.google.com/style).
+
+## Match the content to the artifact
+
+| Artifact | Content |
+|------|---------|
+| Commit | The subject summarizes the change. The body explains the problem, intent, constraints, discarded alternatives, compatibility impact, and why this solution is appropriate. Skip implementation details the patch makes obvious. |
+| Pull request | State the purpose, user-visible or architectural result, important implementation boundary, risks, related context, and verification actually performed. For a large change, tell reviewers where to start. |
+| Issue or bug report | Give expected and observed behavior, minimal reproduction, relevant environment and versions, frequency or scope, and sanitized evidence. Separate facts from hypotheses. |
+| Review comment | Point to the concrete defect or question, explain its consequence, and state the required outcome. Use a suggestion block when the exact edit is known. Distinguish blocking findings from optional ideas. |
+| ADR | Record status, context, decision, rejected alternatives, consequences, and the conditions that would justify revisiting it. |
+| Documentation | Describe the current product for a defined audience and task. State prerequisites before steps, keep procedures ordered, and tell the reader how to verify the result. |
+
+Prose earns its place when it carries context the code or interface cannot:
+
+- the reason the behavior exists
 - the constraint that forced an unobvious choice
-- the blast radius: what else this touches, what could break
+- the alternative rejected and why
+- the compatibility, security, or operational consequence
 
-A commit body that paraphrases the diff is noise. A commit body naming the bug report that prompted it, or the benchmark that ruled out the obvious approach, is the only record that survives.
+A commit body that paraphrases the diff is noise. A pull request still needs an overview of the behavioral change so a reviewer can orient before reading the diff.
 
 ```
 Bad:  Updated the parser to use a hash map instead of a list, changed the
@@ -33,15 +50,15 @@ Length is not effort. Padding a trivial change into a structured document wastes
 
 - Subject line says everything? Write no body.
 - Headings earn their place when the reader needs to navigate, roughly past a screenful. A short PR body is two or three paragraphs, not `## Summary` and `## Test plan`.
-- Nothing was verified? Write no test plan. Never invent one.
+- Nothing was verified? Never imply that it was. If a template or the risk of the change calls for verification status, write `Not run: <reason>`.
 - A README section that repeats the code below it should be deleted, not rewritten.
 
 ## Composition rules
 
 | Rule | Do this |
 |------|---------|
-| Active voice | `parser drops trailing commas`, not `trailing commas are dropped` |
-| Positive form | `the cache expires after 60s`, not `the cache does not persist beyond 60s` |
+| Prefer active voice | `parser drops trailing commas`, not `trailing commas are dropped`. Keep passive voice when the actor is unknown, irrelevant, or would blame the reader. |
+| Prefer positive form | `the cache expires after 60s`, not `the cache does not persist beyond 60s`. Keep a negative requirement when prohibition is the point. |
 | Specific and concrete | `fails on files over 2 MB`, not `fails on large inputs` |
 | Omit needless words | Cut every word whose removal changes nothing |
 | Related words together | `only the retry path calls this`, not `this is only called by the retry path` |
@@ -57,10 +74,10 @@ Length is not effort. Padding a trivial change into a structured document wastes
 | Tacked-on `-ing` clauses: `ensuring reliability`, `enabling faster builds`, `allowing users to` | Split into a sentence, or cut |
 | Promotional adjectives: `robust`, `powerful`, `seamless`, `elegant`, `comprehensive`, `rich` | Name the property: `retries 3x`, `no config file` |
 | Vague attribution: `best practices suggest`, `it is widely believed`, `studies show` | Name the source, or drop the claim. Never invent one |
-| Copula avoidance: `serves as`, `acts as`, `provides`, `boasts`, `features` | `is`, `has` |
+| Copula avoidance: vague `serves as`, `acts as`, `boasts`, or `features` | `is`, `has`, or a precise verb |
 | AI vocabulary: `leverage`, `utilize`, `delve`, `streamline`, `facilitate`, `holistic`, `additionally`, `furthermore` | `use`, `and`, or nothing |
-| Negative parallelism: `not just X, but Y`. Tailing negation: `no guessing`, `no wasted motion` | Write the positive claim as a real clause |
-| Rule of three: three items where two exist | List what actually exists |
+| Empty contrast: `not just X, but Y`. Tailing negation: `no guessing`, `no wasted motion` | State the positive claim unless the contrast changes the meaning |
+| Manufactured list length | List what actually exists |
 | Elegant variation: calling one thing `the handler`, then `the callback`, then `the routine` | One name per concept, every time. Match the identifier in the code |
 | False ranges: `from linting to deployment` | Name the two things |
 | Passive or subjectless: `was refactored`, `no config needed` | Name the actor: `the loader now caches`, `you do not need a config file` |
@@ -72,7 +89,7 @@ Length is not effort. Padding a trivial change into a structured document wastes
 | Aphorism formulas: `X is the Y of Z`, `X becomes a trap` | The concrete claim underneath |
 | Authority tropes: `the real question is`, `at its core`, `fundamentally` | Just make the point |
 | Manufactured drama: a run of short declarative fragments | One sentence, ordinary length |
-| Predicate-position hyphens: `the report is high-quality` | `the report is high quality`. Keep attributive hyphens: `a high-quality report` |
+| Mechanical hyphenation | Follow the repository's dictionary and style guide; hyphenate compound modifiers only where grammar or clarity requires it |
 | Diff-anchored docs: `this function was added to replace the old loop` | Docs describe what is, not what changed. Commits, changelogs, and migration guides are the exception: there, describing the change is the job |
 
 ## Hard constraints
@@ -85,15 +102,15 @@ Check these before returning any text:
 - Headings in sentence case, not Title Case.
 - No recap section restating what the text just said.
 - No `Generated with`, `Co-Authored-By: Claude`, or tool attribution footers.
-- No unsolicited caveats or safety notes the subject matter did not ask for.
+- No boilerplate caveats. State a precondition, limitation, or risk when it changes what the reader should do.
 - Straight ASCII quotes.
 
 ## Do not touch
 
-- Quoted code, error strings, log output, stack traces, and config samples: reproduce verbatim, including their dashes.
+- Existing quoted code, error strings, log output, stack traces, and config samples: reproduce verbatim, including their dashes. This exception does not protect newly authored strings from review.
 - Another person's words in a quote or a review thread reply.
 - Identifier names, CLI flags, and file paths.
-- Legal, license, and security-advisory wording.
+- Required legal, license, and externally mandated security-advisory wording.
 - When editing prose a human wrote, fix only what is broken. Their voice is not a defect.
 
 ## Agent slop in git prose
@@ -109,9 +126,13 @@ These come from writing the message as a session log rather than a description o
 
 Both are read by someone who is already stuck, so they answer a different question than descriptive prose does.
 
-- An error message names what failed, the input that caused it, and what the reader can do next: `config.yaml line 7: timeout must be a positive integer, got -1`. Not `an error occurred while processing your request`.
-- A log line carries the identifiers needed to find the thing again: request id, path, count, duration. Adjectives help nobody grepping at 3am.
+- Use one distinct error message per actionable condition. Name what failed, the safe part of the input or location, and a likely corrective action: `config.yaml line 7: timeout must be a positive integer, got -1`. Do not echo passwords, tokens, personal data, full request bodies, or attacker-controlled text without safe encoding.
+- A log event carries a stable event name, appropriate severity, and structured identifiers needed to find the operation again: request ID, safe path, count, duration. Do not log secrets or personal data. Do not use adjectives where a measured field works.
 - A comment explains why the code is surprising, not what it does. If it restates the line below it, delete it. The case that earns a comment is a constraint the code cannot show: a spec section, a vendor bug, a benchmark that ruled out the obvious approach.
+
+## Global and accessible prose
+
+Use literal terms in their primary sense. Avoid idioms, slang, humor, violent metaphors, culture-specific references, and unexplained abbreviations. Keep one name per concept and match product and UI terminology exactly. Use descriptive link text that still makes sense out of context. Put conditions before instructions, and repeat a noun when the repetition removes ambiguity.
 
 ## Examples
 

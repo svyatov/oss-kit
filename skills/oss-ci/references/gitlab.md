@@ -73,7 +73,7 @@ test:
     - npm test
 ```
 
-Include the oldest and the newest version the manifest claims to support; do not add or drop a version the manifest does not mention.
+Include every maintained release line the manifest claims to support, not only the endpoints of a continuous range. Do not add or drop a release line the manifest does not mention.
 
 ## Caching keyed on the lockfile (R-CI-04)
 
@@ -91,13 +91,11 @@ test:
         - package-lock.json
     paths:
       - .npm/
-    fallback_keys:
-      - npm-default
 ```
 
 Cache `.npm/`, not `node_modules`: `npm ci` deletes `node_modules` before installing, so a cache of `node_modules` returns nothing on the next run. `npm ci --cache .npm --prefer-offline` points npm's own cache at a project-local directory GitLab can persist between jobs.
 
-If no cache is found for `cache:key`, GitLab runs the job without a cache; there is no automatic fallback to the closest prior key. `cache:fallback_keys` is what makes a fallback happen: up to five keys, tried in the listed order, before the job falls back to running uncached. A project-wide `CACHE_FALLBACK_KEY` variable is also available and is tried last, after `cache:key` and every entry in `fallback_keys`.
+If no cache is found for `cache:key`, GitLab runs the job without a cache. Add `fallback_keys` only when the package manager can validate and safely reuse older download data. GitLab tries up to five fallback keys in order, then a project-wide `CACHE_FALLBACK_KEY`, before running uncached. A fallback must preserve every compatibility boundary in the primary key. Never use a broad fallback for installed dependencies or build outputs.
 
 ## Timeout and cancellation of superseded runs (R-CI-05)
 
@@ -127,10 +125,9 @@ test:
 workflow:
   auto_cancel:
     on_new_commit: interruptible
-    on_job_failure: all
 ```
 
-`on_new_commit` takes `conservative` (the default: cancel the pipeline only if no `interruptible: false` job has already started), `interruptible` (cancel only jobs marked `interruptible: true`), or `none`. `on_job_failure` takes `all` (cancel the rest of the pipeline as soon as one job fails) or `none`, and defaults to `none`. `workflow:rules:auto_cancel` overrides either value per rule, for example to turn cancellation off on a protected branch. A job left at the `interruptible` default of `false` is never itself cancelled, and under the default `on_new_commit: conservative` it also blocks cancellation of the whole pipeline while it is running, so mark every job that is safe to cancel, not just one.
+`on_new_commit` takes `conservative` (the default: cancel the pipeline only if no `interruptible: false` job has already started), `interruptible` (cancel only jobs marked `interruptible: true`), or `none`. `workflow:rules:auto_cancel` can override it per rule, for example to turn cancellation off on a protected branch. A job left at the `interruptible` default of `false` is never itself cancelled, and under the default `on_new_commit: conservative` it also blocks cancellation of the whole pipeline while it is running, so mark every job that is safe to cancel. Deployment and migration jobs are usually not safe to cancel.
 
 The project setting Auto-cancel redundant pipelines, under Settings > CI/CD > General pipelines, is an older, coarser mechanism that still works alongside these keywords. Prefer the YAML above so the behavior travels with the pipeline definition; mention the project setting in the setup summary only as a fallback for a GitLab version that predates these keywords.
 

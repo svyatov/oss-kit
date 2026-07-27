@@ -1,8 +1,10 @@
 # oss-kit
 
-Nine agent skills that hold your open source repository to one written quality bar, and tell you where it falls short.
+Curated agent skills for open source maintainers.
 
-The bar covers GitHub and GitLab. Rules that apply to only one forge say so.
+The current kit has nine skills. One audits the repository against a written
+standard. The other eight own focused documentation, community, CI, security,
+release, changelog, prose, and agent-skill responsibilities.
 
 ## Install
 
@@ -16,16 +18,23 @@ One skill at a time:
 npx skills add svyatov/oss-kit --skill oss-readme
 ```
 
-Claude Code and GitHub Copilot CLI both read `.claude-plugin/marketplace.json`, so the same two commands work in either:
+Claude Code, GitHub Copilot CLI, and VS Code read `.claude-plugin/marketplace.json`, so the same two commands work in any of them:
 
 ```
 /plugin marketplace add svyatov/oss-kit
 /plugin install oss-kit@oss-kit
 ```
 
-## Use it
+Every other supported harness has a native install path in the
+[install guide](site/src/content/docs/guides/install.md).
 
-Ask your agent, in Claude Code, GitHub Copilot CLI, or any agent that reads a `skills/` directory:
+## Start with the job
+
+Ask for a skill by name when you know the responsibility. Use `oss-readme` for
+a README, `oss-community` for community files, or `oss-ci` for continuous
+integration.
+
+Start with `oss-audit` when you want the broadest view:
 
 ```
 Use oss-audit on this repository and list every gap against STANDARD.md.
@@ -51,11 +60,14 @@ R-SEC-01: 2 unpinned actions in .github/workflows/validate.yml. Fixed by oss-har
 | `oss-publish` | Sets up registry publishing with trusted publishing, provenance, and an approval gate, for npm, RubyGems, PyPI, and crates.io. |
 | `oss-changelog` | Keeps CHANGELOG.md in Keep a Changelog format, decides the semver bump, and writes release notes and deprecation notices. |
 | `oss-writing` | Fixes the sentences in commits, pull requests, issues, docs, error messages, log lines, and code comments. |
-| `oss-skill` | Fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` frontmatter conformance, oversized bodies that belong in `references/`, the license field an extracted skill carries with it, and what a skill may ship as a script. Bundles a validator that needs Node 22 or later, or Bun, and nothing installed. |
+| `oss-skill` | Fixes the structure, portability, and effectiveness of Agent Skills: canonical layout, `SKILL.md` conformance, trigger descriptions, progressive disclosure, repeatable procedures, portable scripts, evaluation, licensing, and host install paths. Bundles a validator that needs Node 22 or later, or Bun, and nothing installed. |
 
 ## Read the standard without installing anything
 
-Every opinion these skills hold is written down in [STANDARD.md](skills/oss-audit/STANDARD.md), one numbered rule at a time. Each rule states what to do, why, what to check for, and which skill fixes it. Read it and disagree with it before you install anything.
+Every current rule is written down in
+[STANDARD.md](skills/oss-audit/STANDARD.md). Each rule states what to do, why,
+what to check for, and which skill fixes it. Read it and disagree with it
+before you install anything.
 
 oss-kit meets every applicable rule of its own [STANDARD.md](skills/oss-audit/STANDARD.md) except four that await the public repository or the first release: branch protection waits on the public repository, and signed releases and the two release-tied changelog rules wait on the first tagged release. Rules that do not apply to a skills repository, such as the package-registry publishing rules, are recorded in AGENTS.md alongside these four.
 

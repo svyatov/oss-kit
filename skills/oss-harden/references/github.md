@@ -4,7 +4,7 @@ Concrete commands and settings for the decisions `SKILL.md` makes, on GitHub Act
 
 ## Read the current state (Step 2)
 
-List every workflow's `uses:` lines, and whether each already resolves to a 40-character SHA, with `grep -nE 'uses:' .github/workflows/*.yml`. A line matching `uses: owner/repo@[0-9a-f]{40}` is already pinned; anything else, including `@main`, `@v4`, or a shorter SHA, is not.
+List every `uses:` line in both `.yml` and `.yaml` workflow files. A line matching an external `owner/repo@` or `owner/repo/path@` reference followed by a 40-character SHA is pinned; anything else, including `@main`, `@v4`, or a shorter SHA, is not. A local `uses: ./path` reference comes from the same repository commit and needs no external pin.
 
 Check for an existing updater with `test -f .github/dependabot.yml` or a search for a Renovate configuration (`renovate.json`, `.github/renovate.json`, or a `"renovate"` key in `package.json`).
 
@@ -22,15 +22,15 @@ gh api repos/{owner}/{repo}/rulesets
 
 GitHub's own guidance is to prefer rulesets for a repository being configured today; classic branch protection still works and both this skill and the OpenSSF Scorecard action can read either, but there is no need to set up the classic form on a repository that has neither yet.
 
-## Pin third-party actions to a commit SHA (R-SEC-01)
+## Pin external actions and reusable workflows to a commit SHA (R-SEC-01)
 
-Establish which tag is current before resolving one. R-SEC-01 checks that a `uses:` line names a 40-character SHA, so a pin to a major released three years ago satisfies it exactly as well as a pin to the current one, and neither the rule nor any later step in this skill will question it again. Read the action's newest release first:
+Resolve the version the workflow already selects. Do not silently turn pinning into a major-version upgrade. Read the newest release in the selected release line and the newest release overall so the report can distinguish a compatible update from a potential breaking upgrade:
 
 ```bash
 gh api repos/{owner}/{repo}/releases/latest --jq '.tag_name'
 ```
 
-This endpoint returns the newest non-draft, non-prerelease release, which is what you want even when the project backports to an older line. Verified against `actions/checkout` on 2026-07-23, where v7.0.1, v6.1.0, and v5.1.0 were all published within eighteen minutes of each other and the call still returned `v7.0.1`. A project that tags releases without cutting GitHub Releases returns 404 here; fall back to `git ls-remote --tags --refs --sort=-v:refname https://github.com/{owner}/{repo} | head`, and discard the moving major and minor aliases such as `v7` that this listing returns alongside the full versions.
+This endpoint returns the newest non-draft, non-prerelease release overall. It does not identify the newest compatible backport for a workflow that deliberately stays on an older major. Inspect the release list or immutable version tags for that comparison. A project that tags releases without cutting GitHub Releases returns 404 here; inspect its immutable release tags instead of assuming a moving major tag is a release.
 
 Where the current major is ahead of the one the workflow uses, say so and name both versions rather than pinning the old major to a SHA silently. The upgrade is the user's call, since a major bump can change the action's inputs, but a pin recorded without that observation buries the staleness under a line that now looks deliberate and audited.
 
@@ -52,7 +52,7 @@ Where the action's repository is not the one being audited, `git ls-remote` avoi
 
 Write the result as `uses: owner/repo@<40-char-sha>  # tag`, keeping the tag in a trailing comment. This is not decoration: Dependabot's `github-actions` ecosystem (Step 5 below) reads that comment and updates both the SHA and the comment together when a new release ships, so a pin with no comment loses its human-readable version and a pin with the comment in the wrong place is not recognized as an update target.
 
-Pin every third-party action this way, including one already referenced by `oss-ci` or `oss-publish` as a version tag with the trailing comment `# oss-harden pins this to a commit SHA`; that comment is those skills' handoff marker, not an instruction to leave alone. GitHub's own first-party actions under `actions/` and `github/` are lower risk because GitHub controls the tag, but pinning them to a SHA is never wrong and keeps the workflow's pin policy uniform.
+Pin every external action and reusable workflow this way, including actions under `actions/` and `github/`. Leave local actions such as `uses: ./path` unchanged because they already come from the checked-out commit. For a reusable workflow in the same repository written as `uses: ./.github/workflows/file.yml`, the caller and called workflow also share a commit.
 
 GitHub also offers an organization or repository level Actions permissions setting that requires every action used to already be pinned to a full commit SHA before the workflow is allowed to run at all, turning this rule into a platform-enforced gate rather than a convention. Where the user wants that enforced, point them at Settings > Actions > General for the repository, or the organization-level equivalent, rather than relying on this skill's edits alone to keep it true over time.
 
@@ -112,7 +112,7 @@ Confirm `required_pull_request_reviews.required_approving_review_count` is at le
 
 ## Signed tags (R-SEC-05)
 
-Import the maintainer's public GPG key before verifying; GitHub serves it without authentication at `https://github.com/{username}.gpg`:
+First identify the tag's signature format and establish a maintainer-controlled trust source. For OpenPGP, GitHub serves the keys attached to an account at `https://github.com/{username}.gpg`:
 
 ```bash
 curl -fsSL https://github.com/{username}.gpg | gpg --import
@@ -121,9 +121,26 @@ git tag -v {tag}
 git cat-file -t {tag}
 ```
 
-`git tag -v` succeeding and `git cat-file -t {tag}` printing `tag` together confirm a signed, annotated tag. GitHub also accepts SSH keys for signing; where the maintainer signs with SSH rather than GPG, `git tag -v` needs `git config gpg.format ssh` and an `allowedSignersFile` pointing at the maintainer's public SSH key first, since the plain GPG verification path above does not read SSH keys.
+`git tag -v` succeeding and `git cat-file -t {tag}` printing `tag` together confirm a trusted signature on an annotated tag. For SSH, set `gpg.format=ssh` and point `gpg.ssh.allowedSignersFile` at an allowed-signers file containing the maintainer's verified public key. For X.509, set `gpg.format=x509` and configure the certificate trust chain. Do not treat any key found by username alone as trusted without confirming the maintainer controls it.
 
-## Read OpenSSF Scorecard results (Step 9)
+## Untrusted input (R-SEC-07)
+
+GitHub evaluates expressions before handing a `run:` block to the shell. Keep user-controlled event fields out of generated shell text:
+
+```yaml
+- name: Check title
+  env:
+    PR_TITLE: ${{ github.event.pull_request.title }}
+  run: ./scripts/check-title "$PR_TITLE"
+```
+
+Quoting the expression directly inside `run:` is not sufficient because expression substitution happens first. Also inspect every `pull_request_target` and `workflow_run` workflow. A privileged workflow must not check out or execute the contributor-controlled ref, including package scripts from that ref.
+
+## Static analysis (R-SEC-09)
+
+For a public repository in a CodeQL-supported language, prefer CodeQL default setup and confirm its pull request analysis appears as a required status check. Private repositories require GitHub Code Security on an eligible GitHub Team or Enterprise plan. If CodeQL does not support the language, use the project's established analyzer and require its pull request result rather than adding a no-op CodeQL configuration.
+
+## Read OpenSSF Scorecard results (Step 12)
 
 Query the public API rather than running the scan:
 
@@ -133,6 +150,6 @@ curl -s https://api.scorecard.dev/projects/github.com/{owner}/{repo}
 
 This returns a JSON object with a top-level `score` and a `checks` array, each entry carrying `name`, `score`, `reason`, and `details`. A repository the weekly scan has not covered, which is most repositories outside roughly the top million by dependency count, or one that has never run the Scorecard GitHub Action with `publish_results: true`, returns `404` with an empty body; treat that as the normal case for a smaller or newer project, not a failure to work around. `api.securityscorecards.dev` is an older hostname for the same API and still resolves; prefer `api.scorecard.dev`, the one the project's own current documentation and badge examples use.
 
-Where a result exists, these checks map onto the rule IDs above: `Pinned-Dependencies` to R-SEC-01, `Token-Permissions` to R-SEC-02, `Dependency-Update-Tool` to R-SEC-03, `Branch-Protection` to R-SEC-04, and `Signed-Releases` to R-SEC-05, though `Signed-Releases` checks for a provenance attestation on release artifacts, which is `oss-publish`'s R-PUB-03, not a git tag signature; do not report a `Signed-Releases` finding as R-SEC-05 evidence. Use each check's `reason` and `details` array as the finding text rather than re-running the equivalent analysis by hand.
+Where a result exists, use `Pinned-Dependencies`, `Token-Permissions`, `Dependency-Update-Tool`, and `Branch-Protection` as dated supplementary evidence for R-SEC-01 through R-SEC-04. `Signed-Releases` examines release artifacts, not git tag signatures, so it is not R-SEC-05 evidence. The weekly scan omits some API-expensive checks, and any individual check can be inconclusive or fail internally. Keep the direct evidence authoritative and quote the result's `reason`, `details`, date, and Scorecard version.
 
-Where no result exists, offer to help set up the Scorecard GitHub Action so a result exists on the next run, through the repository's Security > Code scanning tab, rather than approximating a score without one.
+Where no result exists, report that fact without approximating a score or expanding the task into scanner installation.

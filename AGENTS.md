@@ -1,6 +1,6 @@
 # Working in this repository
 
-oss-kit ships nine agent skills that apply one opinionated quality bar to open source projects. Every opinion lives in `STANDARD.md` as a numbered rule. Skills cite rule IDs; they do not restate the opinions.
+oss-kit is a curated set of agent skills for open source maintainers. It currently ships nine, built around one repository standard. Every current standard opinion lives in `STANDARD.md` as a numbered rule. Skills cite rule IDs; they do not restate the opinions.
 
 ## Layout
 
@@ -10,13 +10,22 @@ skills/oss-audit/STANDARD.md   every opinion, as R-<AREA>-<NN> rules
 .agents/skills           symlink to ../skills
 .claude/skills           symlink to ../skills
 .claude-plugin/          plugin.json and marketplace.json
+.codex-plugin/           plugin.json for Codex
+.cursor-plugin/          plugin.json for Cursor
+.agents/plugins/         marketplace.json for Codex's own marketplace format
+.opencode/skills         symlink to ../skills
+docs/                    agent-facing project documentation
+site/                    public docs site, content, and own dependency tree
+site/src/content/docs/   tracked public prose and generated site pages
 AGENTS.md                this file
 CLAUDE.md                symlink to AGENTS.md
 ```
 
 `skills/` is canonical because it is the only path that both the `skills` CLI installer and the Claude Code plugin loader read directly. Claude Code does not scan `.agents/skills`, and most other agents do not scan `.claude/skills`, so both are committed symlinks pointing at the one real directory. Edit files under `skills/`. Never edit through a symlink path, and never replace a symlink with a copy.
 
-`docs/` is gitignored on purpose. Planning documents live there and stay untracked. Never `git add -f` them.
+`site/src/content/docs/` holds the public prose the site renders. Handwritten pages stay tracked there. The generator writes rule, skill, standard, and changelog pages into the same tree; those outputs stay gitignored.
+
+`docs/` holds agent-facing project documentation. `docs/superpowers/` is gitignored: planning documents live there and stay untracked. Never `git add -f` them.
 
 ## Repo rules
 
@@ -92,4 +101,10 @@ Specification conformance is checked by the validator this repository ships at `
 
 Dependabot has supported the `bun` ecosystem since February 2025, for the text `bun.lock` on Bun 1.1.39 or later. It ships version updates only. There are no Dependabot security updates for Bun, so a CVE in a dev dependency arrives through the weekly version bump rather than through a security alert.
 
-`skills-ref` was dropped from this repository entirely, not pinned differently, because `oss-skill` now bundles a validator this project maintains and CI runs. R-SKL-02 was already written to accept any specification validator, so the rule needed no change. The reason for removal rather than replacement is that `skills-ref`'s own upstream README calls it a library "intended for demonstration purposes only", not for production use. Do not restore the `skills-ref` install to CI or name it in any skill.
+`site/astro.config.mjs` imports `parseRules` from `site/scripts/generate.mjs` and builds the rules sidebar from `STANDARD.md` at config load. That is what keeps the sidebar in the order the standard argues, grouped under its own `##` headings, with no rule list duplicated in the config. Adding a rule needs no site change; renaming a `##` section in `STANDARD.md` renames a sidebar group. Autogeneration cannot do this, because it sorts by filename and would interleave the areas.
+
+Generated pages carry an `editUrl` pointing at the source they came from, because the generated Markdown under `site/src/content/docs/` is gitignored and has no file to edit. The global `editLink.baseUrl` covers authored pages in that tree.
+
+`site/public/og.png` is generated from `site/scripts/og.html`, which is the only place its wording lives. To change it, edit that file, serve `site/` over a local http server, screenshot the page at a 1200x630 viewport, and downscale the retina capture to 1200x630 with `sharp`, which `site/` already depends on. Serve it rather than opening `file://`: Chrome treats a `file://` page as an opaque origin and refuses the `@font-face` request, which silently substitutes a fallback font. The card carries the tagline without a terminal period, unlike the prose occurrences, because a lone dot under a centered line reads as a blemish.
+
+`lastUpdated` is deliberately off. It reads git commit dates for the content file, and the content files are generated and untracked; CI's shallow checkout would date them all to the same commit anyway.

@@ -31,7 +31,7 @@ Front matter keys: `name` and `about` are the ones the template chooser shows; `
 
 ### Issue forms
 
-A YAML file, extension `.yml`, using GitHub's form schema. Top-level keys:
+A YAML file, extension `.yml`, using GitHub's form schema. The whole form schema is in public preview and subject to change, so verify a generated form in GitHub's template chooser before treating it as finished. Top-level keys:
 
 | Key | Required | Type |
 |---|---|---|
@@ -57,7 +57,7 @@ Each entry in `body` is one form element:
     required: true
 ```
 
-Every element needs `type` and `attributes`. `id` is optional on every element type; it sets the field's identifier for URL query-parameter prefills and does not apply to `markdown`, which is never submitted. `validations` is optional and, where an element type supports it, its only key is `required`.
+Every element needs `type` and `attributes`. `id` is optional on every element type; it sets the field's identifier for URL query-parameter prefills and does not apply to `markdown`, which is never submitted. `validations` is optional. Most elements accept `required`; `upload` also accepts `accept`. Required-field validation works only in public repositories.
 
 Element types and their required attributes:
 
@@ -66,7 +66,7 @@ Element types and their required attributes:
 - `textarea`: multi-line text, supports file drag-and-drop into the box. `attributes.label` required; `description`, `placeholder`, `value` optional; `render` formats the answer as a code block in the given language.
 - `dropdown`: `attributes.label` and `attributes.options` required (`options` cannot be empty and every entry must be distinct); `description`, `default` (index into `options`), `multiple` optional.
 - `checkboxes`: `attributes.label` and `attributes.options` required; each entry in `options` is `{ label: ..., required: true|false }`, where that per-option `required` means the box must be checked, distinct from the element's own `validations.required`, which means at least one option must be selected.
-- `upload`: a file upload field. `attributes.label` required; `description` and, under `validations`, `accept` (a comma-separated extension list) optional. This type is behind a preview flag; confirm it renders before relying on it, and default to `textarea` with a note about drag-and-drop attachments if it does not.
+- `upload`: a file upload field. `attributes.label` required; `description` and, under `validations`, `accept` (a comma-separated extension list) optional. Confirm it renders before relying on it, and default to `textarea` with a note about drag-and-drop attachments if it does not.
 
 Issue forms are not available for pull requests.
 

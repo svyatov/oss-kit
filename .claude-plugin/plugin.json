@@ -1,7 +1,7 @@
 {
   "name": "oss-kit",
-  "description": "An opinionated quality bar for open source projects: README, community files, CI, supply-chain hardening, secure releases, and changelogs.",
-  "version": "0.1.0",
+  "description": "Curated agent skills for open source maintainers",
+  "version": "0.2.0",
   "author": {
     "name": "Leonid Svyatov",
     "email": "leonid@svyatov.com",

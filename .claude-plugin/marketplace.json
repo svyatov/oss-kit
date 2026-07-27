@@ -7,13 +7,13 @@
     "url": "https://www.svyatov.com"
   },
   "metadata": {
-    "description": "An opinionated quality bar for open source projects"
+    "description": "Curated agent skills for open source maintainers"
   },
   "plugins": [
     {
       "name": "oss-kit",
       "source": "./",
-      "description": "An opinionated quality bar for open source projects: README, community files, CI, supply-chain hardening, secure releases, and changelogs.",
+      "description": "Curated agent skills for open source maintainers",
       "category": "productivity",
       "tags": ["open-source", "readme", "changelog", "ci", "security", "release"]
     }

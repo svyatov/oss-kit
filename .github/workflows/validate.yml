@@ -28,6 +28,22 @@ jobs:
       - run: ./tests/test-check-drift.sh
       - run: ./scripts/check-drift.sh
 
+  site:
+    name: build the docs site
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6  # v2.2.0
+        with:
+          bun-version-file: ".bun-version"
+      - run: bun install --frozen-lockfile
+        working-directory: site
+      # The site is generated from the standard and the skills, so a rule or a
+      # reference link that stops resolving breaks the build and nothing else.
+      - run: bun run build
+        working-directory: site
+
   runtime:
     name: validator on node ${{ matrix.node }}
     runs-on: ubuntu-latest

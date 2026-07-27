@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>oss-kit social card</title>
+    <!--
+      Source for site/public/og.png, the 1200x630 Open Graph card. Serve site/
+      over a local http server and screenshot this page at 1200x630; see the
+      social card note in AGENTS.md. Editing the tagline here and re-shooting is
+      the whole procedure.
+
+      The palette matches site/public/favicon.svg in its dark form, not the
+      --kit-* tokens: the icon set and this card ship the same colors.
+    -->
+    <style>
+      @font-face {
+        font-family: "Public Sans";
+        font-weight: 400;
+        font-display: block;
+        src: url("../node_modules/@fontsource/public-sans/files/public-sans-latin-400-normal.woff2") format("woff2");
+      }
+
+      @font-face {
+        font-family: "Public Sans";
+        font-weight: 700;
+        font-display: block;
+        src: url("../node_modules/@fontsource/public-sans/files/public-sans-latin-700-normal.woff2") format("woff2");
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+        gap: 74px;
+        align-items: center;
+        justify-content: center;
+        background: #111827;
+        font-family: "Public Sans", system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .lockup {
+        display: flex;
+        gap: 34px;
+        align-items: center;
+      }
+
+      .lockup svg {
+        width: 152px;
+        height: 152px;
+      }
+
+      .wordmark {
+        color: #f8fafc;
+        font-weight: 700;
+        font-size: 132px;
+        letter-spacing: -0.035em;
+        line-height: 1;
+      }
+
+      .tagline {
+        max-width: 900px;
+        color: #cbd5e1;
+        font-weight: 400;
+        font-size: 52px;
+        line-height: 1.25;
+        text-align: center;
+        text-wrap: balance;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="lockup">
+      <!-- Geometry copied from site/public/favicon.svg. The fills are explicit
+           because that file paints its dark colors through a
+           prefers-color-scheme block, and a headless browser renders light by
+           default, which would hide the bars against this background. -->
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" role="img" aria-label="oss-kit">
+        <path
+          fill="#4ade80"
+          d="M203.7 133.8c7.6-10.9 5-25.8-5.9-33.4s-25.8-5-33.4 5.9l-39.7 56.5L105 143c-9.4-9.3-24.6-9.3-34 0s-9.3 24.6 0 34l40 40c5 5 12 7.6 19.1 6.9s13.5-4.3 17.6-10.1zm0 160c7.6-10.9 5-25.8-5.9-33.4s-25.8-5-33.4 5.9l-39.7 56.5L105 303c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6-.1 34l40 40c5 5 12 7.6 19.1 6.9s13.5-4.3 17.6-10.1z"
+        />
+        <path
+          fill="#f8fafc"
+          d="M256 160c0 13.3 10.7 24 24 24h272c13.3 0 24-10.7 24-24s-10.7-24-24-24H280c-13.3 0-24 10.7-24 24m0 160c0 13.3 10.7 24 24 24h272c13.3 0 24-10.7 24-24s-10.7-24-24-24H280c-13.3 0-24 10.7-24 24m-32 160c0 13.3 10.7 24 24 24h304c13.3 0 24-10.7 24-24s-10.7-24-24-24H248c-13.3 0-24 10.7-24 24m-64 0c0-17.7-14.3-32-32-32s-32 14.3-32 32 14.3 32 32 32 32-14.3 32-32"
+        />
+      </svg>
+      <span class="wordmark">oss-kit</span>
+    </div>
+    <!-- No terminal period: on the card it reads as a stray dot rather than
+         punctuation. The prose occurrences of the tagline keep theirs. -->
+    <p class="tagline">Curated agent skills for open source maintainers</p>
+  </body>
+</html>
