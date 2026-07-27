@@ -6,13 +6,14 @@ The lexicon that marks prose as machine-written. Each row names a pattern and wh
 |------|---------------|
 | Significance inflation: `pivotal`, `testament to`, `underscores`, `marks a shift`, and `key` or `critical` used as importance adjectives (`a key improvement`). The nouns are fine: `cache key`, `API key`, `critical section` | State the fact and stop |
 | Tacked-on `-ing` clauses: `ensuring reliability`, `enabling faster builds`, `allowing users to` | Split into a sentence, or cut |
+| Nominalized gerund chains: `improving the handling of the processing of` | Name the action once, with a finite verb: `the loader now retries` |
 | Promotional adjectives: `robust`, `powerful`, `seamless`, `elegant`, `comprehensive`, `rich` | Name the property: `retries 3x`, `no config file` |
 | Vague attribution: `best practices suggest`, `it is widely believed`, `studies show` | Name the source, or drop the claim. Never invent one |
 | Copula avoidance: vague `serves as`, `acts as`, `boasts`, or `features` | `is`, `has`, or a precise verb |
-| AI vocabulary: `leverage`, `utilize`, `delve`, `streamline`, `facilitate`, `holistic`, `additionally`, `furthermore` | `use`, `and`, or nothing |
+| AI vocabulary, and any rare word where a common one is exact: `leverage`, `utilize`, `delve`, `streamline`, `facilitate`, `holistic`, `obviate`, `predicated on`, `additionally`, `furthermore` | `use`, `and`, or nothing. Reserve a rare word for where it is more precise, never for where it is more impressive |
 | Empty contrast: `not just X, but Y`. Tailing negation: `no guessing`, `no wasted motion` | State the positive claim unless the contrast changes the meaning |
 | Manufactured list length | List what actually exists |
-| Elegant variation: calling one thing `the handler`, then `the callback`, then `the routine` | One name per concept, every time. Match the identifier in the code |
+| Elegant variation: calling one thing `the handler`, then `the callback`, then `the routine` | One name per concept, every time, across the whole document. Match the identifier in the code and the string in the UI |
 | False ranges: `from linting to deployment` | Name the two things |
 | Passive or subjectless: `was refactored`, `no config needed` | Name the actor: `the loader now caches`, `you do not need a config file` |
 | Filler: `in order to`, `due to the fact that`, `has the ability to`, `it is important to note that` | `to`, `because`, `can`, delete |
