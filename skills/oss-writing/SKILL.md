@@ -57,8 +57,18 @@ Length is not effort. Padding a trivial change into a structured document wastes
 | Emphatic word last | End the sentence on the thing that matters |
 | One topic per paragraph | Each paragraph makes exactly one point |
 | Parallel form | Bullets in a list share one grammatical shape |
+| Name the referent | `the loader caches the manifest`, not `it caches it`. Replace `it`, `this`, and `that` with the noun when more than one antecedent is in scope |
+| Cap noun stacks at three | `the timeout for the retry queue`, not `retry queue connection timeout value` |
+| One instruction per step | A numbered step tells the reader to do one thing. Split a step that hides a second action behind `and` |
+| Keep the articles | `the parser reads the file`, not `parser reads file`. Dropping articles and sentence parts is false brevity: it saves two words and costs a reread |
+
+A sentence past roughly 20 words in an instruction, or 25 in an explanation, is a signal to split it, not a limit to count against.
 
 Machine-written prose also carries a lexicon these rules do not cover: inflated significance, promotional adjectives, tacked-on `-ing` clauses, empty contrast, signposting, hedging stacks. When a draft reads as padded, generic, or promotional, and before returning anything longer than a sentence, check it against [references/tells.md](references/tells.md), which names each pattern and what to write instead.
+
+## Normative statements
+
+Uppercase MUST, SHOULD, and MAY carry their RFC 2119 and RFC 8174 meanings, and only where the document says so in its own text. Use them in a specification, a rule statement, or a conformance section. Everywhere else write the plain verb: a README that shouts MUST at a reader has invented a requirement nobody is checking.
 
 ## Hard constraints
 
