@@ -8,3 +8,10 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+  # The docs site has its own dependency tree, so the root entry above does not
+  # reach it. Bun gets version updates only, never security updates, so a CVE in
+  # Astro arrives through this weekly bump or not at all.
+  - package-ecosystem: "bun"
+    directory: "/site"
+    schedule:
+      interval: "weekly"
