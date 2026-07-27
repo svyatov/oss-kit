@@ -38,6 +38,8 @@ Mark a rule not applicable only when its area preamble, rule text, or `Check:` l
 
 Some `Check:` lines name evidence a repository checkout does not carry on its own: a forge API call (branch protection settings, environment approvers, a job token's scope), a registry endpoint (whether a published package carries a provenance attestation), or a maintainer's signing key fetched from outside the repository. You do not need a list of which rules these are memorized ahead of time; the `Check:` line itself tells you, because it names the API call, the endpoint, or the external key it needs.
 
+A `Check:` line that names a script another skill ships is the same case. Where that skill is not installed, and a reader who took one skill rather than the kit is the common reason, the evidence is out of reach and the rule is unknown. Reading the files yourself and calling it a pass substitutes your judgment for the tool the rule names, which is the score two auditors will not agree on.
+
 Where you actually have the access a `Check:` line asks for, network reachable, the right credentials available, use it and score the rule on what it returns. Where you do not, or an attempt fails, mark the rule unknown. Unknown is not a softened fail and not a cautious pass; it is a distinct third state, because a rule scored pass on no evidence is the failure mode that discredits every other score in the report. Give unknown its own line in the report, after the fails, and its own count. Never round unknown up to pass because the rest of the repository looks well kept, and never round it down to fail because access was inconvenient to get.
 
 ## Output format

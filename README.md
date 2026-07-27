@@ -141,6 +141,8 @@ four things:
 - the rule IDs in `STANDARD.md` and what each rule requires
 - the path, argument, and exit codes of the validator at
   `skills/oss-skill/scripts/validate.mjs`
+- the path, arguments, and exit codes of the prose checker at
+  `skills/oss-writing/scripts/check-tells.mjs`, which R-DOC-05 names
 - the manifest paths each supported host reads
 
 The wording of a skill body, the layout of a skill's `references/` directory,

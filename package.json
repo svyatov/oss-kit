@@ -5,7 +5,8 @@
   "scripts": {
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "validate": "bun skills/oss-skill/scripts/validate.mjs ."
+    "validate": "bun skills/oss-skill/scripts/validate.mjs .",
+    "lint:prose": "git ls-files -z '*.md' | xargs -0 node skills/oss-writing/scripts/check-tells.mjs"
   },
   "devDependencies": {
     "@types/bun": "^1.3.14",

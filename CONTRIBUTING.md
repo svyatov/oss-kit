@@ -34,14 +34,24 @@ Run the same checks CI runs:
 ```bash
 bun run typecheck
 bun test
+bun run lint:prose
 bun run validate
 bash tests/test-check-drift.sh
+bash tests/test-install-hooks.sh
 bash scripts/check-drift.sh
 skillspector scan ./skills/ --no-llm --format json
 cd site && bun run build
 ```
 
-`bun run typecheck` checks the repository's own TypeScript. `bun test` runs the validator's own test suite. `bun run validate` runs `skills/oss-skill/scripts/validate.mjs`, which checks every skill against R-SKL-01 through R-SKL-05: layout, frontmatter conformance, body size, the license field, and what a skill may ship as a script. `tests/test-check-drift.sh` is the test suite for `scripts/check-drift.sh`, which fails when a skill cites a rule ID that `skills/oss-audit/STANDARD.md` does not define, or when a rule names a skill that does not claim it. `skillspector scan` checks the skills for prompt injection and other agent-facing risks.
+`bun run typecheck` checks the repository's own TypeScript. `bun test` runs the validator's own test suite. `bun run lint:prose` runs `skills/oss-writing/scripts/check-tells.mjs` over every tracked Markdown file, which fails on a mechanical prose tell the house style forbids and prints, without failing, on a word only a reader can judge. `bun run validate` runs `skills/oss-skill/scripts/validate.mjs`, which checks every skill against R-SKL-01 through R-SKL-05: layout, frontmatter conformance, body size, the license field, and what a skill may ship as a script. `tests/test-check-drift.sh` is the test suite for `scripts/check-drift.sh`, which fails when a skill cites a rule ID that `skills/oss-audit/STANDARD.md` does not define, or when a rule names a skill that does not claim it. `tests/test-install-hooks.sh` exercises the shipped git hooks and their installer in throwaway repositories under the system temp directory. `skillspector scan` checks the skills for prompt injection and other agent-facing risks.
+
+The prose checker also runs on every commit, once you point git at the hooks this repository ships:
+
+```bash
+sh skills/oss-writing/scripts/install-hooks.sh
+```
+
+That sets `core.hooksPath`, which is local configuration, so it is yours to opt into and `git commit --no-verify` bypasses it. A word the heading check does not know, usually a product name, belongs in `oss-writing.allow` in `.oss-kit.json` at the repository root.
 
 `bun run build` in `site/` is a required check, so run it before you open a pull request. The site is generated from `STANDARD.md` and the skills, which means a rule you renamed or a reference link you moved fails this build and nothing else.
 
