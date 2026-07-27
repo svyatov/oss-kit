@@ -83,8 +83,13 @@ Not applicable:
 
 Pending, with the trigger that resolves each one:
 
-- R-SEC-04: the remote exists at `github.com/svyatov/oss-kit`, but `gh api repos/svyatov/oss-kit/branches/main/protection` returns 403, "Upgrade to GitHub Pro or make this repository public." Resolves when the repository becomes public; `oss-harden` sets it then.
-- R-SEC-09: the repository now holds JavaScript, which CodeQL supports, so the rule applies. Code scanning on a private repository needs a paid GitHub Code Security license. Resolves when the repository becomes public; `oss-harden` adds the workflow then, scanning `javascript-typescript` and `actions`.
+- R-CHG-03: `.claude-plugin/plugin.json` and the newest `CHANGELOG.md` heading both say 0.2.0, but the newest tag and the newest GitHub release are `v0.1.0`, so 0.2.0 was never tagged. Resolves when 0.2.0 is tagged and released; `oss-changelog` owns the version decision and `oss-publish` the release.
+
+R-SEC-05 is met: `git cat-file -t v0.1.0` prints `tag`, and `git tag -v v0.1.0` reports a good SSH signature for the ED25519 key published at `gh api users/svyatov/ssh_signing_keys`. Verification needs `gpg.ssh.allowedSignersFile` pointed at that key; without it `git tag -v` fails with a configuration error rather than a bad signature, which reads like an unsigned tag and is not one.
+
+R-SEC-04 and R-SEC-09 were both pending on the repository becoming public. It is public now, and both are set: branch protection on `main` requires a pull request, one approving review, code owner review, and the checks named in the ruleset, and it rejects force pushes and deletion. Code scanning runs through CodeQL default setup rather than a workflow file, scanning `javascript-typescript` and `actions`, so nothing under `.github/workflows/` implements it and nothing there needs maintaining for it.
+
+Branch protection does not enable "Do not allow bypassing the above settings". A sole maintainer cannot approve their own pull request, so enforcing review against the owner too would make every change unmergeable. The requirement binds contributors; the owner can merge their own work.
 
 ## Checklist after any skill change
 

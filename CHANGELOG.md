@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- A `pages` workflow builds the site and deploys it to GitHub Pages on every push to `main`. The site is served at `oss-kit.svyatov.com`, and `site/public/CNAME` rides along in the artifact so the custom domain survives each deploy.
+- Code scanning through CodeQL default setup, covering `javascript-typescript` and `actions`. It is a repository setting rather than a workflow, so there is no file to maintain for it.
 - CI builds the documentation site. The site is generated from `STANDARD.md` and the skills, so a rule or a reference link that stops resolving now fails a check rather than reaching `main`.
 - A social card at `site/public/og.png`, and the `og:image` and `twitter:image` tags that point at it. The site already declared `twitter:card=summary_large_image`, so every share rendered an empty card.
 - `site/public/robots.txt`, naming the sitemap the site already generates.
