@@ -114,7 +114,7 @@ Give the user the resolved URL for rulesets: `https://github.com/{owner}/{repo}/
 
 Scope the ruleset with `conditions.ref_name.include` set to `["~DEFAULT_BRANCH"]` rather than the literal branch name, so renaming the default branch cannot leave the ruleset pointing at a branch that no longer exists.
 
-The `pull_request` rule carries three more parameters worth setting even though R-SEC-04 does not require them. `dismiss_stale_reviews_on_push` drops approvals when new commits arrive, so an approval always refers to the code being merged. `required_review_thread_resolution` blocks the merge while a review comment is unresolved. `allowed_merge_methods` takes any non-empty subset of `merge`, `squash`, and `rebase`, and setting it is not redundant with the repository's own merge-method checkboxes: the repository setting is what a maintainer can change in one click, where the ruleset entry is a branch-level control that survives that change and shows up in the ruleset history. Set it to the method the project's history is already written in.
+The `pull_request` rule carries four more parameters worth setting even though R-SEC-04 does not require them. `dismiss_stale_reviews_on_push` drops approvals when new commits arrive, so an approval always refers to the code being merged. `require_last_push_approval` goes further and requires the newest push to be approved by somebody other than whoever pushed it, which closes the window where a contributor collects an approval and then adds a commit before merging; `dismiss_stale_reviews_on_push` alone reopens review, where this one also rules out self-approving the follow-up. `required_review_thread_resolution` blocks the merge while a review comment is unresolved. `allowed_merge_methods` takes any non-empty subset of `merge`, `squash`, and `rebase`, and setting it is not redundant with the repository's own merge-method checkboxes: the repository setting is what a maintainer can change in one click, where the ruleset entry is a branch-level control that survives that change and shows up in the ruleset history. Set it to the method the project's history is already written in.
 
 Where the user prefers the API to the settings page, `POST /repos/{owner}/{repo}/rulesets` takes the whole thing at once, which is also how it gets recorded and repeated on the next repository:
 
@@ -129,6 +129,16 @@ A ruleset's bypass list replaces the classic "Do not allow bypassing the above s
 The case this matters most is a single-maintainer project, and it needs saying before the ruleset goes in rather than after. Nobody can approve their own pull request, so a ruleset requiring one approving review with an empty bypass list makes every change the sole maintainer opens unmergeable. Put Repository admin on the list at `pull_request` mode. The requirement still binds every contributor, which is what R-SEC-04 is for.
 
 The API returns `actor_id` as a bare number with no label, and GitHub documents the constant for `OrganizationAdmin` and not for repository roles, so do not report which role is exempt from the id alone. The create and read responses carry `current_user_can_bypass`, which is direct evidence for the maintainer running the command: `pull_requests_only` confirms both that the id resolves to a role they hold and that the mode is the narrower one. For the role's name, the UI at `/settings/rules` renders it and the API does not.
+
+### Who can merge is a permission, not a rule
+
+A maintainer asking for "contributors can never merge their own pull requests" is asking for something no ruleset expresses. Nothing in a ruleset keys on the identity of whoever clicks merge; the rules describe the state a pull request must reach, and anyone with write access who sees that state satisfied can merge it. Say this plainly rather than approximating it with a rule that does not do it.
+
+The `update` rule is the one that reads like the answer and is not. Its wording covers pushes only, "only users with bypass permissions can push to branches or tags whose name matches the pattern," and a pull request merge is not one of those pushes. Adding it restricts direct pushes, which the `pull_request` rule already does, and changes nothing about who can merge.
+
+What actually gates merging is repository access, so answer the question there. An outside contributor to a public repository works from a fork, holds no write access on the target, and cannot merge no matter how many approvals a pull request collects; this needs no configuration and is the case for most projects. Where the maintainer wants to bring someone in without granting that ability, the Triage role manages issues and pull requests without push access, so it cannot merge, and Write is the line that hands it over. Custom repository roles could carve this finer, but they are an organization feature and are unavailable on a user-owned repository.
+
+Setting `require_last_push_approval` is the closest a ruleset gets, and it addresses a narrower problem: it stops a contributor who already has write access from approving their own follow-up commit after an earlier approval. It does not stop them merging.
 
 ### Verify
 
