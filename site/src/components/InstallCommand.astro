@@ -2,7 +2,7 @@
 import FaIcon from "./FaIcon.astro"
 
 const { compact = false } = Astro.props
-const command = "npx skills add svyatov/oss-kit"
+const command = "npx skills add svyatov/oss-kit --skill '*'"
 ---
 
 <kit-copy-command class:list={["install-command", { "install-command--compact": compact }]}>
