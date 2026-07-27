@@ -14,7 +14,7 @@
  * this file is held to it.
  */
 import { execFileSync } from "node:child_process"
-import { readFileSync, readdirSync, realpathSync } from "node:fs"
+import { readFileSync, readdirSync, realpathSync, statSync } from "node:fs"
 import { basename, dirname, extname, join, relative, resolve, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -77,11 +77,13 @@ const CODE_OF_CONDUCT_SOURCES = [
 // and the Google style guide the skill cites both use ATX exclusively.
 const ATX_RE = /^ {0,3}#{1,6}[ \t]+(.*)$/gm
 const CLOSING_HASHES_RE = /[ \t]+#+[ \t]*$/
+const WORD_RE = /\S+/g
 const WRAPPING_RE = /^[[({"'*_]+|[\])}"'*_,.;:!?]+$/g
 const CONFIG_FILE = ".oss-kit.json"
 
 const LIST_RE = /^ {0,3}(?:[-*+]|\d{1,9}[.)])(?:[ \t]|$)/
 const FENCE_RE = /^ {0,3}(`{3,}|~{3,})/
+const FENCE_CLOSE_RE = /^ {0,3}(`{3,}|~{3,})[ \t]*$/
 const QUOTE_RE = /^ {0,3}>/
 const INDENT_RE = /^(?: {4}|\t)/
 
@@ -284,7 +286,7 @@ function maskBlocks(chars, lines) {
 
     if (fence) {
       blank(chars, start, end)
-      const close = line.match(/^ {0,3}(`{3,}|~{3,})[ \t]*$/)
+      const close = line.match(FENCE_CLOSE_RE)
       if (close?.[1] && close[1][0] === fence.char && close[1].length >= fence.len) fence = null
       prevBlank = false
       continue
@@ -434,7 +436,7 @@ function headingOffences(prose, allow) {
     const raw = heading[1] ?? ""
     const content = raw.replace(CLOSING_HASHES_RE, "")
     const contentStart = heading.index + heading[0].length - raw.length
-    const tokens = [...content.matchAll(/\S+/g)].map((token) => ({ text: token[0], index: contentStart + token.index }))
+    const tokens = [...content.matchAll(WORD_RE)].map((token) => ({ text: token[0], index: contentStart + token.index }))
 
     let start = 0
     for (let i = 0; i < Math.min(2, tokens.length); i++) {
@@ -546,13 +548,13 @@ export function findConfig(dir) {
   for (;;) {
     const candidate = join(current, CONFIG_FILE)
     try {
-      readFileSync(candidate)
-      return candidate
+      if (statSync(candidate).isFile()) return candidate
     } catch {
-      const parent = dirname(current)
-      if (parent === current) return null
-      current = parent
+      // Nothing at that path. Fall through to the parent.
     }
+    const parent = dirname(current)
+    if (parent === current) return null
+    current = parent
   }
 }
 
