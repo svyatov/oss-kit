@@ -1,0 +1,25 @@
+#!/bin/sh
+# Checks the commit message being written against the mechanical prose tells
+# oss-writing names. An offence stops the commit before the object is written;
+# a suspicion prints and lets it through. Bypass with git commit --no-verify.
+#
+# Installed by pointing core.hooksPath at this directory, which
+# ../install-hooks.sh does. The checker is resolved from this file's own
+# location rather than from the repository root, because installing one skill
+# puts it under a host-specific path.
+
+dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+checker="$dir/../check-tells.mjs"
+
+if [ ! -f "$checker" ]; then
+  echo "oss-writing: no checker at $checker, skipping the prose check" >&2
+  exit 0
+fi
+if ! command -v node >/dev/null 2>&1; then
+  echo "oss-writing: node is not on PATH, skipping the prose check" >&2
+  exit 0
+fi
+
+# Drops git's own comment lines, and everything below the scissors line that
+# git commit --verbose adds, so the diff is not read as prose.
+sed -e '/^#[ 	]*-\{2,\}[ 	]*>8[ 	]*-\{2,\}/,$d' -e '/^#/d' "$1" | node "$checker" -

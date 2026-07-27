@@ -1,0 +1,33 @@
+#!/bin/sh
+# Checks the Markdown files of this commit against the mechanical prose tells
+# oss-writing names. Bypass with git commit --no-verify.
+#
+# Disabled while osskit.precommit is false, which is what ../install-hooks.sh
+# sets in a repository that already has offences: this hook reads whole files,
+# so there it would block every commit on prose nobody in that commit wrote.
+
+dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+checker="$dir/../check-tells.mjs"
+
+if [ ! -f "$checker" ]; then
+  echo "oss-writing: no checker at $checker, skipping the prose check" >&2
+  exit 0
+fi
+if ! command -v node >/dev/null 2>&1; then
+  echo "oss-writing: node is not on PATH, skipping the prose check" >&2
+  exit 0
+fi
+if [ "$(git config --bool osskit.precommit)" = "false" ]; then
+  exit 0
+fi
+
+files=$(git diff --cached --name-only --diff-filter=ACM -- '*.md')
+[ -n "$files" ] || exit 0
+
+# A newline is the only separator git used above, and globbing is off, so a
+# path with a space in it still arrives as one argument.
+IFS='
+'
+set -f
+# shellcheck disable=SC2086
+node "$checker" $files
