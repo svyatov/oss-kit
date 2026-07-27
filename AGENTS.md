@@ -17,6 +17,8 @@ skills/oss-audit/STANDARD.md   every opinion, as R-<AREA>-<NN> rules
 docs/                    agent-facing project documentation
 site/                    public docs site, content, and own dependency tree
 site/src/content/docs/   tracked public prose and generated site pages
+scripts/                 maintenance scripts, including the drift check
+tests/                   the validator and drift check test suites
 AGENTS.md                this file
 CLAUDE.md                symlink to AGENTS.md
 ```
@@ -25,7 +27,7 @@ CLAUDE.md                symlink to AGENTS.md
 
 `site/src/content/docs/` holds the public prose the site renders. Handwritten pages stay tracked there. The generator writes rule, skill, standard, and changelog pages into the same tree; those outputs stay gitignored.
 
-`docs/` holds agent-facing project documentation. `docs/superpowers/` is gitignored: planning documents live there and stay untracked. Never `git add -f` them.
+`docs/` is gitignored in full. Agent-facing project documentation lives there and stays untracked. Never `git add -f` it.
 
 ## Repo rules
 
@@ -98,9 +100,10 @@ Branch protection does not enable "Do not allow bypassing the above settings". A
 ## Checklist after any skill change
 
 1. Update the skills table in `README.md` if the skill's one-line description changed.
-2. Run the drift check, which fails when a skill cites a rule ID that `STANDARD.md` does not define, when `STANDARD.md` names a rule as fixed by a skill that does not claim it, or when a rule names `oss-audit` as its owner.
-3. Confirm the `SKILL.md` body is still under 500 lines.
-4. Before a release, bump `version` in `.claude-plugin/plugin.json`.
+2. Run `bash scripts/check-drift.sh`, which fails when a skill cites a rule ID that `STANDARD.md` does not define, when `STANDARD.md` names a rule as fixed by a skill that does not claim it, or when a rule names `oss-audit` as its owner.
+3. Run `bun run validate` and `bun test`. `CONTRIBUTING.md` lists the full check sequence CI runs.
+4. Confirm the `SKILL.md` body is still under 500 lines.
+5. Before a release, bump `version` in `.claude-plugin/plugin.json`.
 
 ## Gotchas
 
