@@ -1,0 +1,107 @@
+name: Bug report
+description: A skill, a rule, or the bundled validator did something other than what it documents
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A skill is text a model reads inside a host, so what it does depends on the harness that loaded it and the model that read it, as much as on the skill's own words. The harness and model answers below are what let us tell a defect in the skill apart from a difference between hosts.
+  - type: dropdown
+    id: component
+    attributes:
+      label: What this is about
+      options:
+        - oss-audit
+        - oss-changelog
+        - oss-ci
+        - oss-community
+        - oss-harden
+        - oss-publish
+        - oss-readme
+        - oss-skill
+        - oss-writing
+        - STANDARD.md, a rule's wording or its check
+        - The bundled validator, skills/oss-skill/scripts/validate.mjs
+        - Installation, or a skill the harness will not load
+        - The documentation site
+    validations:
+      required: true
+  - type: dropdown
+    id: harness
+    attributes:
+      label: Harness
+      description: The host that loaded the skill. These are the hosts the install guide covers.
+      options:
+        - Claude Code
+        - Codex CLI
+        - Cursor
+        - OpenCode
+        - Gemini CLI
+        - GitHub Copilot CLI or VS Code
+        - Kimi Code
+        - Antigravity
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: harness-version
+    attributes:
+      label: Harness version
+      description: Name the host here as well if you chose Other above.
+      placeholder: claude 2.1.217
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Model
+      description: The exact name, with the revision if you have it. Free text rather than a list, because the set of models in circulation changes faster than this repository releases.
+      placeholder: claude-opus-4-6
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: oss-kit version
+      description: The version field in .claude-plugin/plugin.json, or the commit SHA if you installed from git.
+    validations:
+      required: true
+  - type: textarea
+    id: prompt
+    attributes:
+      label: What you asked for
+      description: The prompt that invoked the skill, verbatim.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should have happened
+      description: Quote the sentence in the SKILL.md, or the rule in STANDARD.md, that says so, if you can find it. Where nothing documents the behavior you expected, this is a skill change rather than a bug.
+    validations:
+      required: true
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened instead
+      description: The relevant span of the transcript, trimmed to what is needed and with anything private removed.
+      render: text
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How you installed it
+      description: Needed when a skill does not load at all, since each host reads skills from a different path. Skip it for a report about what a skill said.
+      options:
+        - npx skills add
+        - Claude Code plugin marketplace
+        - git clone, then a symlink
+        - Something else
+  - type: input
+    id: runtime
+    attributes:
+      label: Node or Bun version
+      description: Only for a report about the bundled validator, which CI runs on Node 22, 24, and current.
+      placeholder: node v22.23.1

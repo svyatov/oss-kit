@@ -1,0 +1,67 @@
+name: Rule proposal
+description: Propose a new rule for STANDARD.md, or a change to what an existing rule requires
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Every rule in STANDARD.md carries a statement, the reason it exists, one mechanical check, the single skill that fixes it, and the forges it applies to. A proposal that arrives with all five can be argued on the merits. One that arrives without a check cannot, because a rule nothing can score is an opinion.
+  - type: input
+    id: statement
+    attributes:
+      label: The rule, as one sentence
+      description: Written the way a rule heading is written, saying what the repository does.
+      placeholder: Pin every third-party action to a full commit SHA
+    validations:
+      required: true
+  - type: input
+    id: existing
+    attributes:
+      label: Existing rule this changes
+      description: The rule ID, if this tightens, loosens, or retires a rule that already exists. Tightening what a rule requires is an incompatible change, because a repository that passed yesterday fails today, so say if that is what this is.
+      placeholder: R-SEC-01
+  - type: textarea
+    id: why
+    attributes:
+      label: What goes wrong without it
+      description: One or two sentences naming the failure a maintainer would recognize, rather than the principle behind it.
+    validations:
+      required: true
+  - type: textarea
+    id: check
+    attributes:
+      label: The check
+      description: The observable evidence a checker looks for, concrete enough that two people scoring the same repository reach the same answer.
+    validations:
+      required: true
+  - type: dropdown
+    id: owner
+    attributes:
+      label: The skill that would fix it
+      description: oss-audit cannot own a rule. It routes each gap to the skill that fixes it, so a rule it owned would route to itself.
+      options:
+        - oss-changelog
+        - oss-ci
+        - oss-community
+        - oss-harden
+        - oss-publish
+        - oss-readme
+        - oss-skill
+        - oss-writing
+    validations:
+      required: true
+  - type: dropdown
+    id: forges
+    attributes:
+      label: Forges it applies to
+      options:
+        - both
+        - github
+        - gitlab
+    validations:
+      required: true
+  - type: textarea
+    id: prior-art
+    attributes:
+      label: Where this is already established
+      description: A link to the upstream documentation, specification, or published guidance the rule follows. A rule with nothing behind it needs a stronger argument here.

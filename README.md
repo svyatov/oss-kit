@@ -5,12 +5,12 @@ Curated agent skills for open source maintainers.
 [![version](https://img.shields.io/github/v/tag/svyatov/oss-kit?label=version)](https://github.com/svyatov/oss-kit/releases)
 [![CI](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml)
 
-- **45 rules.** Each states the check it is scored by and the one skill that
+- **46 rules.** Each states the check it is scored by and the one skill that
   fixes it.
 - **Seven areas.** Documentation, community files, CI, security posture,
   release publishing, changelog discipline, and the agent skills a repository
   ships.
-- **Both forges.** 42 of the 45 rules score GitHub and GitLab alike. Two are
+- **Both forges.** 43 of the 46 rules score GitHub and GitLab alike. Two are
   GitHub-only, one is GitLab-only, and every rule says which.
 - **Four registries.** Release publishing for npm, RubyGems, PyPI, and
   crates.io.
@@ -66,7 +66,7 @@ continuous integration.
 | Skill | What it does |
 |---|---|
 | `oss-audit` | Scores the repository against `STANDARD.md` and returns a gap list keyed by rule ID, each routed to the skill that fixes it. |
-| `oss-community` | Writes the community files: CONTRIBUTING, CODE_OF_CONDUCT, SECURITY.md, issue and change-request templates, CODEOWNERS, FUNDING, and license selection. |
+| `oss-community` | Writes the community files: CONTRIBUTING, CODE_OF_CONDUCT, SECURITY.md, issue forms and change-request templates, CODEOWNERS, FUNDING, and license selection, and sets the forge project's description, topics, and homepage. |
 | `oss-readme` | Orders the README so a reader gets the claim, the install command, and a working example before anything else, links the license, changelog, and contributing guide, and checks every version, command, and claim against the manifest, CI config, and source. |
 | `oss-ci` | Writes what runs on push and on every change request, on GitHub Actions or GitLab CI/CD: test, lint, and build matrices, caching, and per-ecosystem setup. |
 | `oss-harden` | Hardens the security posture: pinned action SHAs, minimal workflow permissions, untrusted input kept out of shell commands, Dependabot or Renovate, locked dependency resolution, static analysis on pull requests, branch protection, and signed tags. |

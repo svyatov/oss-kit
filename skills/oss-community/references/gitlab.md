@@ -77,6 +77,16 @@ GitLab gates the whole Code Owners feature behind Premium or Ultimate, on GitLab
 
 Enforcing Code Owner approval, the setting on a protected branch that blocks merge until the file's owners approve, requires the same Premium or Ultimate tiers as the base feature; it adds no separate gate beyond what reading the file already needs. Enforcement, like the branch protection setting on GitHub, is a project setting outside this file; note that it is needed and leave enabling it to whoever owns branch and merge request protection rather than attempting it from this skill.
 
+## Project settings (R-COM-07)
+
+Project name, description, topics, and avatar all sit in Settings, General, in the section holding the project's naming, description, and topics. Editing any of them needs the Maintainer or Owner role, so confirm the maintainer has it before proposing changes they cannot apply.
+
+Topics are how GitLab's Explore section and its topic RSS feeds surface a project. GitLab's documentation states no limit on the number of topics or the length of a name, so there is no cap to work against; the reason to keep the list short is the same as on GitHub, that a topic nobody searches for adds nothing. Visibility is split: only users with access to the project can see that project's topics, while the instance's list of available topics is visible to everyone, including unauthenticated visitors.
+
+GitLab's documentation describes no equivalent of GitHub's social preview upload. The project avatar set in the same settings section is the image GitLab shows beside the project, so treat that as the closest thing and do not promise an OpenGraph card.
+
+Which tabs exist is controlled in Settings, General, under visibility and project features, where Issues, Repository, Merge requests, Wiki, and Snippets each turn off or restrict to an audience. Issues has to be enabled for R-COM-05's templates to be reachable. Service Desk, which R-COM-04 may name as the security reporting channel, is enabled from the project's settings as well, so check it there rather than assuming an address works.
+
 ## FUNDING.yml
 
 GitLab has no equivalent of `.github/FUNDING.yml` or a built-in sponsor button. A project that wants to surface funding links on GitLab has to put them in the README or a dedicated file such as `FUNDING.md`; that content decision belongs to whoever owns the README, not to a forge-recognized schema this skill can write against.

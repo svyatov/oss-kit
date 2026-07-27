@@ -130,3 +130,39 @@ custom: ["https://www.paypal.me/octocat"]
 ```
 
 Accepted keys: `github` (one username, or up to four in a list), `community_bridge` (LFX Mentorship project name), `issuehunt`, `ko_fi`, `liberapay`, `open_collective`, `patreon`, `polar`, `buy_me_a_coffee`, `thanks_dev` (format `u/gh/USERNAME`), `tidelift` (format `PLATFORM-NAME/PACKAGE-NAME`, where the platform name is `npm`, `pypi`, `rubygems`, `maven`, `packagist`, or `nuget`), and `custom` (up to four URLs). Quote a custom URL if it contains a `:` beyond the scheme separator. List only a platform the project is actually registered on; a `patreon` key pointing at an account that does not accept the project's donations is a dead link like any other.
+
+## Repository settings (R-COM-07)
+
+None of these live in a file, so they survive no clone and appear in no diff. Read the current values before proposing changes:
+
+```bash
+gh repo view --json name,description,homepageUrl,repositoryTopics,hasIssuesEnabled,hasDiscussionsEnabled,hasWikiEnabled,hasProjectsEnabled,isArchived
+```
+
+### The About sidebar
+
+Description, website, and topics are the three fields in the About panel, editable in Settings or with `gh repo edit`:
+
+```bash
+gh repo edit --description "One sentence saying what this is." \
+  --homepage "https://example.com" \
+  --add-topic ecosystem --add-topic domain
+```
+
+`--remove-topic` takes a topic away, and `gh repo edit --enable-wiki=false` is how a boolean setting is turned off.
+
+Keep the description to one sentence and keep it saying the same thing as the README's opening line, since the two are the same claim shown in different places and a reader who sees both notices when they disagree.
+
+Topics: add no more than 20, use lowercase letters, numbers, and hyphens, and keep each to 50 characters or less. Topic names are always public, even on a private repository. Only repository admins can add them. Choose what someone searching would actually type: the ecosystem, the language, the problem domain, and the names of what the project integrates with.
+
+### Social preview
+
+Settings, General, Social preview. GitHub asks for "a PNG, JPG, or GIF file under 1 MB in size" and "a size of at least 640 by 320 pixels (1280 by 640 pixels for best display)". Until one is set, "repository links expand to show basic information about the repository and the owner's avatar". The REST API does not expose this image, so it cannot be read or set the way the About fields can; check it in Settings and hand the upload to the maintainer.
+
+### Feature tabs
+
+Issues, Discussions, Wiki, and Projects each toggle in Settings, General, Features. Issues has to be on for R-COM-05's templates to be reachable at all. Turn off what nothing uses, because an empty tab is a dead end for a visitor who clicks it, and turn Discussions on when the chooser's `contact_links` routes questions there, so the destination exists before the link points at it.
+
+### Community profile
+
+`https://github.com/OWNER/REPO/community` is GitHub's own checklist for a public repository. It reports on recommended community health files in a supported location, and on issue templates, which it requires to be "located in the `.github/ISSUE_TEMPLATE` folder and contain valid `name:` and `about:` keys" for Markdown or "`name:` and `description:` keys" for a form. It is narrower than the COM rules and it says nothing about the About fields, so use it as a second opinion on file placement rather than as the score.

@@ -1,0 +1,40 @@
+name: Skill change
+description: Propose a new skill, or a change to what an existing skill does
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: skill
+    attributes:
+      label: Skill
+      options:
+        - oss-audit
+        - oss-changelog
+        - oss-ci
+        - oss-community
+        - oss-harden
+        - oss-publish
+        - oss-readme
+        - oss-skill
+        - oss-writing
+        - A new skill
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What it gets wrong, or does not cover
+      description: Name the case. A skill is judged by what a model does with its instructions, so a run that went wrong argues better than a preference. Include the harness and model if you have them.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What it should do instead
+    validations:
+      required: true
+  - type: input
+    id: rule
+    attributes:
+      label: Rule this affects
+      description: The STANDARD.md rule ID, where this changes what a rule requires rather than only how a skill explains it. A new skill needs at least one rule to own, or a reason it owns none.
+      placeholder: R-COM-05

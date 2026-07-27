@@ -145,6 +145,15 @@ Check: where the forge supports Code Owners for the repository's visibility and 
 Fixed by: oss-community
 Forges: both
 
+### R-COM-07: The forge project page says what the project is and where it lives
+
+A search result, a social card, and the forge's own project lists show the description and the topics, and none of them render the README. A project with an empty description is findable only by someone who already has the link.
+
+Check: the forge project has a non-empty description, at least one topic, and, where the project publishes a documentation site or a package page, a homepage URL pointing at it. Read these from the forge, with `gh repo view --json description,homepageUrl,repositoryTopics` or the GitLab projects API, rather than inferring them from files in the repository.
+
+Fixed by: oss-community
+Forges: both
+
 ## Continuous integration
 
 ### R-CI-01: CI runs on every push to the default branch and on every change request
