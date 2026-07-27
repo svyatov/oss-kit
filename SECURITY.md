@@ -2,8 +2,8 @@
 
 ## Reporting a vulnerability
 
-Report security issues by email to leonid@svyatov.com. Do not open a public issue for a security report.
+Report security issues through GitHub private vulnerability reporting, at https://github.com/svyatov/oss-kit/security/advisories/new. It is enabled on this repository and it keeps the report private until there is a fix to disclose.
 
-Once this repository is public, GitHub private vulnerability reporting will be enabled at https://github.com/svyatov/oss-kit/security/advisories/new. Use it in preference to email once it exists; email stays the fallback if the advisory form is ever unavailable.
+If the advisory form is unavailable, email leonid@svyatov.com instead. Do not open a public issue for a security report.
 
 The maintainer acknowledges a report within one week of receiving it.

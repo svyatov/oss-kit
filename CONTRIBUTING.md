@@ -4,11 +4,19 @@ This file covers how to set up, test, and submit a change to oss-kit.
 
 ## Setup
 
-Clone the repository. There is no build step. The repository's own tests and typecheck need Bun, at the version pinned in `.bun-version`. Install Bun with the command Bun's own site publishes, then install the dev dependencies:
+Clone the repository. The repository's own tests and typecheck need Bun, at the version pinned in `.bun-version`. Install Bun with the command Bun's own site publishes, then install the dev dependencies:
 
 ```bash
 curl -fsSL https://bun.com/install | bash
 bun install --frozen-lockfile
+```
+
+The documentation site under `site/` has its own dependency tree. Install it
+too if you are changing anything the site renders, which includes every skill
+and `STANDARD.md`:
+
+```bash
+cd site && bun install --frozen-lockfile
 ```
 
 The specification validator that ships in `skills/oss-skill/scripts/validate.mjs` needs nothing installed. It runs on Node 22 or later, which is the claim it makes to the users who bundle it. One check needs a tool:
@@ -30,9 +38,12 @@ bun run validate
 bash tests/test-check-drift.sh
 bash scripts/check-drift.sh
 skillspector scan ./skills/ --no-llm --format json
+cd site && bun run build
 ```
 
 `bun run typecheck` checks the repository's own TypeScript. `bun test` runs the validator's own test suite. `bun run validate` runs `skills/oss-skill/scripts/validate.mjs`, which checks every skill against R-SKL-01 through R-SKL-05: layout, frontmatter conformance, body size, the license field, and what a skill may ship as a script. `tests/test-check-drift.sh` is the test suite for `scripts/check-drift.sh`, which fails when a skill cites a rule ID that `skills/oss-audit/STANDARD.md` does not define, or when a rule names a skill that does not claim it. `skillspector scan` checks the skills for prompt injection and other agent-facing risks.
+
+`bun run build` in `site/` is a required check, so run it before you open a pull request. The site is generated from `STANDARD.md` and the skills, which means a rule you renamed or a reference link you moved fails this build and nothing else.
 
 ## Editing a skill
 
