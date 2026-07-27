@@ -20,7 +20,7 @@ Sources: [Git, Submitting patches](https://git-scm.com/docs/SubmittingPatches), 
 
 The durable body defaults to none. The subject carries the change, and most changes end there.
 
-Write the subject in the imperative, on one line, with no trailing period, under 72 characters counting the `(#NN)` a squash merge appends. Git's 50 predates the `type(scope): ` prefix, which spends 15 to 20 of those characters.
+Write the subject in the imperative, on one line, with no trailing period. Keep it under 72 characters, counting any number the forge appends on squash. Git's 50 predates the `type(scope): ` prefix, which spends 15 to 20 of those characters.
 
 A body exists only when one of these holds:
 
@@ -29,22 +29,31 @@ A body exists only when one of these holds:
 - the commit reverts something
 - it is a security fix or a data migration
 - a future reader would otherwise retry an alternative this one rejected
-- the change rests on a number or an outside source the diff does not contain: a benchmark you ran, a spec section, a vendor bug, an upstream deprecation. Give the number or the citation, not the adjective.
+- the change rests on a number or an outside source the diff lacks: a benchmark, a spec section, a vendor bug, an upstream deprecation. Give the number or the citation, not the adjective.
 
-The body answers three things, in order: what is wrong now, why this fix, what was discarded.
+The body answers what is wrong now, then why this fix. Add what was discarded when an alternative was actually rejected.
 
-Two additions belong only in a change-request description, because both assume the reader has the diff in front of them:
+A change-request description carries one thing a commit body does not: its reader arrives before the diff, not after. So it always opens with a one-line statement of what changed, even when no trigger earns a body.
+
+Two further additions belong only there, because both assume the reader has the diff in front of them:
 
 - where to start reading, when the diff is large enough that a reviewer would otherwise open the wrong file first
 - verification, when it actually ran. Never imply verification that did not. Where a template asks for a status you do not have, write `Not run: <reason>`.
 
-Where the forge reuses the description as the squash commit message, that description is the durable body. Write it as the commit body it is about to become.
+Where the forge reuses the description as the squash commit message, that description is the durable body. Write it as the commit body it is about to become. Its opening line comes along, which is why a squashed commit is rarely subject-only.
 
 Length and content are separate constraints. Say everything the triggers earn, in fewer words; never drop a breaking-change note to be shorter.
 
-A required template section is not optional. Answer each one at the shortest length that answers it, and give a section whose honest answer is nothing that word rather than a paragraph. Invent no scaffolding the repository does not ship.
+A required template section is not optional. Answer each one at the shortest length that answers it. Where a section's honest answer is nothing, write that word rather than a paragraph. Invent no scaffolding the repository does not ship.
 
-Prose earns its place when it carries the reason the behavior exists, the constraint that forced an unobvious choice, the alternative rejected and why, or the compatibility, security, or operational consequence. A commit body that paraphrases the diff is noise.
+Prose earns its place when it carries one of these:
+
+- the reason the behavior exists
+- the constraint that forced an unobvious choice
+- the alternative rejected and why
+- the compatibility, security, or operational consequence
+
+A commit body that paraphrases the diff is noise.
 
 The remaining artifacts carry their own content:
 
@@ -57,7 +66,7 @@ The remaining artifacts carry their own content:
 
 ## Wrapping, and where the text ends up
 
-Write one paragraph per line, with no hard wrapping, for anything typed into a forge field: a change-request description, an issue, a review comment, a release note. Hard-wrap a file only if the repository already wraps its files. Forges disagree about what a single newline means, and unwrapped prose is the one form that renders correctly on all of them.
+Write one paragraph per line, with no hard wrapping, for anything typed into a forge field. That covers a change-request description, an issue, a review comment, and a release note. Hard-wrap a file only if the repository already wraps its files. Forges disagree about what a single newline means, and unwrapped prose is the one form that renders correctly on all of them.
 
 Before writing a change-request description, check whether the forge reuses it as the squash commit message. Where it does, that text becomes permanent history, and a heading, an unticked checkbox, or a leftover template comment survives there. [references/forge-rendering.md](references/forge-rendering.md) carries the per-forge behavior, the setting to read on each, and the double-wrap hazard.
 
@@ -85,7 +94,7 @@ Length is not effort. Padding a trivial change into a structured document wastes
 | One instruction per step | A numbered step tells the reader to do one thing. Split a step that hides a second action behind `and` |
 | Keep the articles | `the parser reads the file`, not `parser reads file`. Dropping articles and sentence parts is false brevity: it saves two words and costs a reread |
 
-Keep a sentence under 20 words in an instruction and under 25 in an explanation, and a paragraph under six sentences. Split what runs longer.
+Keep an instruction under 20 words and an explanation under 25. Cap a paragraph at six sentences. Split what runs longer.
 
 Machine-written prose also carries a lexicon these rules do not cover: inflated significance, promotional adjectives, tacked-on `-ing` clauses, empty contrast, signposting, hedging stacks. When a draft reads as padded, generic, or promotional, check it against [references/tells.md](references/tells.md), which names each pattern and what to write instead.
 
@@ -105,7 +114,7 @@ Check these before returning any text:
 - No `Generated with`, `Co-Authored-By: Claude`, or tool attribution footers: a trailer records who is accountable for the change, and a tool cannot be.
 - No boilerplate caveats. State a precondition, limitation, or risk when it changes what the reader should do: a caveat that changes nothing trains the reader to skip the one that matters.
 - Straight ASCII quotes: curly quotes break a copy-paste into a shell or a config file, and the reader cannot tell by eye which they got.
-- A body exists only if you can name the trigger that earned it: if you cannot, delete the body and ship the subject.
+- A body needs a named trigger, or a required template section asking for it. If neither holds, delete the body and ship the subject.
 
 ## Do not touch
 
@@ -121,7 +130,7 @@ These come from writing the message as a session log rather than a description o
 
 - One bullet per changed file, or a list of every path touched. The diff has that.
 - A test plan describing verification that never ran.
-- Your route to the fix: what you tried, what you ruled out, what you did next. The failure the change targets is evidence and belongs in the body; the session that found it does not. Name the runtime only when the runtime is part of the repro, as it is for a prompt or a skill.
+- Your route to the fix: what you tried, what you ruled out, what you did next. The failure the change targets is evidence and belongs in the body; the session that found it does not. Name the runtime only when it is part of the repro, as for a prompt or a skill.
 - Restating the subject line as the first line of the body.
 
 ## Error messages and comments
