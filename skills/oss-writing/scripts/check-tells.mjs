@@ -14,6 +14,7 @@
  * this file is held to it.
  */
 import { readFileSync, realpathSync } from "node:fs"
+import { basename, dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
 /**
@@ -35,10 +36,48 @@ import { fileURLToPath } from "node:url"
  * @property {string} id
  * @property {Severity} severity
  * @property {string} token The catalog wording, for the drift test to find
- * @property {RegExp} match Global, and safe to reuse: every scan resets lastIndex
+ * @property {RegExp} [match] Global, and safe to reuse: every scan resets lastIndex
  * @property {string} instead
  * @property {string[]} [rules] Rule IDs whose Check line names this pattern
+ * @property {true} [heading] Checked by the heading reader rather than by match
  */
+
+// A word after a heading's sentence start may be capitalized when it is one of
+// these. Go and Actions are deliberately absent: both are ordinary English
+// words, and allowlisting them buys a false negative on `## read the Actions
+// log` to avoid a false positive a repository clears with one entry of its own.
+export const DEFAULT_ALLOW = [
+  "GitHub",
+  "GitLab",
+  "Node",
+  "Bun",
+  "Docker",
+  "Markdown",
+  "JavaScript",
+  "TypeScript",
+  "Python",
+  "Ruby",
+  "Rust",
+  "Dependabot",
+  "CodeQL",
+]
+
+// R-DOC-05 exempts a heading preserved from an attributed third-party code of
+// conduct. Both signals are required: the filename alone would exempt a project
+// that wrote its own, and the attribution alone would let any file in the audit
+// set silence its heading check by naming the Contributor Covenant.
+const CODE_OF_CONDUCT_SOURCES = [
+  [/contributor covenant/i, /contributor-covenant\.org/i],
+  [/citizen code of conduct/i, /stumptownsyndicate\.org|citizencodeofconduct\.org/i],
+  [/django code of conduct/i, /djangoproject\.com/i],
+]
+
+// Setext headings, underlined with = or -, are out of scope. This repository
+// and the Google style guide the skill cites both use ATX exclusively.
+const ATX_RE = /^ {0,3}#{1,6}[ \t]+(.*)$/gm
+const CLOSING_HASHES_RE = /[ \t]+#+[ \t]*$/
+const WRAPPING_RE = /^[[({"'*_]+|[\])}"'*_,.;:!?]+$/g
+const CONFIG_FILE = ".oss-kit.json"
 
 const LIST_RE = /^ {0,3}(?:[-*+]|\d{1,9}[.)])(?:[ \t]|$)/
 const FENCE_RE = /^ {0,3}(`{3,}|~{3,})/
@@ -194,6 +233,15 @@ export const PATTERNS = [
   judgment("effortless", /\beffortless(?:ly)?\b/gi, PROMOTIONAL, R_DOC_05),
   judgment("elegant", /\belegant(?:ly)?\b/gi, PROMOTIONAL),
   judgment("rich", /\brich\b/gi, PROMOTIONAL),
+
+  {
+    id: "heading-case",
+    severity: "offence",
+    token: "sentence case",
+    heading: true,
+    instead: "lowercase the word, unless it is a proper noun the allowlist should carry",
+    rules: R_DOC_05,
+  },
 ]
 
 /**
@@ -350,9 +398,71 @@ function position(starts, offset) {
 }
 
 /**
+ * True when the file is a code of conduct that names a third-party document and
+ * links its canonical home. Read from the source text rather than the masked
+ * copy, because the attribution often carries its URL as a link reference.
+ * @param {string} file
+ * @param {string} text
+ * @returns {boolean}
+ */
+function headingsPreserved(file, text) {
+  if (basename(file) !== "CODE_OF_CONDUCT.md") return false
+  return CODE_OF_CONDUCT_SOURCES.some(([name, url]) => name?.test(text) && url?.test(text))
+}
+
+/**
+ * Every word of an ATX heading that is capitalized past the heading's sentence
+ * start. The sentence start is the first word, or the word after a leading
+ * label token: a first or second token ending in `:`, or a first token ending
+ * in `.`. Without that rule the check reports this repository's own house
+ * style, where a rule heading reads `### R-DOC-01: The README opens with one
+ * sentence` and a procedural heading reads `## Step 1: Find STANDARD.md`.
+ *
+ * The label rule is a heuristic, so `## Note: See Appendix B` skips a word that
+ * should have been checked. That direction of error is the right one: a missed
+ * offence costs less than a checker somebody uninstalls.
+ * @param {string} prose the masked text, so a hash inside a fence is not a heading
+ * @param {Set<string>} allow
+ * @returns {{index: number, word: string}[]}
+ */
+function headingOffences(prose, allow) {
+  /** @type {{index: number, word: string}[]} */
+  const out = []
+  ATX_RE.lastIndex = 0
+  for (const heading of prose.matchAll(ATX_RE)) {
+    const raw = heading[1] ?? ""
+    const content = raw.replace(CLOSING_HASHES_RE, "")
+    const contentStart = heading.index + heading[0].length - raw.length
+    const tokens = [...content.matchAll(/\S+/g)].map((token) => ({ text: token[0], index: contentStart + token.index }))
+
+    let start = 0
+    for (let i = 0; i < Math.min(2, tokens.length); i++) {
+      const text = tokens[i]?.text ?? ""
+      if (text.endsWith(":") || (i === 0 && text.endsWith("."))) {
+        start = i + 1
+        break
+      }
+    }
+
+    for (let i = start + 1; i < tokens.length; i++) {
+      const token = tokens[i]
+      if (!token) continue
+      const bare = token.text.replace(WRAPPING_RE, "")
+      if (bare === "" || !/^[A-Z]/.test(bare)) continue
+      if (/^[A-Z0-9]+$/.test(bare)) continue
+      if (/[./]/.test(bare) || /\d/.test(bare)) continue
+      if (allow.has(bare)) continue
+      out.push({ index: token.index, word: bare })
+    }
+  }
+  return out
+}
+
+/**
  * @typedef {object} ScanOptions
  * @property {Pattern[]} [patterns]
  * @property {boolean} [promote] Report every finding as an offence
+ * @property {string[]} [allow] Proper nouns a heading may capitalize
  */
 
 /**
@@ -363,25 +473,86 @@ function position(starts, offset) {
  */
 export function scan(text, file, options = {}) {
   const patterns = options.patterns ?? PATTERNS
+  const allow = new Set([...DEFAULT_ALLOW, ...(options.allow ?? [])])
   const prose = maskProse(text)
   const starts = lineStarts(prose)
   /** @type {Finding[]} */
   const findings = []
+  /** @param {number} index @param {string} tell @param {Pattern} pattern */
+  const add = (index, tell, pattern) => {
+    const { line, col } = position(starts, index)
+    findings.push({
+      file,
+      line,
+      col,
+      severity: options.promote ? "offence" : pattern.severity,
+      tell,
+      instead: pattern.instead,
+    })
+  }
   for (const pattern of patterns) {
+    if (pattern.heading) {
+      if (headingsPreserved(file, text)) continue
+      for (const offence of headingOffences(prose, allow)) add(offence.index, offence.word, pattern)
+      continue
+    }
+    if (!pattern.match) continue
     pattern.match.lastIndex = 0
     for (const hit of prose.matchAll(pattern.match)) {
-      const { line, col } = position(starts, hit.index)
-      findings.push({
-        file,
-        line,
-        col,
-        severity: options.promote ? "offence" : pattern.severity,
-        tell: hit[0].trim() === "" ? pattern.token : hit[0],
-        instead: pattern.instead,
-      })
+      add(hit.index, hit[0].trim() === "" ? pattern.token : hit[0], pattern)
     }
   }
   return sortFindings(findings)
+}
+
+/**
+ * The allowlist a repository declares in its own `.oss-kit.json`, under the
+ * `oss-writing` key. Malformed JSON throws rather than falling back to the
+ * defaults, because a silently ignored configuration file scores a repository
+ * differently from the one its author was reading.
+ * @param {string} path
+ * @returns {string[]}
+ */
+export function readConfigAllow(path) {
+  let text
+  try {
+    text = readFileSync(path, "utf8")
+  } catch {
+    return []
+  }
+  let config
+  try {
+    config = JSON.parse(text)
+  } catch {
+    throw new Error(`${path} is not valid JSON`)
+  }
+  const allow = config?.["oss-writing"]?.allow
+  if (allow === undefined) return []
+  if (!Array.isArray(allow) || allow.some((entry) => typeof entry !== "string")) {
+    throw new Error(`${path}: oss-writing.allow must be an array of strings`)
+  }
+  return allow
+}
+
+/**
+ * Walks up from dir looking for `.oss-kit.json`, so a hook running against one
+ * file still finds the repository's own allowlist.
+ * @param {string} dir
+ * @returns {string|null}
+ */
+export function findConfig(dir) {
+  let current = resolve(dir)
+  for (;;) {
+    const candidate = join(current, CONFIG_FILE)
+    try {
+      readFileSync(candidate)
+      return candidate
+    } catch {
+      const parent = dirname(current)
+      if (parent === current) return null
+      current = parent
+    }
+  }
 }
 
 /**
@@ -413,11 +584,47 @@ function readInput(path) {
  * @returns {number} the process exit code
  */
 export function main(argv) {
-  const paths = argv.filter((arg) => arg !== "")
+  /** @type {string[]} */
+  const paths = []
+  /** @type {string[]} */
+  const allow = []
+  let flags = true
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i] ?? ""
+    if (arg === "") continue
+    if (flags && arg === "--") {
+      flags = false
+      continue
+    }
+    if (flags && (arg === "--allow" || arg.startsWith("--allow="))) {
+      const value = arg.startsWith("--allow=") ? arg.slice("--allow=".length) : argv[++i]
+      if (value === undefined) {
+        process.stderr.write("--allow needs a comma-separated list of words\n")
+        return 2
+      }
+      allow.push(...value.split(",").filter((word) => word !== ""))
+      continue
+    }
+    if (flags && arg !== "-" && arg.startsWith("-")) {
+      process.stderr.write(`unknown option ${arg}\n`)
+      return 2
+    }
+    paths.push(arg)
+  }
   if (paths.length === 0) {
-    process.stderr.write("usage: check-tells.mjs <file>... | -\n")
+    process.stderr.write("usage: check-tells.mjs [--allow Word,Word] <file>... | -\n")
     return 2
   }
+
+  let configured
+  try {
+    const config = findConfig(process.cwd())
+    configured = config === null ? [] : readConfigAllow(config)
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`)
+    return 2
+  }
+
   /** @type {Finding[]} */
   const findings = []
   for (const path of paths) {
@@ -428,7 +635,7 @@ export function main(argv) {
       process.stderr.write(`could not read ${path}\n`)
       return 2
     }
-    findings.push(...scan(text, path === "-" ? "<stdin>" : path))
+    findings.push(...scan(text, path === "-" ? "<stdin>" : path, { allow: [...configured, ...allow] }))
   }
   for (const finding of findings) {
     process.stdout.write(`${formatFinding(finding)}\n`)

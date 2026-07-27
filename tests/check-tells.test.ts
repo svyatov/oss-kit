@@ -184,7 +184,118 @@ test("every catalog entry carries a token, a global pattern, and a replacement",
   for (const pattern of PATTERNS) {
     expect(pattern.token, pattern.id).not.toBe("")
     expect(pattern.instead, pattern.id).not.toBe("")
-    expect(pattern.match.global, pattern.id).toBe(true)
+    expect(pattern.match?.global ?? pattern.heading, pattern.id).toBe(true)
   }
   expect(new Set(PATTERNS.map((p) => p.id)).size).toBe(PATTERNS.length)
+})
+
+const headings = (text: string, file = "t.md") => scan(text, file).map((f) => f.tell)
+
+test("a title-case heading reports one offence per offending word", () => {
+  expect(headings("## Setting Up The Cache\n")).toEqual(["Up", "The", "Cache"])
+})
+
+test("a sentence-case heading reports nothing", () => {
+  expect(headings("## setting up the cache\n")).toHaveLength(0)
+})
+
+test("a heading whose first word is capitalized reports nothing", () => {
+  expect(headings("## Setting up the cache\n")).toHaveLength(0)
+})
+
+test("a rule heading label is not the sentence start", () => {
+  expect(headings("### R-DOC-01: The README opens with one sentence\n")).toHaveLength(0)
+})
+
+test("a two-token step label is not the sentence start", () => {
+  expect(headings("## Step 1: Find STANDARD.md\n")).toHaveLength(0)
+})
+
+test("a unit label closed with a period is not the sentence start", () => {
+  expect(headings("## U1. Prose extraction and the pipeline\n")).toHaveLength(0)
+})
+
+test("a colon past the second token does not create a label", () => {
+  expect(headings("## use the cache well: Only In Production\n")).toEqual(["Only", "In", "Production"])
+})
+
+test("an allowlisted proper noun is not an offence", () => {
+  expect(headings("## use GitHub Actions\n")).toEqual(["Actions"])
+})
+
+test("an all-caps acronym is not an offence", () => {
+  expect(headings("## read the CHANGELOG\n")).toHaveLength(0)
+})
+
+test("a path or a filename is not an offence", () => {
+  expect(headings("## generate site/src/content from AGENTS.md\n")).toHaveLength(0)
+})
+
+test("a heading ending in a period still checks its last word", () => {
+  expect(headings("## warm the Cache.\n")).toEqual(["Cache"])
+})
+
+test("a capitalized word inside a code span is not an offence", () => {
+  expect(headings("## read the `Foo` table\n")).toHaveLength(0)
+})
+
+test("a hash inside a fenced block is not a heading", () => {
+  expect(headings("```\n# Not A Heading\n```\n")).toHaveLength(0)
+})
+
+test("a per-invocation allowlist clears a heading that otherwise fails", () => {
+  expect(scan("## build with Astro and Starlight\n", "t.md", { allow: ["Astro", "Starlight"] })).toHaveLength(0)
+})
+
+test("--allow clears the same heading from the command line", () => {
+  const dir = mkdtempSync(join(tmpdir(), "tells-"))
+  const file = join(dir, "a.md")
+  writeFileSync(file, "## build with Astro and Starlight\n")
+  expect(run([file]).exitCode).toBe(1)
+  expect(run(["--allow", "Astro,Starlight", file]).exitCode).toBe(0)
+})
+
+test("an .oss-kit.json above the file supplies the allowlist", () => {
+  const dir = mkdtempSync(join(tmpdir(), "tells-"))
+  writeFileSync(join(dir, ".oss-kit.json"), JSON.stringify({ "oss-writing": { allow: ["Astro"] } }))
+  const file = join(dir, "a.md")
+  writeFileSync(file, "## build with Astro\n")
+  expect(Bun.spawnSync(["node", join(process.cwd(), CHECKER), "a.md"], { cwd: dir }).exitCode).toBe(0)
+})
+
+test("a malformed .oss-kit.json exits non-zero rather than scoring on defaults", () => {
+  const dir = mkdtempSync(join(tmpdir(), "tells-"))
+  writeFileSync(join(dir, ".oss-kit.json"), "{ not json")
+  writeFileSync(join(dir, "a.md"), "clean prose.\n")
+  const result = Bun.spawnSync(["node", join(process.cwd(), CHECKER), "a.md"], { cwd: dir })
+  expect(result.exitCode).not.toBe(0)
+  expect(result.stderr.toString()).toContain(".oss-kit.json")
+})
+
+const COC = `# Code of conduct
+
+## Our Pledge
+
+We pledge to make participation a harassment-free experience.
+
+## Attribution
+
+This code of conduct is adapted from the Contributor Covenant, version 2.1,
+available at https://www.contributor-covenant.org/version/2/1/code_of_conduct.html.
+`
+
+test("an attributed code of conduct keeps its preserved headings", () => {
+  expect(scan(COC, "CODE_OF_CONDUCT.md")).toHaveLength(0)
+})
+
+test("an attributed code of conduct is still checked for dashes and emoji", () => {
+  expect(scan(`${COC}\nan em — dash \u{1F680}\n`, "CODE_OF_CONDUCT.md")).toHaveLength(2)
+})
+
+test("a code of conduct with no attribution has its headings checked", () => {
+  expect(scan(COC.replace(/Contributor Covenant/, "nothing"), "CODE_OF_CONDUCT.md").map((f) => f.tell)).toEqual(["Pledge"])
+})
+
+test("another file mentioning the Contributor Covenant still has its headings checked", () => {
+  expect(scan(COC, "CONTRIBUTING.md").map((f) => f.tell)).toEqual(["Pledge"])
 })
