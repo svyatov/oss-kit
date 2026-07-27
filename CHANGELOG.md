@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+### Changed
+
+- `oss-writing` gates the commit and change-request body behind a closed trigger list instead of listing what a body carries. The default is now no body at all, and one of six named conditions has to hold before one exists. The old table read as a checklist to cover, which is where padded git prose came from.
+- `oss-writing` moved the GitHub and GitLab render mechanics into `references/forge-rendering.md`, loaded only when a description is about to become a squash commit message. The body keeps one forge-agnostic rule: forge fields take one paragraph per line, unwrapped.
+- `oss-writing` states a subject budget of 72 characters, counting any number the forge appends on squash. It also makes the sentence and paragraph figures hard limits, where they were signals to split. Git's 50-character subject predates the `type(scope): ` prefix, which spends 15 to 20 of those characters.
+- `oss-writing` no longer bans naming the failure a change targets. Recording the run that went wrong is a reproduction, which Git's own guidance asks for; only the author's route to the fix is noise.
+
 ## [0.3.0] - 2026-07-27
 
 Five new rules, and `oss-audit` now reports the gaps alone rather than every rule it checked.

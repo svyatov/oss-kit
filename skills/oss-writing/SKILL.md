@@ -10,53 +10,71 @@ Technical register: neutral, specific, short. No personality injection, no marke
 
 ## Establish the local contract
 
-Before drafting, read the repository's instructions, contribution guide, templates, nearby documents, and recent accepted examples of the same artifact. Local requirements decide commit structure, required pull request sections, terminology, line length, and audience. Preserve required template sections and legal or security wording. Verify every factual claim against the diff, source, command output, issue, or cited upstream source.
+Before drafting, read the repository's instructions, contribution guide, templates, nearby documents, and recent accepted examples of the same artifact. Local requirements decide commit structure, required change-request sections, terminology, line length, and audience. Preserve required template sections and legal or security wording. Verify every factual claim against the diff, source, command output, issue, or cited upstream source.
 
 For commit messages, inspect `git log --no-merges` for the files in scope. If the repository requires Conventional Commits, use `<type>[optional scope]: <description>`, `!` or a `BREAKING CHANGE:` footer for incompatible changes, and any required trailers. Do not infer a convention from this skill's examples.
 
-Sources: [Git, Submitting patches](https://git-scm.com/docs/SubmittingPatches), [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/), [GitHub, Helping others review your changes](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/getting-started/helping-others-review-your-changes), and [Google developer documentation style guide](https://developers.google.com/style).
+Sources: [Git, Submitting patches](https://git-scm.com/docs/SubmittingPatches), [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/), [GitHub, Helping others review your changes](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/getting-started/helping-others-review-your-changes), [Google developer documentation style guide](https://developers.google.com/style), and [ASD-STE100](https://www.asd-ste100.org/) for the sentence, paragraph, and noun-stack limits.
 
-## Match the content to the artifact
+## How much to write
 
-| Artifact | Content |
-|------|---------|
-| Commit | The subject summarizes the change. The body explains the problem, intent, constraints, discarded alternatives, compatibility impact, and why this solution is appropriate. Skip implementation details the patch makes obvious. |
-| Pull request | State the purpose, user-visible or architectural result, important implementation boundary, risks, related context, and verification actually performed. For a large change, tell reviewers where to start. |
-| Issue or bug report | Give expected and observed behavior, minimal reproduction, relevant environment and versions, frequency or scope, and sanitized evidence. Separate facts from hypotheses. |
-| Review comment | Point to the concrete defect or question, explain its consequence, and state the required outcome. Use a suggestion block when the exact edit is known. Distinguish blocking findings from optional ideas. |
-| ADR | Record status, context, decision, rejected alternatives, consequences, and the conditions that would justify revisiting it. |
-| Documentation | Describe the current product for a defined audience and task. State prerequisites before steps, keep procedures ordered, and tell the reader how to verify the result. |
+The durable body defaults to none. The subject carries the change, and most changes end there.
 
-Prose earns its place when it carries context the code or interface cannot:
+Write the subject in the imperative, on one line, with no trailing period. Keep it under 72 characters, counting any number the forge appends on squash. Git's 50 predates the `type(scope): ` prefix, which spends 15 to 20 of those characters.
+
+A body exists only when one of these holds:
+
+- the why is not derivable from the subject and the diff together
+- the change is breaking
+- the commit reverts something
+- it is a security fix or a data migration
+- a future reader would otherwise retry an alternative this one rejected
+- the change rests on a number or an outside source the diff lacks: a benchmark, a spec section, a vendor bug, an upstream deprecation. Give the number or the citation, not the adjective.
+
+The body answers what is wrong now, then why this fix. Add what was discarded when an alternative was actually rejected.
+
+A change-request description carries one thing a commit body does not: its reader arrives before the diff, not after. So it always opens with a one-line statement of what changed, even when no trigger earns a body.
+
+Two further additions belong only there, because both assume the reader has the diff in front of them:
+
+- where to start reading, when the diff is large enough that a reviewer would otherwise open the wrong file first
+- verification, when it actually ran. Never imply verification that did not. Where a template asks for a status you do not have, write `Not run: <reason>`.
+
+Where the forge reuses the description as the squash commit message, that description is the durable body. Write it as the commit body it is about to become. Its opening line comes along, which is why a squashed commit is rarely subject-only.
+
+Length and content are separate constraints. Say everything the triggers earn, in fewer words; never drop a breaking-change note to be shorter.
+
+A required template section is not optional. Answer each one at the shortest length that answers it. Where a section's honest answer is nothing, write that word rather than a paragraph. Invent no scaffolding the repository does not ship.
+
+Prose earns its place when it carries one of these:
 
 - the reason the behavior exists
 - the constraint that forced an unobvious choice
 - the alternative rejected and why
 - the compatibility, security, or operational consequence
 
-A commit body that paraphrases the diff is noise. A pull request still needs an overview of the behavioral change so a reviewer can orient before reading the diff.
+A commit body that paraphrases the diff is noise.
 
-## A single newline breaks the line on GitHub, but not in a file
+The remaining artifacts carry their own content:
 
-GitHub renders the same Markdown two ways. In an issue, a pull request, or a discussion it turns a single newline into a line break; in a Markdown file in the repository it treats that newline as a space and reflows the paragraph. Its own documentation is explicit that the text that gets a break automatically in a pull request "would render on one line without a line break" in an `.md` file.
+| Artifact | Content |
+|------|---------|
+| Issue or bug report | Give expected and observed behavior, minimal reproduction, relevant environment and versions, frequency or scope, and sanitized evidence. Separate facts from hypotheses. |
+| Review comment | Point to the concrete defect or question, explain its consequence, and state the required outcome, in about two sentences. Use a suggestion block when the exact edit is known. Distinguish blocking findings from optional ideas. |
+| ADR | Record status, context, decision, rejected alternatives, consequences, and the conditions that would justify revisiting it. |
+| Documentation | Describe the current product for a defined audience and task. State prerequisites before steps, keep procedures ordered, and tell the reader how to verify the result. |
 
-So prose hard-wrapped at a column, which is how repository files are usually written, keeps every one of those wraps when it is pasted into a pull request description, and renders ragged at whatever width the author's editor happened to use.
+## Wrapping, and where the text ends up
 
-Write one paragraph per line, with no hard wrapping, for anything typed into a forge field: a pull request description, an issue, a review comment, a release note. Hard-wrap a file only if the repository already wraps its files.
+Write one paragraph per line, with no hard wrapping, for anything typed into a forge field. That covers a change-request description, an issue, a review comment, and a release note. Hard-wrap a file only if the repository already wraps its files. Forges disagree about what a single newline means, and unwrapped prose is the one form that renders correctly on all of them.
 
-GitLab does not share the behavior. There a single newline keeps the following text in the same paragraph everywhere, so the same hard-wrapped prose renders identically in a merge request description and in a file. Wrapping that is merely ugly on GitLab is invisible until someone opens the pull request on GitHub, which is why this is worth checking rather than remembering.
-
-## The pull request description may be the commit message
-
-A repository can set the squash commit message to the pull request body, and no clone reveals that it did, so read `squash_merge_commit_message` before writing the description. Where it is set, that text is the permanent commit body. A heading becomes a heading in `git log`, an unticked checkbox stays unticked forever, and GitHub does not strip HTML comments, so template guidance left in the body survives in history while rendering as nothing on the pull request page. Write the description as the commit body it is about to become. Still do not hard-wrap it: GitHub rewraps the body itself when it builds that message, to roughly 76 columns and without splitting a word, so a description hard-wrapped by its author arrives wrapped twice, which is where a commit body broken mid-sentence comes from.
+Before writing a change-request description, check whether the forge reuses it as the squash commit message. Where it does, that text becomes permanent history, and a heading, an unticked checkbox, or a leftover template comment survives there. [references/forge-rendering.md](references/forge-rendering.md) carries the per-forge behavior, the setting to read on each, and the double-wrap hazard.
 
 ## Say nothing when nothing needs saying
 
 Length is not effort. Padding a trivial change into a structured document wastes the reader twice: once reading it, once distrusting the next one.
 
-- Subject line says everything? Write no body.
-- Headings earn their place when the reader needs to navigate, roughly past a screenful. A short PR body is two or three paragraphs, not `## Summary` and `## Test plan`.
-- Nothing was verified? Never imply that it was. If a template or the risk of the change calls for verification status, write `Not run: <reason>`.
+- Headings earn their place when the reader needs to navigate, roughly past a screenful. Do not open a short document with `## Summary`.
 - A README section that repeats the code below it should be deleted, not rewritten.
 
 ## Composition rules
@@ -76,7 +94,7 @@ Length is not effort. Padding a trivial change into a structured document wastes
 | One instruction per step | A numbered step tells the reader to do one thing. Split a step that hides a second action behind `and` |
 | Keep the articles | `the parser reads the file`, not `parser reads file`. Dropping articles and sentence parts is false brevity: it saves two words and costs a reread |
 
-A sentence past roughly 20 words in an instruction, or 25 in an explanation, is a signal to split it, not a limit to count against.
+Keep an instruction under 20 words and an explanation under 25. Cap a paragraph at six sentences. Split what runs longer.
 
 Machine-written prose also carries a lexicon these rules do not cover: inflated significance, promotional adjectives, tacked-on `-ing` clauses, empty contrast, signposting, hedging stacks. When a draft reads as padded, generic, or promotional, check it against [references/tells.md](references/tells.md), which names each pattern and what to write instead.
 
@@ -96,6 +114,7 @@ Check these before returning any text:
 - No `Generated with`, `Co-Authored-By: Claude`, or tool attribution footers: a trailer records who is accountable for the change, and a tool cannot be.
 - No boilerplate caveats. State a precondition, limitation, or risk when it changes what the reader should do: a caveat that changes nothing trains the reader to skip the one that matters.
 - Straight ASCII quotes: curly quotes break a copy-paste into a shell or a config file, and the reader cannot tell by eye which they got.
+- A body needs a named trigger, or a required template section asking for it. If neither holds, delete the body and ship the subject.
 
 ## Do not touch
 
@@ -111,7 +130,7 @@ These come from writing the message as a session log rather than a description o
 
 - One bullet per changed file, or a list of every path touched. The diff has that.
 - A test plan describing verification that never ran.
-- The body narrating your working process: what you tried, what failed, what you then did.
+- Your route to the fix: what you tried, what you ruled out, what you did next. The failure the change targets is evidence and belongs in the body; the session that found it does not. Name the runtime only when it is part of the repro, as for a prompt or a skill.
 - Restating the subject line as the first line of the body.
 
 ## Error messages and comments
@@ -127,41 +146,49 @@ Use literal terms in their primary sense. Avoid idioms, slang, humor, violent me
 
 ## Examples
 
-<example name="commit body">
+Each example is a finished artifact at one rung. The name says which trigger earned the body, or that none did.
+
+<example name="commit, no trigger">
 
 ```
-Bad:  refactor(auth): improve token handling
-
-      This commit refactors the token handling logic to be more robust and
-      maintainable, updating the refresh function and error handling.
-
-Good: fix(auth): refresh tokens 30s before expiry
-
-      Clock skew against the IdP reached 12s, so tokens refreshed exactly
-      at expiry were rejected about 1 in 400 times. 30s covers the
-      observed skew with margin, and the extra refresh cost is negligible.
+fix(parser): handle empty input
 ```
 
 </example>
 
-<example name="pull request description">
+<example name="commit, trigger: why not derivable">
 
 ```
-Bad:  ## Summary
-      - Added a new caching layer
-      - Updated the service to use it
+fix(auth): refresh tokens 30s before expiry
 
-      This significantly improves performance and enhances the user
-      experience by reducing load times.
+Clock skew against the IdP reached 12s, so tokens refreshed exactly at
+expiry were rejected about 1 in 400 times. 30s covers the observed skew
+with margin, and the extra refresh cost is negligible.
+```
 
-Good: Search results were recomputed on every keystroke, which pinned a CPU
-      core during peak hours. Results are now cached per normalized query
-      for 5 minutes.
+</example>
 
-      The cache is in-process, so a deploy clears it. That is fine at one
-      replica, and needs Redis if we scale out.
+<example name="commit, trigger: measurement">
 
-      Verified with bench/load.sh: p99 drops from 1.4s to 210ms.
+```
+perf(search): cache results per normalized query
+
+Results were recomputed on every keystroke, pinning a CPU core during
+peak hours. Caching for 5 minutes drops p99 from 1.4s to 210ms and costs
+40 MB of resident memory, which is what pays for the cache.
+
+The cache is in-process, so a deploy clears it. That is fine at one
+replica and needs Redis if we scale out.
+```
+
+</example>
+
+<example name="change-request description">
+
+```
+Search results were recomputed on every keystroke, which pinned a CPU core during peak hours. Results are now cached per normalized query for 5 minutes.
+
+Verified with bench/load.sh: p99 drops from 1.4s to 210ms.
 ```
 
 </example>
@@ -169,10 +196,8 @@ Good: Search results were recomputed on every keystroke, which pinned a CPU
 <example name="review comment">
 
 ```
-Bad:  Great catch on the null check! One small thing to consider: it might
-      potentially be worth thinking about concurrent access here.
-Good: Two goroutines can reach this branch at once, so the map write races.
-      A sync.Map or a mutex around lines 40-48 fixes it.
+Two goroutines can reach this branch at once, so the map write races.
+A sync.Map or a mutex around lines 40-48 fixes it.
 ```
 
 </example>
