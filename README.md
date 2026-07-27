@@ -1,11 +1,10 @@
 # oss-kit
 
-Curated agent skills for the recurring work of maintaining an open source
-repository.
+Curated agent skills for open source maintainers.
 
 The current kit has nine skills. One audits the repository against a written
-quality bar. The other eight own focused documentation, community, CI,
-security, release, changelog, prose, and agent-skill responsibilities.
+standard. The other eight own focused documentation, community, CI, security,
+release, changelog, prose, and agent-skill responsibilities.
 
 ## Install
 

@@ -1,7 +1,7 @@
 {
   "name": "oss-kit",
   "version": "0.2.0",
-  "description": "An opinionated quality bar for open source projects: README, community files, CI, supply-chain hardening, secure releases, and changelogs.",
+  "description": "Curated agent skills for open source maintainers",
   "author": {
     "name": "Leonid Svyatov",
     "email": "leonid@svyatov.com",
@@ -15,7 +15,7 @@
   "hooks": {},
   "interface": {
     "displayName": "oss-kit",
-    "shortDescription": "One opinionated quality bar for open source repositories",
+    "shortDescription": "Curated agent skills for open source maintainers",
     "developerName": "Leonid Svyatov",
     "category": "Developer Tools",
     "websiteURL": "https://github.com/svyatov/oss-kit"

@@ -1,6 +1,6 @@
 # Working in this repository
 
-oss-kit is a curated, opinionated kit for recurring open source maintenance. It currently ships nine agent skills built around one repository quality standard. Every current standard opinion lives in `STANDARD.md` as a numbered rule. Skills cite rule IDs; they do not restate the opinions.
+oss-kit is a curated set of agent skills for open source maintainers. It currently ships nine, built around one repository standard. Every current standard opinion lives in `STANDARD.md` as a numbered rule. Skills cite rule IDs; they do not restate the opinions.
 
 ## Layout
 
@@ -104,5 +104,7 @@ Dependabot has supported the `bun` ecosystem since February 2025, for the text `
 `site/astro.config.mjs` imports `parseRules` from `site/scripts/generate.mjs` and builds the rules sidebar from `STANDARD.md` at config load. That is what keeps the sidebar in the order the standard argues, grouped under its own `##` headings, with no rule list duplicated in the config. Adding a rule needs no site change; renaming a `##` section in `STANDARD.md` renames a sidebar group. Autogeneration cannot do this, because it sorts by filename and would interleave the areas.
 
 Generated pages carry an `editUrl` pointing at the source they came from, because the generated Markdown under `site/src/content/docs/` is gitignored and has no file to edit. The global `editLink.baseUrl` covers authored pages in that tree.
+
+`site/public/og.png` is generated from `site/scripts/og.html`, which is the only place its wording lives. To change it, edit that file, serve `site/` over a local http server, screenshot the page at a 1200x630 viewport, and downscale the retina capture to 1200x630 with `sharp`, which `site/` already depends on. Serve it rather than opening `file://`: Chrome treats a `file://` page as an opaque origin and refuses the `@font-face` request, which silently substitutes a fallback font. The card carries the tagline without a terminal period, unlike the prose occurrences, because a lone dot under a centered line reads as a blemish.
 
 `lastUpdated` is deliberately off. It reads git commit dates for the content file, and the content files are generated and untracked; CI's shallow checkout would date them all to the same commit anyway.

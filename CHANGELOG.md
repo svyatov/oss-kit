@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Every plugin and marketplace manifest describes oss-kit as `Curated agent skills for open source maintainers`, the same line the site and the social card carry. The manifests called it an opinionated quality bar, so the pitch a reader saw depended on whether they arrived through a plugin browser, a share preview, or the site. The capability list those descriptions carried lives in the `keywords` and `tags` arrays of the same files.
 - A rule page is titled by the rule, not by its ID. The ID moves to a badge in the sidebar. The title drove the browser tab, the sidebar label, the pagination card, and the search result, so all four used to read `R-SEC-01` and say nothing.
 - The site sidebar groups rules by area in the order `STANDARD.md` argues them. It is built from `STANDARD.md` rather than from filenames, which sorted the areas alphabetically and split each one.
 - Guide and reference pages get a description drawn from their own first sentence. Guides used to repeat their title, and every reference page shared one generic line.
