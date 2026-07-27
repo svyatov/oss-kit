@@ -37,12 +37,45 @@ import { fileURLToPath } from "node:url"
  * @property {string} token The catalog wording, for the drift test to find
  * @property {RegExp} match Global, and safe to reuse: every scan resets lastIndex
  * @property {string} instead
+ * @property {string[]} [rules] Rule IDs whose Check line names this pattern
  */
 
 const LIST_RE = /^ {0,3}(?:[-*+]|\d{1,9}[.)])(?:[ \t]|$)/
 const FENCE_RE = /^ {0,3}(`{3,}|~{3,})/
 const QUOTE_RE = /^ {0,3}>/
 const INDENT_RE = /^(?: {4}|\t)/
+
+const BREAK_INSTEAD = "a period, a comma, a colon, or a pair of parentheses"
+
+/**
+ * A word with no legitimate use in technical prose. Every entry is an offence,
+ * and every one is a row of references/tells.md.
+ * @param {string} token
+ * @param {RegExp} match
+ * @param {string} instead
+ * @returns {Pattern}
+ */
+function vocabulary(token, match, instead) {
+  return { id: `word-${token.replace(/\W+/g, "-")}`, severity: "offence", token, match, instead }
+}
+
+/**
+ * A word the token alone cannot decide: references/tells.md or SKILL.md
+ * documents a legitimate use, or the same spelling has an ordinary technical
+ * noun sense. Prints, and leaves the exit code alone.
+ * @param {string} token
+ * @param {RegExp} match
+ * @param {string} instead
+ * @param {string[]} [rules]
+ * @returns {Pattern}
+ */
+function judgment(token, match, instead, rules) {
+  const pattern = { id: `word-${token.replace(/\W+/g, "-")}`, severity: /** @type {Severity} */ ("suspicion"), token, match, instead }
+  return rules ? { ...pattern, rules } : pattern
+}
+
+const PROMOTIONAL = "name the property the adjective is standing in for"
+const R_DOC_05 = ["R-DOC-05"]
 
 /** @type {Pattern[]} */
 export const PATTERNS = [
@@ -51,7 +84,8 @@ export const PATTERNS = [
     severity: "offence",
     token: "em dash",
     match: /—/g,
-    instead: "a period, a comma, a colon, or a pair of parentheses",
+    instead: BREAK_INSTEAD,
+    rules: R_DOC_05,
   },
   {
     id: "en-dash",
@@ -59,14 +93,107 @@ export const PATTERNS = [
     token: "en dash",
     match: /–/g,
     instead: "a plain hyphen in a range, or a rewritten sentence",
+    rules: R_DOC_05,
   },
   {
     id: "double-hyphen",
     severity: "offence",
     token: " -- ",
     match: / -- /g,
-    instead: "a period, a comma, a colon, or a pair of parentheses",
+    instead: BREAK_INSTEAD,
   },
+  {
+    // \p{Emoji} matches the ASCII digits and #, which would report every
+    // version number in a repository. Extended_Pictographic is the property
+    // that means what a reader means by an emoji.
+    id: "emoji",
+    severity: "offence",
+    token: "emoji",
+    match: /\p{Extended_Pictographic}/gu,
+    instead: "a word: their width and glyph vary by terminal and font",
+    rules: R_DOC_05,
+  },
+  {
+    id: "curly-quote",
+    severity: "offence",
+    token: "curly quotes",
+    match: /[‘’“”]/g,
+    instead: "a straight ASCII quote, which survives a copy-paste into a shell",
+  },
+  {
+    // A colon inside or straight after the bold marks a label. A period marks a
+    // claim, which SKILL.md allows, so `- **Fast.** 50% faster` does not match.
+    id: "inline-header-bullet",
+    severity: "offence",
+    token: "inline-header bullet",
+    match: /^[ \t]*[-*+][ \t]+\*\*[^*\n]*(?::\*\*|\*\*[ \t]*:)/gm,
+    instead: "a sentence that makes the claim the label is standing in for",
+  },
+  {
+    // Anchored to the start of a line, which is where a trailer sits. Mid
+    // sentence the same words are ordinary prose: a site is generated with Astro.
+    id: "generated-with",
+    severity: "offence",
+    token: "Generated with",
+    match: /^[ \t]*\S{0,4}[ \t]*Generated with\b/gm,
+    instead: "nothing: a trailer records who is accountable, and a tool cannot be",
+  },
+  {
+    // The trailer key is matched without regard to case because git and GitHub
+    // both write Co-authored-by, and the tell is the same one either way.
+    id: "claude-trailer",
+    severity: "offence",
+    token: "Co-Authored-By: Claude",
+    match: /co-authored-by:[^\n]*\bclaude\b/gi,
+    instead: "nothing: a trailer records who is accountable, and a tool cannot be",
+  },
+
+  vocabulary("leverage", /\bleverag(?:e|es|ed|ing)\b/gi, "use"),
+  vocabulary("utilize", /\butili[sz](?:e|es|ed|ing|ation)\b/gi, "use"),
+  vocabulary("delve", /\bdelv(?:e|es|ed|ing)\b/gi, "look at, or read"),
+  vocabulary("streamline", /\bstreamlin(?:e|es|ed|ing)\b/gi, "name what got shorter or faster"),
+  vocabulary("facilitate", /\bfacilitat(?:e|es|ed|ing|ion)\b/gi, "the verb for what actually happens"),
+  vocabulary("holistic", /\bholistic(?:ally)?\b/gi, "name the parts it covers"),
+  vocabulary("obviate", /\bobviat(?:e|es|ed|ing)\b/gi, "removes the need for"),
+  vocabulary("predicated on", /\bpredicated on\b/gi, "depends on, or assumes"),
+  vocabulary("additionally", /\badditionally\b/gi, "and, or nothing"),
+  vocabulary("furthermore", /\bfurthermore\b/gi, "and, or nothing"),
+  vocabulary("pivotal", /\bpivotal\b/gi, "state the fact and stop"),
+  vocabulary("testament to", /\btestament to\b/gi, "state the fact and stop"),
+  vocabulary("boasts", /\bboast(?:s|ed|ing)?\b/gi, "is, has, or a precise verb"),
+  vocabulary("best practices suggest", /\bbest practices suggest\b/gi, "name the source, or drop the claim"),
+  vocabulary("it is widely believed", /\bit is widely believed\b/gi, "name the source, or drop the claim"),
+  vocabulary("studies show", /\bstudies show\b/gi, "name the source, or drop the claim"),
+  vocabulary("in order to", /\bin order to\b/gi, "to"),
+  vocabulary("due to the fact that", /\bdue to the fact that\b/gi, "because"),
+  vocabulary("has the ability to", /\bha(?:s|ve|d) the ability to\b/gi, "can"),
+  vocabulary("it is important to note that", /\bit is important to note that\b/gi, "delete the phrase"),
+  vocabulary("may potentially", /\bmay potentially\b/gi, "one modal, or none"),
+  vocabulary("could possibly", /\bcould possibly\b/gi, "one modal, or none"),
+  vocabulary("let's dive in", /\blet['’]s dive in\b/gi, "start with the content"),
+  vocabulary("here's what you need to know", /\bhere['’]s what you need to know\b/gi, "start with the content"),
+  vocabulary("this PR aims to", /\bthis (?:PR|MR|pull request|merge request) aims to\b/gi, "start with the content"),
+  vocabulary("at its core", /\bat its core\b/gi, "just make the point"),
+  vocabulary("fundamentally", /\bfundamentally\b/gi, "just make the point"),
+  vocabulary("the real question is", /\bthe real question is\b/gi, "just make the point"),
+
+  judgment("key", /\bkey\b/gi, "state the fact and stop, unless this is a cache key or an API key"),
+  judgment("critical", /\bcritical\b/gi, "state the fact and stop, unless this is a critical section"),
+  judgment("underscores", /\bunderscores\b/gi, "state the fact and stop"),
+  judgment("serves as", /\bserves as\b/gi, "is, has, or a precise verb"),
+  judgment("acts as", /\bacts as\b/gi, "is, has, or a precise verb"),
+  judgment("features", /\bfeatures\b/gi, "is, has, or a precise verb"),
+  judgment("ensuring", /,[ \t]*ensuring\b/gi, "split into a sentence, or cut"),
+  judgment("enabling", /,[ \t]*enabling\b/gi, "split into a sentence, or cut"),
+  judgment("allowing", /,[ \t]*allowing\b/gi, "split into a sentence, or cut"),
+  judgment("robust", /\brobust\b/gi, PROMOTIONAL, R_DOC_05),
+  judgment("powerful", /\bpowerful\b/gi, PROMOTIONAL, R_DOC_05),
+  judgment("seamless", /\bseamless(?:ly)?\b/gi, PROMOTIONAL, R_DOC_05),
+  judgment("comprehensive", /\bcomprehensive(?:ly)?\b/gi, PROMOTIONAL, R_DOC_05),
+  judgment("blazing", /\bblazing(?:ly)?\b/gi, PROMOTIONAL, R_DOC_05),
+  judgment("effortless", /\beffortless(?:ly)?\b/gi, PROMOTIONAL, R_DOC_05),
+  judgment("elegant", /\belegant(?:ly)?\b/gi, PROMOTIONAL),
+  judgment("rich", /\brich\b/gi, PROMOTIONAL),
 ]
 
 /**
