@@ -52,3 +52,11 @@ Edit files under `skills/`, never through the `.agents/skills` or `.claude/skill
 ## Submitting a change
 
 Fork the repository, create a branch, and open a pull request against `main`. Use Conventional Commits for commit messages: `type(scope): description`.
+
+Before you open the pull request:
+
+- Add an entry to `CHANGELOG.md` under Unreleased, unless the change is not notable.
+- If a skill's description changed, update the skills table in `README.md`.
+- If this adds or changes a rule, check that `AGENTS.md` still describes how this repository scores against it.
+
+This repository merges by squash with the pull request description as the commit message, so write the description as the commit body it becomes: paragraphs, no headings, and no hard wrapping.

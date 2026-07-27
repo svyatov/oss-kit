@@ -46,6 +46,10 @@ Write one paragraph per line, with no hard wrapping, for anything typed into a f
 
 GitLab does not share the behavior. There a single newline keeps the following text in the same paragraph everywhere, so the same hard-wrapped prose renders identically in a merge request description and in a file. Wrapping that is merely ugly on GitLab is invisible until someone opens the pull request on GitHub, which is why this is worth checking rather than remembering.
 
+## The pull request description may be the commit message
+
+A repository can set the squash commit message to the pull request body, and no clone reveals that it did, so read `squash_merge_commit_message` before writing the description. Where it is set, that text is the permanent commit body. A heading becomes a heading in `git log`, an unticked checkbox stays unticked forever, and GitHub does not strip HTML comments, so template guidance left in the body survives in history while rendering as nothing on the pull request page. Write the description as the commit body it is about to become.
+
 ## Say nothing when nothing needs saying
 
 Length is not effort. Padding a trivial change into a structured document wastes the reader twice: once reading it, once distrusting the next one.
