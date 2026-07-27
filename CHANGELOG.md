@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+### Changed
+
+- The README leads with what the kit is, then one install command and one worked example, in that order. The install variants and the per-host plugin commands moved below the example, because three install blocks used to run back to back before a reader saw the kit do anything.
+- The README states the facts a reader picks a tool on: the rule count, the routing from a gap to the skill that fixes it, the 500-line ceiling on a skill body, and the single bundled script that needs nothing installed.
+- The README links the rendered install guide and standard on [oss-kit.svyatov.com](https://oss-kit.svyatov.com) rather than the Markdown sources under `site/`. A reader on GitHub was being sent to a source file when a published page exists.
+
 ## [0.2.0] - 2026-07-27
 
 ### Added

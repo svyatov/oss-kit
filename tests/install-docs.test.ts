@@ -34,7 +34,7 @@ test("every plugin manifest directory in the repository is named on the install 
 test("the README keeps the fast path and links to the install page", () => {
   const text = readme()
   expect(text).toContain("npx skills add svyatov/oss-kit")
-  expect(text).toContain("site/src/content/docs/guides/install.md")
+  expect(text).toContain("https://oss-kit.svyatov.com/guides/install/")
 })
 
 test("the README does not duplicate the per-harness matrix", () => {
