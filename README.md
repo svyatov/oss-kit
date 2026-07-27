@@ -5,59 +5,61 @@ Curated agent skills for open source maintainers.
 [![version](https://img.shields.io/github/v/tag/svyatov/oss-kit?label=version)](https://github.com/svyatov/oss-kit/releases)
 [![CI](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml)
 
-- 41 rules in one file, each stating the check it is scored by and the single
-  skill that fixes it
-- `oss-audit` returns every gap keyed by its rule ID, naming the skill that
-  fixes it
-- nine skills, every body under 500 lines, with the depth in `references/` that
-  a skill reads only when it needs it
-- one bundled script, `skills/oss-skill/scripts/validate.mjs`, which imports
-  Node built-in modules only and runs on Node 22 or later, or on Bun
-- oss-kit is scored against its own standard, and
-  [AGENTS.md](AGENTS.md) records the reason for every rule that does not reach
-  a skills repository
+- **45 rules.** Each states the check it is scored by and the one skill that
+  fixes it.
+- **Seven areas.** Documentation, community files, CI, security posture,
+  release publishing, changelog discipline, and the agent skills a repository
+  ships.
+- **Both forges.** 42 of the 45 rules score GitHub and GitLab alike. Two are
+  GitHub-only, one is GitLab-only, and every rule says which.
+- **Four registries.** Release publishing for npm, RubyGems, PyPI, and
+  crates.io.
+
+Install the kit:
 
 ```bash
 npx skills add svyatov/oss-kit
 ```
 
-```
-Use oss-audit on this repository and list every gap against STANDARD.md.
+Then ask your agent:
+
+```text
+Audit this repository against the oss-kit standard.
 ```
 
-oss-audit reads `skills/oss-audit/STANDARD.md`, scores the repository rule by
-rule, and routes each gap to the skill that fixes it:
+It answers with the gaps, each keyed to the rule it failed and routed to the
+skill that fixes it:
 
-```
+```text
 R-COM-04: SECURITY.md is missing. Fixed by oss-community.
 R-SEC-01: 2 unpinned actions in .github/workflows/validate.yml. Fixed by oss-harden.
 ```
 
-## More install paths
+## Where to start
 
-One skill at a time:
+Run `oss-audit` first. It scores the whole repository and names which of the
+other skills to run, so you do not have to guess which gap matters.
 
-```bash
-npx skills add svyatov/oss-kit --skill oss-readme
-```
+Starting from an empty repository there is nothing to score yet, so work in
+this order instead:
 
-Claude Code, GitHub Copilot CLI, and VS Code read
-`.claude-plugin/marketplace.json`, so the same two commands work in any of
-them:
+1. `oss-community` for the license, code of conduct, contributing guide, and
+   security policy
+2. `oss-readme` for the README
+3. `oss-ci` for tests, linting, and builds on push and on every change request
+4. `oss-harden` for pinned action SHAs, workflow permissions, and branch
+   protection
+5. `oss-changelog` for CHANGELOG.md and the first tagged release
+6. `oss-publish` for registry publishing, if you ship a package
 
-```
-/plugin marketplace add svyatov/oss-kit
-/plugin install oss-kit@oss-kit
-```
+`oss-writing` and `oss-skill` are not steps in that sequence. Reach for
+`oss-writing` whenever you are about to write a commit, a pull request, or a
+paragraph of docs, and for `oss-skill` only if your repository ships agent
+skills of its own.
 
-Every other supported harness has a native install path in the
-[install guide](https://oss-kit.svyatov.com/guides/install/).
-
-## Start with the job
-
-Ask for a skill by name when you know the responsibility. Use `oss-readme` for
-a README, `oss-community` for community files, or `oss-ci` for continuous
-integration. Start with `oss-audit` when you want the broadest view.
+You can also ask for a skill by name when you already know the job: use
+`oss-readme` for a README, `oss-community` for community files, `oss-ci` for
+continuous integration.
 
 ## Skills
 
@@ -73,6 +75,26 @@ integration. Start with `oss-audit` when you want the broadest view.
 | `oss-writing` | Fixes the sentences in commits, pull requests, issues, docs, error messages, log lines, and code comments. |
 | `oss-skill` | Fixes the structure, portability, and effectiveness of Agent Skills: canonical layout, `SKILL.md` conformance, trigger descriptions, progressive disclosure, repeatable procedures, portable scripts, evaluation, licensing, and host install paths. Bundles a validator that needs Node 22 or later, or Bun, and nothing installed. |
 
+## More install paths
+
+One skill at a time:
+
+```bash
+npx skills add svyatov/oss-kit --skill oss-readme
+```
+
+Claude Code, GitHub Copilot CLI, and VS Code read
+`.claude-plugin/marketplace.json`. In Claude Code or Copilot CLI, type these
+two commands at the prompt:
+
+```text
+/plugin marketplace add svyatov/oss-kit
+/plugin install oss-kit@oss-kit
+```
+
+Every other supported harness has a native install path in the
+[install guide](https://oss-kit.svyatov.com/guides/install/).
+
 ## Read the standard without installing anything
 
 Every current rule is written down in
@@ -80,6 +102,19 @@ Every current rule is written down in
 [oss-kit.svyatov.com/standard](https://oss-kit.svyatov.com/standard/). Each
 rule states what to do, why, what to check for, and which skill fixes it. Read
 it and disagree with it before you install anything.
+
+oss-kit is scored against its own standard, and [AGENTS.md](AGENTS.md) records
+the reason for every rule that does not reach a skills repository.
+
+## Help and project status
+
+Ask a question or report a problem in
+[Issues](https://github.com/svyatov/oss-kit/issues). Questions and defect
+reports go to the same place. To report a security vulnerability, follow
+[SECURITY.md](SECURITY.md) instead of opening an issue.
+
+oss-kit is maintained. It is below 1.0.0, so incompatible changes still ship
+in minor releases; the Versioning section below says exactly what is covered.
 
 ## Contributing
 

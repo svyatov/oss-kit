@@ -1,7 +1,6 @@
 .compound-engineering/
 .claude/settings.local.json
-docs/superpowers/
-docs/ideas/
+docs/
 STRATEGY.md
 CONCEPTS.md
 PRODUCT.md

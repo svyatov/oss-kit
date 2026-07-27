@@ -76,7 +76,7 @@ Check these before returning any text:
 
 - No em dashes, en dashes, or ` -- `: in short technical prose they are a reliable machine-written tell, and a period, comma, colon, or pair of parentheses carries the same break.
 - No emoji anywhere, including headings and bullets: their width and glyph vary by terminal and font, so they break alignment in the fixed-width contexts a repository lives in.
-- No inline-header bullet lists (`- **Performance:** it is faster`): the bolded stub replaces the sentence that would have said what changed, so the reader gets a label instead of a claim.
+- No inline-header bullet lists (`- **Performance:** it is faster`): the bolded stub replaces the sentence that would have said what changed, so the reader gets a label instead of a claim. A bolded claim closed with a period is a different shape and is allowed (`- **Fast.** 50% faster than native crypto.randomUUID().`), because there the bold is the claim and what follows is its evidence. Tell them apart by deleting everything after the bold: "Performance." says nothing, so it was a label; "Fast." says something, so it was a claim.
 - Headings in sentence case, not Title Case: it is what the Google developer style guide prescribes, and mixing the two inside one document reads as text assembled from two sources.
 - No recap section restating what the text just said: the reader just read it, and a recap marks text written to a length rather than to a point.
 - No `Generated with`, `Co-Authored-By: Claude`, or tool attribution footers: a trailer records who is accountable for the change, and a tool cannot be.
