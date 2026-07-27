@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 - Four documentation rules, all fixed by `oss-readme`. R-DOC-06, the README names what the project covers and where it runs, so a reader can tell in five seconds whether they are in the audience. R-DOC-07, every fenced code block carries a language tag and, when its destination is not a shell, a sentence above it naming where it goes. R-DOC-08, the README links a public, searchable channel for questions and defect reports. R-DOC-09, the README says whether the project is maintained.
 - A procedure in `oss-readme` for building the facts list: sweep the repository for candidates, record the source file of each, sort them into the five questions a reader is asking, then present the slate and stop for the maintainer to pick three to five. The writer no longer chooses alone.
 - A section in `oss-readme` for projects with more than one entry point, which name one thing to run first and cover the empty-repository case separately. It rests on no external convention and says so, because the published README guidance does not address such projects at all.
+- A note in `oss-writing` that GitHub turns a single newline into a line break in an issue, a pull request, or a discussion, and into a space in a Markdown file. Prose hard-wrapped the way a repository file is written therefore renders ragged once it is pasted into a pull request description. GitLab does not share the behavior, so the fault is invisible until someone opens the pull request on GitHub.
 
 ### Changed
 
