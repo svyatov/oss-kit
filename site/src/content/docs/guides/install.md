@@ -10,11 +10,15 @@ Every host below reads the current skills from the repository's canonical
 
 ## Any agent
 
-The open `skills` CLI installs into every agent it supports:
+The open `skills` CLI takes all nine skills with `--skill '*'`, then asks which
+of the agents it finds to install them into:
 
 ```bash
-npx skills add svyatov/oss-kit
+npx skills add svyatov/oss-kit --skill '*'
 ```
+
+Without `--skill '*'` the command opens a picker and you select each skill by
+hand.
 
 One skill at a time:
 

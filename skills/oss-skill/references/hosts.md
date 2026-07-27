@@ -10,11 +10,13 @@ Running `npx skills add <owner>/<repo>` checks the repository root, `skills/`, t
 
 `--skill <name>` (short form `-s`) installs only the named skill or skills from the source instead of every skill found. `--list` prints what is available without installing anything.
 
+Installation is interactive by default, so a bare `add` prompts for the skills, the agents, and the scope. The value `'*'` means every match, for `--skill` and for `--agent` alike, and `-y` skips the confirmation prompts. `--all` is the shorthand for `--skill '*' --agent '*' -y`. A repository that documents a whole-collection install wants `--skill '*'`, which preselects the skills and leaves the agent and scope questions to the reader; `--all` answers those two for them.
+
 The receiving path is client-specific. Current examples are `.claude/skills/` for Claude Code and `.agents/skills/` for Codex, Cursor, Gemini CLI, GitHub Copilot, Kimi Code CLI, and the universal target. Global paths differ by client, so read the CLI's current `Supported Agents` table instead of deriving one. Interactive installation uses one canonical copy with client symlinks by default; `--copy` requests independent copies.
 
 Both `.claude/skills/` and `.agents/skills/` are among the source-side directories the CLI searches, and both are also write targets on the receiving side, for Claude Code and for Amp/Kimi Code CLI respectively.
 
-Verified 2026-07-24 against the `main` branch of `vercel-labs/skills`.
+Verified 2026-07-27 against the `main` branch of `vercel-labs/skills`.
 
 ## Antigravity
 
