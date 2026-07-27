@@ -88,6 +88,67 @@ concurrency:
 
 Scoping `cancel-in-progress` to pull request events, rather than always true, avoids cancelling a push to the default branch mid-run.
 
+## Deploying a static site to GitHub Pages
+
+No rule in `STANDARD.md` requires a project to publish a site, so nothing below is cited against a rule ID and none of it is a gap in a project that publishes no site. Write a Pages workflow only where the repository already builds a site and the user asks for it to deploy. Ask in Step 3 rather than inferring the intent from the presence of a static build.
+
+Deployment is a second workflow, not a job added to the CI workflow. CI builds the site on every pull request to prove the build still works, which is R-CI-01. A deploy runs only after a change lands on the default branch, because a pull request must not replace what visitors are served.
+
+```yaml
+name: pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deployment at a time, and an in-flight one finishes: Pages serves whatever
+# published last, so cancelling mid-publish leaves the older build live with no
+# failed run to point at.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7  # oss-harden pins this to a commit SHA
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+      - id: deployment
+        uses: actions/deploy-pages@v5
+```
+
+GitHub documents `pages: write` and `id-token: write` as the minimum for the deploying job. Declare them on the job and leave the top-level block at `contents: read`, which is what R-SEC-02 asks for and `oss-harden` owns. GitHub's own starter workflow at `actions/starter-workflows` grants all three at the top level, so a project that copies it verbatim inherits an R-SEC-02 finding along with the deploy. Its pins also lag: it selects `upload-pages-artifact@v3` and `configure-pages@v5` where the current majors are v5 and v6.
+
+The `concurrency` block above is the one place R-CI-05's cancellation guidance inverts. Cancelling a superseded test run costs a contributor nothing, and `cancel-in-progress` stays scoped to pull requests in the CI workflow. A deploy cancelled mid-publish can leave the previous build live, so the deploy workflow keeps its own group and never cancels.
+
+`environment: github-pages` is required rather than decorative. GitHub creates the environment automatically, and it is what applies deployment protection rules and reports the deployed URL back to the run.
+
+`actions/configure-pages` is optional. It exports the site's base path and origin for a build that needs them, which a project served from `owner.github.io/repo/` usually does. A site whose own config already states its full URL, as a custom domain implies, needs one less action pinned and updated.
+
+Two things the workflow cannot do for itself, both the repository owner's to set, so present them in Step 8 with the resolved URL `https://github.com/<owner>/<repo>/settings/pages` rather than running them:
+
+Set the publishing source to GitHub Actions. GitHub documents this as a required step, and it is what routes an artifact this workflow uploads to the live site.
+
+On the Free plan, Pages serves only from a public repository, so a private project has nothing to deploy to until it is public or the plan changes.
+
+A custom domain is set once in those same settings and needs no file in the repository: GitHub documents that when publishing from a custom Actions workflow, no `CNAME` file is created and an existing one is ignored. A repository carrying a `CNAME` under its published directory is either left from a branch-based deploy or written on the assumption that the artifact sets the domain, and it does neither. Verifying the domain is what stops another account from claiming it if the site is ever disabled; that is security posture, so hand it to `oss-harden`.
+
 ## Secrets
 
 Secrets configured on the repository are not available to a workflow run triggered by a pull request from a fork. A job that needs one should check for it rather than fail outright. The `secrets` context is not available in a job's or a step's `if:` condition; a workflow that references it there fails to parse with `Unrecognized named-value: 'secrets'`. Promote the secret into `env:` first, then test the `env` value, which a step's `if:` can read:

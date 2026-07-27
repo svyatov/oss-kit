@@ -147,3 +147,31 @@ test:
 ```
 
 `artifacts:reports` also accepts other report types such as `coverage_report` and `dotenv`. `sast` is available on GitLab Free; its advanced features, such as GitLab Advanced SAST cross-file analysis, are gated to Ultimate. `dependency_scanning` and `container_scanning` ship as part of GitLab's paid tiers. Do not add a report type without confirming the project's GitLab tier supports it.
+
+## Deploying a static site to GitLab Pages
+
+No rule in `STANDARD.md` requires a project to publish a site, so nothing below is cited against a rule ID and none of it is a gap in a project that publishes no site. Write a Pages job only where the repository already builds a site and the user asks for it to deploy. Ask in Step 3 rather than inferring the intent from the presence of a static build.
+
+Unlike GitHub, GitLab deploys Pages from a job inside the ordinary pipeline, so this is a job in the existing `.gitlab-ci.yml` rather than a second file. Restrict it to the default branch: a merge request pipeline must not replace what visitors are served.
+
+```yaml
+pages:
+  stage: deploy
+  timeout: 10 minutes
+  interruptible: false
+  script:
+    - npm ci --cache .npm --prefer-offline
+    - npm run build
+  pages:
+    publish: dist
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+```
+
+`pages:` as a job keyword is what marks a job as a Pages deployment. Setting it to `true` is the short form; the hash form takes `publish` for the built directory and `path_prefix` for parallel deployments under one site. GitLab 17.6 and later accept any job name once the keyword is present, so the job above could be called `deploy-docs`; before that the job had to be named `pages`, which is why so many pipelines still are.
+
+In GitLab 17.10 and later, the `pages.publish` path is appended to `artifacts:paths` automatically, and `public` is appended when `publish` is not set at all. On an older GitLab, name the directory in `artifacts:paths` as well, or the job publishes nothing.
+
+`interruptible: false` is deliberate here and is the one place R-CI-05's cancellation guidance inverts, for the reason the timeout section above gives: a deploy cancelled mid-publish can leave the previous build live. Leave the rest of the pipeline interruptible.
+
+Pages settings that a pipeline cannot set for itself, including the primary domain, a custom domain and its certificate, and access control on a private project, live under Deploy > Pages in the project settings; present them in Step 8 with the resolved project URL rather than changing them.
