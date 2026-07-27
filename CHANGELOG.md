@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+### Added
+
+- A tell catalog at `skills/oss-writing/references/tells.md`, 22 lexical patterns with what to write instead of each. It loads when a draft reads padded, generic, or promotional, rather than on every invocation, and it is published at [oss-kit.svyatov.com/skills/oss-writing/tells](https://oss-kit.svyatov.com/skills/oss-writing/tells/).
+- Four composition rules in `oss-writing`, each of which costs a non-native reader more than a native one: name the referent, cap noun stacks at three, one instruction per step, keep the articles. Paraphrased from ASD-STE100, which is cited and never reproduced.
+- A normative statements section in `oss-writing`. Uppercase MUST, SHOULD, and MAY carry their RFC 2119 and RFC 8174 meanings only where the document claims them; a README that shouts MUST has invented a requirement nobody is checking.
+- A test that scans every Markdown file under `skills/` for em dashes and en dashes. The tree had none, and now nothing can add one unnoticed.
+
+### Changed
+
+- `oss-writing` moved its kill list out of the always-loaded body and into the catalog above, taking roughly a third of the skill's rules off every invocation. The lexical tells are the part a model cannot reproduce from judgment, so they were split off rather than cut.
+- Every hard constraint in `oss-writing` now says what goes wrong when it is broken. A bare prohibition is weaker than the same prohibition with its reason attached.
+- The README leads with what the kit is, then one install command and one worked example, in that order. The install variants and the per-host plugin commands moved below the example, because three install blocks used to run back to back before a reader saw the kit do anything.
+- The README states the facts a reader picks a tool on: the rule count, the routing from a gap to the skill that fixes it, the 500-line ceiling on a skill body, and the single bundled script that needs nothing installed.
+- The README links the rendered install guide and standard on [oss-kit.svyatov.com](https://oss-kit.svyatov.com) rather than the Markdown sources under `site/`. A reader on GitHub was being sent to a source file when a published page exists.
+
 ## [0.2.0] - 2026-07-27
 
 ### Added

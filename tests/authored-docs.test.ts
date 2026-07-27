@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { readFileSync } from "node:fs"
+import { readFileSync, readdirSync } from "node:fs"
 
 const PAGES = [
   "site/src/content/docs/guides/install.md",
@@ -22,6 +22,20 @@ test("no authored page uses a dash character the house style forbids", () => {
     expect(text.includes("—"), page).toBe(false)
     expect(text.includes("–"), page).toBe(false)
     expect(text.includes(" -- "), page).toBe(false)
+  }
+})
+
+// Scans for the two dash characters only. It cannot scan for " -- ", because
+// oss-writing names that pattern inside backticks in the rule that forbids it.
+test("no skill file uses a dash character the house style forbids", () => {
+  const files = readdirSync("skills", { recursive: true, encoding: "utf8" }).filter((f) =>
+    f.endsWith(".md"),
+  )
+  expect(files.length).toBeGreaterThan(9)
+  for (const file of files) {
+    const text = readFileSync(`skills/${file}`, "utf8")
+    expect(text.includes("—"), `em dash in ${file}`).toBe(false)
+    expect(text.includes("–"), `en dash in ${file}`).toBe(false)
   }
 })
 

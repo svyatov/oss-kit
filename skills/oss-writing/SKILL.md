@@ -36,14 +36,6 @@ Prose earns its place when it carries context the code or interface cannot:
 
 A commit body that paraphrases the diff is noise. A pull request still needs an overview of the behavioral change so a reviewer can orient before reading the diff.
 
-```
-Bad:  Updated the parser to use a hash map instead of a list, changed the
-      lookup function, and added a test for the new behavior.
-Good: List scan was O(n^2) on the 40k-symbol files in vendor/. Hash map
-      drops import time from 8s to 90ms. Ordering is no longer stable, so
-      callers that relied on insertion order now sort explicitly.
-```
-
 ## Say nothing when nothing needs saying
 
 Length is not effort. Padding a trivial change into a structured document wastes the reader twice: once reading it, once distrusting the next one.
@@ -65,45 +57,31 @@ Length is not effort. Padding a trivial change into a structured document wastes
 | Emphatic word last | End the sentence on the thing that matters |
 | One topic per paragraph | Each paragraph makes exactly one point |
 | Parallel form | Bullets in a list share one grammatical shape |
+| Name the referent | `the loader caches the manifest`, not `it caches it`. Replace `it`, `this`, and `that` with the noun when more than one antecedent is in scope |
+| Cap noun stacks at three | `the timeout for the retry queue`, not `retry queue connection timeout value` |
+| One instruction per step | A numbered step tells the reader to do one thing. Split a step that hides a second action behind `and` |
+| Keep the articles | `the parser reads the file`, not `parser reads file`. Dropping articles and sentence parts is false brevity: it saves two words and costs a reread |
 
-## Kill list
+A sentence past roughly 20 words in an instruction, or 25 in an explanation, is a signal to split it, not a limit to count against.
 
-| Tell | Write instead |
-|------|---------------|
-| Significance inflation: `pivotal`, `testament to`, `underscores`, `marks a shift`, and `key` or `critical` used as importance adjectives (`a key improvement`). The nouns are fine: `cache key`, `API key`, `critical section` | State the fact and stop |
-| Tacked-on `-ing` clauses: `ensuring reliability`, `enabling faster builds`, `allowing users to` | Split into a sentence, or cut |
-| Promotional adjectives: `robust`, `powerful`, `seamless`, `elegant`, `comprehensive`, `rich` | Name the property: `retries 3x`, `no config file` |
-| Vague attribution: `best practices suggest`, `it is widely believed`, `studies show` | Name the source, or drop the claim. Never invent one |
-| Copula avoidance: vague `serves as`, `acts as`, `boasts`, or `features` | `is`, `has`, or a precise verb |
-| AI vocabulary: `leverage`, `utilize`, `delve`, `streamline`, `facilitate`, `holistic`, `additionally`, `furthermore` | `use`, `and`, or nothing |
-| Empty contrast: `not just X, but Y`. Tailing negation: `no guessing`, `no wasted motion` | State the positive claim unless the contrast changes the meaning |
-| Manufactured list length | List what actually exists |
-| Elegant variation: calling one thing `the handler`, then `the callback`, then `the routine` | One name per concept, every time. Match the identifier in the code |
-| False ranges: `from linting to deployment` | Name the two things |
-| Passive or subjectless: `was refactored`, `no config needed` | Name the actor: `the loader now caches`, `you do not need a config file` |
-| Filler: `in order to`, `due to the fact that`, `has the ability to`, `it is important to note that` | `to`, `because`, `can`, delete |
-| Hedging stacks: `may potentially`, `could possibly` | Pick one modal or drop it |
-| Generic upbeat closer: `this improves maintainability going forward` | Delete the sentence |
-| Signposting: `let's dive in`, `here's what you need to know`, `this PR aims to`, `in this change, we` | Start with the content |
-| Fragmented header: a heading followed by a line restating the heading | Delete the restatement |
-| Aphorism formulas: `X is the Y of Z`, `X becomes a trap` | The concrete claim underneath |
-| Authority tropes: `the real question is`, `at its core`, `fundamentally` | Just make the point |
-| Manufactured drama: a run of short declarative fragments | One sentence, ordinary length |
-| Mechanical hyphenation | Follow the repository's dictionary and style guide; hyphenate compound modifiers only where grammar or clarity requires it |
-| Diff-anchored docs: `this function was added to replace the old loop` | Docs describe what is, not what changed. Commits, changelogs, and migration guides are the exception: there, describing the change is the job |
+Machine-written prose also carries a lexicon these rules do not cover: inflated significance, promotional adjectives, tacked-on `-ing` clauses, empty contrast, signposting, hedging stacks. When a draft reads as padded, generic, or promotional, and before returning anything longer than a sentence, check it against [references/tells.md](references/tells.md), which names each pattern and what to write instead.
+
+## Normative statements
+
+Uppercase MUST, SHOULD, and MAY carry their RFC 2119 and RFC 8174 meanings, and only where the document says so in its own text. Use them in a specification, a rule statement, or a conformance section. Everywhere else write the plain verb: a README that shouts MUST at a reader has invented a requirement nobody is checking.
 
 ## Hard constraints
 
 Check these before returning any text:
 
-- No em dashes, en dashes, or ` -- `. Replace with a period, comma, colon, or parentheses.
-- No emoji anywhere, including headings and bullets.
-- No inline-header bullet lists (`- **Performance:** it is faster`). Write prose or a plain list.
-- Headings in sentence case, not Title Case.
-- No recap section restating what the text just said.
-- No `Generated with`, `Co-Authored-By: Claude`, or tool attribution footers.
-- No boilerplate caveats. State a precondition, limitation, or risk when it changes what the reader should do.
-- Straight ASCII quotes.
+- No em dashes, en dashes, or ` -- `: in short technical prose they are the strongest single machine-written tell, and a period, comma, colon, or pair of parentheses carries the same break.
+- No emoji anywhere, including headings and bullets: they survive neither a plain terminal nor a screen reader cleanly, and they decorate a file someone will grep.
+- No inline-header bullet lists (`- **Performance:** it is faster`): the bolded stub replaces the sentence that would have said what changed, so the reader gets a label instead of a claim.
+- Headings in sentence case, not Title Case: it is what the Google developer style guide prescribes and what most repositories already use, so Title Case reads as imported from elsewhere.
+- No recap section restating what the text just said: the reader just read it, and a recap marks text written to a length rather than to a point.
+- No `Generated with`, `Co-Authored-By: Claude`, or tool attribution footers: a trailer records who is accountable for the change, and a tool cannot be.
+- No boilerplate caveats. State a precondition, limitation, or risk when it changes what the reader should do: a caveat that changes nothing trains the reader to skip the one that matters.
+- Straight ASCII quotes: curly quotes break a copy-paste into a shell or a config file, and the reader cannot tell by eye which they got.
 
 ## Do not touch
 
@@ -126,8 +104,7 @@ These come from writing the message as a session log rather than a description o
 
 Both are read by someone who is already stuck, so they answer a different question than descriptive prose does.
 
-- Use one distinct error message per actionable condition. Name what failed, the safe part of the input or location, and a likely corrective action: `config.yaml line 7: timeout must be a positive integer, got -1`. Do not echo passwords, tokens, personal data, full request bodies, or attacker-controlled text without safe encoding.
-- A log event carries a stable event name, appropriate severity, and structured identifiers needed to find the operation again: request ID, safe path, count, duration. Do not log secrets or personal data. Do not use adjectives where a measured field works.
+- An error or log line names what failed, the safe part of the input or location, and a likely corrective action: `config.yaml line 7: timeout must be a positive integer, got -1`. One distinct message per actionable condition. A log event also carries a stable event name, a severity, and the structured identifiers needed to find the operation again: request ID, safe path, count, duration. Measured fields, not adjectives. Never emit passwords, tokens, personal data, full request bodies, or unencoded attacker-controlled text.
 - A comment explains why the code is surprising, not what it does. If it restates the line below it, delete it. The case that earns a comment is a constraint the code cannot show: a spec section, a vendor bug, a benchmark that ruled out the obvious approach.
 
 ## Global and accessible prose
@@ -136,52 +113,52 @@ Use literal terms in their primary sense. Avoid idioms, slang, humor, violent me
 
 ## Examples
 
-Commit body:
+<example name="commit body">
 
 ```
 Bad:  refactor(auth): improve token handling
 
       This commit refactors the token handling logic to be more robust and
-      maintainable. Changes include updating the refresh function, adding
-      validation, and improving error handling.
+      maintainable, updating the refresh function and error handling.
 
 Good: fix(auth): refresh tokens 30s before expiry
 
-      Clock skew between our nodes and the IdP was up to 12s, so tokens
-      refreshed exactly at expiry were rejected about 1 in 400 times.
-      30s covers observed skew with margin. Refresh cost is negligible.
+      Clock skew against the IdP reached 12s, so tokens refreshed exactly
+      at expiry were rejected about 1 in 400 times. 30s covers it.
 ```
 
-PR description:
+</example>
+
+<example name="pull request description">
 
 ```
 Bad:  ## Summary
       - Added a new caching layer
       - Updated the service to use it
-      - Added tests
 
       This significantly improves performance and enhances the user
       experience by reducing load times.
 
 Good: Search results were recomputed on every keystroke, which pinned a CPU
-      core on the API box during peak hours. Results are now cached per
-      normalized query for 5 minutes.
+      core during peak hours. Results are now cached per normalized query
+      for 5 minutes. The cache is in-process, so a deploy clears it: fine
+      at one replica, needs Redis if we scale out.
 
-      Cache is in-process, so a deploy clears it. That is fine at one
-      replica; if we scale out, this needs Redis.
-
-      Verified with the load script in bench/: p99 drops from 1.4s to 210ms.
+      Verified with bench/load.sh: p99 drops from 1.4s to 210ms.
 ```
 
-Review comment:
+</example>
+
+<example name="review comment">
 
 ```
 Bad:  Great catch on the null check! One small thing to consider: it might
-      potentially be worth thinking about whether this could possibly cause
-      issues with concurrent access.
+      potentially be worth thinking about concurrent access here.
 Good: Two goroutines can reach this branch at once, so the map write races.
       A sync.Map or a mutex around lines 40-48 fixes it.
 ```
+
+</example>
 
 ## Rules this skill owns
 

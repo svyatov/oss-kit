@@ -38,7 +38,8 @@
     "Recorded GitHub and GitLab plan limits for native approval gates and forbade unverified third-party approval substitutes."
   ],
   "license": "MIT",
-  "copyright": "Copyright (c) evilmartians",
-  "license_override": false,
-  "license_override_reason": null
+  "copyright": [
+    "Copyright (c) 2026 Leonid Svyatov",
+    "Copyright (c) evilmartians"
+  ]
 }

@@ -2,15 +2,38 @@
 
 Curated agent skills for open source maintainers.
 
-The current kit has nine skills. One audits the repository against a written
-standard. The other eight own focused documentation, community, CI, security,
-release, changelog, prose, and agent-skill responsibilities.
+[![version](https://img.shields.io/github/v/tag/svyatov/oss-kit?label=version)](https://github.com/svyatov/oss-kit/releases)
+[![CI](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml)
 
-## Install
+- 41 rules in one file, each stating the check it is scored by and the single
+  skill that fixes it
+- `oss-audit` returns every gap keyed by its rule ID, naming the skill that
+  fixes it
+- nine skills, every body under 500 lines, with the depth in `references/` that
+  a skill reads only when it needs it
+- one bundled script, `skills/oss-skill/scripts/validate.mjs`, which imports
+  Node built-in modules only and runs on Node 22 or later, or on Bun
+- oss-kit is scored against its own standard, and
+  [AGENTS.md](AGENTS.md) records the reason for every rule that does not reach
+  a skills repository
 
 ```bash
 npx skills add svyatov/oss-kit
 ```
+
+```
+Use oss-audit on this repository and list every gap against STANDARD.md.
+```
+
+oss-audit reads `skills/oss-audit/STANDARD.md`, scores the repository rule by
+rule, and routes each gap to the skill that fixes it:
+
+```
+R-COM-04: SECURITY.md is missing. Fixed by oss-community.
+R-SEC-01: 2 unpinned actions in .github/workflows/validate.yml. Fixed by oss-harden.
+```
+
+## More install paths
 
 One skill at a time:
 
@@ -18,7 +41,9 @@ One skill at a time:
 npx skills add svyatov/oss-kit --skill oss-readme
 ```
 
-Claude Code, GitHub Copilot CLI, and VS Code read `.claude-plugin/marketplace.json`, so the same two commands work in any of them:
+Claude Code, GitHub Copilot CLI, and VS Code read
+`.claude-plugin/marketplace.json`, so the same two commands work in any of
+them:
 
 ```
 /plugin marketplace add svyatov/oss-kit
@@ -26,27 +51,13 @@ Claude Code, GitHub Copilot CLI, and VS Code read `.claude-plugin/marketplace.js
 ```
 
 Every other supported harness has a native install path in the
-[install guide](site/src/content/docs/guides/install.md).
+[install guide](https://oss-kit.svyatov.com/guides/install/).
 
 ## Start with the job
 
 Ask for a skill by name when you know the responsibility. Use `oss-readme` for
 a README, `oss-community` for community files, or `oss-ci` for continuous
-integration.
-
-Start with `oss-audit` when you want the broadest view:
-
-```
-Use oss-audit on this repository and list every gap against STANDARD.md.
-```
-
-```
-oss-audit reads skills/oss-audit/STANDARD.md, scores the repository rule
-by rule, and returns a gap list routed to the skill that fixes each one:
-
-R-COM-04: SECURITY.md is missing. Fixed by oss-community.
-R-SEC-01: 2 unpinned actions in .github/workflows/validate.yml. Fixed by oss-harden.
-```
+integration. Start with `oss-audit` when you want the broadest view.
 
 ## Skills
 
@@ -65,11 +76,10 @@ R-SEC-01: 2 unpinned actions in .github/workflows/validate.yml. Fixed by oss-har
 ## Read the standard without installing anything
 
 Every current rule is written down in
-[STANDARD.md](skills/oss-audit/STANDARD.md). Each rule states what to do, why,
-what to check for, and which skill fixes it. Read it and disagree with it
-before you install anything.
-
-oss-kit meets every applicable rule of its own [STANDARD.md](skills/oss-audit/STANDARD.md). Rules that do not apply to a skills repository, such as the package-registry publishing rules, are recorded in AGENTS.md with the reason each one is out of scope.
+[STANDARD.md](skills/oss-audit/STANDARD.md), also rendered at
+[oss-kit.svyatov.com/standard](https://oss-kit.svyatov.com/standard/). Each
+rule states what to do, why, what to check for, and which skill fixes it. Read
+it and disagree with it before you install anything.
 
 ## Contributing
 
@@ -99,15 +109,8 @@ requires is an incompatible change: a repository that passed yesterday can fail
 today. Adding a skill or a rule is not. While the version stays below 1.0.0, an
 incompatible change ships in a MINOR release.
 
-## Credits
-
-Four upstream projects this kit borrows from:
-
-- [Evil Martians](https://github.com/evilmartians/agent-skills), source of `oss-readme` and part of `oss-publish`
-- [vfarcic](https://github.com/vfarcic/dot-ai), source of `oss-ci`
-- [blader](https://github.com/blader/humanizer), source of part of `oss-writing`
-- [softaworks](https://github.com/softaworks/agent-toolkit), source of part of `oss-writing`
-
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE). A skill that derives from third-party work carries
+a `sources.json` naming what it came from and who holds copyright alongside the
+maintainer.

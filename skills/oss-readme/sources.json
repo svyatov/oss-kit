@@ -20,7 +20,8 @@
     "Clean-environment verification, renderer-specific alerts, generated outlines, installation provenance, and image accessibility were aligned with current GitHub, GitLab, Codecov, and upstream package documentation."
   ],
   "license": "MIT",
-  "copyright": "Copyright (c) evilmartians",
-  "license_override": false,
-  "license_override_reason": null
+  "copyright": [
+    "Copyright (c) 2026 Leonid Svyatov",
+    "Copyright (c) evilmartians"
+  ]
 }
