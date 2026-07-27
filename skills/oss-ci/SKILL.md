@@ -1,6 +1,6 @@
 ---
 name: oss-ci
-description: "Set up continuous integration for an open source project on GitHub Actions or GitLab CI/CD. Use when the user asks to set up CI, create workflows or pipelines, add automated testing, building, or linting on push and pull requests, or review existing CI configuration. Also use when the user mentions automating tests, running checks on PRs, or a build matrix, even without saying CI. Covers what runs. Security posture of those workflows belongs to oss-harden, and publishing belongs to oss-publish."
+description: "Set up continuous integration for an open source project on GitHub Actions or GitLab CI/CD. Use when the user asks to set up CI, create workflows or pipelines, add automated testing, building, or linting on push and pull requests, deploy a docs or other static site to GitHub Pages or GitLab Pages, or review existing CI configuration. Also use when the user mentions automating tests, running checks on PRs, or a build matrix, even without saying CI. Covers what runs. Security posture of those workflows belongs to oss-harden, and publishing belongs to oss-publish."
 license: MIT
 ---
 
@@ -13,6 +13,8 @@ Decide what runs on push and on every change request, then write it in the synta
 This skill owns what runs: which checks execute, on which triggers, across which versions, with what caching. It shares the workflow and pipeline files it writes with two other skills, and the boundary between them is the rule area, not a description of files.
 
 The CI rules below (R-CI-*) belong here. The SEC rules, security posture of the same files such as pinned action SHAs, minimal permissions, dependency updaters, branch protection, and pinned images, belong to oss-harden. The REL rules, publishing a built artifact to a registry with trusted publishing, provenance, and an approval gate, belong to oss-publish. Do not add a `permissions:` block, pin a SHA, configure branch protection, or write a publish job while working from this skill; note that the project needs it and hand the work to the owning skill.
+
+Deploying a built static site to the forge's own Pages hosting is also something that runs on a push, so it stays here rather than with oss-publish, which owns registry releases. No rule requires it: a project publishes a site because it has one, so it is written only where the repository builds a site and the user asks for the deployment.
 
 ## Principles
 
@@ -44,6 +46,8 @@ Find `.env.example` and search the source for required environment variables, so
 
 Summarize what Step 2 found, then ask about the choices code alone cannot answer: what should run on a pull or merge request, what should trigger a release build, and whether existing CI should be extended or replaced. Ask only what applies to this project; a project with no Dockerfile gets no question about a registry.
 
+Where Step 2 found a build that produces a static site, ask whether it should also deploy, and to where. A site can be built as a check and never published, so treat a static build as a question rather than as consent to deploy one.
+
 ### Step 4: Choose the matrix
 
 Build the version matrix from the supported release lines identified in Step 2, not from a single pinned version. Include every maintained major or minor release line the project claims to support. A project with no stated support range gets a single-version pipeline instead of an invented matrix; do not manufacture support claims the manifest does not make. If a range is continuous and includes release lines the project does not intend to support, fix the declared range rather than silently testing a subset.
@@ -54,7 +58,7 @@ Cache only package-manager download data or another directory the tool's officia
 
 ### Step 6: Write the configuration
 
-Open the reference file for the forge chosen in Step 1 and follow its syntax exactly. Both reference files cover triggering on push to the default branch and on every change request (R-CI-01), a timeout on every job with cancellation of superseded runs on the same branch (R-CI-05), and the cache decisions from Step 5 (R-CI-04). Neither reference file covers permissions, SHA pinning, or publishing; those stay out of the file you write here.
+Open the reference file for the forge chosen in Step 1 and follow its syntax exactly. Both reference files cover triggering on push to the default branch and on every change request (R-CI-01), a timeout on every job with cancellation of superseded runs on the same branch (R-CI-05), and the cache decisions from Step 5 (R-CI-04). Both also carry a Pages deployment section, used only when Step 3 established that the project wants one. Neither reference file covers permissions, SHA pinning, or publishing; those stay out of the file you write here.
 
 ### Step 7: Validate before presenting
 

@@ -34,8 +34,6 @@ jobs:
         working-directory: site
       - run: bun run build
         working-directory: site
-      # site/public/CNAME rides along in dist/, which keeps the custom domain
-      # set on every deploy rather than only on the one where it was configured.
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: site/dist
