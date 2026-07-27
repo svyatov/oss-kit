@@ -36,14 +36,6 @@ Prose earns its place when it carries context the code or interface cannot:
 
 A commit body that paraphrases the diff is noise. A pull request still needs an overview of the behavioral change so a reviewer can orient before reading the diff.
 
-```
-Bad:  Updated the parser to use a hash map instead of a list, changed the
-      lookup function, and added a test for the new behavior.
-Good: List scan was O(n^2) on the 40k-symbol files in vendor/. Hash map
-      drops import time from 8s to 90ms. Ordering is no longer stable, so
-      callers that relied on insertion order now sort explicitly.
-```
-
 ## Say nothing when nothing needs saying
 
 Length is not effort. Padding a trivial change into a structured document wastes the reader twice: once reading it, once distrusting the next one.
@@ -118,43 +110,37 @@ Commit body:
 Bad:  refactor(auth): improve token handling
 
       This commit refactors the token handling logic to be more robust and
-      maintainable. Changes include updating the refresh function, adding
-      validation, and improving error handling.
+      maintainable, updating the refresh function and error handling.
 
 Good: fix(auth): refresh tokens 30s before expiry
 
-      Clock skew between our nodes and the IdP was up to 12s, so tokens
-      refreshed exactly at expiry were rejected about 1 in 400 times.
-      30s covers observed skew with margin. Refresh cost is negligible.
+      Clock skew against the IdP reached 12s, so tokens refreshed exactly
+      at expiry were rejected about 1 in 400 times. 30s covers it.
 ```
 
-PR description:
+Pull request description:
 
 ```
 Bad:  ## Summary
       - Added a new caching layer
       - Updated the service to use it
-      - Added tests
 
       This significantly improves performance and enhances the user
       experience by reducing load times.
 
 Good: Search results were recomputed on every keystroke, which pinned a CPU
-      core on the API box during peak hours. Results are now cached per
-      normalized query for 5 minutes.
+      core during peak hours. Results are now cached per normalized query
+      for 5 minutes. The cache is in-process, so a deploy clears it: fine
+      at one replica, needs Redis if we scale out.
 
-      Cache is in-process, so a deploy clears it. That is fine at one
-      replica; if we scale out, this needs Redis.
-
-      Verified with the load script in bench/: p99 drops from 1.4s to 210ms.
+      Verified with bench/load.sh: p99 drops from 1.4s to 210ms.
 ```
 
 Review comment:
 
 ```
 Bad:  Great catch on the null check! One small thing to consider: it might
-      potentially be worth thinking about whether this could possibly cause
-      issues with concurrent access.
+      potentially be worth thinking about concurrent access here.
 Good: Two goroutines can reach this branch at once, so the map write races.
       A sync.Map or a mutex around lines 40-48 fixes it.
 ```
