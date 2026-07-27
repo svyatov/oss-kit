@@ -36,6 +36,16 @@ Prose earns its place when it carries context the code or interface cannot:
 
 A commit body that paraphrases the diff is noise. A pull request still needs an overview of the behavioral change so a reviewer can orient before reading the diff.
 
+## A single newline breaks the line on GitHub, but not in a file
+
+GitHub renders the same Markdown two ways. In an issue, a pull request, or a discussion it turns a single newline into a line break; in a Markdown file in the repository it treats that newline as a space and reflows the paragraph. Its own documentation is explicit that the text that gets a break automatically in a pull request "would render on one line without a line break" in an `.md` file.
+
+So prose hard-wrapped at a column, which is how repository files are usually written, keeps every one of those wraps when it is pasted into a pull request description, and renders ragged at whatever width the author's editor happened to use.
+
+Write one paragraph per line, with no hard wrapping, for anything typed into a forge field: a pull request description, an issue, a review comment, a release note. Hard-wrap a file only if the repository already wraps its files.
+
+GitLab does not share the behavior. There a single newline keeps the following text in the same paragraph everywhere, so the same hard-wrapped prose renders identically in a merge request description and in a file. Wrapping that is merely ugly on GitLab is invisible until someone opens the pull request on GitHub, which is why this is worth checking rather than remembering.
+
 ## Say nothing when nothing needs saying
 
 Length is not effort. Padding a trivial change into a structured document wastes the reader twice: once reading it, once distrusting the next one.
