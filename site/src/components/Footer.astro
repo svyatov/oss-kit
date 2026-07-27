@@ -1,0 +1,38 @@
+---
+import EditLink from "virtual:starlight/components/EditLink"
+import Pagination from "virtual:starlight/components/Pagination"
+import BrandMark from "./BrandMark.astro"
+import InstallCommand from "./InstallCommand.astro"
+---
+
+<footer class="kit-footer">
+  <div class="kit-footer__page">
+    <EditLink />
+    <Pagination />
+  </div>
+
+  <section class="kit-footer__install" aria-labelledby="footer-install-title">
+    <div>
+      <p class="kit-label">Install the kit</p>
+      <h2 id="footer-install-title">Put the current skills in your agent.</h2>
+      <p>Install the full collection, or choose one skill from the install guide.</p>
+    </div>
+    <InstallCommand compact />
+  </section>
+
+  <div class="kit-footer__utility">
+    <a class="kit-footer__brand" href="/">
+      <BrandMark />
+      <span>oss-kit</span>
+    </a>
+    <p>Curated agent skills for open source maintainers.</p>
+    <nav aria-label="Footer">
+      <a href="/skills/">Skills</a>
+      <a href="/standard/">Standard</a>
+      <a href="/guides/getting-started/">Guides</a>
+      <a href="/changelog/">Changelog</a>
+      <a href="https://github.com/svyatov/oss-kit">GitHub</a>
+      <a href="https://github.com/svyatov/oss-kit/blob/main/LICENSE">MIT license</a>
+    </nav>
+  </div>
+</footer>

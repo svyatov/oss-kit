@@ -1,4 +1,9 @@
-# Adoption guide
+---
+title: Adoption guide
+description: Apply the oss-kit standard to a new or established repository in reviewable stages.
+---
+
+<p class="doc-kind-label">Guide · public documentation</p>
 
 The bar is the same for every repository. What changes is the order you reach
 it in, and how much of it you fix at once.

@@ -1,8 +1,8 @@
 # npm
 
-Concrete flow for the decisions `SKILL.md` makes, for a package published to the public npm registry. npm accepts three trusted publishing providers: GitHub Actions, GitLab CI/CD (GitLab.com shared runners), and CircleCI. This file covers GitHub Actions and GitLab CI/CD; CircleCI is out of scope for this skill because `oss-kit`'s forge scope is GitHub and GitLab. Self-hosted runners on any provider are not supported. Trusted publishing needs npm CLI 11.5.1 or newer and Node 22.14.0 or newer; check the project's `packageManager` field and lockfile before assuming either is new enough, and tell the user to upgrade rather than falling back to a token silently. Staged publishing, which this file uses for the approval gate in Step 4, needs a higher floor still: npm CLI 11.15.0 or newer, with the same Node 22.14.0 minimum. `actions/setup-node` pins Node, not npm, so the publish job upgrades npm explicitly to meet this floor rather than trusting whatever version the Node release happens to bundle.
+Concrete flow for the decisions `SKILL.md` makes, for a package published to the public npm registry. npm accepts three trusted publishing providers: GitHub Actions, GitLab CI/CD on GitLab.com shared runners, and CircleCI Cloud. This file covers GitHub Actions and GitLab CI/CD because `oss-kit`'s forge scope is GitHub and GitLab. Self-hosted runners are not supported. Trusted publishing needs npm CLI 11.5.1 or newer and Node 22.14.0 or newer. Staged publishing needs npm CLI 11.15.0 or newer. Resolve an exact supported Node release from Node's official archive immediately before writing the workflow and verify the bundled npm version there. As of July 2026, Node 24.18.0 bundles npm 11.16.0. Do not install a floating npm range in the credentialed job.
 
-Source: [npm Docs, Trusted publishing for npm packages](https://docs.npmjs.com/trusted-publishers/).
+Source: [npm Docs, Trusted publishing for npm packages](https://docs.npmjs.com/trusted-publishers/), [npm Docs, Staged publishing](https://docs.npmjs.com/staged-publishing/), and [Node.js download archive, Node 24.18.0](https://nodejs.org/en/download/archive/v24.18.0).
 
 ## Gather facts (Step 1)
 
@@ -29,10 +29,11 @@ permissions:
   id-token: write
   contents: read
 steps:
-  - uses: actions/setup-node@v6
+  - uses: actions/setup-node@v7
     with:
-      node-version: '24'
+      node-version: '24.18.0'
       registry-url: 'https://registry.npmjs.org'
+      package-manager-cache: false
 ```
 
 No `NPM_TOKEN` or any other registry secret is needed; npm's CLI exchanges the workflow's OIDC token for a publish token automatically once the trusted publisher above is configured.
@@ -72,9 +73,10 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
-          node-version: '24'
+          node-version: '24.18.0'
+          package-manager-cache: false
       - run: npm ci --ignore-scripts
       - run: npm test  # oss-ci decides the actual command from CONTRIBUTING.md (R-CI-02)
 
@@ -84,15 +86,18 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
-          node-version: '24'
+          node-version: '24.18.0'
+          package-manager-cache: false
       - run: npm ci --ignore-scripts
+      - run: test "${GITHUB_REF_NAME#v}" = "$(node -p "require('./package.json').version")"
       - run: npm run build
-      - uses: actions/upload-artifact@v5
+      - run: npm pack --ignore-scripts
+      - uses: actions/upload-artifact@v7
         with:
-          name: build-artifacts
-          path: dist/
+          name: package-tarball
+          path: '*.tgz'
           retention-days: 1
 
   publish:
@@ -103,22 +108,21 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
-          persist-credentials: false
-      - uses: actions/download-artifact@v6
+          name: package-tarball
+          path: package/
+      - uses: actions/setup-node@v7
         with:
-          name: build-artifacts
-          path: dist/
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '24'
+          node-version: '24.18.0'
           registry-url: 'https://registry.npmjs.org'
-      - run: npm install -g npm@'>=11.15.0'
-      - run: npm stage publish --ignore-scripts
+          package-manager-cache: false
+      - run: npm stage publish package/*.tgz --ignore-scripts
 ```
 
-`oss-harden` pins every `uses:` line above to a commit SHA and sets this workflow's `permissions:`, including the `contents: read` this skill left off the test and build jobs above; do not pin them or add permissions here. On GitLab CI/CD, give the publish job `environment: name: release` with `when: manual`, and configure `release` as a protected environment with approval rules, the same gate Step 4 below describes; then run `npm ci --ignore-scripts`, `npm run build`, and `npm stage publish --ignore-scripts` in `script:`.
+The version comparison assumes tags such as `v1.2.3`; derive the comparison from the repository's actual tag format. `npm pack` creates the exact tarball handed to `npm stage publish`, so the credentialed job does not check out source, install dependencies, or rebuild. `package-manager-cache: false` prevents `setup-node` from automatically restoring a package-manager cache in the credentialed job.
+
+`oss-harden` pins every `uses:` line above to a commit SHA and sets this workflow's `permissions:`, including the `contents: read` this skill left off the test and build jobs above; do not pin them or add permissions here. On GitLab CI/CD, use separate test and build jobs, pass the resulting `.tgz` as an artifact, and make the publish job run only `npm stage publish package/*.tgz --ignore-scripts`. Give that job `environment: name: release` with `when: manual`, plus the `id_tokens` block from Step 2.
 
 If an existing workflow uses `secrets.NPM_TOKEN`, remove it from the YAML now and tell the user to delete the corresponding secret and revoke the token once the new flow is verified.
 
@@ -126,7 +130,7 @@ If an existing workflow uses `secrets.NPM_TOKEN`, remove it from the YAML now an
 
 Two gates apply together, not as alternatives:
 
-The workflow-level gate is the `environment: release` on the publish job above, with required reviewers configured at `https://github.com/<owner>/<repo>/settings/environments`, or, on GitLab, a protected environment with approval rules at the project's Settings > CI/CD > Protected environments. This is the evidence R-PUB-04 checks for on the workflow itself.
+The workflow-level gate is the `environment: release` on the publish job above, with required reviewers configured at `https://github.com/<owner>/<repo>/settings/environments`, or, on GitLab Premium or Ultimate, a protected environment with approval rules at the project's Settings > CI/CD > Protected environments. GitHub required reviewers work for public repositories on current plans; private or internal repositories need GitHub Enterprise Cloud. If the forge plan lacks this gate, keep the environment binding because it is part of the npm trusted-publisher identity and rely on the registry gate below for R-PUB-04.
 
 The registry-level gate is npm's staged publishing: the workflow runs `npm stage publish`, which uploads the package to a staging area without requiring 2FA, and a maintainer then runs `npm stage approve <stage-id>` from the CLI or approves it on npmjs.com, which does require 2FA. Because the trusted publisher above only allows `npm stage publish` and not `npm publish`, no run of this workflow, compromised or not, can ship a version without that 2FA step. Also set publishing access at `https://www.npmjs.com/package/<name>/access` to "Require two-factor authentication and disallow tokens", which revokes any existing publish token; warn the user first if another automation still uses one.
 
@@ -134,15 +138,16 @@ Source: [npm Docs, Staged publishing for npm packages](https://docs.npmjs.com/st
 
 ## Verify provenance (Step 5)
 
-When publishing through trusted publishing from GitHub Actions or GitLab CI/CD, npm generates a provenance attestation automatically; no `--provenance` flag or extra step is needed. After the first release, verify it with:
+When publishing a public package from a public GitHub or GitLab repository through trusted publishing, npm generates a provenance attestation automatically; no `--provenance` flag is needed. npm does not generate provenance for a private repository, even when the package is public. After approval publishes the staged version, verify the exact installed version in a clean temporary project:
 
 ```bash
+npm install <name>@<version> --ignore-scripts
 npm audit signatures
 ```
 
-The output should report a verified provenance attestation for the newest version. CircleCI does not currently produce provenance, which is one more reason this file does not cover it as a first choice.
+The output must report verified provenance for that dependency. The package page also shows provenance details. A bare `npm audit signatures` in the source repository does not verify the newly published package unless that exact version is installed there.
 
-Source: [npm Docs, Generating provenance statements](https://docs.npmjs.com/generating-provenance-statements).
+Source: [npm Docs, Trusted publishing for npm packages](https://docs.npmjs.com/trusted-publishers/) and [npm Docs, Viewing package provenance](https://docs.npmjs.com/viewing-package-provenance/).
 
 ## Not yet published packages
 
@@ -150,4 +155,4 @@ A trusted publisher is configured on the package's npm settings page, which does
 
 ## Monorepo packages
 
-Every public workspace package needs its own trusted publisher entry pointing at the same repository and the same workflow filename; a package left out of that list stays unprotected. One publish job can release every package with `npm stage publish --ignore-scripts --workspaces`, or one job per package with `--workspace=<name>` if versions are tagged independently, in which case adjust the tag trigger to match the repository's per-package tag format from Step 1.
+Every public workspace package needs its own trusted publisher entry pointing at the same repository and workflow filename; a package left out stays unprotected. `npm stage` is unaware of workspaces. Pack each publishable workspace in the build job, then stage each resulting tarball explicitly, preferably in one approval-gated publish job per independently versioned package. Match each job's tag trigger and version check to that package.

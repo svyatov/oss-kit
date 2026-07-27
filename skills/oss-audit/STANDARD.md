@@ -48,7 +48,7 @@ Forges: both
 
 Documentation is read by someone who is already stuck. Promotional adjectives and hedging add reading time without adding information, and they make the honest parts harder to trust. Write sentences in the active voice and name the actor, so a reader learns who has to do the thing. The check below names only evidence a tool can count, because an auditor that scores the same files differently on two runs makes every other score in the report unreliable.
 
-Check: `README.md`, files under `docs/`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, and the entry text under `CHANGELOG.md` release headings contain no em dash (U+2014), en dash (U+2013), or emoji character; every heading is sentence case; and none of the words robust, powerful, seamless, comprehensive, blazing, or effortless describes the project.
+Check: `README.md`, files under `docs/`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, and the entry text under `CHANGELOG.md` release headings contain no em dash (U+2014), en dash (U+2013), or emoji character; every heading is sentence case except a heading preserved from an attributed third-party code of conduct; and none of the words robust, powerful, seamless, comprehensive, blazing, or effortless describes the project.
 
 Fixed by: oss-writing
 Forges: both
@@ -59,7 +59,7 @@ Forges: both
 
 Without a license file the default is exclusive copyright, so nobody may legally use the code. A manifest field saying MIT while the file says Apache-2.0 forces every downstream legal review to stop and ask.
 
-Check: `LICENSE` or `LICENSE.md` exists at the repository root, and the license it contains matches the `license` field of the package manifest.
+Check: `LICENSE` or `LICENSE.md` exists at the repository root, and every package manifest that declares a license names the license that file contains.
 
 Fixed by: oss-community
 Forges: both
@@ -86,7 +86,7 @@ Forges: both
 
 Without a stated channel, a finder either opens a public issue that discloses the bug to everyone at once, or gives up. A stated response window tells them when to escalate.
 
-Check: `SECURITY.md` exists at the repository root, in `.github/`, or in `docs/` on GitHub, or at the repository root on GitLab, and names a private channel (GitHub private vulnerability reporting, a GitLab confidential issue, or an email address) together with the time you commit to responding in.
+Check: `SECURITY.md` exists at the repository root, in `.github/`, or in `docs/` on GitHub, or at the repository root on GitLab, and names a private channel that an unaffiliated reporter can use, together with the time you commit to responding in. Accept GitHub private vulnerability reporting only when the repository is public and the feature is enabled. Accept a GitLab confidential issue only when the intended reporter role can create it as confidential; GitLab Service Desk and a monitored security email are valid alternatives.
 
 Fixed by: oss-community
 Forges: both
@@ -104,7 +104,7 @@ Forges: both
 
 Without a catch-all owner, a change to an unclaimed directory waits for someone to notice it. With one, the forge requests review automatically.
 
-Check: a `CODEOWNERS` file exists in the repository root, `.github/`, `.gitlab/`, or `docs/`, and it contains a `*` rule naming at least one owner.
+Check: where the forge supports Code Owners for the repository's visibility and plan, a `CODEOWNERS` file exists in the repository root, `.github/`, `.gitlab/`, or `docs/`, and it contains a `*` rule naming at least one eligible owner. GitLab Free and private repositories on GitHub Free fall outside this rule.
 
 Fixed by: oss-community
 Forges: both
@@ -124,7 +124,7 @@ Forges: both
 
 When CI runs a different command than `CONTRIBUTING.md` documents, a contributor passes locally and fails in CI, and neither of you can tell which is authoritative.
 
-Check: the CI configuration invokes a linter, a test runner, and the build command for the shipped artifact, and each command string matches the one in `CONTRIBUTING.md`.
+Check: the CI configuration invokes every applicable lint, typecheck, test, and build command defined by the project's automation, and each command string agrees with `CONTRIBUTING.md`.
 
 Fixed by: oss-ci
 Forges: both
@@ -133,7 +133,7 @@ Forges: both
 
 A support claim you do not test is a guess. Dropping the oldest supported version from the matrix is how a patch release breaks half the installed base.
 
-Check: the matrix entries in the CI configuration list the same runtime versions as the supported range declared in the package manifest, including the oldest and the newest.
+Check: the matrix entries in the CI configuration cover every maintained runtime release line included by the support range declared in the package manifest.
 
 Fixed by: oss-ci
 Forges: both
@@ -142,7 +142,7 @@ Forges: both
 
 A cache key that ignores the lockfile serves stale dependencies after an upgrade, so CI tests a dependency set nobody has. A key that changes on every run caches nothing and pays the restore cost anyway.
 
-Check: every cache step in the CI configuration includes a hash of the lockfile in its key, and declares a restore-key prefix so a changed lockfile still warms from the previous cache.
+Check: every dependency cache in the CI configuration caches only reusable package-manager data, derives its primary key from the lockfile, and separates every operating system, architecture, runtime, or package-manager boundary that makes the cached contents incompatible. Any fallback key preserves those compatibility boundaries.
 
 Fixed by: oss-ci
 Forges: both
@@ -158,11 +158,11 @@ Forges: both
 
 ## Security posture
 
-### R-SEC-01: Pin every third-party action to a full commit SHA
+### R-SEC-01: Pin every external action and reusable workflow to a full commit SHA
 
 Tag and branch refs are mutable, so a compromised upstream tag changes what runs in your workflow without a diff in your repo.
 
-Check: every `uses:` line in `.github/workflows/` that references a third-party action resolves to a 40-character SHA.
+Check: every external `uses:` line in `.github/workflows/`, including GitHub-owned actions and reusable workflows outside the current repository, resolves to a 40-character commit SHA.
 
 Fixed by: oss-harden
 Forges: github
@@ -196,18 +196,18 @@ Forges: both
 
 ### R-SEC-05: Release tags are signed and verifiable
 
-An unsigned tag proves nothing about who cut the release. Anyone with write access, or anyone who takes it, can point a tag at any commit. Neither forge exposes an API that reports tag signature validity, so the evidence comes from git itself once the tag and the maintainer's public key are local.
+An unsigned tag proves nothing about who cut the release. Anyone with write access, or anyone who takes it, can point a tag at any commit. Forge verification reflects keys and identities registered with that forge and differs by signature format, so the portable evidence comes from git itself against a maintainer-controlled trust source.
 
 Check: after `git fetch --tags` and importing the maintainer's published signing key, `git tag -v <tag>` on the newest release tag succeeds, and `git cat-file -t <tag>` prints `tag`, which means the tag is annotated rather than lightweight.
 
 Fixed by: oss-harden
 Forges: both
 
-### R-SEC-06: A GitLab pipeline pins every image and every included file, and limits what its job token reaches
+### R-SEC-06: A GitLab pipeline pins external execution inputs and restricts inbound job-token access
 
-GitLab has no `uses:` line to pin, so the same mutable-reference problem arrives through `image:`, `services:`, and `include:`. A floating image tag or an `include:` on a branch name changes what runs without a diff in your repository, and a job token with an open inbound scope lets whatever runs read every project that trusts the token. The pin and the scope belong in one rule because a pinned pipeline with an unscoped token still hands an attacker the blast radius.
+GitLab has no action-shaped `uses:` step, so the same mutable-reference problem arrives through `image:`, `services:`, and external `include:` entries. A floating image tag or an `include:` on a branch name changes what runs without a diff in your repository. Separately, an open inbound job-token scope lets a job token from any project access this project when its triggering user is authorized. The allowlist is a target-project control; it does not describe where this project's own job token can go.
 
-Check: every `image:` and `services:` entry in `.gitlab-ci.yml` and its included files names an image by digest (`image@sha256:...`), every `include:project` entry sets `ref:` to a commit SHA or a protected tag, every `include:remote` entry points at an immutable URL and sets `integrity:`, and `GET /projects/:id/job_token_scope` reports `inbound_enabled` true with `GET /projects/:id/job_token_scope/allowlist` naming only the projects the pipeline needs.
+Check: every `image:` and `services:` entry in `.gitlab-ci.yml` and its included files names an image by digest (`image@sha256:...`), every external `include:project` and `include:component` entry resolves to a full commit SHA, every `include:remote` entry sets `integrity:`, and `GET /projects/:id/job_token_scope` reports `inbound_enabled` true with its allowlist naming only source projects that need access to this target project.
 
 Fixed by: oss-harden
 Forges: gitlab
@@ -216,7 +216,7 @@ Forges: gitlab
 
 Forge-supplied text such as an issue title, a branch name, or a commit message is written by whoever opened the contribution. Interpolated into a shell command it runs as code, and a workflow that builds a fork's contribution while holding secrets hands those secrets to its author.
 
-Check: on GitHub, no `${{ github.event.* }}` or `${{ github.head_ref }}` expression appears inside a `run:` block, such values reach the shell through an `env:` block instead, and no `pull_request_target` or `workflow_run` workflow checks out the untrusted head ref; on GitLab, no job interpolates `$CI_COMMIT_MESSAGE`, `$CI_COMMIT_REF_NAME`, or `$CI_MERGE_REQUEST_TITLE` into a `script:` command, and every sensitive variable clears "Expand variable reference".
+Check: on GitHub, no user-controlled `${{ github.event.* }}` or `${{ github.head_ref }}` expression appears inside a `run:` block, such values reach the shell through an `env:` block instead, and no `pull_request_target` or `workflow_run` workflow executes contributor-controlled code; on GitLab, user-controlled predefined variables are quoted when used in `script:`, no job evaluates them as generated shell, and every sensitive variable is masked with variable-reference expansion disabled.
 
 Fixed by: oss-harden
 Forges: both
@@ -225,7 +225,7 @@ Forges: both
 
 A version range re-resolves on every build, so what CI installs today is not what it installed yesterday. A lockfile records the exact artifact and its hash, which turns a silent substitution into a failed build. It costs a maintainer nothing, because the package manager writes it.
 
-Check: the lockfile the project's package manager produces is committed, records an integrity hash for each dependency, and every CI install runs in a mode that fails on a stale or missing lockfile rather than re-resolving, such as `npm ci`, `uv sync --locked`, `cargo build --locked`, `bundle install --deployment`, or `pip install --require-hashes`.
+Check: the lockfile or fully hashed requirements file the project's package manager produces is committed, records integrity for registry dependencies, and every CI install uses the package manager's current frozen mode so it fails on stale or missing resolution data rather than updating it.
 
 Fixed by: oss-harden
 Forges: both
@@ -263,7 +263,7 @@ Forges: both
 
 Provenance links the published artifact back to the commit and workflow that built it, so a consumer can tell a legitimate release from one uploaded by whoever held the token.
 
-Check: the publish step emits provenance (`npm publish --provenance`, PyPI attestations, or a build provenance attestation step), and the registry serves it for the newest version: `npm audit signatures` reports a verified attestation for the package, or `GET https://pypi.org/integrity/<project>/<version>/<filename>/provenance` returns a provenance object instead of a 404.
+Check: the exact published artifact has verifiable provenance tied to the expected repository and workflow. Prefer a registry-served record: verify npm provenance for an installed exact package version, PyPI provenance through its Integrity API, or a RubyGems attestation through its attestation API. Where a registry cannot serve provenance, verify a forge attestation for the exact published artifact and report the registry limitation; OIDC authentication alone is not provenance.
 
 Fixed by: oss-publish
 Forges: both
@@ -272,54 +272,54 @@ Forges: both
 
 A registry publish cannot be undone. An approval gate is the last point where a compromised tag, a wrong version, or a bad artifact can be stopped.
 
-Check: the publish job targets a GitHub environment with required reviewers, or a GitLab protected environment with a manual job, and the environment lists at least one approver other than an automation account. Read `protection_rules` from `gh api repos/{owner}/{repo}/environments/{environment_name}` and look for a `required_reviewers` entry on GitHub, or read `approval_rules` and `deploy_access_levels` from `GET /projects/:id/protected_environments/:name` on GitLab.
+Check: before public availability, a person other than an automation account must approve through a GitHub environment with required reviewers, a GitLab protected environment with a manual job and approval rules, or a registry proof-of-presence gate such as npm staged publishing with 2FA approval. Verify the configured gate through the forge or registry API. If the repository visibility or forge plan does not provide a native gate and the registry has no equivalent, report the rule as unmet rather than substituting an unverified approval action.
 
 Fixed by: oss-publish
 Forges: both
 
 ## Changelog and versioning
 
-### R-CHG-01: The repository keeps CHANGELOG.md in Keep a Changelog format
+### R-CHG-01: Each release unit keeps a discoverable changelog in its declared format
 
 A changelog exists so a user upgrading two versions can read what changed without diffing tags. Generated commit lists do not answer that, because commit subjects address the maintainer, not the user.
 
-Check: `CHANGELOG.md` exists at the repository root, carries an `## [Unreleased]` section, and every release heading matches `## [X.Y.Z] - YYYY-MM-DD` with entries grouped under Added, Changed, Deprecated, Removed, Fixed, or Security.
+Check: each release unit has a discoverable changelog following the project's declared convention. For Keep a Changelog 2.0.0, it opens with `# Changelog` and a pinned convention link, carries `## [Unreleased]`, lists dated releases newest first, groups notable changes under the six standard types, marks incompatible entries `**Breaking:**`, and resolves version headings to tag or comparison links.
 
 Fixed by: oss-changelog
 Forges: both
 
-### R-CHG-02: Versions follow semantic versioning, and any breaking change bumps the major
+### R-CHG-02: Semantic versions reflect changes to the declared public API
 
-Semver is a promise to a dependency resolver. A breaking change shipped as a patch bypasses every version constraint your users wrote and breaks their builds without their action.
+SemVer is a promise to users and dependency resolvers about the declared public API. A version increment that understates an incompatible change lets an ordinary upgrade select code the version range did not warn users about.
 
-Check: every version in `CHANGELOG.md` and every release tag matches `v?MAJOR.MINOR.PATCH` with an optional prerelease suffix, and every release containing a Removed entry or a breaking Changed entry increments MAJOR.
+Check: the project declares the public API covered by Semantic Versioning; versions use valid SemVer syntax, allowing a `v` prefix only on tag names; stable releases increment MAJOR for incompatible public API changes, MINOR for compatible additions and deprecations, and PATCH for compatible fixes. During `0.y.z` initial development, this standard uses MINOR for incompatible changes rather than forcing `1.0.0`; SemVer itself permits anything to change before 1.0.0.
 
 Fixed by: oss-changelog
 Forges: both
 
-### R-CHG-03: The release tag, every versioned manifest, and the newest changelog entry are the same version
+### R-CHG-03: Every release unit uses one version across its tag, manifests, and changelog
 
 When these disagree, nobody can tell which one describes the artifact users installed, and the changelog stops being a reliable upgrade record. A repository that ships several manifests, one per host or one per package, multiplies the ways they can drift apart.
 
-Check: for the newest release tag, the tag name, the `version` field of every manifest in the repository that declares one, and the topmost release heading in `CHANGELOG.md` all name the same version.
+Check: for the newest release of each release unit, its tag, every manifest or generated version source that describes that unit, and its newest changelog entry name the same version. Independently versioned packages in one repository are checked separately and are not forced to share a version.
 
 Fixed by: oss-changelog
 Forges: both
 
-### R-CHG-04: Forge release notes reproduce the changelog entry for that version
+### R-CHG-04: Forge release notes derive from the changelog without contradicting it
 
 Auto-generated release notes list merged pull requests, which repeats work the changelog already did better. Two divergent descriptions of one release is worse than one.
 
-Check: the release body on the forge for the newest version matches the corresponding section of `CHANGELOG.md`. Read it with `gh release view <tag> --json body` on GitHub, or from the `description` field of `GET /projects/:id/releases/:tag_name` on GitLab.
+Check: the release body on the forge contains the corresponding changelog section without omissions or contradictory claims. It may add release-scoped installation, verification, migration, asset, or contributor details. Read it with `gh release view <tag> --json body` on GitHub, or from the `description` field of `GET /projects/:id/releases/:tag_name` on GitLab.
 
 Fixed by: oss-changelog
 Forges: both
 
 ### R-CHG-05: A public API is deprecated in a release before it is removed
 
-Removing an API without warning turns an upgrade into an outage. A deprecation shipped one minor release earlier gives users a window to migrate while both paths still work.
+Removing an API without warning turns an upgrade into an outage. Users need a released version where the old path still works and the interface they use directs them to the replacement.
 
-Check: every item under Removed in a release appears under Deprecated in an earlier release, and the deprecated API emits a runtime warning naming its replacement.
+Check: every public item under Removed appeared under Deprecated in an earlier release, stayed usable for the project's stated deprecation window, and produced an interface-appropriate notice naming the replacement or migration path and earliest removal version. For stable SemVer, deprecation ships in a MINOR release and removal waits for a later MAJOR release.
 
 Fixed by: oss-changelog
 Forges: both
@@ -330,7 +330,7 @@ This area applies only to a repository that ships agent skills, meaning a reposi
 
 ### R-SKL-01: Skills live in a top-level `skills/` directory, one directory per skill
 
-The `skills` CLI installer and every plugin loader read that path. A repository that keeps its skills anywhere else cannot be installed by the commands its own README documents, so the skills reach nobody.
+The `skills` CLI discovers this layout directly, and plugin packages conventionally expose the same directory. Keeping one canonical tree avoids copies drifting while host-specific paths can point to it through manifests or symlinks.
 
 Check: a `skills/` directory exists at the repository root, every skill is a direct child of it and holds a `SKILL.md`, and no other `SKILL.md` exists in the repository. Resolve a symlinked directory such as `.claude/skills` to its target before applying the check, so a committed symlink pointing at `skills/` does not read as a second copy.
 
@@ -348,7 +348,7 @@ Forges: both
 
 ### R-SKL-03: A `SKILL.md` body stays under 500 lines, with depth in `references/`
 
-The whole body loads into context when the skill activates, competing there with the conversation and with every other active skill. The specification sets the ceiling at 500 lines and about 5000 tokens, and puts the rest under `references/`, loaded only when the task calls for it.
+The whole body loads into context when the skill activates, competing there with the conversation and with every other active skill. The specification recommends fewer than 500 lines and 5000 tokens, with supporting files loaded only when the task calls for them.
 
 Check: every `skills/*/SKILL.md` is under 500 lines, and any skill needing more material ships it under that skill's own `references/` directory.
 
@@ -359,16 +359,16 @@ Forges: both
 
 Installers extract one skill directory at a time. The repository license file does not travel with it, so an extracted skill arrives with no terms attached and nobody downstream can tell whether they may use it.
 
-Check: the frontmatter of every `skills/*/SKILL.md` carries a `license:` field, and its value names the same license as the repository license file.
+Check: the frontmatter of every `skills/*/SKILL.md` carries a `license:` field naming the license that applies to that skill. It matches the repository license when that license covers the skill; a differently licensed skill carries its own license file and the field references it.
 
 Fixed by: oss-skill
 Forges: both
 
-### R-SKL-05: A skill that ships a script uses sh or Node, with no dependencies
+### R-SKL-05: A skill that ships a script uses portable sh or JavaScript with no dependencies
 
 A script inside a skill runs on the reader's machine, not the author's. An interpreter the reader does not have, or a dependency install the skill cannot perform, turns a skill that loads into a skill that fails partway through the task it was invoked for.
 
-Check: within a skill's `scripts/` directory, at any depth, every file whose extension is not `.md`, `.txt`, `.json`, `.yml`, `.yaml`, `.toml`, or `.csv` starts with a shebang naming `sh`, `bash`, or `node` as its interpreter, directly or through `env`; every file whose extension is `.js`, `.mjs`, `.cjs`, `.ts`, `.mts`, or `.cts` resolves every import and require to a relative path, an absolute path, or a Node built-in module, and reads no property from a `Bun` or `Deno` global; and the skill directory contains no `node_modules` directory and none of `package.json`, `bun.lock`, `bun.lockb`, `package-lock.json`, `yarn.lock`, or `pnpm-lock.yaml`. A skill that ships no script and no manifest falls outside this rule rather than failing it.
+Check: within a skill's `scripts/` directory, at any depth, every executable file starts with a shebang naming `sh` or `node`, directly or through `env`; JavaScript resolves every import and require to a relative path, an absolute path, or a real Node built-in module; no script uses TypeScript, a runtime-specific global, or a runtime-specific module; and the skill directory contains no dependency manifest, lockfile, or `node_modules`. A skill that ships no script and no manifest falls outside this rule rather than failing it.
 
 Fixed by: oss-skill
 Forges: both
@@ -378,6 +378,15 @@ Forges: both
 A README that names a host it has shipped nothing for sends a reader to a command that fails. Hosts read different manifests, so support is a file at a path, not a sentence.
 
 Check: for every host named in `README.md` or in the install documentation it links to, either the manifest that host reads is committed at the path the host reads it from, or a documented install command exists that needs no manifest; and no host is named that has neither.
+
+Fixed by: oss-skill
+Forges: both
+
+### R-SKL-07: Each skill is a focused, progressively disclosed procedure
+
+A skill adds value only when it triggers for the right task, supplies knowledge the agent lacks, and leads the work through a repeatable procedure. Generic explanation, broad menus of equal choices, and unnecessary reference loads consume context without improving the result.
+
+Check: the description states both the task outcome and when to use the skill; the body keeps one coherent workflow, gives a default when several approaches exist, preserves non-obvious gotchas, and includes a verification loop; conditional detail lives in directly linked files loaded only at the branch that needs it; and the instructions name capabilities rather than harness-specific tools.
 
 Fixed by: oss-skill
 Forges: both

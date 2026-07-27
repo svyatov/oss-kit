@@ -1,0 +1,64 @@
+---
+import { icon } from "@fortawesome/fontawesome-svg-core"
+import {
+  faArrowRight,
+  faBoxOpen,
+  faCheck,
+  faCodeBranch,
+  faCopy,
+  faCrosshairs,
+  faDownload,
+  faFileLines,
+  faPeopleGroup,
+  faPuzzlePiece,
+  faRotate,
+  faShieldHalved,
+} from "@fortawesome/free-solid-svg-icons"
+
+const icons = {
+  arrow: faArrowRight,
+  audit: faCrosshairs,
+  chg: faCodeBranch,
+  check: faCheck,
+  ci: faRotate,
+  com: faPeopleGroup,
+  copy: faCopy,
+  doc: faFileLines,
+  download: faDownload,
+  pub: faBoxOpen,
+  sec: faShieldHalved,
+  skl: faPuzzlePiece,
+}
+
+const { name, label, class: className } = Astro.props
+const glyph = icons[name]
+// A new STANDARD.md area reaches here as an unmapped name. Say which one, so
+// the build points at the missing entry instead of at a null dereference.
+if (!glyph) throw new Error(`FaIcon: no icon mapped for "${name}"`)
+const svg = icon(glyph, {
+  attributes: {
+    "aria-hidden": label ? "false" : "true",
+    "aria-label": label,
+    focusable: "false",
+  },
+}).html.join("")
+---
+
+<span class:list={["fa-icon", className]} set:html={svg} />
+
+<style>
+  .fa-icon {
+    display: inline-grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 1em;
+    height: 1em;
+    color: currentColor;
+  }
+
+  .fa-icon :global(svg) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+</style>

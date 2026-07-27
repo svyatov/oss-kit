@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { existsSync, readdirSync, readFileSync } from "node:fs"
 
-const install = () => readFileSync("docs/install.md", "utf8")
+const install = () => readFileSync("site/src/content/docs/guides/install.md", "utf8")
 const readme = () => readFileSync("README.md", "utf8")
 
 test("the install page names every harness this repository documents", () => {
@@ -34,7 +34,7 @@ test("every plugin manifest directory in the repository is named on the install 
 test("the README keeps the fast path and links to the install page", () => {
   const text = readme()
   expect(text).toContain("npx skills add svyatov/oss-kit")
-  expect(text).toContain("docs/install.md")
+  expect(text).toContain("site/src/content/docs/guides/install.md")
 })
 
 test("the README does not duplicate the per-harness matrix", () => {

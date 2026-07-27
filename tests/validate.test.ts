@@ -51,6 +51,13 @@ test("parseFrontmatter flags a construct it cannot read without claiming invalid
   expect(fm.unreadable).toEqual([3, 4])
 })
 
+test("parseFrontmatter flags an unterminated quoted scalar", () => {
+  const fm = parseFrontmatter('---\nname: a\ndescription: "broken\n---\n')
+  expect(fm.ok).toBe(true)
+  expect(fm.unreadable).toEqual([3])
+  expect(fm.unreadableKeys).toContain("description")
+})
+
 test("frontmatter not at byte 0 is an R-SKL-02 error", () => {
   const root = makeRepo()
   const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
@@ -475,16 +482,16 @@ test("a conforming node script passes", () => {
 test("a conforming shell script passes", () => {
   const root = makeRepo()
   const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
-  addScript(dir, "ok.sh", "#!/usr/bin/env bash\nset -eu\necho hello\n")
+  addScript(dir, "ok.sh", "#!/usr/bin/env sh\nset -eu\necho hello\n")
   expect(errors(root)).toEqual([])
   rmSync(root, { recursive: true, force: true })
 })
 
-test("a shebang naming an interpreter directly, at a non-standard path, passes", () => {
+test("a bash shebang is an R-SKL-05 error", () => {
   const root = makeRepo()
   const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
-  addScript(dir, "ok.sh", "#!/usr/local/bin/bash\nset -eu\necho hello\n")
-  expect(errors(root)).toEqual([])
+  addScript(dir, "bash.sh", "#!/usr/bin/env bash\nset -eu\necho hello\n")
+  expect(rules(errors(root))).toContain("R-SKL-05")
   rmSync(root, { recursive: true, force: true })
 })
 
@@ -513,6 +520,15 @@ test("a python shebang is an R-SKL-05 error", () => {
   rmSync(root, { recursive: true, force: true })
 })
 
+test("a TypeScript script is an R-SKL-05 error", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addScript(dir, "tool.ts", "#!/usr/bin/env node\nconst value: string = 'hi'\nconsole.log(value)\n")
+  const found = errors(root).filter((f) => f.rule === "R-SKL-05")
+  expect(found.some((f) => f.message.includes("TypeScript"))).toBe(true)
+  rmSync(root, { recursive: true, force: true })
+})
+
 test("a scripts/README.md and a nested data file draw no R-SKL-05 finding", () => {
   const root = makeRepo()
   const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
@@ -536,6 +552,15 @@ test("a builtin imported without the node prefix passes", () => {
   const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
   addScript(dir, "bare-builtin.mjs", '#!/usr/bin/env node\nimport { join } from "path"\nconsole.log(join("a"))\n')
   expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a nonexistent node-prefixed module is an R-SKL-05 error", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addScript(dir, "typo.mjs", '#!/usr/bin/env node\nimport value from "node:fsx"\nconsole.log(value)\n')
+  const found = errors(root).filter((f) => f.rule === "R-SKL-05")
+  expect(found.some((f) => f.message.includes('"node:fsx"'))).toBe(true)
   rmSync(root, { recursive: true, force: true })
 })
 
@@ -579,6 +604,22 @@ test("importing node:test produces no finding", () => {
   const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
   addScript(dir, "ok.mjs", '#!/usr/bin/env node\nimport test from "node:test"\nconsole.log(test)\n')
   expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("importing test without its required node prefix is an R-SKL-05 error", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addScript(dir, "test.mjs", '#!/usr/bin/env node\nimport test from "test"\nconsole.log(test)\n')
+  expect(errors(root).some((f) => f.rule === "R-SKL-05")).toBe(true)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a built-in added after the Node 22 floor is an R-SKL-05 error", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addScript(dir, "ffi.mjs", '#!/usr/bin/env node\nimport ffi from "node:ffi"\nconsole.log(ffi)\n')
+  expect(errors(root).some((f) => f.rule === "R-SKL-05")).toBe(true)
   rmSync(root, { recursive: true, force: true })
 })
 
@@ -636,6 +677,14 @@ test("a manifest nested under a skill's references directory is an R-SKL-05 erro
   const found = errors(root).filter((f) => f.rule === "R-SKL-05")
   expect(found).toHaveLength(1)
   expect(found[0]?.message).toContain("no install step")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a Deno manifest nested under a skill is an R-SKL-05 error", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  writeFileSync(join(dir, "deno.json"), "{}\n")
+  expect(errors(root).some((f) => f.rule === "R-SKL-05")).toBe(true)
   rmSync(root, { recursive: true, force: true })
 })
 

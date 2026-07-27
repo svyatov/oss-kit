@@ -1,8 +1,12 @@
-# Install oss-kit
+---
+title: Install oss-kit
+description: Install the full oss-kit collection or one skill in a supported agent.
+---
 
-Every host below reads the same nine skills from the `skills/` directory of this
-repository. Nothing is harness-specific except how the host finds that
-directory.
+<p class="doc-kind-label">Guide · public documentation</p>
+
+Every host below reads the current skills from the repository's canonical
+`skills/` directory. Only the discovery path changes between hosts.
 
 ## Any agent
 

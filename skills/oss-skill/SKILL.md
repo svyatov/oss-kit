@@ -1,23 +1,23 @@
 ---
 name: oss-skill
-description: "Fix the structure and packaging of a repository that ships agent skills, so every skill loads in every host that reads the Agent Skills format. Covers the top-level skills directory layout, SKILL.md frontmatter conformance, splitting an oversized skill into references, and the license field an extracted skill carries with it. Use when a skill fails to load or never triggers, when a repository keeps its skills somewhere an installer does not read, when a SKILL.md has grown too long to load cheaply, or when auditing a repository whose product is agent skills. What a skill teaches and how its sentences read is out of scope: prose belongs to oss-writing, README structure belongs to oss-readme."
+description: "Fix the structure, portability, and effectiveness of repositories that ship Agent Skills. Covers canonical layout, SKILL.md conformance, trigger descriptions, progressive disclosure, repeatable procedures, bundled scripts, evaluation, licensing, and host install paths. Use when a skill fails to load or trigger, produces inconsistent results, wastes context or tool calls, ships non-portable code, or needs an audit against the current Agent Skills specification and authoring guidance."
 license: MIT
 compatibility: Requires Node 22+ or Bun to run the bundled validator
 ---
 
-# Structure of a repository that ships agent skills
+# Build reliable Agent Skills
 
-Fix the four things that decide whether a skill loads at all: where it sits, whether its frontmatter conforms to the Agent Skills specification, how much context its body spends, and whether a copy of it carries its license. A skill that fails any of these is invisible or unusable no matter how good its instructions are.
+Fix the mechanics that decide whether a skill loads, then verify that it improves the task it claims to handle. Format conformance cannot prove output quality, and model behavior is nondeterministic, so never infer reliable behavior from a validator exit code alone.
 
 Most of what this skill fixes is mechanical, and the validator this skill ships at `scripts/validate.mjs` in its own directory names the fault precisely (R-SKL-02). It reads files, needs nothing installed, and runs on Node or Bun: `node scripts/validate.mjs <repository>`. Run it before reading further into any repository; its output tells you which of the rules below is in play.
 
 ## Scope
 
-The SKL rules belong here: R-SKL-01 layout, R-SKL-02 specification conformance, R-SKL-03 body size, R-SKL-04 the license field, R-SKL-05 what a skill may ship as a script, and R-SKL-06 the install path behind every host the repository claims.
+The SKL rules belong here: R-SKL-01 layout, R-SKL-02 specification conformance, R-SKL-03 body size, R-SKL-04 licensing, R-SKL-05 portable scripts, R-SKL-06 install paths, and R-SKL-07 focused procedures with progressive disclosure.
 
 Neighbouring work belongs elsewhere. Wiring the validator into CI is R-CI-02, owned by `oss-ci`, because the rule already requires CI to run the same linter the contributing guide gives to humans, and for a skills repository that linter is the validator. Keeping every host manifest on one version is R-CHG-03, owned by `oss-changelog`. The README's install command and runnable example are R-DOC-02, and its links to the license, changelog, and contributing guide are R-DOC-03, both owned by `oss-readme`. The sentences inside any file are R-DOC-05, owned by `oss-writing`. Note what a repository needs and hand it to the owning skill rather than doing that work from here.
 
-This skill holds no opinion about what a skill should teach, how prescriptive its instructions should be, or how its description should be tuned to trigger. Those are authoring judgments and `STANDARD.md` states none of them, so neither does this skill.
+Use `oss-writing` for sentence-level prose and `oss-readme` for repository documentation. This skill owns whether the skill itself has a focused trigger, an efficient procedure, conditional references, and a verification loop.
 
 ## Step 1: Find every skill in the repository
 
@@ -49,7 +49,7 @@ An over-long description means the field exceeds 1024 characters. Cut the parts 
 
 A missing required field means `name` or `description` is absent or empty. Both are required and neither has a default.
 
-Frontmatter that fails to parse usually means an unquoted description, either containing a colon or opening with a character YAML reads as syntax, such as `>` or `|`. Quote the description.
+Frontmatter that fails to parse needs a YAML fix, not a guessed rewrite. Quote single-line descriptions as the repository convention. If the bundled validator warns that it cannot read a valid YAML construct such as a block scalar, check that construct with a strict YAML parser before changing it.
 
 ## Step 3: Bring an oversized body under the ceiling (R-SKL-03)
 
@@ -63,21 +63,39 @@ Keep references one level deep. A reference file that sends the reader to a thir
 
 ## Step 4: Declare the license in every skill (R-SKL-04)
 
-Add a `license:` line to the frontmatter of every `SKILL.md`, naming the same license as the repository license file. Where the two disagree, stop and ask which is correct rather than picking one.
+Add a `license:` line to every `SKILL.md`, naming the license that applies to that skill. Use the repository license when it covers every skill. If one skill has different terms, bundle its license file inside that skill and reference the file from frontmatter. Where the evidence conflicts, stop and ask which terms apply.
 
-This matters because of how skills travel. An installer that fetches one skill copies that directory and nothing else, so the repository's `LICENSE` file stays behind and the copy arrives with no terms. The specification defines the field to solve exactly this, and it accepts either a license name or a reference to a bundled license file.
+The Agent Skills specification makes `license` optional and accepts either a name or a bundled file reference. R-SKL-04 deliberately requires it because an installer may extract one skill directory without the repository license.
 
 ## Step 5: Keep a shipped script runnable (R-SKL-05)
 
 Where a skill ships a `scripts/` directory, check what its files assume. A script runs on the reader's machine, so an interpreter they lack or a dependency they cannot install fails the task the skill was invoked for.
 
-A script file needs a shebang naming `sh`, `bash`, or `node`; documentation and data files under `scripts/`, such as a README or a fixture a script reads, carry no such requirement. A JavaScript or TypeScript file may import a Node built-in module or its own sibling file by relative path, but not a package, so no `package.json`, no lockfile, and no `node_modules` travels with the skill, and it references no runtime-specific global, because a script written against one runtime fails on the other.
+A script file needs a shebang naming portable `sh` or `node`; documentation and data files under `scripts/`, such as a README or fixture, need no shebang. Ship JavaScript, not TypeScript, because Node 22 does not provide the type-stripping behavior this repository would need. JavaScript may import real Node built-ins or sibling files by relative path, but no package. No dependency manifest, lockfile, `node_modules`, runtime-specific module, or `Bun` or `Deno` global travels with the skill.
 
-The specification permits Python here and this rule does not. A Python script pins an interpreter version and, in practice, pulls dependencies, which is the failure this rule exists to prevent. Where a skill needs Python, say so plainly and let the maintainer decide, rather than rewriting working code.
+The specification permits Python, Bash, TypeScript, dependencies, and other host-supported choices. R-SKL-05 is deliberately stricter so one shipped script runs unchanged under the repository's Node 22 floor or a POSIX shell. Where a skill needs another runtime, report the conflict and let the maintainer choose rather than silently rewriting working code.
 
 Fix a violation by rewriting the script against Node built-ins, or by moving the work into the skill's prose where an agent performs it directly.
 
-## Step 6: Check the install path behind every claimed host
+## Step 6: Make the procedure earn its context (R-SKL-07)
+
+Start from real task evidence: upstream documentation, project artifacts, recurring corrections, and failure cases. Remove generic knowledge the agent already has. Keep one coherent unit of work whose output and boundary can be stated precisely.
+
+Write the description for activation. State what outcome the skill produces and when to use it, using the language a user is likely to use. Include adjacent cases only when the skill truly handles them. Test near-miss prompts too, because a description that triggers on unrelated work wastes the whole body load.
+
+Inside the body:
+
+1. Give a default path, not a menu of equal choices.
+2. Match control to risk. Prescribe fragile sequences; explain intent where several correct approaches exist.
+3. Keep non-obvious gotchas before the point where they cause failure.
+4. Name capabilities and observable evidence, not a host's tool names.
+5. Load a direct reference only at the branch that needs it. Do not chain references.
+6. Bundle a tested script only when repeated runs otherwise recreate the same deterministic logic.
+7. End state-changing work with validation, correction, and re-validation.
+
+Evaluate behavior separately from format. Start with two or three realistic tasks, including an edge case, and define observable success before running them. Run each in a clean context with the skill and against a no-skill or previous-version baseline. Grade assertions with concrete evidence, review the execution trace for wasted steps, and record time and token cost. Keep a change only when it improves the target result enough to justify its cost. For trigger tuning, use varied positive prompts and near-miss negatives, repeat runs because activation is nondeterministic, and keep a held-out validation set.
+
+## Step 7: Check the install path behind every claimed host
 
 Read the README and the install documentation it links to, and list every host named there. For each one, find the manifest that host reads, at the path that host reads it from, or the documented command that installs without a manifest. A host with neither is an R-SKL-06 finding: either ship the manifest or stop naming the host. Do not accept a manifest at a path no host reads as evidence.
 
@@ -90,3 +108,7 @@ Treat it as one. Say so when proposing the rename, and hand the changelog entry 
 ## Report what you changed
 
 List every skill you touched, the rule each change satisfies, and every fault the validator reported that you did not fix, with the reason. Name the rename separately from the mechanical fixes, since it is the only one with downstream cost.
+
+## Upstream sources
+
+Use the current [Agent Skills specification](https://agentskills.io/specification), [creator best practices](https://agentskills.io/skill-creation/best-practices), [evaluation guide](https://agentskills.io/skill-creation/evaluating-skills), [description optimization guide](https://agentskills.io/skill-creation/optimizing-descriptions), and [script guide](https://agentskills.io/skill-creation/using-scripts). Recheck them before changing a rule because the format and host implementations continue to evolve.

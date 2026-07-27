@@ -13,7 +13,7 @@ Project-level locations, files on the default branch, extension `.md`:
 
 A file named `Default.md` (case insensitive) in either directory is preselected automatically every time a contributor opens a new issue or merge request; every other filename in the directory appears as a named choice the contributor selects manually. At minimum, ship one file in each directory; name it `Default.md` if the project wants it to load without the contributor choosing anything.
 
-A group can also designate one project as the source of templates shared across every project in the group, configured in the group's settings rather than by a file path; mention that this exists when the maintainer wants templates shared across multiple projects, but the per-project directories above are what satisfies R-COM-05 on its own.
+On Premium or Ultimate, a group can also designate one direct child project as the source of templates shared across the group's projects, configured in the group's settings rather than by a file path. Mention that option when the maintainer wants shared templates, but the per-project directories above satisfy R-COM-05 on their own.
 
 ## CODEOWNERS (R-COM-06)
 
@@ -55,6 +55,20 @@ A number in a second bracket after the section name sets how many distinct appro
 
 ```text
 [Backend][2] @backend-team @staff-engineer
+```
+
+GitLab also accepts direct project roles as owners. Prefix the role with `@@`; only Developer, Maintainer, and Owner work, and a role does not include higher roles:
+
+```text
+/config/ @@maintainer
+```
+
+Prefix a path with `!` to exclude it from code owner approval in that section. GitLab evaluates exclusions in order, and a later rule in the same section cannot include an excluded path again:
+
+```text
+[Generated files] @release-team
+generated/
+!generated/fixtures/
 ```
 
 ### Enforcement and tier

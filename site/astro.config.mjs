@@ -11,6 +11,7 @@ const REPO = "https://github.com/svyatov/oss-kit"
 // Autogeneration would sort them alphabetically by ID and split every area.
 const rules = parseRules(readFileSync(new URL("../skills/oss-audit/STANDARD.md", import.meta.url), "utf8"))
 const areas = [...new Set(rules.map((rule) => rule.section))]
+const areaCode = (section) => rules.find((rule) => rule.section === section)?.area.toLowerCase()
 
 /** @param {string} property @param {string} content */
 const meta = (property, content) => ({
@@ -23,12 +24,19 @@ export default defineConfig({
   integrations: [
     starlight({
       title: "oss-kit",
-      logo: { src: "./public/favicon.svg", alt: "" },
-      description: "One opinionated quality bar for open source repositories.",
+      description: "Curated agent skills for open source maintainers.",
+      disable404Route: true,
       favicon: "/icon.svg",
       customCss: ["./src/styles/custom.css"],
+      components: {
+        Header: "./src/components/Header.astro",
+        Hero: "./src/components/HomeHero.astro",
+        Footer: "./src/components/Footer.astro",
+        ThemeProvider: "./src/components/ThemeProvider.astro",
+      },
       social: [{ icon: "github", label: "GitHub", href: REPO }],
       editLink: { baseUrl: `${REPO}/edit/main/site/` },
+      credits: false,
       head: [
         { tag: "link", attrs: { rel: "icon", href: "/favicon.ico", sizes: "32x32" } },
         { tag: "link", attrs: { rel: "apple-touch-icon", href: "/apple-touch-icon.png" } },
@@ -53,14 +61,20 @@ export default defineConfig({
           ],
         },
         { label: "Standard", link: "/standard/" },
-        { label: "Skills", items: [{ autogenerate: { directory: "skills" } }] },
+        {
+          label: "Skills",
+          items: [{ autogenerate: { directory: "skills" } }],
+        },
         {
           label: "Rules",
-          items: areas.map((section) => ({
+          items: [{ label: "All rules", link: "/rules/" }, ...areas.map((section) => ({
             label: section,
             collapsed: true,
-            items: rules.filter((rule) => rule.section === section).map((rule) => `rules/${rule.id.toLowerCase()}`),
-          })),
+            items: [
+              { label: "Overview", link: `/rules/${areaCode(section)}/` },
+              ...rules.filter((rule) => rule.section === section).map((rule) => `rules/${rule.id.toLowerCase()}`),
+            ],
+          }))],
         },
         { label: "Changelog", link: "/changelog/" },
       ],

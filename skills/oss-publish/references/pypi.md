@@ -51,7 +51,7 @@ id_tokens:
     aud: pypi
 ```
 
-With that token present, `twine upload` uses trusted publishing automatically; no explicit `--repository-url` credential handling is needed beyond installing `twine`.
+With that token present, current Twine uses trusted publishing automatically; no explicit credential handling is needed. Resolve Twine's current release from the PyPA repository before writing the pipeline, then lock that exact version and every transitive dependency with hashes. Do not install `twine -U` in the job that receives the OIDC token.
 
 ## Write the hardened release workflow (Step 3)
 
@@ -70,10 +70,10 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.13'
-      - run: pip install -e .[test]
+      - run: <frozen project install command from CONTRIBUTING.md>
       - run: pytest  # oss-ci decides the actual command from CONTRIBUTING.md (R-CI-02)
 
   build:
@@ -82,12 +82,13 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.13'
-      - run: pip install build
-      - run: python -m build
-      - uses: actions/upload-artifact@v5
+      - run: <frozen build-tool install command>
+      - run: <project-specific tag and version equality check>
+      - run: <documented build command>
+      - uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
@@ -100,32 +101,40 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v8
         with:
           name: dist
           path: dist/
       - uses: pypa/gh-action-pypi-publish@release/v1
 ```
 
-`oss-harden` pins every `uses:` line above to a commit SHA and sets this workflow's `permissions:`, including the `contents: read` this skill left off the test and build jobs above; do not pin them or add permissions here. On GitLab CI/CD, run the equivalent `test`, `build`, and `publish` jobs with `image: python:3.13-bookworm`, give the publish job the `id_tokens` block above, and run `python -m pip install -U twine && twine upload dist/*` in its `script:`.
+Replace the angle-bracket commands from the repository's contributing guide, lockfiles, build backend, and version source. Do not assume every project uses editable installs, pytest, a static `project.version`, or the `build` frontend. If the repository has no frozen build-tool install, add one using the project's existing lock workflow after verifying the build frontend through its upstream documentation.
+
+`oss-harden` pins every `uses:` line above to a commit SHA and sets this workflow's `permissions:`, including the `contents: read` this skill left off the test and build jobs above; do not pin them or add permissions here.
+
+On GitLab CI/CD, use separate build, attestation, and publish jobs. PyPI's official GitLab flow requires the attestation job to request `SIGSTORE_ID_TOKEN` with audience `sigstore`, sign every distribution with `pypi-attestations`, and pass the distributions plus adjacent attestation files to the publish job. The publish job requests `PYPI_ID_TOKEN` with audience `pypi` and runs `twine upload --attestations dist/*`. Prepare hash-locked wheels for both CLIs in an uncredentialed job and install them offline, or use a project-controlled image pinned by digest. A plain `twine upload dist/*` publishes through OIDC but does not upload provenance.
 
 If an existing workflow uses `secrets.PYPI_API_TOKEN`, remove it from the YAML now and tell the user to delete the corresponding secret once the new flow is verified.
 
 ## Gate on manual approval (Step 4)
 
-Pin the publish job to `environment: pypi` as above (the name is conventional, not required; keep whatever the trusted publisher's Environment name field says), and create that environment at `https://github.com/<owner>/<repo>/settings/environments/new` with required reviewers, or, on GitLab, as a protected environment with approval rules at the project's Settings > CI/CD > Protected environments. PyPI's own docs call this configuration optional; this skill does not, because it is the only human gate this flow has.
+Pin the publish job to `environment: pypi` as above (the name is conventional, not required; keep whatever the trusted publisher's Environment name field says), and create that environment at `https://github.com/<owner>/<repo>/settings/environments/new` with required reviewers, or, on GitLab Premium or Ultimate, as a protected environment with approval rules. GitHub required reviewers work for public repositories on current plans; private or internal repositories need GitHub Enterprise Cloud. If the repository's visibility or plan provides no native approval gate, report R-PUB-04 as unmet. PyPI has no registry-side approval fallback.
 
 ## Verify provenance (Step 5)
 
-`pypa/gh-action-pypi-publish` generates and uploads a PEP 740 attestation by default when publishing through trusted publishing; no extra flag is needed. After the first release, verify with:
+`pypa/gh-action-pypi-publish` generates and uploads a PEP 740 attestation by default when publishing through trusted publishing. The GitLab flow must generate and upload adjacent attestations explicitly as described above. After the first release, first confirm that PyPI serves provenance:
 
 ```bash
 curl -s https://pypi.org/integrity/<name>/<version>/<filename>/provenance
 ```
 
-A provenance object in the response confirms it; a 404 means the attestation was not produced, which points back at Step 3 or Step 4 having been skipped.
+A provenance object confirms the file has attestations; a 404 means it does not. Then cryptographically verify the distribution against the expected repository using the current, upstream-verified `pypi-attestations` CLI:
 
-Source: [PyPI Docs, Producing attestations](https://docs.pypi.org/attestations/producing-attestations/).
+```bash
+pypi-attestations verify pypi --repository https://<forge>/<owner>/<repo> <distribution-url>
+```
+
+Source: [PyPI Docs, Producing attestations](https://docs.pypi.org/attestations/producing-attestations/) and [PyPI Docs, Consuming attestations](https://docs.pypi.org/attestations/consuming-attestations/).
 
 ## Not yet published projects
 

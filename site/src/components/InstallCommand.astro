@@ -1,0 +1,53 @@
+---
+import FaIcon from "./FaIcon.astro"
+
+const { compact = false } = Astro.props
+const command = "npx skills add svyatov/oss-kit"
+---
+
+<kit-copy-command class:list={["install-command", { "install-command--compact": compact }]}>
+  <span class="install-command__prompt" aria-hidden="true">$</span>
+  <code>{command}</code>
+  <button type="button" data-copy aria-label="Copy install command">
+    <FaIcon name="copy" />
+    <span data-label aria-live="polite" aria-atomic="true">Copy</span>
+  </button>
+</kit-copy-command>
+
+<script>
+  class KitCopyCommand extends HTMLElement {
+    constructor() {
+      super()
+      const button = this.querySelector<HTMLButtonElement>("[data-copy]")
+      const label = this.querySelector<HTMLElement>("[data-label]")
+      const code = this.querySelector("code")
+      if (!button || !label || !code) return
+
+      button.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(code.textContent ?? "")
+          this.dataset.state = "copied"
+          button.ariaLabel = "Copied install command"
+          label.textContent = "Copied"
+          window.setTimeout(() => {
+            delete this.dataset.state
+            button.ariaLabel = "Copy install command"
+            label.textContent = "Copy"
+          }, 1800)
+        } catch {
+          button.ariaLabel = "Select install command"
+          label.textContent = "Select command"
+          const selection = window.getSelection()
+          const range = document.createRange()
+          range.selectNodeContents(code)
+          selection?.removeAllRanges()
+          selection?.addRange(range)
+        }
+      })
+    }
+  }
+
+  if (!customElements.get("kit-copy-command")) {
+    customElements.define("kit-copy-command", KitCopyCommand)
+  }
+</script>

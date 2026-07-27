@@ -4,17 +4,17 @@ This file records what each host reads, verified against that host's own documen
 
 ## The `skills` CLI (`npx skills add`)
 
-Source: the `antfu/skills-cli` README, fetched from `raw.githubusercontent.com/antfu/skills-cli/main/README.md`.
+Source: the `vercel-labs/skills` README at `github.com/vercel-labs/skills`.
 
-Running `npx skills add <owner>/<repo>` looks inside the source repository for skills in, in order: the repository root (if it holds a `SKILL.md` directly), `skills/`, `skills/.curated/`, `skills/.experimental/`, `skills/.system/`, and a long list of agent-specific directories including `.agents/skills/`, `.agent/skills/`, and `.claude/skills/`. If none of these hold a skill, the CLI falls back to a recursive search of the repository.
+Running `npx skills add <owner>/<repo>` checks the repository root, `skills/`, the curated and experimental collections below it, and the supported clients' skill directories, including `.agents/skills/` and `.claude/skills/`. It walks the normal flat layout and one extra catalog level. Use `--full-depth` to discover skills elsewhere rather than depending on an undocumented repository shape.
 
 `--skill <name>` (short form `-s`) installs only the named skill or skills from the source instead of every skill found. `--list` prints what is available without installing anything.
 
-On the receiving side, the CLI writes into a per-agent skills folder, project scope by default or global scope with the `-g` flag. The path is not one pattern applied across agents: Claude Code gets `.claude/skills/` (project) and `~/.claude/skills/` (global), Amp and Kimi Code CLI share `.agents/skills/` (project) and `~/.config/agents/skills/` (global), Antigravity gets `.agent/skills/` (project) and `~/.gemini/antigravity/global_skills/` (global), Codex gets `.codex/skills/` (project) and `~/.codex/skills/` (global), and GitHub Copilot gets `.github/skills/` (project) and `~/.copilot/skills/` (global). These are a sample; the README's `Supported Agents` table carries the full per-agent list, which runs past thirty entries, and is the place to check for an agent not named here. Installation can create a symlink from each agent's folder to one canonical copy, or an independent copy per agent, chosen interactively.
+The receiving path is client-specific. Current examples are `.claude/skills/` for Claude Code and `.agents/skills/` for Codex, Cursor, Gemini CLI, GitHub Copilot, Kimi Code CLI, and the universal target. Global paths differ by client, so read the CLI's current `Supported Agents` table instead of deriving one. Interactive installation uses one canonical copy with client symlinks by default; `--copy` requests independent copies.
 
 Both `.claude/skills/` and `.agents/skills/` are among the source-side directories the CLI searches, and both are also write targets on the receiving side, for Claude Code and for Amp/Kimi Code CLI respectively.
 
-Verified 2026-07-23 against the `main` branch of `antfu/skills-cli`.
+Verified 2026-07-24 against the `main` branch of `vercel-labs/skills`.
 
 ## Antigravity
 
@@ -62,15 +62,15 @@ Verified 2026-07-23.
 
 ## Cursor
 
-Source: `cursor.com/help/customization/skills` and `cursor.com/docs/reference/plugins`.
+Source: `cursor.com/docs/skills`, `cursor.com/docs/reference/plugins`, and the Cursor 2.5 changelog.
 
 Cursor loads skills automatically from `.cursor/skills/` and `.agents/skills/` in the project (including nested directories such as `apps/web/.cursor/skills/` in a monorepo), and from `~/.cursor/skills/` and `~/.agents/skills/` for skills available across all projects. It also reads `.claude/skills/` and `.codex/skills/`, and their `~/`-rooted equivalents, for compatibility with skills placed for those other hosts. Each skill is a directory holding a `SKILL.md`, with no manifest.
 
-Cursor's plugin system is separate from skills discovery and does carry a manifest: every plugin requires a `.cursor-plugin/plugin.json` file. Installation has no CLI or slash command; it is interface-only, through the Customize panel inside Cursor or through `cursor.com/marketplace`. A team admin can also add a plugin from the Dashboard, under Plugins, Add Marketplace, Import from Repo.
+Cursor's plugin system is separate from skills discovery and requires `.cursor-plugin/plugin.json`. Install a marketplace plugin from the editor or with `/add-plugin`; use Cursor's current plugin documentation for source-repository and team-admin flows.
 
 Cursor scans both `.claude/skills/` and `.agents/skills/`.
 
-Verified 2026-07-23.
+Verified 2026-07-24.
 
 ## Gemini CLI
 
@@ -86,13 +86,15 @@ Verified 2026-07-23.
 
 ## GitHub Copilot CLI
 
-Source: `docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-marketplace`.
+Source: `docs.github.com/en/copilot/concepts/agents/about-agent-skills`, the Copilot CLI command reference, and `docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-marketplace`.
+
+Copilot project skills load from `.github/skills/`, `.agents/skills/`, and `.claude/skills/`. Personal skills load from `~/.copilot/skills/` and `~/.agents/skills/`. The CLI can invoke a discovered skill explicitly or select it from its description.
 
 Copilot CLI reads a plugin marketplace manifest, `marketplace.json`, from either of two locations: `.github/plugin/` or `.claude-plugin/`. Either satisfies it, so this repository's `.claude-plugin/marketplace.json` serves Copilot CLI with no separate file.
 
 Add the marketplace with `copilot plugin marketplace add OWNER/REPO` in the shell, or `/plugin marketplace add OWNER/REPO` interactively, then install with `copilot plugin install PLUGIN-NAME@MARKETPLACE-NAME`.
 
-Verified 2026-07-23.
+Verified 2026-07-24.
 
 ## Kimi Code CLI
 

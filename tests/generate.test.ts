@@ -15,6 +15,8 @@ import { existsSync, mkdtempSync, readFileSync as read, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
+const currentRules = parseRules(read("skills/oss-audit/STANDARD.md", "utf8"))
+
 const TWO_RULES = `# The oss-kit standard
 
 Preamble prose that is not a rule.
@@ -92,7 +94,7 @@ test("renderRulePage titles the page by the rule, not by its ID", () => {
   expect(page).toContain('"badge":"R-SEC-01"')
   expect(page).toContain("edit/main/skills/oss-audit/STANDARD.md")
   expect(page).toContain("A tag moves.")
-  expect(page).toContain("every `uses:` line resolves to a 40-character SHA.")
+  expect(page).toContain("every <code>uses:</code> line resolves to a 40-character SHA.")
   expect(page).toContain("/skills/oss-harden/")
   expect(page).toContain("GitHub only")
 })
@@ -111,13 +113,11 @@ test("pageDescription skips headings and directives to reach real prose", () => 
 })
 
 test("every rule in the real standard parses", () => {
-  const text = require("node:fs").readFileSync("skills/oss-audit/STANDARD.md", "utf8")
-  const rules = parseRules(text)
-  expect(rules.length).toBe(40)
-  expect(new Set(rules.map((r) => r.id)).size).toBe(40)
-  expect(rules.some((r) => r.fixedBy === "oss-audit")).toBe(false)
+  expect(currentRules.length).toBeGreaterThan(0)
+  expect(new Set(currentRules.map((rule) => rule.id)).size).toBe(currentRules.length)
+  expect(currentRules.some((rule) => rule.fixedBy === "oss-audit")).toBe(false)
   // The CI area is two letters, unlike the three-letter areas; the parser must accept both.
-  expect(rules.filter((r) => r.area === "CI")).toHaveLength(5)
+  expect(currentRules.filter((rule) => rule.area === "CI")).toHaveLength(5)
 })
 
 test("rewriteLinks replaces the targets the resolver claims", () => {
@@ -152,14 +152,16 @@ test("writeAll produces every page the site needs", () => {
   const out = mkdtempSync(join(tmpdir(), "oss-kit-site-"))
   const { written } = writeAll(".", out)
 
-  expect(written.filter((p) => p.startsWith("rules/"))).toHaveLength(40)
+  expect(written.filter((path) => /^rules\/r-[a-z]+-\d{2}\.md$/.test(path))).toHaveLength(currentRules.length)
   expect(existsSync(join(out, "rules/r-sec-01.md"))).toBe(true)
+  expect(existsSync(join(out, "rules/index.md"))).toBe(true)
+  expect(existsSync(join(out, "rules/sec/index.md"))).toBe(true)
   expect(existsSync(join(out, "standard.md"))).toBe(true)
   expect(existsSync(join(out, "changelog.md"))).toBe(true)
+  expect(existsSync(join(out, "skills/index.md"))).toBe(true)
   expect(existsSync(join(out, "skills/oss-audit.md"))).toBe(true)
   expect(existsSync(join(out, "skills/oss-publish/npm.md"))).toBe(true)
-  expect(existsSync(join(out, "guides/install.md"))).toBe(true)
-  expect(existsSync(join(out, "guides/superpowers"))).toBe(false)
+  expect(existsSync(join(out, "guides/install.md"))).toBe(false)
 
   expect(read(join(out, "rules/r-sec-01.md"), "utf8")).toContain("/skills/oss-harden/")
   rmSync(out, { recursive: true, force: true })

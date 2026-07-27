@@ -1,6 +1,6 @@
 # Working in this repository
 
-oss-kit ships nine agent skills that apply one opinionated quality bar to open source projects. Every opinion lives in `STANDARD.md` as a numbered rule. Skills cite rule IDs; they do not restate the opinions.
+oss-kit is a curated, opinionated kit for recurring open source maintenance. It currently ships nine agent skills built around one repository quality standard. Every current standard opinion lives in `STANDARD.md` as a numbered rule. Skills cite rule IDs; they do not restate the opinions.
 
 ## Layout
 
@@ -14,15 +14,18 @@ skills/oss-audit/STANDARD.md   every opinion, as R-<AREA>-<NN> rules
 .cursor-plugin/          plugin.json for Cursor
 .agents/plugins/         marketplace.json for Codex's own marketplace format
 .opencode/skills         symlink to ../skills
-docs/                    tracked prose the site renders
-site/                    the docs site, own dependency tree
+docs/                    agent-facing project documentation
+site/                    public docs site, content, and own dependency tree
+site/src/content/docs/   tracked public prose and generated site pages
 AGENTS.md                this file
 CLAUDE.md                symlink to AGENTS.md
 ```
 
 `skills/` is canonical because it is the only path that both the `skills` CLI installer and the Claude Code plugin loader read directly. Claude Code does not scan `.agents/skills`, and most other agents do not scan `.claude/skills`, so both are committed symlinks pointing at the one real directory. Edit files under `skills/`. Never edit through a symlink path, and never replace a symlink with a copy.
 
-`docs/` is tracked and holds the prose the site renders, so every page has a twin that renders on the forge. `docs/superpowers/` is gitignored: planning documents live there and stay untracked. Never `git add -f` them.
+`site/src/content/docs/` holds the public prose the site renders. Handwritten pages stay tracked there. The generator writes rule, skill, standard, and changelog pages into the same tree; those outputs stay gitignored.
+
+`docs/` holds agent-facing project documentation. `docs/superpowers/` is gitignored: planning documents live there and stay untracked. Never `git add -f` them.
 
 ## Repo rules
 
@@ -100,6 +103,6 @@ Dependabot has supported the `bun` ecosystem since February 2025, for the text `
 
 `site/astro.config.mjs` imports `parseRules` from `site/scripts/generate.mjs` and builds the rules sidebar from `STANDARD.md` at config load. That is what keeps the sidebar in the order the standard argues, grouped under its own `##` headings, with no rule list duplicated in the config. Adding a rule needs no site change; renaming a `##` section in `STANDARD.md` renames a sidebar group. Autogeneration cannot do this, because it sorts by filename and would interleave the areas.
 
-Generated pages carry an `editUrl` pointing at the source they came from, because the generated Markdown under `site/src/content/docs/` is gitignored and has no file to edit. The global `editLink.baseUrl` is correct only for `index.mdx`, the one authored page.
+Generated pages carry an `editUrl` pointing at the source they came from, because the generated Markdown under `site/src/content/docs/` is gitignored and has no file to edit. The global `editLink.baseUrl` covers authored pages in that tree.
 
 `lastUpdated` is deliberately off. It reads git commit dates for the content file, and the content files are generated and untracked; CI's shallow checkout would date them all to the same commit anyway.

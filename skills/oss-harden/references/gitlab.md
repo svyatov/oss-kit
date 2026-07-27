@@ -15,7 +15,20 @@ curl --header "PRIVATE-TOKEN: <token>" \
   "https://gitlab.example.com/api/v4/projects/:id/protected_branches/:name"
 ```
 
-The response's `allow_force_push` and `code_owner_approval_required` booleans, and the `push_access_levels` and `merge_access_levels` arrays, are the evidence R-SEC-04 checks for. Read the job token scope the same way, per R-SEC-06:
+The response's `allow_force_push` and `code_owner_approval_required` booleans, and the `push_access_levels` and `merge_access_levels` arrays, are part of the evidence R-SEC-04 checks for.
+
+The protected-branch response does not report required approval rules or the "Pipelines must succeed" merge check. On Premium or Ultimate, read approval rules separately, and on every tier read the project setting:
+
+```bash
+curl --header "PRIVATE-TOKEN: <token>" \
+  "https://gitlab.example.com/api/v4/projects/:id/approval_rules"
+curl --header "PRIVATE-TOKEN: <token>" \
+  "https://gitlab.example.com/api/v4/projects/:id"
+```
+
+Require at least one applicable rule with `approvals_required` of 1 or more on paid tiers, and require `only_allow_merge_if_pipeline_succeeds` to be `true`.
+
+Read the inbound job-token scope and allowlist separately, per R-SEC-06:
 
 ```bash
 curl --header "PRIVATE-TOKEN: <token>" \
@@ -38,7 +51,7 @@ services:
   - postgres@sha256:6f5e4d3c2b1a...
 ```
 
-`include:project` should pin `ref:` to a full 40-character commit SHA rather than a branch name or a mutable tag:
+`include:project` should pin `ref:` to a full 40-character commit SHA rather than a branch name or tag:
 
 ```yaml
 include:
@@ -47,7 +60,7 @@ include:
     file: '/templates/ci-template.yml'
 ```
 
-A protected tag is an acceptable `ref:` where the included project's maintainers guarantee it is immutable in practice; a SHA needs no such guarantee.
+`include:component` should also use a full commit SHA after the `@`. GitLab ranks a commit SHA as the highest-priority component version and recommends it for third-party components when integrity matters. Avoid `~latest`, partial versions, branches, and tags for an immutable pipeline.
 
 `include:remote` should carry an `integrity:` hash so a change to the remote content, not just a change to the URL, fails the pipeline instead of silently running different configuration:
 
@@ -57,11 +70,13 @@ include:
     integrity: 'sha256-<base64-encoded-hash>'
 ```
 
-Resolve each of the three against the version that is current, not the one the file already names, for the reason `SKILL.md` Step 3 gives: a digest freezes whatever it was pointed at, including an image two majors behind, and the pin then reads as audited. For `include:component` and `include:project`, read the source project's releases with `GET /projects/:id/releases` and compare the newest against the `ref:` in the file. For `image:` and `services:`, compare the tag against the tags the image's own registry publishes, using whichever registry client the project already has rather than adding one for this. Name a lagging major to the user rather than pinning it.
+Resolve the version the file already selects unless the user separately authorizes an upgrade. For `include:component` and `include:project`, compare the selected release line with the source project's releases through `GET /projects/:id/releases`. For `image:` and `services:`, resolve the selected tag to the registry's manifest digest with a registry client the project already trusts. Report newer compatible and major releases separately, but do not hide an upgrade inside a pinning change.
 
-## Job token scope (R-SEC-06)
+## Inbound job token scope (R-SEC-06)
 
-GitLab's job token access is project-only by default: a job's `CI_JOB_TOKEN` can only authenticate against the project the pipeline runs in unless the inbound allowlist explicitly names another project. Where `inbound_enabled` from the read above is `false`, the scope is already open to every project that trusts the token, which is broader than the default and worth narrowing; where it is `true`, confirm the allowlist names only the projects this pipeline actually calls into, at Settings > CI/CD > Job token permissions for the project, or with:
+The job-token allowlist belongs to the target project. It names source projects whose job tokens may access this project. It does not list targets that this project's own jobs may call. Where `inbound_enabled` from the read above is `false`, jobs from any project may authenticate to this project when the user who triggered them has sufficient access. Enable the allowlist and confirm it names only source projects that need inbound access, at Settings > CI/CD > Job token permissions. When the project uses GitLab 18.3 or later, use fine-grained permissions for each entry so its token can call only the required API endpoint groups.
+
+In this API call, the project in the URL is the target being protected and `target_project_id` is the source project being allowed:
 
 ```bash
 curl --request POST \
@@ -73,19 +88,9 @@ curl --request POST \
 
 ## Automated dependency updates (R-SEC-03)
 
-GitLab's own Dependency Scanning finds known-vulnerable dependencies already in use; it does not open update merge requests the way Dependabot or Renovate do, and it is gated to GitLab Ultimate, so a project on Free or Premium gets nothing from it here even where it is enabled. The practical equivalent of Dependabot's update pull requests on GitLab is Renovate, run as a scheduled pipeline job rather than as a hosted app, since GitLab ships no hosted update bot of its own:
+GitLab Dependency Scanning finds known-vulnerable dependencies already in use; it does not open update merge requests, and its dependency list is gated to Ultimate. GitLab ships no hosted update bot. Renovate's official self-hosting documentation recommends its `renovate-runner` GitLab project and scheduled-pipeline templates, so follow that project's current setup instead of inventing a one-job `latest` image example here. For GitLab Self-Managed, Renovate recommends cloning or importing that runner project to the instance.
 
-```yaml
-renovate:
-  stage: .post
-  image: renovate/renovate:latest
-  script:
-    - renovate
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-```
-
-Renovate needs a project or group access token with the `api` scope (`read_api` is enough for a dry run) stored as a masked CI/CD variable, and `platform=gitlab` set in its own configuration file. Configure the pipeline schedule that triggers this job at Settings > CI/CD > Pipeline schedules. Renovate's own `regexManagers` and its built-in `gitlabci` and `dockerfile` managers can update the pinned digests and SHAs from the section above the same way its `github-actions` manager updates a GitHub workflow; enable the ecosystems the project actually uses rather than every manager by default.
+Before adopting Renovate, review its documented trust model: a self-hosted Renovate instance must trust developers of the repositories it monitors and needs credentials for GitLab plus GitHub.com access for changelogs and tools. Store credentials as masked and hidden CI/CD variables, protect them where the schedule runs only on protected refs, and use the narrowest token and repository scope the documented runner supports. Enable only the managers the repository needs. Renovate's `gitlabci` manager covers images, services, and components; verify any additional manager against its current official documentation.
 
 ## Branch protection and required review (R-SEC-04)
 
@@ -97,20 +102,39 @@ Also on Free, GitLab does not read CODEOWNERS for merge request approval at all;
 
 "Pipelines must succeed," the setting that blocks a merge while the pipeline is failing, is available on every tier, at Settings > Merge requests > Merge checks; turn it on regardless of what the approval rule situation allows.
 
-After the user confirms each setting, verify with the protected branches read from Step 2 above, checking `allow_force_push` is `false` and `merge_access_levels` restricts direct push where enforced approvals are not available.
+After the user confirms each setting, repeat all three reads from Step 2. Check `allow_force_push` is `false`, direct push is explicitly `No one`, `only_allow_merge_if_pipeline_succeeds` is `true`, and, on Premium or Ultimate, an applicable approval rule requires at least one approval.
 
 Push rules, the project-level settings that reject unsigned commits, enforce a commit message or branch name pattern, or block secret filenames, are a separate, Premium-or-Ultimate-only control at Settings > Repository > Push rules; they are not required by any R-SEC rule here, so mention them as an available option on a project with that tier rather than a gap on a project without it.
 
 ## Signed tags (R-SEC-05)
 
-Identical to GitHub, because the evidence is git's own, not the forge's: import the maintainer's public signing key, then run `git fetch --tags`, `git tag -v {tag}`, and `git cat-file -t {tag}`, expecting `git cat-file` to print `tag`. GitLab has no equivalent of `github.com/{user}.gpg` for fetching a key without authentication; get the maintainer's public key from wherever they publish it, such as a keyserver or their GitLab profile's GPG keys page if they have added one there.
+The evidence is git's own, not the forge's. Establish whether the tag uses OpenPGP, SSH, or X.509, get the maintainer's key or certificate through a maintainer-controlled channel, and configure Git for that format. SSH verification requires `gpg.format=ssh` and `gpg.ssh.allowedSignersFile`; X.509 uses `gpg.format=x509`. Then run `git fetch --tags`, `git tag -v {tag}`, and `git cat-file -t {tag}`, expecting verification to succeed and the object type to be `tag`.
 
-## Read OpenSSF Scorecard results (Step 9)
+## Untrusted input and variables (R-SEC-07)
 
-The same public API also covers GitLab.com projects, at the same host, with `gitlab.com` in place of `github.com`:
+GitLab expands a `script:` entry in the execution shell. User-controlled values such as commit messages, branch names, and merge request titles are data only when the shell expansion is quoted and the command does not pass them to `eval`, `sh -c`, or another interpreter. Prefer an argument:
 
-```bash
-curl -s https://api.scorecard.dev/projects/gitlab.com/{namespace}/{project}
+```yaml
+script:
+  - ./scripts/check-title "$CI_MERGE_REQUEST_TITLE"
 ```
 
-Coverage of GitLab.com projects by the weekly scan is much thinner than GitHub's; a result that does exist may be from a single one-off scan rather than a recent weekly run, so check the response's `date` field before treating a score as current. A self-managed GitLab instance is not covered by this API at all, and a project with no result returns `404` with an empty body, the same as on GitHub; treat both as reasons to say no data exists yet rather than to guess at a score. Scorecard's CLI can be run directly against a GitLab project by a maintainer who wants a current, one-off result without waiting for or configuring the weekly scan.
+Do not splice the value into generated shell text. UI-defined variables have reference expansion disabled by default since GitLab 18.6; keep it disabled for secrets. Store secrets as masked and hidden variables, and mark them protected when jobs on unprotected refs do not need them. Remember that a merge request pipeline run in the parent project for a fork can receive parent-project variables, so do not run untrusted fork code in a privileged parent pipeline.
+
+## Static analysis (R-SEC-09)
+
+GitLab SAST's basic open-source analyzers are available on Free, Premium, and Ultimate, while Advanced SAST and merge request findings UI require Ultimate. Add the stable built-in template only for a supported language and enable merge request pipelines explicitly:
+
+```yaml
+include:
+  - template: Jobs/SAST.gitlab-ci.yml
+
+variables:
+  AST_ENABLE_MR_PIPELINES: "true"
+```
+
+The built-in template belongs to the GitLab instance version, so it is not an external `include:` that R-SEC-06 can pin. Do not use the documented component example at `@main`; if a project chooses the component instead, resolve it to a full commit SHA. Confirm the merge request pipeline contains the SAST job and that "Pipelines must succeed" blocks a merge when the job fails.
+
+## Read OpenSSF Scorecard results (Step 12)
+
+OpenSSF's current weekly public dataset derives its project list from GitHub only, and its GitHub Action is the documented path for publishing repository-owned results to the REST API. Do not claim a GitLab project has current public API coverage without a successful dated response. If a result exists, report its date and use it only as supplementary evidence. If it does not, report no public result. Running the CLI is a separate task that requires installation and authentication, so do not add or run it unless the user asks.

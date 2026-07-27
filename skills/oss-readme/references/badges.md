@@ -2,7 +2,7 @@
 
 Optional, and at most three, in this order when present: version, CI, coverage. Omit any that does not apply; a repository where none apply gets no badge row.
 
-Everything renders through `img.shields.io` with no `style` parameter, so all three match in height, font, and corner radius by construction. Native vendor badges (GitHub Actions' `badge.svg`, badge.fury, Code Climate) are never used, because mixing renderers is what makes a badge row look ragged.
+Use the data provider's documented badge URL when it has one. Use Shields.io only for facts whose provider does not publish a badge. This removes an unnecessary intermediary from CI and coverage status while keeping version badges available across registries.
 
 ## Placement
 
@@ -14,8 +14,8 @@ Own paragraph directly below the opening sentence, one badge per source line:
 One-sentence description of what it does and why it is different.
 
 [![gem](https://img.shields.io/gem/v/project-name)](https://rubygems.org/gems/project-name)
-[![CI](https://img.shields.io/github/actions/workflow/status/owner/project-name/main.yml?branch=main&label=CI)](https://github.com/owner/project-name/actions/workflows/main.yml)
-[![coverage](https://img.shields.io/codecov/c/github/owner/project-name)](https://app.codecov.io/gh/owner/project-name)
+[![CI](https://github.com/owner/project-name/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/owner/project-name/actions/workflows/main.yml)
+[![coverage](https://codecov.io/gh/owner/project-name/branch/main/graph/badge.svg)](https://app.codecov.io/gh/owner/project-name)
 ```
 
 Markdown joins consecutive lines into one paragraph, so this renders as a single row while keeping each badge a one-line diff.
@@ -37,20 +37,20 @@ Go uses the git tag because that is what the module proxy resolves; it has no co
 
 ## 2. CI
 
-Identical in every ecosystem. `&label=CI` is required, because shields labels this endpoint `build` by default.
+Use GitHub Actions' documented native status badge. It reports the default branch when `branch` is absent, but spell out the real default branch so the README states what it measures.
 
 ```
-https://img.shields.io/github/actions/workflow/status/OWNER/REPO/WORKFLOW.yml?branch=main&label=CI
+https://github.com/OWNER/REPO/actions/workflows/WORKFLOW.yml/badge.svg?branch=DEFAULT_BRANCH
 ```
 
 Link to `https://github.com/OWNER/REPO/actions/workflows/WORKFLOW.yml`. Substitute the real workflow filename and default branch.
 
 ## 3. Coverage
 
-Codecov everywhere. Never mix in Code Climate or Coveralls.
+When the repository uses Codecov, use Codecov's documented native badge and link it to the report. Substitute the actual forge and default branch. Do not add a Codecov badge to a repository that uploads coverage somewhere else.
 
 ```
-https://img.shields.io/codecov/c/github/OWNER/REPO
+https://codecov.io/gh/OWNER/REPO/branch/DEFAULT_BRANCH/graph/badge.svg
 ```
 
 Link to `https://app.codecov.io/gh/OWNER/REPO`.

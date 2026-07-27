@@ -6,7 +6,7 @@ license: MIT
 
 # Changelog and versioning
 
-Keep `CHANGELOG.md` in Keep a Changelog format, decide the semver bump a set of merged changes forces, write the release entry from the merged work, and run a deprecation window before an API is removed. The sentences themselves follow `oss-writing`; this skill decides what goes in and what version it ships under. Publishing the tagged release, the workflow that builds and uploads it, belongs to `oss-publish`.
+Keep `CHANGELOG.md` in Keep a Changelog 2.0.0 format, decide the Semantic Versioning bump a set of merged changes forces, write the release entry from the merged work, and run a deprecation window before an API is removed. The sentences themselves follow `oss-writing`; this skill decides what goes in and what version it ships under. Publishing the tagged release, the workflow that builds and uploads it, belongs to `oss-publish`.
 
 ## The exception to describing what is
 
@@ -14,7 +14,9 @@ Keep `CHANGELOG.md` in Keep a Changelog format, decide the semver bump a set of 
 
 ## Keep a Changelog structure
 
-`CHANGELOG.md` opens with an `## [Unreleased]` section that collects merged work not yet tagged. Each released version gets its own heading in the exact form `## [X.Y.Z] - YYYY-MM-DD`, newest version first. Entries under both kinds of heading are grouped under one or more of six category headings, and only these six, spelled exactly:
+Open with `# Changelog` and a two-sentence preamble that says all notable changes are recorded here, links to the pinned [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.0.0/) convention, and names the project's versioning scheme. Do not claim Semantic Versioning until the project has declared the public API it covers.
+
+Next comes `## [Unreleased]`, followed by released versions newest first in the form `## [X.Y.Z] - YYYY-MM-DD`. Use the project's actual version syntax when it supports prereleases or another declared scheme. Mark a withdrawn release with `[YANKED]`; never delete it. Group entries under the six standard category headings:
 
 - `Added` for new features
 - `Changed` for changes in existing functionality
@@ -23,33 +25,41 @@ Keep `CHANGELOG.md` in Keep a Changelog format, decide the semver bump a set of 
 - `Fixed` for any bug fixes
 - `Security` in case of vulnerabilities
 
-Omit a category heading entirely when a release has nothing in it; do not leave an empty `### Fixed` with no entries under it. An entry is one line, not a bullet that restates a commit subject followed by a hash; it names the change from a user's point of view, the way `oss-writing` writes any sentence. A release with only internal changes, refactors, tests, or CI, gets no entry at all: a user upgrading has nothing to read about, and a changelog padded with internal housekeeping trains readers to stop reading it.
+Omit empty categories. Mark each incompatible change inside `Changed` or `Removed` with `**Breaking:**`, name the affected public interface, and give the short migration step. Link to a migration guide when the steps would make the entry hard to scan. A release may start with a one- or two-sentence summary before its categories.
+
+Curate notable user-facing changes instead of restating commit subjects. Fold one user-visible outcome spread across several commits into one entry. Leave out refactors, tests, CI, and dependency bumps with no user-visible effect. If a version contains no notable change, keep the required version entry and say that it contains internal maintenance only instead of inventing category bullets.
+
+Make every bracketed version heading a reference link. `[Unreleased]` compares the newest tag with `HEAD`, each later version compares its tag with the preceding release, and the oldest version links to its tag. Use the repository's actual forge and tag format. Keep issue and pull request links useful and portable, and collect them as reference links rather than filling entries with bare forge numbers.
 
 R-CHG-01 is the check for this structure.
 
 ## Deciding the semver bump
 
-A version is `MAJOR.MINOR.PATCH`. The specification's rule is about the public API, not about which files changed: increment MAJOR when a change is backward incompatible with the public API, increment MINOR when new functionality is backward compatible, increment PATCH when a fix is backward compatible. The specification also states that the public API can be declared in code or exist strictly in documentation, so a documented contract is part of the API even where no type system enforces it.
+A normal version is `MAJOR.MINOR.PATCH`, with optional prerelease and build metadata. First identify the release unit and its declared public API: library symbols, CLI behavior, configuration, network protocols, file formats, or another documented contract. For a stable `1.0.0` or later release, increment MAJOR for an incompatible public API change, MINOR for a backward-compatible addition or deprecation, and PATCH for backward-compatible fixes.
+
+Major version zero has different upstream semantics: `0.y.z` is initial development and SemVer permits anything to change. This standard uses MINOR for an incompatible change and PATCH for a backward-compatible fix so pre-1.0 versions still communicate risk. Do not force a project to declare stability by changing `0.y.z` to `1.0.0`; that decision defines the public API and belongs to the maintainer.
+
+Source: [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html).
 
 The test that survives both cases people get wrong: will something that worked, unmodified, on the previous version keep working, unmodified, on the new one? If no, the change is backward incompatible and forces MAJOR, regardless of what kind of change produced it.
 
-A bug fix that changes documented behavior is the first case people get wrong. The instinct is that a fix is always a patch, because `Fixed` sounds small. But if the documentation described the old, buggy behavior, then that behavior was the public API, and correcting it is a backward incompatible change to that API. Apply the test: a caller who wrote code against the documented behavior now gets a different result from the same call, unmodified. That forces MAJOR. Only a fix to behavior nothing documented, one no caller could have knowingly relied on, stays a PATCH.
+A bug fix is not automatically a PATCH. Determine whether the old behavior belonged to the declared public API and whether restoring the intended contract breaks realistic callers. SemVer explicitly calls for judgment when a widely used accidental behavior conflicts with the intended API. If the correction is incompatible with the public API, use MAJOR after 1.0.0; otherwise use PATCH. Do not assume that undocumented behavior is harmless or that every documented bug is a permanent contract.
 
 A new required config value is the second case. The instinct is that adding something is growth, so it should be MINOR. But a config value with no default, one the project now refuses to start without, breaks every existing deployment the moment they upgrade without editing their config. Apply the test: a config file that worked, unmodified, on the previous version no longer starts the previous version. That forces MAJOR. A new config value with a default that preserves the old behavior is backward compatible and stays MINOR.
 
-R-CHG-02 is the check for the bump rule. R-CHG-03 is the check that the release tag, every manifest that declares a version, and the newest changelog heading agree; update all of them together, not the changelog alone. A repository that ships several manifests, one per host or one per package, has to bump every one of them.
+R-CHG-02 checks the bump rule. R-CHG-03 checks that the release tag, the version sources for that release unit, and its newest changelog entry agree. Do not bump unrelated packages merely because they share a repository. A single product spread across several manifests must update all manifests that describe that product; independently versioned packages need separate release units and changelog sections or files.
 
 ## Writing release notes from merged work
 
 A release entry names what changed for a user, not the pull requests that produced it. Read the merged work since the last tag, not the commit messages verbatim: a commit message addresses another contributor reading `git log`, a changelog entry addresses a user deciding whether to upgrade. Fold multiple commits that implement one user-visible change into one entry; do not list each commit as its own line. Drop anything with no user-visible effect: a refactor, a test added for existing behavior, a CI config change, a dependency bump with no behavior change.
 
-When the forge auto-generates release notes from merged pull requests, do not publish those as the release body. They repeat the pull request list, which is what the merge history already shows, and they say nothing a user upgrading needs. Reproduce the `CHANGELOG.md` entry for that version as the release body instead, so the two never diverge. R-CHG-04 is the check for that agreement.
+Keep `CHANGELOG.md` canonical. A forge-generated pull request list is useful raw material, not a finished changelog or release announcement. Start the release body from the corresponding changelog section without retyping it. It may add a brief announcement, installation or verification details, migration links, contributor credit, and attached-asset context, but it must not omit or contradict notable changes. R-CHG-04 checks that relationship.
 
 ## Deprecation policy
 
-Deprecate before removing. An item that will be removed appears under `Deprecated` in a release before it appears under `Removed` in a later one, and at least one released minor version ships with the item still working, so a user who upgrades promptly has a version where the warning shows and the old path still runs. Removing in the same release that first mentions deprecation gives no window at all, which is a removal wearing a deprecation label.
+Deprecate before removing. For a stable SemVer API, release at least one MINOR version where the old path still works before removing it in a later MAJOR version. During initial development, give users at least one earlier release before removal, then make the incompatible change in a later MINOR version. A longer published support policy takes precedence.
 
-The deprecation warning names three things: what is deprecated, what replaces it, and when it goes away, stated as a version rather than a date, because a user tracks the version they are on, not a calendar. `connect() is deprecated and will be removed in 3.0; use connectAsync() instead` gives a caller everything needed to act, unlike a warning that only says a feature is deprecated. Emit the warning at runtime, not only in the changelog, so a caller who never reads release notes still sees it. R-CHG-05 is the check for the deprecate-before-remove ordering.
+The deprecation notice names what is deprecated, its replacement or migration path, and the earliest removal version. Surface it through the interface users actually encounter: a runtime warning for a library, a diagnostic for a CLI or configuration parser, a compiler annotation where the ecosystem supports one, and documentation plus protocol signaling for a remote API. Avoid noisy warnings that fire where the user cannot act. R-CHG-05 checks both the release ordering and the interface-appropriate notice.
 
 ## Scope
 
@@ -57,12 +67,12 @@ This skill owns the changelog and versioning rules below, the R-CHG rules. It do
 
 ## Rules this skill owns
 
-R-CHG-01: The repository keeps CHANGELOG.md in Keep a Changelog format
+R-CHG-01: Each release unit keeps a discoverable changelog in its declared format
 
-R-CHG-02: Versions follow semantic versioning, and any breaking change bumps the major
+R-CHG-02: Semantic versions reflect changes to the declared public API
 
-R-CHG-03: The release tag, every versioned manifest, and the newest changelog entry are the same version
+R-CHG-03: Every release unit uses one version across its tag, manifests, and changelog
 
-R-CHG-04: Forge release notes reproduce the changelog entry for that version
+R-CHG-04: Forge release notes derive from the changelog without contradicting it
 
 R-CHG-05: A public API is deprecated in a release before it is removed

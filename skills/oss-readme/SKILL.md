@@ -37,13 +37,13 @@ A bullet list of the project's most important facts, features, and differentiato
 - a real benchmark number, asked for or measured, never estimated
 - an exact size, measured or asked for, never guessed
 - a short code comparison against the closest alternative
-- a screenshot or diagram where it replaces a paragraph of text
+- a screenshot or diagram where it replaces a paragraph of text, with alt text that conveys the same information
 
 ### 5. Install and example
 
 Two fenced code blocks back to back: an install command, then a minimal usage example, in that order. The second block must show the project being used, not a second way to install it; two install blocks with no usage block fails this section even when the two commands differ. Both must appear before any section about design, motivation, or comparisons.
 
-Keep the usage example small, 4 to 10 lines, and show its output in a comment so the reader sees the result without running anything. Nano ID's opener packs the title, the opening sentence, the facts, and this pair on one screen:
+Keep the usage example small, 4 to 10 lines, and show its result when a short language comment can do so without making the example invalid or misleading. Otherwise show the output in a separate fenced block. Nano ID's opener packs the title, the opening sentence, the facts, and this pair on one screen:
 
 ````markdown
 # Nano ID
@@ -68,7 +68,7 @@ If the project has no install step, for example a script meant to be copied, say
 
 ### 6. Getting started
 
-A step-by-step guide for adding the tool to an existing project, with explicit commands the reader can copy without thinking. Cover every step; do not assume a step the reader already did. Validate the guide by following it from scratch as if you had never seen the project, and fix every gap you hit.
+A step-by-step guide for adding the tool to an existing project, with explicit commands the reader can copy without thinking. Cover every step, including documented runtime and tool prerequisites. Validate the guide in an isolated temporary directory with the lowest supported runtime and only the prerequisites the guide names. Do not change global configuration or install packages globally to make the guide pass. Fix every gap you hit.
 
 ### 7. Links
 
@@ -76,37 +76,38 @@ Link the license file, `CHANGELOG.md`, and `CONTRIBUTING.md`. Confirm each targe
 
 ### Table of contents
 
-If the README runs longer than about two screens, add a table of contents after the badges and before the facts list. A short README does not need one.
+If the target renderer does not generate an outline and the README runs longer than about two screens, add a table of contents after the badges and before the facts list. GitHub already generates an outline from headings, so do not duplicate it there unless the project also publishes the README somewhere that needs one.
 
 ## Formatting for skimmers
 
 - Headings for hierarchy, horizontal rules between layers.
 - Lists over dense paragraphs.
-- Put a must-not-miss line in a GitHub alert: `> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`, `> [!WARNING]`, or `> [!CAUTION]`, each on its own line with the content in the blockquote below it.
+- On GitHub or GitLab, put a must-not-miss line in an alert: `> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`, `> [!WARNING]`, or `> [!CAUTION]`, each on its own line with the content in the blockquote below it.
 
   ```markdown
   > [!WARNING]
   > Version 3 drops Node 18. Pin to `^2` if you need it.
   ```
 
-  GitHub renders these as colored callouts; every other renderer degrades them to a plain blockquote, so nothing breaks off-GitHub. Two or three per README at most: a page of callouts is a page with no emphasis.
+  GitHub and GitLab render these as callouts. For any other target renderer, verify the preview or use an ordinary blockquote because unsupported renderers may expose the `[!TYPE]` marker. Use alerts only for crucial information and limit them to one or two per README.
 - Every section should reach a reason to keep reading quickly; a reader abandons at the first boring stretch.
 
 ## Accuracy
 
-Before finishing, read the package manifest, the CI configuration, and the source. Match every version number, install command, and CLI flag quoted in the README against what those files actually say.
+Before finishing, read every package manifest, the lockfile, the CI configuration, the release configuration, and the source. Match every version number, install command, import path, CLI flag, prerequisite, and support claim quoted in the README against those files. For an installation command, also confirm that the upstream project or registry owner documents that exact package and command. A manifest proves what this checkout declares, not that an external package name is legitimate.
 
 ## Checklist before finishing
 
 1. The opening sentence alone states what the project is and who it is for, and nothing precedes it.
 2. Every number and claim is real: sourced from the repository, from the person who asked for the README, or from an actual measurement.
 3. The install and usage blocks appear in that order, before any design, motivation, or comparison content.
-4. The usage example is self-explanatory and shows its output.
-5. The getting-started guide works from a clean machine.
+4. The usage example is self-explanatory and shows its result without invalid or misleading syntax.
+5. The getting-started guide works in an isolated directory with the lowest supported runtime and only its stated prerequisites.
 6. The license, changelog, and contributing links resolve to files that exist.
 7. Every version, command, and support claim matches the manifest, the CI configuration, and the source.
 8. Skimming only headings and the facts list still tells the story.
 9. The draft has been through oss-writing.
+10. Every image has meaningful alt text, and repository images use relative paths.
 
 ## Rules this skill owns
 

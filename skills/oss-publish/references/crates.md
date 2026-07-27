@@ -51,34 +51,27 @@ id_tokens:
     aud: crates.io
 ```
 
-crates.io has no equivalent to `crates-io-auth-action` for GitLab; the pipeline exchanges the OIDC token for a publish token itself, with a small script that POSTs to the crates.io API. The script needs `curl` and `jq`. The official `rust:*-bookworm` image ships `curl` through its `buildpack-deps` base, but never ships `jq`, and this file does not pin which `rust:` image variant to use, so install both explicitly rather than assuming either is there:
-
-```yaml
-before_script:
-  - apt-get update && apt-get install -y --no-install-recommends curl jq
-```
+crates.io has no equivalent to `crates-io-auth-action` for GitLab; the pipeline exchanges the OIDC token for a publish token itself. The exchange needs `curl` and `jq`. Use a project-controlled release image that contains the project's exact Rust toolchain plus these tools, and pin the image by digest. Build and provenance-check that image before adding `id_tokens` to the job. Do not run `apt-get` after the job has received its OIDC token.
 
 ```bash
-#!/bin/bash
-set -e
-RESPONSE=$(curl -s -X POST https://crates.io/api/v1/trusted_publishing/tokens \
+#!/bin/sh
+set -eu
+set +x
+response=$(curl --fail-with-body --silent --show-error \
+  --request POST https://crates.io/api/v1/trusted_publishing/tokens \
   -H "Content-Type: application/json" \
   -H "User-Agent: gitlab-trusted-publishing (<maintainer email>)" \
-  -d "{\"jwt\": \"$CRATES_IO_ID_TOKEN\"}")
-CARGO_REGISTRY_TOKEN=$(echo "$RESPONSE" | jq -r '.token')
-if [ "$CARGO_REGISTRY_TOKEN" = "null" ] || [ -z "$CARGO_REGISTRY_TOKEN" ]; then
-  echo "Failed to get upload token" >&2
-  echo "$RESPONSE" >&2
-  exit 1
-fi
-echo "$CARGO_REGISTRY_TOKEN"
+  --data "$(jq -cn --arg jwt "$CRATES_IO_ID_TOKEN" '{jwt:$jwt}')")
+token=$(printf '%s' "$response" | jq -er '.token | select(type == "string" and length > 0)')
+export CARGO_REGISTRY_TOKEN=$token
+unset token response CRATES_IO_ID_TOKEN
 ```
 
-Save that as `exchange-token.sh` in the repository. This is crates.io's own documented approach for GitLab, not an improvisation; treat the public beta label as a reason to tell the user it may change, not a reason to skip it.
+Save that as `exchange-token.sh` and source it with `. ./exchange-token.sh` in the same shell that runs `cargo publish`; executing it as a child process loses the exported variable. The script disables command tracing, fails on HTTP or JSON errors, never prints the short-lived token or error response, and removes the original OIDC token from the environment. This follows crates.io's documented exchange endpoint while closing the token leak in its minimal example. Treat GitLab support's public beta label as a reason to re-check the endpoint before every implementation.
 
 ## Write the hardened release workflow (Step 3)
 
-crates.io publishes a single crate binary from `cargo publish`, so there is no separate build-artifact handoff the way npm or RubyGems needs; keep the publish job to the auth exchange and the publish command, and run tests in a separate job that never sees `id-token: write`:
+Cargo does not accept a prebuilt `.crate` path for publishing. Run `cargo publish --dry-run` in an uncredentialed job so dependency resolution, build scripts, packaging, and verification finish before approval. The publish job then authenticates and runs `cargo publish --no-verify`, which repackages and uploads without building dependencies:
 
 ```yaml
 name: Release
@@ -94,31 +87,41 @@ jobs:
         with:
           persist-credentials: false
       - run: cargo test --all-features  # oss-ci decides the actual command from CONTRIBUTING.md (R-CI-02)
+      - run: <project-specific tag and Cargo.toml version equality check>
+      - run: cargo publish --dry-run
 
   publish:
     runs-on: ubuntu-latest
     needs: [test]
     environment: release
     permissions:
+      contents: read
       id-token: write
+      attestations: write
+      artifact-metadata: write
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - uses: rust-lang/crates-io-auth-action@v1
         id: auth
-      - run: cargo publish
+      - run: cargo publish --no-verify
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+      - uses: actions/attest@v4
+        with:
+          subject-path: target/package/*.crate
 ```
 
-`oss-harden` pins every `uses:` line above to a commit SHA and sets this workflow's `permissions:`, including the `contents: read` this skill left off the test job above; do not pin them or add permissions here. On GitLab CI/CD, give the publish job the `id_tokens` block above, run `exchange-token.sh` in `before_script:` or `script:` to get `CARGO_REGISTRY_TOKEN`, then `cargo publish`, restricted to tag pushes with `only: [tags]` or an equivalent `rules:` entry.
+Use the package selector and version source discovered in Step 1 for workspaces. The publish command creates the exact `.crate` it uploads under `target/package/`; the following attestation therefore covers the uploaded bytes. `--no-verify` is safe only because the required dry run already succeeded for the same tag commit and toolchain.
+
+`oss-harden` pins every `uses:` line above to a commit SHA and sets the test job's minimal permissions; this skill includes the publish permissions required for authentication and provenance. On GitLab CI/CD, give the publish job the `id_tokens` block above, source `exchange-token.sh`, then run `cargo publish --no-verify`, restricted to version tags with `rules:`. The preceding uncredentialed job must run the same version check and `cargo publish --dry-run`.
 
 If an existing workflow reads a `CARGO_REGISTRY_TOKEN` from repository secrets, remove that now and tell the user to delete the secret and revoke the token on crates.io once the new flow is verified.
 
 ## Gate on manual approval (Step 4)
 
-Pin the publish job to `environment: release` as above, and create that environment at `https://github.com/<owner>/<repo>/settings/environments/new` with required reviewers, or, on GitLab, as a protected environment with approval rules. crates.io's own docs call the environment optional, "for enhanced security"; this skill does not, because crates.io has no registry-side approval step of its own the way npm does.
+Pin the publish job to `environment: release` as above, and create that environment at `https://github.com/<owner>/<repo>/settings/environments/new` with required reviewers, or, on GitLab Premium or Ultimate, as a protected environment with approval rules. GitHub required reviewers work for public repositories on current plans; private or internal repositories need GitHub Enterprise Cloud. crates.io has no registry-side approval fallback, so report R-PUB-04 as unmet when the forge plan provides no native gate.
 
 ## Verify provenance (Step 5): a gap, not a check
 
@@ -126,12 +129,10 @@ crates.io has no build provenance mechanism today: no cryptographic signature on
 
 Source: [rust-lang/rfcs#3403, Sigstore-based signing for crates.io (closed, not merged)](https://github.com/rust-lang/rfcs/pull/3403).
 
-The strongest substitute available is GitHub's own artifact attestation, produced and verified independently of crates.io:
+The strongest substitute on GitHub is the `actions/attest` step in the workflow above. Download the exact published `.crate`, then verify it:
 
-```yaml
-- uses: actions/attest-build-provenance@v4
-  with:
-    subject-path: target/package/*.crate
+```bash
+gh attestation verify <name>-<version>.crate --repo <owner>/<repo>
 ```
 
-placed in the build step before `cargo publish`. A consumer can then verify the artifact came from the expected repository and workflow with `gh attestation verify <file> --repo <owner>/<repo>`, but this only works for a `.crate` file downloaded directly; crates.io does not surface or link to the attestation on the crate's own page, so nothing points a consumer at it. GitLab CI/CD has no equivalent build-provenance action in `oss-kit`'s scope. Mark this below the bar: it is independent verification bolted onto the release, not registry-served provenance, and it exists only on the GitHub Actions side. Tell the user this is a real gap in crates.io itself, not a shortcut this skill is taking, and move on; there is no flow to invent here.
+crates.io does not surface or link to that attestation. GitLab CI/CD has no equivalent forge attestation in this skill's scope, so R-PUB-03 remains unmet there. Report both limitations plainly; trusted publishing proves the publishing workflow's identity, not the provenance of the uploaded bytes.

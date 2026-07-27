@@ -1,0 +1,102 @@
+---
+/*
+THESIS: oss-kit is a curated maintainer system, not an audit product or a skill marketplace.
+OWN-WORLD: matte graphite faceplates, diagnostic green signals, indexed domains, and mechanical boundaries.
+STORY: see the current kit, follow one real rule route, then install the collection or inspect its sources.
+FIRST VIEWPORT: copy and install controls anchor the left; a repository hub, seven domain bays, audit rail, and one expanded rule route own the right.
+FORM: user-pinned lateral control surface based on approved composition A; no concept seed.
+*/
+import DomainIcon from "./FaIcon.astro"
+import InlineCode from "./InlineCode.astro"
+import InstallCommand from "./InstallCommand.astro"
+import { domains, sampleRule } from "../lib/content.mjs"
+---
+
+<section class="kit-hero" aria-labelledby="kit-hero-title">
+  <div class="kit-hero__copy">
+    <p class="kit-status"><span></span> Nine current skills. One curated kit.</p>
+    <h1 id="kit-hero-title">Curated agent skills for open source maintainers.</h1>
+    <p class="kit-hero__lede">
+      A deliberately small collection for the recurring work behind healthy repositories.
+      Every opinion is explicit. Every skill earns its place.
+    </p>
+    <InstallCommand />
+    <div class="kit-hero__actions">
+      <a class="kit-button kit-button--primary" href="/guides/install/">
+        Install the kit
+        <DomainIcon name="arrow" />
+      </a>
+      <a class="kit-button kit-button--secondary" href="/skills/">Browse skills</a>
+    </div>
+  </div>
+
+  <div class="maintenance-map" aria-label="How oss-kit connects repository maintenance domains">
+    <div class="maintenance-map__rail">
+      <span>Cross-domain scan</span>
+      <a href="/skills/oss-audit/">oss-audit</a>
+      <span class="maintenance-map__pulse" aria-hidden="true"></span>
+      <span>Every standard domain</span>
+    </div>
+
+    <div class="maintenance-map__body">
+      <article class="repo-hub">
+        <div class="repo-hub__head">
+          <span>Repository</span>
+          <span class="repo-hub__state"><i></i> Input</span>
+        </div>
+        <div class="repo-hub__mark" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <dl>
+          <div><dt>Source</dt><dd>Your repository</dd></div>
+          <div><dt>Scope</dt><dd>Applicable rules</dd></div>
+          <div><dt>Output</dt><dd>Evidence and routes</dd></div>
+        </dl>
+      </article>
+
+      <ol class="domain-bays">
+        {
+          domains.map((domain, index) => (
+            <li class:list={["domain-bay", { "domain-bay--active": domain.area === "SEC" }]}>
+              <a href={`/rules/${domain.area.toLowerCase()}/`}>
+                <span class="domain-bay__number">{String(index + 1).padStart(2, "0")}</span>
+                <span class="domain-bay__icon"><DomainIcon name={domain.area.toLowerCase()} /></span>
+                <span class="domain-bay__name">{domain.section}</span>
+                <span class="domain-bay__skills">{domain.skills.join(" + ")}</span>
+                <span class="domain-bay__count">{domain.rules.length} rules</span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+
+      {
+        sampleRule && (
+          <article class="rule-route">
+            <div class="rule-route__head">
+              <span>Example route</span>
+              <a href={`/rules/${sampleRule.id.toLowerCase()}/`}>{sampleRule.id}</a>
+            </div>
+            <h2>{sampleRule.statement}</h2>
+            <dl>
+              <div>
+                <dt>Check</dt>
+                <dd><InlineCode text={sampleRule.check} /></dd>
+              </div>
+              <div>
+                <dt>Fixed by</dt>
+                <dd><a href={`/skills/${sampleRule.fixedBy}/`}>{sampleRule.fixedBy}</a></dd>
+              </div>
+              <div>
+                <dt>Finish</dt>
+                <dd><span class="rule-route__verified"><DomainIcon name="check" /> Verify on rerun</span></dd>
+              </div>
+            </dl>
+          </article>
+        )
+      }
+    </div>
+  </div>
+</section>

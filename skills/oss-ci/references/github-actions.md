@@ -51,22 +51,21 @@ steps:
       node-version: ${{ matrix.node-version }}
 ```
 
-`fail-fast: false` lets every matrix cell finish so a contributor sees every version that broke, not just the first. Include the oldest and the newest version the manifest claims to support; do not add or drop a version the manifest does not mention.
+`fail-fast: false` lets every matrix cell finish so a contributor sees every version that broke, not just the first. Include every maintained release line the manifest claims to support, not only the endpoints of a continuous range. Do not add or drop a release line the manifest does not mention.
 
 ## Caching keyed on the lockfile (R-CI-04)
 
-Use `actions/cache` directly, keyed on a hash of the lockfile, with a `restore-keys` prefix so a changed lockfile still warms from the closest prior cache instead of starting cold:
+Prefer the official setup action's built-in package-manager cache when it supports the repository's package manager. For Node, `actions/setup-node` hashes the dependency file and caches the package manager's global data, not `node_modules`:
 
 ```yaml
-- uses: actions/cache@v6  # oss-harden pins this to a commit SHA
+- uses: actions/setup-node@v7  # oss-harden pins this to a commit SHA
   with:
-    path: ~/.npm
-    key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
-    restore-keys: |
-      ${{ runner.os }}-npm-
+    node-version: ${{ matrix.node-version }}
+    cache: npm
+    cache-dependency-path: package-lock.json
 ```
 
-A cache key with no lockfile hash serves stale dependencies after an upgrade. A key with no `restore-keys` fallback caches nothing useful the moment the lockfile changes, which is why the `cache:` input built into `actions/setup-node`, `actions/setup-python`, and `actions/setup-go` is not the first choice here: it hashes the lockfile for you, but it restores on that exact key only, has no `restore-keys` equivalent, and so fails the restore-key half of R-CI-04 on its own. Reach for `actions/cache` with `restore-keys` as shown above; only fall back to the built-in `cache:` input where the pipeline does not need the fallback restore.
+Use `actions/cache` directly only when no official setup action supports the required cache. Include the lockfile hash and every compatibility boundary in the key. GitHub defines `restore-keys` as prefixes for stale caches, so add one only when the cached tool can safely validate and reuse older content. Never let a fallback cross operating system, architecture, runtime, or package-manager boundaries. Do not cache installed dependency directories that a clean install recreates from the lockfile.
 
 ## Timeout and cancellation of superseded runs (R-CI-05)
 

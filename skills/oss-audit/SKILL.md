@@ -32,19 +32,13 @@ One area is scoped by repository type rather than by forge. The SKL area carries
 
 For every applicable rule, turn its `Check:` line into an observation against the repository: open the file or configuration it names, and record what is actually there. A `Check:` line asking whether the README's first paragraph is a single sentence before any heading is answered by reading `README.md`. A `Check:` line asking whether every `uses:` line resolves to a 40-character SHA is answered by reading every workflow file. Mark the rule pass when the evidence matches what the `Check:` line asks for, fail when it does not, and cite the concrete evidence either way: a fail with no evidence is a guess, not a finding.
 
-Some `Check:` lines presuppose something the repository does not have yet, such as a release tag before any release has shipped or a package manifest for a repository that ships none. Treat that the same way as a rule outside the detected forge's scope: not applicable, with a note of what is missing that would make the rule checkable, rather than scoring an absent precondition as a failure of the rule built on top of it.
+Mark a rule not applicable only when its area preamble, rule text, or `Check:` line states a precondition that the repository does not meet. Do not infer an unstated precondition from missing evidence: where the rule requires a file, setting, or value and does not define an exception, its absence is a failure. Record the scope sentence that made each rule not applicable so another audit reaches the same result.
 
 ## Step 4: Report unknown where the checkout cannot answer
 
 Some `Check:` lines name evidence a repository checkout does not carry on its own: a forge API call (branch protection settings, environment approvers, a job token's scope), a registry endpoint (whether a published package carries a provenance attestation), or a maintainer's signing key fetched from outside the repository. You do not need a list of which rules these are memorized ahead of time; the `Check:` line itself tells you, because it names the API call, the endpoint, or the external key it needs.
 
 Where you actually have the access a `Check:` line asks for, network reachable, the right credentials available, use it and score the rule on what it returns. Where you do not, or an attempt fails, mark the rule unknown. Unknown is not a softened fail and not a cautious pass; it is a distinct third state, because a rule scored pass on no evidence is the failure mode that discredits every other score in the report. Give unknown its own row in the table, its own place in the prioritized list if closing it would let a fail turn into a pass or stay a fail, and its own count. Never round unknown up to pass because the rest of the repository looks well kept, and never round it down to fail because access was inconvenient to get.
-
-## Step 5: OpenSSF Scorecard
-
-Two SEC rules name evidence a plain checkout cannot produce and that OpenSSF Scorecard already checks: R-SEC-04, whose `Check:` line reads branch protection settings through a forge API, and R-SEC-05, whose `Check:` line needs the maintainer's signing key fetched from outside the repository to verify a signed tag. Do not query Scorecard or reimplement its checks from this skill; `skills/oss-harden` already reads Scorecard results, including what a repository with no scan yet returns, and maps its findings to the same rule IDs. Mark R-SEC-04 and R-SEC-05 unknown here and point at `oss-harden` to resolve them, rather than duplicating that lookup.
-
-R-SEC-01, R-SEC-02, and R-SEC-03 are not deferred here: their `Check:` lines name evidence a checkout already has, pinned SHAs in `.github/workflows/`, a `permissions:` block in each workflow file, and a dependency-update configuration file, so Step 3 scores them directly.
 
 ## Output format
 

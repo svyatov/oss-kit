@@ -1,90 +1,102 @@
 ---
 title: oss-kit
-description: One opinionated quality bar for open source repositories, and nine agent skills that hold you to it.
+description: Curated agent skills for open source maintainers.
 template: splash
 head:
   - tag: title
     content: oss-kit
 hero:
-  tagline: Opinionated agent skills for healthier open source projects.
-  image:
-    html: '<img class="home-hero-mark" src="/icon.svg" width="640" height="640" alt="">'
-  actions:
-    - text: Get started
-      link: /guides/getting-started/
-      icon: right-arrow
-    - text: Install
-      link: /guides/install/
-      variant: secondary
+  tagline: Curated agent skills for open source maintainers.
+tableOfContents: false
 ---
 
-<section className="home-intro" aria-labelledby="how-it-works">
-  <div className="home-section-heading">
-    <p className="home-kicker">How it works</p>
-    <h2 id="how-it-works">From repository audit to verified fix.</h2>
-    <p>The audit checks one standard, routes each gap to the skill that owns it, and checks the evidence again.</p>
+import DomainRack from "../../components/DomainRack.astro";
+import InlineCode from "../../components/InlineCode.astro";
+import { rules, sampleRule } from "../../lib/content.mjs";
+
+<DomainRack />
+
+<section className="home-principle" aria-labelledby="why-curated">
+  <div>
+    <p className="kit-label">Why curated</p>
+    <h2 id="why-curated">The collection grows when a maintainer job is missing.</h2>
+  </div>
+  <div className="home-principle__body">
+    <p>Each skill owns one recurring responsibility, encodes a clear workflow, and ends on evidence a maintainer can inspect.</p>
+    <p>A new skill joins only when the existing kit leaves a real job uncovered. Skill count is not a goal.</p>
+    <a href="/skills/">Inspect the current skills <span aria-hidden="true">→</span></a>
+  </div>
+</section>
+
+<section className="home-workflow" aria-labelledby="one-route">
+  <div className="home-section-head">
+    <div>
+      <p className="kit-label">One workflow, end to end</p>
+      <h2 id="one-route">A recommendation stays traceable.</h2>
+    </div>
+    <p><code>oss-audit</code> connects a concrete check to the skill that owns the fix. The next run checks the same evidence again.</p>
   </div>
 
-  <ol className="home-route">
+  <ol className="workflow-trace">
     <li>
-      <span className="home-route-number" aria-hidden="true">01</span>
-      <div>
-        <h3>Audit the repository</h3>
-        <p><code>oss-audit</code> checks every applicable rule, records the evidence, and puts confirmed gaps before unknowns.</p>
-        <a href="/skills/oss-audit/">See how the audit works</a>
-      </div>
+      <span className="workflow-trace__step">01 · Rule</span>
+      <strong>R-SEC-01</strong>
+      <p>{sampleRule?.statement}</p>
+      <a href="/rules/r-sec-01/">Read the rule</a>
     </li>
     <li>
-      <span className="home-route-number" aria-hidden="true">02</span>
-      <div>
-        <h3>Hand each gap to its skill</h3>
-        <p>Eight focused skills fix documentation, community files, CI, security, releases, changelogs, prose, and skill packaging.</p>
-        <a href="/guides/getting-started/">Start fixing gaps</a>
-      </div>
+      <span className="workflow-trace__step">02 · Check</span>
+      <strong>Observable evidence</strong>
+      <p><InlineCode text={sampleRule?.check} /></p>
     </li>
     <li>
-      <span className="home-route-number" aria-hidden="true">03</span>
-      <div>
-        <h3>Run the audit again</h3>
-        <p>The next audit checks the same evidence. Repeat the loop until no gaps remain.</p>
-        <span className="home-route-loop" aria-label="Audit, fix, rerun">
-          <code>audit</code><span aria-hidden="true">→</span><code>fix</code><span aria-hidden="true">→</span><code>rerun</code><span aria-hidden="true">✓</span>
-        </span>
-      </div>
+      <span className="workflow-trace__step">03 · Fix</span>
+      <strong><code>oss-harden</code></strong>
+      <p>The rule names one skill that owns the change.</p>
+      <a href="/skills/oss-harden/">Open the skill</a>
+    </li>
+    <li>
+      <span className="workflow-trace__step">04 · Verify</span>
+      <strong>Run the same check</strong>
+      <p>The rerun closes the gap only when the repository contains the required evidence.</p>
     </li>
   </ol>
-
-  <p className="home-standard-link">Curious about the bar? <a href="/standard/">Read all 40 rules.</a></p>
 </section>
 
-<section className="home-proof" aria-labelledby="one-rule">
-  <div className="home-section-heading">
-    <p className="home-kicker">One rule, end to end</p>
-    <h2 id="one-rule">The standard makes every recommendation traceable.</h2>
+<section className="home-standard" aria-labelledby="inspect-opinions">
+  <div className="home-standard__copy">
+    <p className="kit-label">Opinions in the open</p>
+    <h2 id="inspect-opinions">Read the bar before you adopt it.</h2>
+    <p>The standard states every current opinion as a numbered rule with a reason, a check, one fixing skill, and forge scope.</p>
+    <a className="kit-button kit-button--secondary" href="/standard/">Read all {rules.length} rules</a>
   </div>
-
-  <article className="home-rule">
-    <div className="home-rule-id">
-      <span>R-SEC-01</span>
-      <span>GitHub</span>
+  <div className="standard-sheet" aria-label="Structure of an oss-kit rule">
+    <div className="standard-sheet__head">
+      <span>Rule contract</span>
+      <span>R-CI-01</span>
     </div>
-    <div className="home-rule-body">
-      <h3>Pin every third-party action to a full commit SHA</h3>
-      <p>The audit checks every third-party <code>uses:</code> line for a 40-character SHA. A failure routes to <code>oss-harden</code>.</p>
+    <code>Statement</code>
+    <p>CI runs on every push to the default branch and on every change request.</p>
+    <code>Check</code>
+    <p>The workflow declares both trigger paths.</p>
+    <div className="standard-sheet__meta">
+      <span>Fixed by <strong>oss-ci</strong></span>
+      <span>GitHub and GitLab</span>
     </div>
-    <a className="home-rule-link" href="/rules/r-sec-01/">Read the full rule</a>
-  </article>
+  </div>
 </section>
 
-<section className="home-support" aria-labelledby="works-with">
-  <div>
-    <p className="home-kicker">Forge support</p>
-    <h2 id="works-with">GitHub and GitLab stay explicit.</h2>
-    <p>Every rule names its forge scope. A GitHub-only recommendation never presents itself as a universal requirement.</p>
+<section className="home-support" aria-labelledby="works-where-you-work">
+  <div className="home-section-head">
+    <div>
+      <p className="kit-label">Portable by design</p>
+      <h2 id="works-where-you-work">One canonical skill source.</h2>
+    </div>
+    <p>The same <code>skills/</code> directory reaches supported agents through the skills CLI, plugin manifests, or the directory a host already scans.</p>
   </div>
-  <div>
-    <p className="home-kicker">Agent support</p>
-    <h2>Install the same skills in every host.</h2>
-    <p>Use the <code>skills</code> CLI, a supported plugin manifest, or the directory your agent already scans.</p>
+  <div className="support-lines">
+    <div><span>Forges</span><strong>GitHub · GitLab</strong></div>
+    <div><span>Install</span><strong>Full kit · One skill</strong></div>
+    <div><span>Source</span><strong>Open repository · MIT</strong></div>
   </div>
 </section>

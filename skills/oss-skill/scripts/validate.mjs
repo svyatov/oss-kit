@@ -12,7 +12,6 @@
  * this file is held to it.
  */
 import { existsSync, readFileSync, readdirSync, realpathSync } from "node:fs"
-import { builtinModules } from "node:module"
 import { basename, dirname, extname, join, relative, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -57,9 +56,92 @@ const LICENSE_MARKERS = new Map([
   ["unlicense", "this is free and unencumbered software"],
 ])
 
-const BUILTINS = new Set(builtinModules.flatMap((name) => [name, `node:${name}`]))
-const MANIFESTS = ["package.json", "bun.lock", "bun.lockb", "package-lock.json", "yarn.lock", "pnpm-lock.yaml"]
-const CODE_EXTENSIONS = new Set([".js", ".mjs", ".cjs", ".ts", ".mts", ".cts"])
+// Public and legacy built-ins present at the Node 22 floor. Keep this fixed:
+// reading the running runtime's list would let Node 24+ or Bun-specific
+// modules pass even though a Node 22 reader cannot import them.
+const NODE_22_BUILTINS = [
+  "assert",
+  "assert/strict",
+  "async_hooks",
+  "buffer",
+  "child_process",
+  "cluster",
+  "console",
+  "constants",
+  "crypto",
+  "dgram",
+  "diagnostics_channel",
+  "dns",
+  "dns/promises",
+  "domain",
+  "events",
+  "fs",
+  "fs/promises",
+  "http",
+  "http2",
+  "https",
+  "inspector",
+  "inspector/promises",
+  "module",
+  "net",
+  "os",
+  "path",
+  "path/posix",
+  "path/win32",
+  "perf_hooks",
+  "process",
+  "punycode",
+  "querystring",
+  "readline",
+  "readline/promises",
+  "repl",
+  "stream",
+  "stream/consumers",
+  "stream/promises",
+  "stream/web",
+  "string_decoder",
+  "sys",
+  "timers",
+  "timers/promises",
+  "tls",
+  "trace_events",
+  "tty",
+  "url",
+  "util",
+  "util/types",
+  "v8",
+  "vm",
+  "wasi",
+  "worker_threads",
+  "zlib",
+]
+const BUILTINS = new Set([
+  ...NODE_22_BUILTINS,
+  ...NODE_22_BUILTINS.map((name) => `node:${name}`),
+  // Built-ins Node exposes only under the node: prefix, so they cannot go in
+  // the list above. node:sea arrived in v21.7.0 and needs no flag to import.
+  // node:sqlite arrived in v22.5.0 and left --experimental-sqlite in v22.13.0,
+  // below the 22.23.1 that ubuntu-24.04 ships.
+  "node:sea",
+  "node:sqlite",
+  "node:test",
+  "node:test/reporters",
+])
+const MANIFESTS = [
+  "package.json",
+  "package-lock.json",
+  "npm-shrinkwrap.json",
+  "pnpm-lock.yaml",
+  "pnpm-workspace.yaml",
+  "yarn.lock",
+  "bun.lock",
+  "bun.lockb",
+  "deno.json",
+  "deno.jsonc",
+  "deno.lock",
+]
+const CODE_EXTENSIONS = new Set([".js", ".mjs", ".cjs"])
+const TYPESCRIPT_EXTENSIONS = new Set([".ts", ".mts", ".cts"])
 // Documentation and data a script's directory may carry alongside it. A file
 // with no extension is a script, not data, and stays in scope for the shebang
 // check below.
@@ -67,7 +149,7 @@ const DATA_EXTENSIONS = new Set([".md", ".txt", ".json", ".yml", ".yaml", ".toml
 // The interpreter may be named directly, at any path, or through env. The -S
 // flag is how a portable shebang passes arguments through env, so a script
 // written as env -S node --flag names node just as plainly as env node does.
-const SHEBANG_RE = /^#!\s*(?:\S*\/)?(?:env\s+(?:-S\s+)?)?(?:sh|bash|node)(?:\s|$)/
+const SHEBANG_RE = /^#!\s*(?:\S*\/)?(?:env\s+(?:-S\s+)?)?(?:sh|node)(?:\s|$)/
 // This guard stops the pattern from matching a property access on some other
 // identifier that merely ends in a runtime name, such as `myBun.trim()`. It
 // does not stop every false match: the same runtime name inside a string or a
@@ -176,11 +258,15 @@ function countLines(lines) {
 
 /**
  * @param {string} value
- * @returns {string}
+ * @returns {string|null}
  */
 function unquote(value) {
   if (value.length >= 2 && value.startsWith('"') && value.endsWith('"')) {
-    return value.slice(1, -1).replace(/\\"/g, '"')
+    try {
+      return JSON.parse(value)
+    } catch {
+      return null
+    }
   }
   if (value.length >= 2 && value.startsWith("'") && value.endsWith("'")) {
     return value.slice(1, -1).replace(/''/g, "'")
@@ -255,11 +341,21 @@ export function parseFrontmatter(text) {
     let value
     if (raw.startsWith('"') || raw.startsWith("'")) {
       const quoted = raw.match(QUOTED_RE)
-      value = quoted ? quoted[1] ?? raw : raw
+      if (!quoted) {
+        unreadable.push(i + 1)
+        unreadableKeys.add(key)
+        continue
+      }
+      value = unquote(quoted[1] ?? raw)
+      if (value === null) {
+        unreadable.push(i + 1)
+        unreadableKeys.add(key)
+        continue
+      }
     } else {
       value = raw.replace(/(^|\s)#.*$/, "")
     }
-    entries.set(key, unquote(value))
+    entries.set(key, value)
     unreadableKeys.delete(key)
   }
   return { ok: true, reason: null, entries, unreadable, unreadableKeys, duplicates, bodyStart: end + 1 }
@@ -615,7 +711,11 @@ export function checkScripts(root, skillDir) {
       continue
     }
     if (!isData && !SHEBANG_RE.test(source)) {
-      err(path, "no shebang naming sh, bash, or node; a reader's machine may have no other interpreter")
+      err(path, "no shebang naming sh or node; a reader's machine may have no other interpreter")
+    }
+    if (TYPESCRIPT_EXTENSIONS.has(extension)) {
+      err(path, "TypeScript is not portable to the Node 22 floor; ship JavaScript instead")
+      continue
     }
     if (!CODE_EXTENSIONS.has(extension)) continue
     const runtime = source.match(RUNTIME_GLOBAL_RE)
@@ -631,12 +731,6 @@ export function checkScripts(root, skillDir) {
         err(path, `imports "${specifier}", which is a module only one runtime provides; a skill ships no dependencies`)
         continue
       }
-      // The node: prefix is what makes a specifier a built-in reference,
-      // regardless of which runtime enumerated BUILTINS below, so it passes
-      // outright rather than being looked up. A typo such as node:fsx passes
-      // too; that false negative is the cost of not rejecting a valid import
-      // on whichever of the two blessed runtimes did not enumerate it.
-      if (specifier.startsWith("node:")) continue
       if (BUILTINS.has(specifier)) continue
       err(path, `imports "${specifier}", which is not a Node built-in module; a skill ships no dependencies`)
     }

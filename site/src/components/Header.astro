@@ -1,0 +1,52 @@
+---
+import Search from "virtual:starlight/components/Search"
+import ThemeSelect from "virtual:starlight/components/ThemeSelect"
+import BrandMark from "./BrandMark.astro"
+
+const pathname = Astro.url.pathname
+const links = [
+  { label: "Skills", href: "/skills/" },
+  { label: "Standard", href: "/standard/" },
+  { label: "Guides", href: "/guides/getting-started/" },
+  { label: "Changelog", href: "/changelog/" },
+]
+---
+
+<div class="kit-header">
+  <a class="kit-header__brand" href="/" aria-label="oss-kit home">
+    <BrandMark />
+    <span>oss-kit</span>
+  </a>
+
+  <nav class="kit-header__nav" aria-label="Primary">
+    {
+      links.map((link) => (
+        <a
+          href={link.href}
+          aria-current={pathname.startsWith(link.href) ? "page" : undefined}
+        >
+          {link.label}
+        </a>
+      ))
+    }
+  </nav>
+
+  <div class="kit-header__tools">
+    <Search />
+    <a class="kit-header__github" href="https://github.com/svyatov/oss-kit">GitHub</a>
+    <ThemeSelect />
+    <a class="kit-header__install" href="/guides/install/">Install</a>
+    {
+      pathname === "/" && (
+        <details class="kit-mobile-nav">
+          <summary>Menu</summary>
+          <nav aria-label="Mobile primary">
+            {links.map((link) => <a href={link.href}>{link.label}</a>)}
+            <a href="https://github.com/svyatov/oss-kit">GitHub</a>
+            <a class="kit-mobile-nav__install" href="/guides/install/">Install</a>
+          </nav>
+        </details>
+      )
+    }
+  </div>
+</div>

@@ -3,10 +3,9 @@
 /**
  * Generates the oss-kit documentation site's content from the repository.
  *
- * Reads the standard, the skills, the tracked prose under docs/, and the
- * changelog. Writes Markdown into the site's content directory. Imports only
- * Node built-ins and reads no runtime-specific global, so node and bun both
- * run it.
+ * Reads the standard, the skills, and the changelog. Writes Markdown into the
+ * site's content directory. Imports only Node built-ins and reads no
+ * runtime-specific global, so node and bun both run it.
  */
 
 import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs"
@@ -124,11 +123,18 @@ export function pageDescription(markdown, fallback) {
 
 /** @param {Rule} rule @param {string} sourcePath */
 export function renderRulePage(rule, sourcePath) {
-  const body = `**${rule.id}** applies to ${FORGE_LABEL[rule.forges]} and is fixed by [${rule.fixedBy}](/skills/${rule.fixedBy}/).
+  const body = `<dl class="doc-instrument-meta">
+  <div><dt>Rule</dt><dd>${rule.id}</dd></div>
+  <div><dt>Forge scope</dt><dd>${FORGE_LABEL[rule.forges]}</dd></div>
+  <div><dt>Fixed by</dt><dd><a href="/skills/${rule.fixedBy}/">${rule.fixedBy}</a></dd></div>
+</dl>
 
 ${rule.why}
 
-**Check:** ${rule.check}
+<section class="doc-check">
+  <h2>Observable check</h2>
+  <p>${inlineCodeHtml(rule.check)}</p>
+</section>
 
 [Read the whole standard](/standard/)
 `
@@ -192,12 +198,22 @@ export function renderSkillPage(sourcePath, text) {
   const title = fields.name ?? sourcePath
   const description = fields.description ?? ""
   return frontmatter(
-    { title, description, editUrl: `${EDIT}/${sourcePath}` },
-    `${agentNotice(sourcePath)}\n\n${body}`,
+    { title, description, sidebar: { badge: "Skill" }, editUrl: `${EDIT}/${sourcePath}` },
+    `<p class="doc-kind-label">Agent instruction · canonical source</p>\n\n${agentNotice(sourcePath)}\n\n${body}`,
   )
 }
 
-const GENERATED = ["rules", "skills", "guides", "standard.md", "changelog.md"]
+const GENERATED = ["rules", "skills", "standard.md", "changelog.md"]
+
+/** @param {string} text */
+function inlineCodeHtml(text) {
+  const escaped = text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+  return escaped.replace(/`([^`]+)`/g, "<code>$1</code>")
+}
 
 /**
  * @param {string} outDir
@@ -223,6 +239,50 @@ export function writeAll(repoRoot, outDir) {
   for (const rule of rules) {
     written.push(write(outDir, `rules/${rule.id.toLowerCase()}.md`, renderRulePage(rule, standardPath)))
   }
+  const sections = [...new Set(rules.map((rule) => rule.section))]
+  written.push(
+    write(
+      outDir,
+      "rules/index.md",
+      frontmatter(
+        {
+          title: "Rules",
+          description: "Browse the current oss-kit standard by maintainer responsibility.",
+          sidebar: { label: "All rules" },
+        },
+        sections
+          .map((section) => {
+            const members = rules.filter((rule) => rule.section === section)
+            const area = members[0]?.area.toLowerCase()
+            return `- [${section}](/rules/${area}/) (${members.length} rules)`
+          })
+          .join("\n"),
+      ),
+    ),
+  )
+  for (const section of sections) {
+    const members = rules.filter((rule) => rule.section === section)
+    const area = members[0]?.area.toLowerCase() ?? ""
+    written.push(
+      write(
+        outDir,
+        `rules/${area}/index.md`,
+        frontmatter(
+          {
+            title: section,
+            description: `The ${section.toLowerCase()} rules in the oss-kit standard.`,
+            sidebar: { label: `About ${section.toLowerCase()}` },
+          },
+          members
+            .map(
+              (rule) =>
+                `- [${rule.id}: ${rule.statement}](/rules/${rule.id.toLowerCase()}/) · [${rule.fixedBy}](/skills/${rule.fixedBy}/)`,
+            )
+            .join("\n"),
+        ),
+      ),
+    )
+  }
   written.push(
     write(
       outDir,
@@ -244,6 +304,27 @@ export function writeAll(repoRoot, outDir) {
   const skillNames = readdirSync(join(repoRoot, "skills"), { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
+  const skillEntries = skillNames.map((name) => {
+    const source = `skills/${name}/SKILL.md`
+    const { fields } = splitFrontmatter(readFileSync(join(repoRoot, source), "utf8"))
+    return { name, description: fields.description ?? "" }
+  })
+  written.push(
+    write(
+      outDir,
+      "skills/index.md",
+      frontmatter(
+        {
+          title: "Skills",
+          description: "The current curated set of agent skills for open source maintainers.",
+          sidebar: { label: "All skills" },
+        },
+        `oss-kit currently ships ${skillEntries.length} skills. Install the full collection, or choose the responsibility you need.\n\n${skillEntries
+          .map(({ name, description }) => `## [${name}](/skills/${name}/)\n\n${description}`)
+          .join("\n\n")}`,
+      ),
+    ),
+  )
   /** @type {Map<string, string>} */
   const refTargets = new Map()
   for (const name of skillNames) {
@@ -282,28 +363,6 @@ export function writeAll(repoRoot, outDir) {
       )
       written.push(write(outDir, `skills/${name}/${ref}`, rewriteLinks(refPage, resolve(name))))
     }
-  }
-
-  const guides = safeReaddir(join(repoRoot, "docs")).filter((n) => n.endsWith(".md"))
-  const guideTargets = new Set(guides.map((n) => n.replace(/\.md$/, "")))
-  for (const guide of guides) {
-    const source = `docs/${guide}`
-    const text = readFileSync(join(repoRoot, source), "utf8")
-    const title = /^# (.*)$/m.exec(text)?.[1] ?? guide.replace(/\.md$/, "")
-    const prose = text.replace(/^# .*\n/m, "")
-    const page = frontmatter(
-      { title, description: pageDescription(prose, title), editUrl: `${EDIT}/${source}` },
-      prose,
-    )
-    const resolveGuide = (/** @type {string} */ target) => {
-      const key = target.replace(/^\.\//, "").replace(/\.md$/, "")
-      if (guideTargets.has(key)) return `/guides/${key}/`
-      if (key === "CHANGELOG") return "/changelog/"
-      if (/^(\.\.\/)*skills\/oss-audit\/STANDARD$/.test(key)) return "/standard/"
-      if (key.startsWith("skills/")) return `/${key.replace(/\/SKILL$/, "")}/`
-      return resolve("")(target)
-    }
-    written.push(write(outDir, `guides/${guide}`, rewriteLinks(page, resolveGuide)))
   }
 
   const changelog = readFileSync(join(repoRoot, "CHANGELOG.md"), "utf8")
