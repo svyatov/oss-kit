@@ -74,14 +74,14 @@ Uppercase MUST, SHOULD, and MAY carry their RFC 2119 and RFC 8174 meanings, and 
 
 Check these before returning any text:
 
-- No em dashes, en dashes, or ` -- `. Replace with a period, comma, colon, or parentheses.
-- No emoji anywhere, including headings and bullets.
-- No inline-header bullet lists (`- **Performance:** it is faster`). Write prose or a plain list.
-- Headings in sentence case, not Title Case.
-- No recap section restating what the text just said.
-- No `Generated with`, `Co-Authored-By: Claude`, or tool attribution footers.
-- No boilerplate caveats. State a precondition, limitation, or risk when it changes what the reader should do.
-- Straight ASCII quotes.
+- No em dashes, en dashes, or ` -- `: in short technical prose they are the strongest single machine-written tell, and a period, comma, colon, or pair of parentheses carries the same break.
+- No emoji anywhere, including headings and bullets: they survive neither a plain terminal nor a screen reader cleanly, and they decorate a file someone will grep.
+- No inline-header bullet lists (`- **Performance:** it is faster`): the bolded stub replaces the sentence that would have said what changed, so the reader gets a label instead of a claim.
+- Headings in sentence case, not Title Case: it is what the Google developer style guide prescribes and what most repositories already use, so Title Case reads as imported from elsewhere.
+- No recap section restating what the text just said: the reader just read it, and a recap marks text written to a length rather than to a point.
+- No `Generated with`, `Co-Authored-By: Claude`, or tool attribution footers: a trailer records who is accountable for the change, and a tool cannot be.
+- No boilerplate caveats. State a precondition, limitation, or risk when it changes what the reader should do: a caveat that changes nothing trains the reader to skip the one that matters.
+- Straight ASCII quotes: curly quotes break a copy-paste into a shell or a config file, and the reader cannot tell by eye which they got.
 
 ## Do not touch
 
@@ -104,8 +104,7 @@ These come from writing the message as a session log rather than a description o
 
 Both are read by someone who is already stuck, so they answer a different question than descriptive prose does.
 
-- Use one distinct error message per actionable condition. Name what failed, the safe part of the input or location, and a likely corrective action: `config.yaml line 7: timeout must be a positive integer, got -1`. Do not echo passwords, tokens, personal data, full request bodies, or attacker-controlled text without safe encoding.
-- A log event carries a stable event name, appropriate severity, and structured identifiers needed to find the operation again: request ID, safe path, count, duration. Do not log secrets or personal data. Do not use adjectives where a measured field works.
+- An error or log line names what failed, the safe part of the input or location, and a likely corrective action: `config.yaml line 7: timeout must be a positive integer, got -1`. One distinct message per actionable condition. A log event also carries a stable event name, a severity, and the structured identifiers needed to find the operation again: request ID, safe path, count, duration. Measured fields, not adjectives. Never emit passwords, tokens, personal data, full request bodies, or unencoded attacker-controlled text.
 - A comment explains why the code is surprising, not what it does. If it restates the line below it, delete it. The case that earns a comment is a constraint the code cannot show: a spec section, a vendor bug, a benchmark that ruled out the obvious approach.
 
 ## Global and accessible prose
@@ -114,7 +113,7 @@ Use literal terms in their primary sense. Avoid idioms, slang, humor, violent me
 
 ## Examples
 
-Commit body:
+<example name="commit body">
 
 ```
 Bad:  refactor(auth): improve token handling
@@ -128,7 +127,9 @@ Good: fix(auth): refresh tokens 30s before expiry
       at expiry were rejected about 1 in 400 times. 30s covers it.
 ```
 
-Pull request description:
+</example>
+
+<example name="pull request description">
 
 ```
 Bad:  ## Summary
@@ -146,7 +147,9 @@ Good: Search results were recomputed on every keystroke, which pinned a CPU
       Verified with bench/load.sh: p99 drops from 1.4s to 210ms.
 ```
 
-Review comment:
+</example>
+
+<example name="review comment">
 
 ```
 Bad:  Great catch on the null check! One small thing to consider: it might
@@ -154,6 +157,8 @@ Bad:  Great catch on the null check! One small thing to consider: it might
 Good: Two goroutines can reach this branch at once, so the map write races.
       A sync.Map or a mutex around lines 40-48 fixes it.
 ```
+
+</example>
 
 ## Rules this skill owns
 
