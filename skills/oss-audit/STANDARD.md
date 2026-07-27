@@ -234,7 +234,7 @@ Forges: both
 
 Branch protection is the only rule here that a repository setting enforces rather than a file. Without it, every other rule in this document can be bypassed by one push.
 
-Check: the default branch is protected, requires at least one approving review, requires the CI status check to pass, and blocks force pushes and deletion. Read the settings with `gh api repos/{owner}/{repo}/branches/{branch}/protection` on GitHub, or `GET /projects/:id/protected_branches/:name` on GitLab.
+Check: the default branch is protected, requires at least one approving review, requires the CI status check to pass, and blocks force pushes and deletion. On GitHub the settings live in either of two places, so read both: `gh api repos/{owner}/{repo}/rulesets` for a ruleset, and `gh api repos/{owner}/{repo}/branches/{branch}/protection` for a classic rule, which answers `404 Branch not protected` when a ruleset is what guards the branch. On GitLab, `GET /projects/:id/protected_branches/:name`.
 
 Fixed by: oss-harden
 Forges: both

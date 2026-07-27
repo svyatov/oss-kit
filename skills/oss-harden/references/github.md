@@ -8,19 +8,24 @@ List every `uses:` line in both `.yml` and `.yaml` workflow files. A line matchi
 
 Check for an existing updater with `test -f .github/dependabot.yml` or a search for a Renovate configuration (`renovate.json`, `.github/renovate.json`, or a `"renovate"` key in `package.json`).
 
-Read the live branch protection for the default branch:
+What guards the default branch lives in one of two places, and neither endpoint reports the other. Read both. Rulesets first, since that is the form to create:
+
+```bash
+gh api repos/{owner}/{repo}/rulesets
+gh api repos/{owner}/{repo}/rulesets/{ruleset_id}
+```
+
+The list call returns id, name, target, and enforcement only. The rules themselves come from the per-ruleset call, so a repository with a ruleset takes two reads. More than one ruleset can match the same branch, and their rules combine, so read every entry whose conditions include the default branch rather than the first one.
+
+Then the classic rule:
 
 ```bash
 gh api repos/{owner}/{repo}/branches/{branch}/protection
 ```
 
-This 404s both when the branch has no classic protection and when the repository or branch name is wrong, so confirm the repository exists first with `gh api repos/{owner}/{repo}` if the protection call 404s unexpectedly. A repository using the newer rulesets instead of classic branch protection needs a second call, since a ruleset does not show up in the classic endpoint:
+This 404s with `Branch not protected` in three different situations that need telling apart: the branch is guarded by a ruleset instead, the branch is genuinely unguarded, or the repository or branch name is wrong. The ruleset read above separates the first from the other two. Confirm the repository and branch exist with `gh api repos/{owner}/{repo}` before reporting an unguarded branch on the strength of this 404 alone.
 
-```bash
-gh api repos/{owner}/{repo}/rulesets
-```
-
-GitHub's own guidance is to prefer rulesets for a repository being configured today; classic branch protection still works and both this skill and the OpenSSF Scorecard action can read either, but there is no need to set up the classic form on a repository that has neither yet.
+GitHub's own guidance is to prefer rulesets for a repository being configured today; classic branch protection still works and both this skill and the OpenSSF Scorecard action can read either, but do not set up the classic form on a repository that has neither yet.
 
 ## Pin external actions and reusable workflows to a commit SHA (R-SEC-01)
 
@@ -100,15 +105,50 @@ A workflow step that installs a tool with `pip install <package>` with no versio
 
 ## Branch protection and rulesets (R-SEC-04)
 
-Give the user the resolved URL for the default branch's protection settings: `https://github.com/{owner}/{repo}/settings/branches`. The settings needed are: require a pull request before merging with at least one approving review, require the status check this repository's CI job reports, and, in the same panel, block force pushes and branch deletion. Where CODEOWNERS exists, the same panel has "Require review from Code Owners"; turn it on alongside the approval requirement so the file `oss-community` wrote is actually enforced.
+Give the user the resolved URL for rulesets: `https://github.com/{owner}/{repo}/settings/rules`. Four rule types carry what R-SEC-04 requires:
 
-After the user confirms, verify with the same read used in Step 2:
+- `pull_request`, with `required_approving_review_count` at 1 or more. Where CODEOWNERS exists, set `require_code_owner_review` alongside it, so the file `oss-community` wrote is enforced rather than advisory.
+- `required_status_checks`, naming every check CI reports. Each entry takes an `integration_id` next to its `context`; supplying it means only that app can satisfy the check, where omitting it lets anything reporting the same context name satisfy it.
+- `non_fast_forward`, which blocks force pushes.
+- `deletion`, which blocks deleting the branch.
+
+Scope the ruleset with `conditions.ref_name.include` set to `["~DEFAULT_BRANCH"]` rather than the literal branch name, so renaming the default branch cannot leave the ruleset pointing at a branch that no longer exists.
+
+The `pull_request` rule carries four more parameters worth setting even though R-SEC-04 does not require them. `dismiss_stale_reviews_on_push` drops approvals when new commits arrive, so an approval always refers to the code being merged. `require_last_push_approval` goes further and requires the newest push to be approved by somebody other than whoever pushed it, which closes the window where a contributor collects an approval and then adds a commit before merging; `dismiss_stale_reviews_on_push` alone reopens review, where this one also rules out self-approving the follow-up. `required_review_thread_resolution` blocks the merge while a review comment is unresolved. `allowed_merge_methods` takes any non-empty subset of `merge`, `squash`, and `rebase`, and setting it is not redundant with the repository's own merge-method checkboxes: the repository setting is what a maintainer can change in one click, where the ruleset entry is a branch-level control that survives that change and shows up in the ruleset history. Set it to the method the project's history is already written in.
+
+Where the user prefers the API to the settings page, `POST /repos/{owner}/{repo}/rulesets` takes the whole thing at once, which is also how it gets recorded and repeated on the next repository:
 
 ```bash
-gh api repos/{owner}/{repo}/branches/{branch}/protection
+gh api -X POST repos/{owner}/{repo}/rulesets --input ruleset.json
 ```
 
-Confirm `required_pull_request_reviews.required_approving_review_count` is at least 1, `required_status_checks.contexts` (or `checks`) names the CI job, `allow_force_pushes.enabled` is `false`, and `allow_deletions.enabled` is `false`. A repository configured through rulesets instead reports through `gh api repos/{owner}/{repo}/rulesets/{ruleset_id}` instead, with the same intent expressed as a `pull_request` rule, a `required_status_checks` rule, a `non_fast_forward` rule, and a `deletion` rule.
+### The bypass list
+
+A ruleset's bypass list replaces the classic "Do not allow bypassing the above settings" checkbox, inverted: classic protection exempted admins unless the box was ticked, where a ruleset binds everyone unless an actor is listed. Each entry carries an `actor_type`, an `actor_id`, and a `bypass_mode` of either `always` or `pull_request`. Prefer `pull_request`: the actor can merge a pull request that violates the rules, but still cannot push straight to the branch, so every change leaves a reviewable trail.
+
+The case this matters most is a single-maintainer project, and it needs saying before the ruleset goes in rather than after. Nobody can approve their own pull request, so a ruleset requiring one approving review with an empty bypass list makes every change the sole maintainer opens unmergeable. Put Repository admin on the list at `pull_request` mode. The requirement still binds every contributor, which is what R-SEC-04 is for.
+
+The API returns `actor_id` as a bare number with no label, and GitHub documents the constant for `OrganizationAdmin` and not for repository roles, so do not report which role is exempt from the id alone. The create and read responses carry `current_user_can_bypass`, which is direct evidence for the maintainer running the command: `pull_requests_only` confirms both that the id resolves to a role they hold and that the mode is the narrower one. For the role's name, the UI at `/settings/rules` renders it and the API does not.
+
+### Who can merge is a permission, not a rule
+
+A maintainer asking for "contributors can never merge their own pull requests" is asking for something no ruleset expresses. Nothing in a ruleset keys on the identity of whoever clicks merge; the rules describe the state a pull request must reach, and anyone with write access who sees that state satisfied can merge it. Say this plainly rather than approximating it with a rule that does not do it.
+
+The `update` rule is the one that reads like the answer and is not. Its wording covers pushes only, "only users with bypass permissions can push to branches or tags whose name matches the pattern," and a pull request merge is not one of those pushes. Adding it restricts direct pushes, which the `pull_request` rule already does, and changes nothing about who can merge.
+
+What actually gates merging is repository access, so answer the question there. An outside contributor to a public repository works from a fork, holds no write access on the target, and cannot merge no matter how many approvals a pull request collects; this needs no configuration and is the case for most projects. Where the maintainer wants to bring someone in without granting that ability, the Triage role manages issues and pull requests without push access, so it cannot merge, and Write is the line that hands it over. Custom repository roles could carve this finer, but they are an organization feature and are unavailable on a user-owned repository.
+
+Setting `require_last_push_approval` is the closest a ruleset gets, and it addresses a narrower problem: it stops a contributor who already has write access from approving their own follow-up commit after an earlier approval. It does not stop them merging.
+
+### Verify
+
+```bash
+gh api repos/{owner}/{repo}/rulesets/{ruleset_id}
+```
+
+Confirm `enforcement` is `active` rather than `disabled` or `evaluate`, that the four rule types above are present, that the `pull_request` rule's review count is at least 1, that `required_status_checks` names the CI checks, and that `bypass_actors` holds only actors the project means to exempt.
+
+A repository still on classic protection reports through `gh api repos/{owner}/{repo}/branches/{branch}/protection` instead, where the same intent reads as `required_pull_request_reviews.required_approving_review_count` at 1 or more, `required_status_checks.contexts` or `checks` naming the CI job, and `allow_force_pushes.enabled` and `allow_deletions.enabled` both `false`. That satisfies the rule; leave a working classic rule alone unless the user asks to move it. Migrating means creating the ruleset first, verifying it, and only then deleting the classic rule with `gh api -X DELETE repos/{owner}/{repo}/branches/{branch}/protection`, so the branch is never unguarded in between. Both forms can coexist, and while they do the more restrictive of the two applies.
 
 ## Signed tags (R-SEC-05)
 
@@ -139,6 +179,32 @@ Quoting the expression directly inside `run:` is not sufficient because expressi
 ## Static analysis (R-SEC-09)
 
 For a public repository in a CodeQL-supported language, prefer CodeQL default setup and confirm its pull request analysis appears as a required status check. Private repositories require GitHub Code Security on an eligible GitHub Team or Enterprise plan. If CodeQL does not support the language, use the project's established analyzer and require its pull request result rather than adding a no-op CodeQL configuration.
+
+Where the branch is guarded by a ruleset, the `code_scanning` rule is the stronger way to make the analysis binding, and it is worth having alongside the status check rather than instead of it:
+
+```json
+{
+  "type": "code_scanning",
+  "parameters": {
+    "code_scanning_tools": [
+      { "tool": "CodeQL", "security_alerts_threshold": "high_or_higher", "alerts_threshold": "errors" }
+    ]
+  }
+}
+```
+
+A required status check asks whether the analysis reported; this rule asks what it found. It blocks the merge on three distinct conditions: the named tool found an alert at or above either threshold, the tool's analysis is still running, or the tool is not configured for the repository at all. That third condition is what a status check cannot express, since deleting the analysis setup removes the check rather than failing it, and a required check nobody reports stops being a gate.
+
+`security_alerts_threshold` takes `none`, `critical`, `high_or_higher`, `medium_or_higher`, or `all`, and governs security alerts. `alerts_threshold` takes `none`, `errors`, `errors_and_warnings`, or `all`, and governs everything else the tool reports. The two are separate so a project can block on any security finding above a bar while tolerating style-grade alerts. `tool` matches the analysis tool's reported name, `CodeQL` for default setup; confirm the spelling against what the repository actually reports rather than assuming it:
+
+```bash
+gh api "repos/{owner}/{repo}/code-scanning/analyses?per_page=5" --jq '[.[] | .tool.name] | unique'
+gh api repos/{owner}/{repo}/code-scanning/default-setup --jq '{state, languages}'
+```
+
+A `tool` name that matches nothing the repository reports reads as "not configured" and blocks every merge, so verify the name before the rule goes active.
+
+GitHub Code Quality adds a second rule of the same shape, `code_quality`, whose `parameters.severity` names the level at or above which a result blocks the merge; `errors` is the value verified against a live ruleset. Two cautions belong with any recommendation of it. It is absent from the rulesets REST reference, which documents `code_scanning` and not this rule, so the API accepting it is currently better evidence than the reference is. And it is a licensed product that must be turned on per repository or organization and that consumes Actions minutes for its CodeQL passes plus per-seat licensing and AI credits for the rest, so name that cost before proposing it, and do not add the rule to a repository where Code Quality is not already on: a rule requiring a tool that never reports blocks every merge. R-SEC-09 does not require it, and CodeQL default setup with the `code_scanning` rule satisfies the rule on its own.
 
 ## Read OpenSSF Scorecard results (Step 12)
 
