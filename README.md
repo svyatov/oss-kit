@@ -69,15 +69,19 @@ continuous integration.
 
 | Skill | What it does |
 |---|---|
-| `oss-audit` | Scores the repository against `STANDARD.md` and returns a gap list keyed by rule ID, each routed to the skill that fixes it. |
-| `oss-community` | Writes the community files: CONTRIBUTING, CODE_OF_CONDUCT, SECURITY.md, issue forms and change-request templates, CODEOWNERS, FUNDING, and license selection, and sets the forge project's description, topics, and homepage. |
-| `oss-readme` | Orders the README so a reader gets the claim, the install command, and a working example before anything else, links the license, changelog, and contributing guide, and checks every version, command, and claim against the manifest, CI config, and source. |
-| `oss-ci` | Writes what runs on push and on every change request, on GitHub Actions or GitLab CI/CD: test, lint, and build matrices, caching, and per-ecosystem setup. |
-| `oss-harden` | Hardens the security posture: pinned action SHAs, minimal workflow permissions, untrusted input kept out of shell commands, Dependabot or Renovate, locked dependency resolution, static analysis on pull requests, branch protection, and signed tags. |
-| `oss-publish` | Sets up registry publishing with trusted publishing, provenance, and an approval gate, for npm, RubyGems, PyPI, and crates.io. |
-| `oss-changelog` | Keeps CHANGELOG.md in Keep a Changelog format, decides the semver bump, and writes release notes and deprecation notices. |
-| `oss-writing` | Fixes the sentences in commits, pull requests, issues, docs, error messages, log lines, and code comments. |
-| `oss-skill` | Fixes the structure, portability, and effectiveness of Agent Skills: canonical layout, `SKILL.md` conformance, trigger descriptions, progressive disclosure, repeatable procedures, portable scripts, evaluation, licensing, and host install paths. Bundles a validator that needs Node 22 or later, or Bun, and nothing installed. |
+| `oss-audit` | Scores the repository and routes each gap to a skill. |
+| `oss-community` | Writes every community file, from the license to issue forms. |
+| `oss-readme` | Orders the README and checks its claims against the source. |
+| `oss-ci` | Writes the test, lint, and build jobs for either forge. |
+| `oss-harden` | Pins action SHAs, trims permissions, and guards the branch. |
+| `oss-publish` | Sets up publishing to npm, RubyGems, PyPI, and crates.io. |
+| `oss-changelog` | Keeps CHANGELOG.md, picks the bump, writes release notes. |
+| `oss-writing` | Fixes the sentences in commits, pull requests, and docs. |
+| `oss-skill` | Fixes the structure and portability of the skills you ship. |
+
+Each skill page on the [documentation site](https://oss-kit.svyatov.com/skills/)
+carries the full description, including the validator `oss-skill` bundles, which
+runs on Node 22 or later, or Bun, with nothing installed.
 
 ## More install paths
 
