@@ -69,7 +69,7 @@ Every current rule is written down in
 what to check for, and which skill fixes it. Read it and disagree with it
 before you install anything.
 
-oss-kit meets every applicable rule of its own [STANDARD.md](skills/oss-audit/STANDARD.md) except one: the version in the manifests and the changelog is a release ahead of the newest tag. Rules that do not apply to a skills repository, such as the package-registry publishing rules, are recorded in AGENTS.md alongside it.
+oss-kit meets every applicable rule of its own [STANDARD.md](skills/oss-audit/STANDARD.md). Rules that do not apply to a skills repository, such as the package-registry publishing rules, are recorded in AGENTS.md with the reason each one is out of scope.
 
 ## Contributing
 
@@ -78,6 +78,26 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the setup, test, and pull request ste
 ## Changelog
 
 Every notable change is recorded in [CHANGELOG.md](CHANGELOG.md).
+
+## Versioning
+
+oss-kit follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) over
+four things:
+
+- the name of every skill and its `skills/<name>/` path
+- the rule IDs in `STANDARD.md` and what each rule requires
+- the path, argument, and exit codes of the validator at
+  `skills/oss-skill/scripts/validate.mjs`
+- the manifest paths each supported host reads
+
+The wording of a skill body, the layout of a skill's `references/` directory,
+the documentation site, and the maintenance code under `scripts/` and `tests/`
+are outside it. They change in any release.
+
+Renaming or removing a skill, renaming a rule ID, or tightening what a rule
+requires is an incompatible change: a repository that passed yesterday can fail
+today. Adding a skill or a rule is not. While the version stays below 1.0.0, an
+incompatible change ships in a MINOR release.
 
 ## Credits
 

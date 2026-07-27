@@ -2,53 +2,30 @@
 
 All notable changes to this project are documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.0.0/), and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) over the public API declared in the [README](README.md#versioning).
 
 ## [Unreleased]
 
-### Added
-
-- A `pages` workflow builds the site and deploys it to GitHub Pages on every push to `main`. The site is served at `oss-kit.svyatov.com`, which is set in the repository's Pages settings: GitHub ignores a `CNAME` file when publishing from a custom Actions workflow, so `site/public/CNAME` is gone.
-- `oss-ci` covers static-site deployment, for GitHub Pages and GitLab Pages. It carries no rule, since no rule requires a project to publish a site, so the skill asks before writing a deploy and writes none for a project that only builds a site as a check.
-- Code scanning through CodeQL default setup, covering `javascript-typescript` and `actions`. It is a repository setting rather than a workflow, so there is no file to maintain for it.
-- CI builds the documentation site. The site is generated from `STANDARD.md` and the skills, so a rule or a reference link that stops resolving now fails a check rather than reaching `main`.
-- A social card at `site/public/og.png`, and the `og:image` and `twitter:image` tags that point at it. The site already declared `twitter:card=summary_large_image`, so every share rendered an empty card.
-- `site/public/robots.txt`, naming the sitemap the site already generates.
-- A link to the repository in the site header, and an edit link on every page. Generated pages point at the file they were generated from, not at the generated copy.
-
-### Changed
-
-- Every plugin and marketplace manifest describes oss-kit as `Curated agent skills for open source maintainers`, the same line the site and the social card carry. The manifests called it an opinionated quality bar, so the pitch a reader saw depended on whether they arrived through a plugin browser, a share preview, or the site. The capability list those descriptions carried lives in the `keywords` and `tags` arrays of the same files.
-- A rule page is titled by the rule, not by its ID. The ID moves to a badge in the sidebar. The title drove the browser tab, the sidebar label, the pagination card, and the search result, so all four used to read `R-SEC-01` and say nothing.
-- The site sidebar groups rules by area in the order `STANDARD.md` argues them. It is built from `STANDARD.md` rather than from filenames, which sorted the areas alphabetically and split each one.
-- Guide and reference pages get a description drawn from their own first sentence. Guides used to repeat their title, and every reference page shared one generic line.
-- A reference page title names the skill that owns it, so the two `GitHub reference` pages and the two `GitLab reference` pages are distinguishable in search results.
-- Code blocks wrap, so an install command is readable on a phone without scrolling sideways.
-- `/standard/` is no longer in the search index. Every rule on it has its own page, so a query used to return the same rule twice.
-
-### Removed
-
-- The explicit `sharp` dependency in `site/package.json`. Astro already declares it as an optional dependency, and the site has no images.
-
-## [0.2.0] - 2026-07-23
+## [0.2.0] - 2026-07-27
 
 ### Added
 
 - `oss-skill` bundles a validator at `scripts/validate.mjs` that checks a repository against R-SKL-01 through R-SKL-05. It needs Node 22 or later, or Bun, and nothing installed: it imports only Node built-in modules, reads files, and makes no network call.
-- `STANDARD.md` gains R-SKL-05: a script a skill ships uses `sh` or Node with no dependencies, because it runs on the reader's machine rather than the author's.
-- Plugin manifests for Codex CLI and Cursor, and Codex's own `marketplace.json` at `.agents/plugins/`.
-- An `.opencode/skills` symlink, so OpenCode finds the skills where it scans.
-- `docs/install.md`, one page covering every harness.
-- The documentation site, generated from `STANDARD.md`, the skills, and the tracked prose under `docs/`.
-- `docs/getting-started.md` and `docs/adoption-guide.md`.
-- R-SKL-06: every host a repository claims support for has a committed manifest or a documented install command.
+- `STANDARD.md` gains R-SKL-05, a script a skill ships uses `sh` or Node with no dependencies, because it runs on the reader's machine rather than the author's, and R-SKL-06, every host a repository claims support for has a committed manifest or a documented install command.
+- Plugin manifests for Codex CLI at `.codex-plugin/plugin.json` and Cursor at `.cursor-plugin/plugin.json`, Codex's own marketplace at `.agents/plugins/marketplace.json`, and an `.opencode/skills` symlink. Each host now finds the skills where it scans.
+- A documentation site generated from `STANDARD.md` and the skills, served at [oss-kit.svyatov.com](https://oss-kit.svyatov.com) and redeployed on every push to `main`. Every rule has its own page, so a rule can be linked and read without installing anything.
+- Install, getting started, and adoption guides on that site. The install guide covers every claimed harness, one section each.
+- `oss-ci` covers static-site deployment, for GitHub Pages and GitLab Pages. It carries no rule, since no rule requires a project to publish a site, so the skill asks before writing a deploy and writes none for a project that only builds a site as a check.
+- The README declares the public API that Semantic Versioning covers: skill names and paths, rule IDs and what they require, the bundled validator's command line, and the manifest paths each host reads.
 
 ### Changed
 
 - R-SKL-02 now names the validator `oss-skill` bundles. The rule already accepted any specification validator, so what it requires has not changed.
 - `oss-harden` reads the upstream project's newest release before pinning an action, component, or image, and reports a lagging major to the user instead of freezing it. R-SEC-01 and R-SEC-06 accept a SHA regardless of the age of the tag behind it, so a stale pin used to pass unquestioned and then read as audited.
-- The README install section shows the two fastest commands and links to the install page.
-- `docs/` is tracked. Planning documents move to the gitignored `docs/superpowers/`.
+- The README install section shows the two fastest commands and links to the install guide.
+- Every plugin and marketplace manifest describes oss-kit as `Curated agent skills for open source maintainers`, the same line the site carries. The manifests called it an opinionated quality bar, so the pitch a reader saw depended on whether they arrived through a plugin browser or the site.
+- Security reports go through GitHub private vulnerability reporting, now enabled on this repository. Email stays the fallback.
+- `CONTRIBUTING.md` names the documentation site build. CI requires that check, and the guide used to say the repository has no build step, so a contributor who touched `site/` passed every documented command and still failed the merge.
 
 ### Removed
 

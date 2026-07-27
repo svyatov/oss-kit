@@ -81,9 +81,11 @@ Not applicable:
 - R-PUB-01, R-PUB-02, R-PUB-03, R-PUB-04: oss-kit ships through git, `npx skills add`, and the Claude Code plugin marketplace, and publishes to no package registry, so there is no publish step, token, OIDC flow, or provenance to secure.
 - R-CHG-05: no API has been removed, so there is no deprecation to have preceded it.
 
-Pending, with the trigger that resolves each one:
+Nothing is pending. R-CHG-03 was, until 0.2.0 was tagged: three plugin manifests and the newest `CHANGELOG.md` heading said 0.2.0 while the newest tag said `v0.1.0`. Because nothing had ever consumed 0.2.0, the fix folded the accumulated `Unreleased` section into it and dated it at the tag, rather than tagging an old commit and opening 0.3.0. Folding a release that never shipped means dropping every entry that describes a change to something introduced in the same release: the site landed in 0.2.0, so the entries tuning its page titles, sidebar, and search index described a state no user ever saw.
 
-- R-CHG-03: `.claude-plugin/plugin.json` and the newest `CHANGELOG.md` heading both say 0.2.0, but the newest tag and the newest GitHub release are `v0.1.0`, so 0.2.0 was never tagged. Resolves when 0.2.0 is tagged and released; `oss-changelog` owns the version decision and `oss-publish` the release.
+The public API that R-CHG-02 requires is declared in the README under Versioning: skill names and paths, rule IDs and what they require, the validator's command line, and the manifest paths each host reads. A skill body's wording and the `references/` layout are deliberately outside it, so prose can be improved in a patch. Tightening what a rule requires is incompatible, because a repository that passed yesterday fails today.
+
+`CHANGELOG.md` pins Keep a Changelog 2.0.0, which was published on 2026-06-07 and is what `oss-changelog` prescribes. The file used to pin 1.1.0.
 
 R-SEC-05 is met: `git cat-file -t v0.1.0` prints `tag`, and `git tag -v v0.1.0` reports a good SSH signature for the ED25519 key published at `gh api users/svyatov/ssh_signing_keys`. Verification needs `gpg.ssh.allowedSignersFile` pointed at that key; without it `git tag -v` fails with a configuration error rather than a bad signature, which reads like an unsigned tag and is not one.
 
