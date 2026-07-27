@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 - A tell catalog at `skills/oss-writing/references/tells.md`, 22 lexical patterns with what to write instead of each. It loads when a draft reads padded, generic, or promotional, rather than on every invocation, and it is published at [oss-kit.svyatov.com/skills/oss-writing/tells](https://oss-kit.svyatov.com/skills/oss-writing/tells/).
 - Four composition rules in `oss-writing`, each of which costs a non-native reader more than a native one: name the referent, cap noun stacks at three, one instruction per step, keep the articles. Paraphrased from ASD-STE100, which is cited and never reproduced.
 - A normative statements section in `oss-writing`. Uppercase MUST, SHOULD, and MAY carry their RFC 2119 and RFC 8174 meanings only where the document claims them; a README that shouts MUST has invented a requirement nobody is checking.
-- A test that scans every Markdown file under `skills/` for em dashes and en dashes. The tree had none, and now nothing can add one unnoticed.
+- A test that scans the skills tree and the root documents for em dashes, en dashes, and ` -- `. It reads prose only, stripping fenced blocks and inline code, so a rule can still name the pattern it forbids. The tree had none, and now nothing can add one unnoticed.
 
 ### Changed
 
@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 - The README leads with what the kit is, then one install command and one worked example, in that order. The install variants and the per-host plugin commands moved below the example, because three install blocks used to run back to back before a reader saw the kit do anything.
 - The README states the facts a reader picks a tool on: the rule count, the routing from a gap to the skill that fixes it, the 500-line ceiling on a skill body, and the single bundled script that needs nothing installed.
 - The README links the rendered install guide and standard on [oss-kit.svyatov.com](https://oss-kit.svyatov.com) rather than the Markdown sources under `site/`. A reader on GitHub was being sent to a source file when a published page exists.
+- The four skills derived from third-party work credit the maintainer alongside the upstream holder in their `sources.json`. Each file named only upstream, which understates one side of a joint work after the rewrites those same files document. The unread `license_override` and `license_override_reason` fields are gone, and the README credits list is now a line pointing at `sources.json`, so attribution lives in one place per skill instead of a list that grows with every borrowing.
 
 ## [0.2.0] - 2026-07-27
 
