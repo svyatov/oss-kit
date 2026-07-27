@@ -69,7 +69,7 @@ Every current rule is written down in
 what to check for, and which skill fixes it. Read it and disagree with it
 before you install anything.
 
-oss-kit meets every applicable rule of its own [STANDARD.md](skills/oss-audit/STANDARD.md) except four that await the public repository or the first release: branch protection waits on the public repository, and signed releases and the two release-tied changelog rules wait on the first tagged release. Rules that do not apply to a skills repository, such as the package-registry publishing rules, are recorded in AGENTS.md alongside these four.
+oss-kit meets every applicable rule of its own [STANDARD.md](skills/oss-audit/STANDARD.md) except one: the version in the manifests and the changelog is a release ahead of the newest tag. Rules that do not apply to a skills repository, such as the package-registry publishing rules, are recorded in AGENTS.md alongside it.
 
 ## Contributing
 
