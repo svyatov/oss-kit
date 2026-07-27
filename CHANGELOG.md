@@ -6,9 +6,13 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-27
+
+Five new rules, and `oss-audit` now reports the gaps alone rather than every rule it checked.
+
 ### Added
 
-- A tell catalog at `skills/oss-writing/references/tells.md`, 22 lexical patterns with what to write instead of each. It loads when a draft reads padded, generic, or promotional, rather than on every invocation, and it is published at [oss-kit.svyatov.com/skills/oss-writing/tells](https://oss-kit.svyatov.com/skills/oss-writing/tells/).
+- A tell catalog at `skills/oss-writing/references/tells.md`, 22 lexical patterns with what to write instead of each. It took the kill list out of the always-loaded body, roughly a third of the skill's rules, because the lexical tells are the part a model cannot reproduce from judgment and the composition rules are the part it can. It loads when a draft reads padded, generic, or promotional, rather than on every invocation, and it is published at [oss-kit.svyatov.com/skills/oss-writing/tells](https://oss-kit.svyatov.com/skills/oss-writing/tells/).
 - Four composition rules in `oss-writing`, each of which costs a non-native reader more than a native one: name the referent, cap noun stacks at three, one instruction per step, keep the articles. Paraphrased from ASD-STE100, which is cited and never reproduced.
 - A normative statements section in `oss-writing`. Uppercase MUST, SHOULD, and MAY carry their RFC 2119 and RFC 8174 meanings only where the document claims them; a README that shouts MUST has invented a requirement nobody is checking.
 - R-COM-07, the forge project page says what the project is and where it lives. A search result, a social card, and the forge's own project lists show the description and the topics and render none of the README, so a project with an empty description is findable only by someone who already has the link. `oss-community` gains a step for it, and both reference files gain the field limits, the commands, and the feature tabs each forge exposes.
@@ -34,7 +38,6 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 - R-SEC-04 accepts a repository ruleset as evidence on GitHub, not only a classic branch protection rule. Its check now reads `repos/{owner}/{repo}/rulesets` alongside the classic endpoint, which answers `404 Branch not protected` on a repository guarded by a ruleset. Any repository that passed before still passes; a repository on the form GitHub now recommends stops auditing as a fail.
 - `oss-harden` reaches for a ruleset's code scanning rule on R-SEC-09, alongside the required status check rather than instead of it. A required check asks whether the analysis reported; the rule asks what it found, and it also blocks when the tool is unconfigured, which is the case a required check cannot express because deleting the analysis setup removes the check rather than failing it. The reference carries both threshold enums, the command that confirms the tool's reported name, and the note that a name matching nothing blocks every merge. GitHub Code Quality's equivalent rule is described with its licensing and Actions cost, and with the fact that the REST reference does not document it yet.
 - `oss-harden` sets up branch protection on GitHub as a ruleset, with classic protection kept as the form to read rather than to create. The reference file gains the four rule types that carry R-SEC-04, the `~DEFAULT_BRANCH` condition, the migration order that never leaves the branch unguarded, and the four `pull_request` parameters worth setting past what the rule requires, including why `allowed_merge_methods` is not redundant with the repository's own merge checkboxes. It also answers the question a ruleset cannot: no rule keys on who clicks merge, the `update` rule that reads like the answer covers direct pushes only, and repository access is where restricting merges actually happens. It also gains the bypass list, which inverts the classic admin exemption: a ruleset binds everyone unless an actor is listed, so a single-maintainer project that requires one approving review and lists nobody cannot merge anything at all.
-- `oss-writing` moved its kill list out of the always-loaded body and into the catalog above, taking roughly a third of the skill's rules off every invocation. The lexical tells are the part a model cannot reproduce from judgment, so they were split off rather than cut.
 - `oss-readme` judges a fact by the reader question it answers rather than by the kind of evidence behind it. The old list admitted a benchmark, a size, a code comparison, and a screenshot, all of them properties of the artifact, which left no slot for what a project covers or what it needs from you. Those two are now the slots most often missing, and the first is mandatory wherever a project has a boundary.
 - `oss-writing` separates a bolded label from a bolded claim. `- **Performance:** it is faster` is still banned, because the stub displaces the sentence. `- **Fast.** 50% faster than X.` is allowed, because there the bold is the claim and the rest is its evidence. Delete everything after the bold to tell which one you wrote.
 - `oss-readme` says why it keeps the badge row below the tagline when the projects it takes its structure from put badges above the title. R-DOC-01 exists to spend a reader's first five seconds on the sentence, and the divergence holds only because the badge cap is three.
@@ -88,6 +91,7 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 - `oss-audit` scores a repository against `STANDARD.md`, reports each gap with the rule it fails, and names the skill that fixes it.
 - `oss-skill` fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` conformance to the Agent Skills specification, oversized bodies that belong in `references/`, and the license field an extracted skill carries with it.
 
-[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/svyatov/oss-kit/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/svyatov/oss-kit/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/svyatov/oss-kit/releases/tag/v0.1.0
