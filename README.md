@@ -27,12 +27,16 @@ Then ask your agent:
 Audit this repository against the oss-kit standard.
 ```
 
-It answers with the gaps, each keyed to the rule it failed and routed to the
-skill that fixes it:
+It answers with the gaps and nothing else, each keyed to the rule it missed and
+routed to the skill that fixes it. Rules that already pass do not appear:
 
 ```text
-R-COM-04: SECURITY.md is missing. Fixed by oss-community.
-R-SEC-01: 2 unpinned actions in .github/workflows/validate.yml. Fixed by oss-harden.
+Audited 41 applicable rules: 38 pass, 2 fail, 1 unknown, 5 not applicable
+(4 PUB, the project publishes no package; 1 GitLab-only).
+
+1. R-COM-04 fail, no SECURITY.md, run oss-community
+2. R-SEC-01 fail, two uses: lines in .github/workflows/validate.yml pin a tag rather than a SHA, run oss-harden
+3. R-SEC-05 unknown, the maintainer's signing key was not reachable, run oss-harden
 ```
 
 ## Where to start
