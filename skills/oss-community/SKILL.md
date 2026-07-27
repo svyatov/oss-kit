@@ -36,13 +36,17 @@ Identify the language and ecosystem from the package manifest and source layout,
 
 Read every package manifest's `license` field. If a manifest names a license and no `LICENSE` or `LICENSE.md` file exists, fetch the matching text from the license steward or the SPDX License List by its current identifier, then fill only the replaceable copyright fields. Do not reconstruct license text from memory. If no manifest names a license, ask which one to use rather than defaulting to MIT or any other license silently. If a `LICENSE` file already exists and disagrees with a manifest, point out the mismatch and ask which one is correct instead of picking one.
 
+A manifest that declares no license at all, because the package is private or the project publishes nothing, leaves this rule with no manifest to match. The license file still has to exist and still has to say which license it is, so read the file itself and confirm it is the full text of a license you can name, not a stub or a header. Check what else in the repository states a license, such as a skill's frontmatter or the forge's own detected license, and raise it if any of them disagree with the file.
+
 ### Step 3: CONTRIBUTING.md (R-COM-02)
 
 State the setup command, the test command, and how to open a pull request or merge request, using the commands verified in Step 1's read of the manifest and any build files. Name the actual branch and fork workflow the repository uses; do not describe a generic GitHub flow for a project that requires a different one. Place the file at the repository root unless the project already keeps community files in `.github/` or `docs/` on GitHub, in which case match that convention; GitLab recognizes no alternate location for this file, so keep it at the root there.
 
 ### Step 4: CODE_OF_CONDUCT.md (R-COM-03)
 
-Use an established code of conduct rather than drafting new standards of behavior. Fetch its current adoption template from the steward's official site, preserve its attribution and license notice, and customize only the fields the adoption instructions invite the project to customize. For Contributor Covenant 3.0, those fields are the reporting instructions and, when the project has its own process, the section about addressing and repairing harm. Fill in the verified reporting contact, and confirm no placeholder text survives before finishing.
+Use an established code of conduct rather than drafting new standards of behavior. Read the steward's official site for the version it currently publishes and fetch that adoption template from there; do not assume a version number, because the one a skill or an existing file names goes stale the moment the steward publishes the next one. Preserve the attribution and license notice, and customize only the fields that version's own adoption instructions invite the project to customize, which for the Contributor Covenant is the reporting instructions and, in versions that have one, the section describing the project's own enforcement process. Fill in the verified reporting contact, and confirm no placeholder text survives before finishing.
+
+A code of conduct already in the repository at an older version of the same document still satisfies R-COM-03, provided its reporting contact works. Say that the newer version exists and let the maintainer decide; do not replace a working file to chase a version number.
 
 ### Step 5: SECURITY.md (R-COM-04)
 
@@ -51,6 +55,8 @@ State the private reporting channel gathered above and the response window the m
 ### Step 6: Issue and pull or merge request templates (R-COM-05)
 
 Open the reference file for the forge chosen in Step 1 before writing any template; the two forges differ enough here that guessing at the other's shape produces a template the forge will not render. At minimum, ship one issue template and one pull or merge request template. Ask what categories of issue the project wants to distinguish, such as a bug report and a feature request, rather than inventing categories the maintainer did not ask for.
+
+The rule asks that reports arrive with the facts you need, and a template made of Markdown headings cannot require anything: a contributor can delete every heading and submit an empty issue. On a public GitHub repository, write issue forms instead, and mark the fields you cannot triage without as required, because that is the only shape either forge enforces and it works only in public repositories. Verify the form renders in the template chooser before treating it as finished, since the form schema is in public preview. Fall back to a Markdown template on a private repository, on GitLab, or when a form does not render, and say which one you shipped and what it does not enforce.
 
 ### Step 7: CODEOWNERS (R-COM-06)
 
