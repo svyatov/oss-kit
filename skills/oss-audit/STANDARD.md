@@ -53,6 +53,42 @@ Check: `README.md`, files under `docs/`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE
 Fixed by: oss-writing
 Forges: both
 
+### R-DOC-06: The README names what the project covers and where it runs
+
+A reader's first question is whether they are in the audience at all. A README that describes what the project does but never names the forges, registries, runtimes, or platforms it supports makes every reader run the install command to find out, and most of them will not.
+
+Check: `README.md` names the platforms, forges, ecosystems, registries, or runtimes the project supports, and each name it claims appears in the source, the manifest, or the CI configuration.
+
+Fixed by: oss-readme
+Forges: both
+
+### R-DOC-07: Every fenced code block in the README says what consumes it
+
+A block of text in a box tells a reader nothing about where it goes. Two blocks in a row, one a shell command and one the contents of a configuration file, look identical and get pasted into the same place.
+
+Check: every fenced code block in `README.md` carries a language tag, and every block whose destination is not a shell is preceded by a sentence naming the file, tool, or prompt it goes to.
+
+Fixed by: oss-readme
+Forges: both
+
+### R-DOC-08: The README links a public place to ask a question and report a problem
+
+A reader who is stuck either finds the channel or leaves. A private mailbox or a chat platform that needs an account and a client is not a channel, because the next person with the same question cannot find the answer you already wrote.
+
+Check: `README.md` links at least one public channel that is searchable, addressable by URL, and usable without proprietary client software, covering both questions and defect reports; one channel satisfies both when the project routes them to the same place.
+
+Fixed by: oss-readme
+Forges: both
+
+### R-DOC-09: The README says whether the project is maintained
+
+A project that stopped four years ago and one that shipped last week look the same in a search result. Saying which costs a sentence and saves a reader a day.
+
+Check: `README.md` carries a statement of maintenance or support status, or the repository carries an equivalent signal: `DEPRECATED` as the first heading of `README.md`, `DEPRECATED` at the start of the repository description, a no-maintenance-intended badge, or the archived flag set.
+
+Fixed by: oss-readme
+Forges: both
+
 ## Community
 
 ### R-COM-01: The repository ships a license file whose license matches the package manifest
