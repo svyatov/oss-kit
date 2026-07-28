@@ -30,7 +30,7 @@
       "https://evilmartians.com/chronicles/how-to-make-your-open-source-popular"
     ],
     "verified": "2026-07-28",
-    "note": "Same provenance and same caveat as R-DOC-01. Upstream carries the plain-language half twice, as 'No jargon' in the skill and as 'Don't use tech speak, write like you'd speak with your colleagues in real life' in the essay. The active-voice requirement and the ban on marketing language are this standard's own. skills/oss-writing separately cites https://www.asd-ste100.org/, a controlled-language specification that would be the stronger source, but it was not re-read for this rule and ASD-STE100 governs technical maintenance documentation rather than a README."
+    "note": "Same provenance and same caveat as R-DOC-01. Upstream carries the plain-language half twice, as 'No jargon' in the skill and as 'Don't use tech speak, write like you'd speak with your colleagues in real life' in the essay. The active-voice requirement and the ban on marketing language are this standard's own. skills/oss-writing separately cites https://www.asd-ste100.org/, a controlled-language specification that would be the stronger source. Public secondary material on it was read on 2026-07-28, which confirmed the sentence, paragraph, and noun-stack figures that skill carries; the specification itself is paywalled and has never been read for this rule. ASD-STE100 also governs technical maintenance documentation rather than a README, so it would not carry this rule alone."
   },
   "R-DOC-06": {
     "sources": [],

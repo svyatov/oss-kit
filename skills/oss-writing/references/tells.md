@@ -1,6 +1,6 @@
 # Tell catalog
 
-The lexicon that marks prose as machine-written. Each row names a pattern and what to write instead. The composition rules in `SKILL.md` handle the common case; this file is the lookup for a specific suspicion, so read the row that matches rather than running the whole table over every draft.
+The lexicon that marks prose as machine-written. Each row names a pattern and what to write instead. The composition rules and the check list in `SKILL.md` handle the common case; this file is the lookup for a specific suspicion, so read the row that matches rather than running the whole table over every draft.
 
 | Tell | Write instead |
 |------|---------------|
@@ -17,7 +17,6 @@ The lexicon that marks prose as machine-written. Each row names a pattern and wh
 | False ranges: `from linting to deployment` | Name the two things |
 | Passive or subjectless: `was refactored`, `no config needed` | Name the actor: `the loader now caches`, `you do not need a config file` |
 | Filler: `in order to`, `due to the fact that`, `has the ability to`, `it is important to note that` | `to`, `because`, `can`, delete |
-| Hedging stacks: `may potentially`, `could possibly` | Pick one modal or drop it |
 | Generic closer, upbeat (`this improves maintainability going forward`) or defensive (`and that is the finding rather than a gap to paper over`) | Delete it |
 | Signposting: `let's dive in`, `here's what you need to know`, `this PR aims to`, `in this change, we` | Start with the content |
 | Fragmented header: a heading followed by a line restating the heading | Delete the restatement |
