@@ -6,12 +6,21 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-07-28
+
 ### Changed
 
 - `oss-writing` gates the commit and change-request body behind a closed trigger list instead of listing what a body carries. The default is now no body at all, and one of six named conditions has to hold before one exists. The old table read as a checklist to cover, which is where padded git prose came from.
 - `oss-writing` moved the GitHub and GitLab render mechanics into `references/forge-rendering.md`, loaded only when a description is about to become a squash commit message. The body keeps one forge-agnostic rule: forge fields take one paragraph per line, unwrapped.
 - `oss-writing` states a subject budget of 72 characters, counting any number the forge appends on squash. It also makes the sentence and paragraph figures hard limits, where they were signals to split. Git's 50-character subject predates the `type(scope): ` prefix, which spends 15 to 20 of those characters.
 - `oss-writing` no longer bans naming the failure a change targets. Recording the run that went wrong is a reproduction, which Git's own guidance asks for; only the author's route to the fix is noise.
+
+### Fixed
+
+- The site's home page no longer clips the domain map on a narrow window. Between 418px and 526px the map kept its two-column form inside a narrower container, which cut off the count column, the right edge of every bay, and the active bay's marker.
+- Running prose on the site is capped at 58ch rather than 72ch, which measures about 70 characters a line instead of 84. Code blocks, tables, and install commands keep the full pane.
+- Every rule page's Fixed by cell links to the owning skill's list of rules rather than to the top of its page, and a skill that names its rules only in prose gets a generated list to link to. Header navigation links also clear the 24px target floor from WCAG 2.5.8.
+- The README skills table keeps every skill name on one line. GitHub's table layout was squeezing the name column to the width of `community` because the descriptions in the second column took the whole budget; they are now one line each, and the skill pages carry the detail.
 
 ## [0.3.0] - 2026-07-27
 
@@ -98,7 +107,8 @@ Five new rules, and `oss-audit` now reports the gaps alone rather than every rul
 - `oss-audit` scores a repository against `STANDARD.md`, reports each gap with the rule it fails, and names the skill that fixes it.
 - `oss-skill` fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` conformance to the Agent Skills specification, oversized bodies that belong in `references/`, and the license field an extracted skill carries with it.
 
-[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/svyatov/oss-kit/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/svyatov/oss-kit/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/svyatov/oss-kit/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/svyatov/oss-kit/releases/tag/v0.1.0
