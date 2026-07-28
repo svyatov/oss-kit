@@ -297,19 +297,53 @@ ${RELEASED}[Unreleased]: https://example.com/compare/v0.2.0...HEAD
   expect(stripUnreleased(`${RELEASED}[Unreleased]: https://example.com/h`)).toBe(RELEASED)
 })
 
-test("stripUnreleased ends the section at a release, not at an entry in bracket form", () => {
-  // A definition is a label, a colon, and a URL. An entry that opens with a
-  // bracket has the first two, and stopping there left the rest on the page.
+test("stripUnreleased ends the section at a release, not at a definition inside it", () => {
+  // Only a heading ends the section. Ending it at the first line that looks
+  // like a definition, which an entry can carry and prose can imitate, left
+  // every entry below that line on the page with no heading to explain it.
   const text = `## [Unreleased]
 
 ### Changed
 
 [Note]: this line has the label and the colon but no URL, so it is prose.
-- A second entry that must go too.
+- An entry that must go too. See [#12].
+
+[#12]: https://example.com/issues/12
+
+- A last entry, below a definition this section really does carry.
 
 ${RELEASED}[Unreleased]: https://example.com/compare/v0.2.0...HEAD
 `
   expect(stripUnreleased(text)).toBe(RELEASED)
+})
+
+test("stripUnreleased takes the last entry of a file that ends without a newline", () => {
+  // The section runs to the end of the file, and its final entry carries no
+  // newline to be recognized by.
+  expect(stripUnreleased("## [Unreleased]\n\n### Fixed\n\n- A leaking entry")).toBe("")
+})
+
+test("stripUnreleased removes the definition in the footer, not an example of one", () => {
+  // oss-kit documents changelogs, so a released entry may quote the footer it
+  // prescribes. Removing the first match took the example and left the real
+  // definition, putting the word on the page and in the search index.
+  const quoted = `## [0.2.0] - 2026-07-27
+
+### Added
+
+- A footer, which reads:
+
+\`\`\`
+[Unreleased]: https://example.com/compare/v0.2.0...HEAD
+\`\`\`
+
+[0.2.0]: https://example.com/compare/v0.1.0...v0.2.0
+[Unreleased]: https://example.com/compare/v0.2.0...HEAD
+`
+  const stripped = stripUnreleased(quoted)
+  expect(stripped).toContain("```\n[Unreleased]: https://example.com/compare/v0.2.0...HEAD\n```")
+  expect(stripped.endsWith("[0.2.0]: https://example.com/compare/v0.1.0...v0.2.0\n")).toBe(true)
+  expect(stripped.match(/^\[Unreleased\]: /gm)).toHaveLength(1)
 })
 
 test("stripUnreleased ends the section at the definitions when no release follows", () => {

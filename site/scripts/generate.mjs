@@ -239,8 +239,9 @@ export function rewriteLinks(markdown, resolve) {
   })
 }
 
-const UNRELEASED = /^## \[Unreleased\][^\n]*\n(?:(?!^## |^\[[^\]\n]+\]: https?:)[^\n]*\n)*/m
-const UNRELEASED_DEF = /^\[Unreleased\]: [^\n]*\n?/m
+// A label, a colon, and one token of target. An entry that opens with a bracket
+// has the first two, so the target is what tells a definition from prose.
+const DEFINITION = /^\[[^\]]+\]: \S+\s*$/
 
 /**
  * The site publishes released versions only. Keep a Changelog requires the
@@ -249,15 +250,43 @@ const UNRELEASED_DEF = /^\[Unreleased\]: [^\n]*\n?/m
  * Its reference definition goes too, so the word reaches neither the page nor
  * the search index.
  *
- * The section ends at the next `##` heading, or at the reference definitions
- * when no release follows it. A definition is a bracketed label, a colon, and
- * a URL: matching on the brackets alone would end the section early on an
- * entry that opens one, and letting the label span a newline turns the scan
- * quadratic on a line that opens a bracket it never closes.
+ * A changelog is a body followed by a block of reference definitions, and
+ * finding that boundary first is what keeps the two removals out of each
+ * other's reach. In the body only a `##` heading ends the section, so a
+ * definition an entry carries cannot end it early. The definition removal
+ * looks only inside the block, so an example of the footer quoted in a
+ * released entry is not mistaken for the footer itself.
+ *
+ * Each line keeps its own newline, so dropping the last line of a file does
+ * not take the newline off the line above it, and a file that ends without one
+ * cannot leave its final entry behind.
  * @param {string} markdown
  */
 export function stripUnreleased(markdown) {
-  return markdown.replace(UNRELEASED, "").replace(UNRELEASED_DEF, "")
+  const lines = markdown.split(/(?<=\n)/)
+
+  let footer = lines.length
+  while (footer > 0) {
+    const line = lines[footer - 1]
+    if (line === undefined || (line.trim() !== "" && !DEFINITION.test(line))) break
+    footer--
+  }
+  // The blank line separating the two belongs to the body, so a section that
+  // runs to the footer takes it and does not leave the page opening on it.
+  while (footer < lines.length && lines[footer]?.trim() === "") footer++
+
+  const start = lines.findIndex((line) => line.startsWith("## [Unreleased]"))
+  if (start > -1 && start < footer) {
+    let end = start + 1
+    while (end < footer && !lines[end]?.startsWith("## ")) end++
+    lines.splice(start, end - start)
+    footer -= end - start
+  }
+
+  const definition = lines.findIndex((line, i) => i >= footer && line.startsWith("[Unreleased]: "))
+  if (definition > -1) lines.splice(definition, 1)
+
+  return lines.join("")
 }
 
 /**
