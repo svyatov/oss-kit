@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-28
+
+Every rule now names the upstream it rests on, or argues its own case, and four new rules take the standard to 50.
+
 ### Added
 
 - Four rules, taking the standard from 46 to 50. R-PUB-05 requires a release that carries a built asset to carry a software bill of materials describing it. R-PUB-06 requires those assets to be signed, or listed by hash in a signed manifest; it is separate from R-SEC-05, which covers the tag object and not the files attached to the release. R-COM-08 requires a documented statement of who decides and what happens if they stop, and a single-maintainer project satisfies it by saying so. R-DOC-10 requires the README to name one thing that sets the project apart, backed by a boundary, a measured number, or an alternative named outright; it restores a clause `oss-readme` dropped from the skill it was forked from, and gives that skill's longest section, the facts list, a rule to be scored by.
@@ -132,7 +136,8 @@ Five new rules, and `oss-audit` now reports the gaps alone rather than every rul
 - `oss-audit` scores a repository against `STANDARD.md`, reports each gap with the rule it fails, and names the skill that fixes it.
 - `oss-skill` fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` conformance to the Agent Skills specification, oversized bodies that belong in `references/`, and the license field an extracted skill carries with it.
 
-[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/svyatov/oss-kit/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/svyatov/oss-kit/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/svyatov/oss-kit/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/svyatov/oss-kit/compare/v0.1.0...v0.2.0
