@@ -30,9 +30,11 @@ Keep it self-contained. Summarize the discussion that led here instead of linkin
 
 A description running long is a signal to split the change into finer pieces, not to write more. Length and content are separate constraints, so never drop a breaking-change note to be shorter.
 
-A change-request description differs from a commit body in one way: its reader arrives before the diff, not after. So it opens with a one-line statement of what changed even when nothing else earns a body, it names where to start reading when the diff is large enough that a reviewer would otherwise open the wrong file first, and it reports verification only when verification actually ran.
+A change-request description differs from a commit body in one way: its reader arrives before the diff, not after. So it opens with a one-line statement of what changed, even when nothing else earns a body. It names where to start reading when the diff is large enough that a reviewer would open the wrong file first. It reports verification only when verification actually ran.
 
-A required template section is not optional. Answer each at the shortest length that answers it. Where a section's honest answer is nothing, write that word rather than a paragraph. Where it asks for a status you do not have, write `Not run: <reason>`. Invent no scaffolding the repository does not ship.
+Account for every changed file somewhere in the prose, so no reviewer meets a hunk the description did not prepare them for. Group the incidental ones into a single clause. This is the one place the silence default does not reach: a file nobody mentioned reads as a file nobody meant to change. A bullet per file is still the diff restated, so keep the coverage in sentences.
+
+A required template section is not optional. Answer each at the shortest length that answers it. Read what the section actually asks: where it asks for something beyond a named baseline, answer past that baseline instead of naming it again. Where a section's honest answer is nothing, write that word rather than a paragraph. Where it asks for a status you do not have, write `Not run: <reason>`. Name what would close the gap, so a reviewer can decide whether to close it. Invent no scaffolding the repository does not ship.
 
 A review comment names the concrete defect, states its consequence, and gives the required outcome, in about two sentences. Say whether it blocks or is optional, and use a suggestion block when the exact edit is known. Where the repository has adopted Conventional Comments, open with its label and decoration, as `issue (blocking):` or `nitpick (non-blocking):`, and keep the two sentences behind it.
 
