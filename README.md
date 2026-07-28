@@ -5,12 +5,12 @@ Curated agent skills for open source maintainers.
 [![version](https://img.shields.io/github/v/tag/svyatov/oss-kit?label=version)](https://github.com/svyatov/oss-kit/releases)
 [![CI](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml)
 
-- **50 rules.** Each states the check it is scored by and the one skill that
+- **51 rules.** Each states the check it is scored by and the one skill that
   fixes it.
 - **Seven areas.** Documentation, community files, CI, security posture,
   release publishing, changelog discipline, and the agent skills a repository
   ships.
-- **Both forges.** 47 of the 50 rules score GitHub and GitLab alike. Two are
+- **Both forges.** 47 of the 51 rules score GitHub and GitLab alike. Three are
   GitHub-only, one is GitLab-only, and every rule says which.
 - **Four registries.** Release publishing for npm, RubyGems, PyPI, and
   crates.io.
@@ -31,7 +31,7 @@ It answers with the gaps and nothing else, each keyed to the rule it missed and
 routed to the skill that fixes it. Rules that already pass do not appear:
 
 ```text
-Audited 43 applicable rules: 40 pass, 2 fail, 1 unknown, 7 not applicable
+Audited 44 applicable rules: 41 pass, 2 fail, 1 unknown, 7 not applicable
 (6 PUB, the project publishes no package; 1 GitLab-only).
 
 1. R-COM-04 fail, no SECURITY.md, run oss-community
@@ -116,10 +116,16 @@ the reason for every rule that does not reach a skills repository.
 
 ## Help and project status
 
-Ask a question or report a problem in
-[Issues](https://github.com/svyatov/oss-kit/issues). Questions and defect
-reports go to the same place. To report a security vulnerability, follow
-[SECURITY.md](SECURITY.md) instead of opening an issue.
+Start in [Discussions](https://github.com/svyatov/oss-kit/discussions).
+Questions, disagreement with a rule, and anything you are not sure is a defect
+belong there.
+
+Open an [issue](https://github.com/svyatov/oss-kit/issues) when something is
+broken, when you want to propose a rule, or when you want to propose a skill
+change. Each of the three has a form.
+
+To report a security vulnerability, follow [SECURITY.md](SECURITY.md) instead
+of either.
 
 oss-kit is maintained. It is below 1.0.0, so incompatible changes still ship
 in minor releases; the Versioning section below says exactly what is covered.

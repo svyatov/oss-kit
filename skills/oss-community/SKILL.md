@@ -52,7 +52,7 @@ A code of conduct already in the repository at an older version of the same docu
 
 State the private reporting channel gathered above and the response window the maintainer confirmed. Do not state a response window nobody committed to keeping; a generic "we aim to respond within 48 hours" that the maintainer never agreed to is exactly the kind of unmaintained promise this skill exists to avoid. On GitHub, confirm the repository is public and private vulnerability reporting is enabled before naming its report form. On GitLab, prefer an enabled Service Desk address or a monitored security email. Name a confidential-issue URL only after verifying that a reporter with the documented audience's role can create the issue as confidential. A channel that requires undisclosed project membership is not a public security contact.
 
-### Step 6: Issue and pull or merge request templates (R-COM-05)
+### Step 6: Issue and pull or merge request templates (R-COM-05, R-COM-09)
 
 Open the reference file for the forge chosen in Step 1 before writing any template; the two forges differ enough here that guessing at the other's shape produces a template the forge will not render. At minimum, ship one issue template and one pull or merge request template.
 
@@ -62,7 +62,9 @@ Present the derived fields and the template categories before writing any file. 
 
 A template made of Markdown headings cannot require any of those fields: a contributor can delete every heading and submit an empty issue. On a public GitHub repository, write issue forms instead, and mark the fields you cannot triage without as required, because that is the only shape either forge enforces and it works only in public repositories. Verify the form renders in the template chooser before treating it as finished, since the form schema is in public preview. Fall back to a Markdown template on a private repository, on GitLab, or when a form does not render, and say which one you shipped and what it does not enforce.
 
-Write the chooser config as well on GitHub whenever the project has somewhere to send what is not a defect. Routing questions and support requests to a discussion forum or chat channel with `contact_links` removes more noise than any field can, because a question is not a defect in any shape. Leave the blank issue enabled unless the templates cover every kind of report the project accepts.
+Write the chooser config as well on GitHub whenever the project has somewhere to send what is not a defect (R-COM-09). Routing questions and support requests to a discussion forum or chat channel with `contact_links` removes more noise than any field can, because a question is not a defect in any shape. Ask where that traffic already goes rather than assuming the tracker; a project with a forum nobody links to has the channel and not the door. Open the linked URL before shipping the file, since the rule checks that the destination exists and a link to a forum that was never opened costs a contributor the same round trip as no link at all. Leave the blank issue enabled unless the templates cover every kind of report the project accepts, and leave `blank_issues_enabled` alone otherwise: R-COM-09 scores the routing, not the tracker's front door.
+
+Whether the project runs such a channel at all is the maintainer's decision and not this rule's business. Where they want one and the project is on GitHub, Discussions is the cheapest to open, and it is a repository setting rather than a file, so Step 9's rules about settings apply. A Discussions category can carry a form of its own in the same schema the issue forms use, which is worth proposing only for a category that already collects a recurring shape of report; [references/github.md](references/github.md) has the path, the naming rule, and the keys that differ from an issue form.
 
 A change-request template collects what review needs and the pipeline cannot report. A checkbox asking whether the contributor ran the tests duplicates a required check and reads as satisfied whether or not it is, so read the project's own pipeline first and ask for nothing it already answers. Ask instead for what no job produces: which part of the declared public API the change touches, where the project declares one, and the evidence behind a change nothing automated can score. Neither forge can require a field here, so keep the list short enough to be read.
 
@@ -105,3 +107,5 @@ R-COM-06: A CODEOWNERS file assigns a reviewer to every path
 R-COM-07: The forge project page says what the project is and where it lives
 
 R-COM-08: A documented statement says who decides, and what happens if they stop
+
+R-COM-09: When questions and defects have different homes, the issue chooser says so

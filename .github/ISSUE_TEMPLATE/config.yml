@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a question
+    url: https://github.com/svyatov/oss-kit/discussions/categories/q-a
+    about: Anything you need answered about a rule, a skill, or installing the kit.
+  - name: Disagree with a rule
+    url: https://github.com/svyatov/oss-kit/discussions/categories/general
+    about: Argue it here first. Open a rule proposal once you have a check to offer.
+  - name: Report a security vulnerability
+    url: https://github.com/svyatov/oss-kit/security/policy
+    about: Follow SECURITY.md. Do not open a public issue.

@@ -48,7 +48,9 @@ Anything the template can decide for the reporter belongs in the top-level keys 
 
 Ship one template per kind of work that gets triaged differently. A defect and a proposal land in different parts of a maintainer's week, so they are two templates. A distinction that only sets a label or names a component is a field inside one template instead of a second file, because near-identical templates drift apart the first time one of them is updated.
 
-Questions and support requests are the largest source of tracker noise and the one templates cannot fix, since a question is not a defect whatever shape it is filed in. Route them out of the tracker with `contact_links` in the chooser config, pointing at the discussion forum, chat channel, or mailing list where the project actually answers them. Where a project has nowhere to route them, leave the blank issue enabled rather than closing the only door: R-DOC-08 requires a public channel for questions, and if the tracker is that channel then it has to accept a question that fits no template.
+Questions and support requests are the largest source of tracker noise and the one templates cannot fix, since a question is not a defect whatever shape it is filed in. Route them out of the tracker with `contact_links` in the chooser config, pointing at the discussion forum, chat channel, or mailing list where the project actually answers them. That routing is what R-COM-09 scores, and it scores only projects that run such a channel. Where a project has nowhere to route them, leave the blank issue enabled rather than closing the only door: R-DOC-08 requires a public channel for questions, and if the tracker is that channel then it has to accept a question that fits no template.
+
+The reverse case is worth naming too, because it is the one a maintainer creates by accident. A project that opens a forum and leaves the chooser silent has moved nothing: the door a reporter sees is still the tracker, so the questions keep arriving there and the forum stays empty, which then reads as evidence nobody wanted one.
 
 ## What this looks like for a project that runs inside a host
 
