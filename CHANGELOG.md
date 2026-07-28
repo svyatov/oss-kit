@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+### Fixed
+
+- The site's changelog page publishes released versions only. The generator copied this file whole, so the page carried an `Unreleased` heading that renders empty between releases and advertises uninstallable work the rest of the time, along with a comparison link that moves on every merge to `main`.
+- The site's changelog page links the README's Versioning section on GitHub. It is the one generated page with no sibling page to point at, so the relative target shipped raw and answered 404.
+
 ## [0.3.1] - 2026-07-28
 
 ### Changed

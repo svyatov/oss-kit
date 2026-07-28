@@ -11,6 +11,7 @@ import {
   rewriteLinks,
   skillSummaries,
   splitFrontmatter,
+  stripUnreleased,
   writeAll,
 } from "../site/scripts/generate.mjs"
 import { existsSync, mkdtempSync, readFileSync as read, rmSync } from "node:fs"
@@ -261,6 +262,54 @@ test("every page has a unique title and a description that is not a copy of it",
   expect(new Set(titles).size).toBe(titles.length)
   expect(pages.filter((p) => p.description === p.title)).toEqual([])
   expect(pages.filter((p) => !p.description)).toEqual([])
+  rmSync(out, { recursive: true, force: true })
+})
+
+const RELEASED = `## [0.2.0] - 2026-07-27
+
+### Added
+
+- A thing.
+
+[0.2.0]: https://example.com/compare/v0.1.0...v0.2.0
+`
+
+test("stripUnreleased drops the section, its entries, and its definition", () => {
+  const text = `## [Unreleased]
+
+### Changed
+
+- [A link](https://example.com) opens this entry, which is not a definition.
+
+${RELEASED}[Unreleased]: https://example.com/compare/v0.2.0...HEAD
+`
+  expect(stripUnreleased(text)).toBe(RELEASED)
+})
+
+test("stripUnreleased handles an empty section and a changelog without one", () => {
+  const empty = `## [Unreleased]
+
+${RELEASED}[Unreleased]: https://example.com/compare/v0.2.0...HEAD
+`
+  expect(stripUnreleased(empty)).toBe(RELEASED)
+  expect(stripUnreleased(RELEASED)).toBe(RELEASED)
+})
+
+test("the changelog page publishes released versions only", () => {
+  const out = mkdtempSync(join(tmpdir(), "oss-kit-site-"))
+  writeAll(".", out)
+  const page = read(join(out, "changelog.md"), "utf8")
+
+  expect(page).not.toContain("Unreleased")
+  // Every release heading is a shortcut reference link, so it renders as
+  // literal brackets if its definition is dropped along with the section's.
+  expect(page).toMatch(/^## \[\d+\.\d+\.\d+\] - \d{4}-\d{2}-\d{2}$/m)
+  expect(page).toMatch(/^\[\d+\.\d+\.\d+\]: https:/m)
+
+  // The changelog is the only page with no sibling page to link, so a relative
+  // target used to ship raw and 404 on the site.
+  expect(page).not.toContain("](README.md")
+  expect(page).toContain("blob/main/README.md#versioning")
   rmSync(out, { recursive: true, force: true })
 })
 

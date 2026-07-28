@@ -239,6 +239,22 @@ export function rewriteLinks(markdown, resolve) {
   })
 }
 
+const UNRELEASED = /^## \[Unreleased\][^\n]*\n(?:(?!^## |^\[[^\]]+\]: )[^\n]*\n)*/m
+const UNRELEASED_DEF = /^\[Unreleased\]: [^\n]*\n/m
+
+/**
+ * The site publishes released versions only. Keep a Changelog requires the
+ * section in the file, where it stages the next release, but on a page it
+ * either renders as an empty heading or advertises work nobody can install.
+ * Its reference definition goes too, so the word reaches neither the page nor
+ * the search index. The section ends at the next `##` heading or at the
+ * reference definitions, and only a definition carries the colon and space.
+ * @param {string} markdown
+ */
+export function stripUnreleased(markdown) {
+  return markdown.replace(UNRELEASED, "").replace(UNRELEASED_DEF, "")
+}
+
 /**
  * The second sentence is for the human reader. Everything below the notice is
  * written to be loaded by an agent, and without it the page reads as
@@ -520,6 +536,12 @@ the job in front of you.
   }
 
   const changelog = readFileSync(join(repoRoot, "CHANGELOG.md"), "utf8")
+  // A relative target in the changelog names a file in the repository, and this
+  // is the one page with no sibling page to point at, so it goes to the source.
+  const releases = rewriteLinks(
+    stripUnreleased(changelog).replace(/^# .*\n/m, "").trim(),
+    (target) => `${BLOB}/${target}`,
+  )
   written.push(
     write(
       outDir,
@@ -533,7 +555,7 @@ the job in front of you.
         // A bare div, blank-line separated, so CommonMark closes the HTML block
         // and parses the releases as Markdown. The headings stay real headings,
         // which is what keeps the anchors and the table of contents working.
-        `<div class="release-rail">\n\n${changelog.replace(/^# .*\n/m, "").trim()}\n\n</div>`,
+        `<div class="release-rail">\n\n${releases}\n\n</div>`,
       ),
     ),
   )
