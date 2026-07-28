@@ -46,9 +46,13 @@ Pin the publish job to a GitHub environment with required reviewers, or a GitLab
 
 Once the first tag-triggered release runs, verify the exact published artifact against the repository and workflow identity using the registry record or forge attestation named by the reference file. Record a registry limitation as a gap when it cannot serve verifiable provenance. Do not claim that OIDC authentication alone proves which artifact was built, and do not claim provenance exists from a successful publish alone.
 
+### Step 6: Describe and sign what the release ships (R-PUB-05, R-PUB-06)
+
+Only for a release that attaches a built asset. A source archive the forge generates is not one, and a project that publishes to a registry and attaches nothing else is done at Step 5. Where there is a built asset, add two steps to the build job, before the artifact is handed on: generate a software bill of materials in SPDX or CycloneDX, whichever the ecosystem's tooling already produces, and attach it to the release beside the asset it describes; then either sign each asset or write a manifest of their hashes and sign that. Prefer the forge's own attestation where it covers the exact asset, since it needs no key for the maintainer to hold, publish, or lose. If it does not, say which key verifies the signature and where a downloader finds it, because a signature nobody can trace to a published key verifies nothing. Do not generate an SBOM for the repository's source tree and attach it to a binary release; it describes a different thing and reads as though the rule were met.
+
 ## Scope
 
-This skill owns publishing: trusted publishing, build provenance, and the human approval gate on the release workflow, the R-PUB rules below. It writes into the same workflow and pipeline files as two other skills, and the boundary between them is the rule area, not a description of files. `oss-ci` decides what runs on push and on every change request, including the test job this skill's publish job depends on; it does not decide how the publish job authenticates or who approves it. `oss-harden` owns the security posture of the same files: pinning third-party actions to a commit SHA, minimal workflow permissions, dependency updates, branch protection, and signed tags; it does not decide when a job runs or how a package is published. Do not pin an action to a SHA, add an unrelated `permissions:` scope, or configure branch protection from this skill; note that the project needs it and hand the work to `oss-harden`.
+This skill owns publishing: trusted publishing, build provenance, the human approval gate on the release workflow, and what a release attaches alongside a built asset, the R-PUB rules below. It writes into the same workflow and pipeline files as two other skills, and the boundary between them is the rule area, not a description of files. `oss-ci` decides what runs on push and on every change request, including the test job this skill's publish job depends on; it does not decide how the publish job authenticates or who approves it. `oss-harden` owns the security posture of the same files: pinning third-party actions to a commit SHA, minimal workflow permissions, dependency updates, branch protection, and signed tags; it does not decide when a job runs or how a package is published. Do not pin an action to a SHA, add an unrelated `permissions:` scope, or configure branch protection from this skill; note that the project needs it and hand the work to `oss-harden`.
 
 ## Routing table
 
@@ -68,3 +72,7 @@ R-PUB-02: The publish job authenticates to the registry with trusted publishing,
 R-PUB-03: Published artifacts carry build provenance
 
 R-PUB-04: A human approves the run before anything reaches a public registry
+
+R-PUB-05: A built artifact ships with an inventory of what went into it
+
+R-PUB-06: Release assets are signed, or listed by hash in a signed manifest

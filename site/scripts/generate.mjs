@@ -199,15 +199,44 @@ export function renderStandardBody(standardText, rules) {
 }
 
 /**
+ * Where a rule's opinion came from, rendered on the rule page and nowhere else.
+ * The standard is an argument and stays clean; a visitor asking "says who" is
+ * asking about one rule. A rule with no upstream says so in those words rather
+ * than rendering an empty list, because the whole point of publishing this is
+ * that a reader can tell a sourced rule from this standard's own position.
+ * @param {{sources?: string[], verified?: string, note?: string}} [entry]
+ */
+export function renderRuleSources(entry) {
+  const urls = entry?.sources ?? []
+  // A date belongs to the list it was read against, so it rides the sourced branch.
+  const verified = entry?.verified ? `\n<p class="doc-verified">Last read against these sources on ${entry.verified}.</p>` : ""
+  const list = urls.map((url) => `  <li><a href="${inlineCodeHtml(url)}">${inlineCodeHtml(url)}</a></li>`).join("\n")
+  const body =
+    urls.length === 0
+      ? "<p>No upstream source. This is oss-kit's own position, and the argument for it is below.</p>"
+      : `<ul>\n${list}\n</ul>${verified}`
+  // Notes quote upstream verbatim, and upstream writes things like
+  // GET /integrity/<project>/<version>/. Unescaped, CommonMark eats them as tags.
+  return `<section class="doc-sources">
+  <h2>Where this comes from</h2>
+  ${body}${entry?.note ? `\n  <p>${inlineCodeHtml(entry.note)}</p>` : ""}
+</section>`
+}
+
+/**
  * @param {Rule} rule
  * @param {string} sourcePath
  * @param {{position: number, total: number}} [place] where the rule sits in its
  *   area. Search resolves to a rule page rather than to the standard, so a
  *   visitor commonly arrives here with no idea which area they landed in.
+ * @param {{sources?: string[], verified?: string, note?: string}} [entry] this
+ *   rule's entry in rule-sources.json.
  */
-export function renderRulePage(rule, sourcePath, place) {
+export function renderRulePage(rule, sourcePath, place, entry) {
   const position = place ? ` · ${place.position} of ${place.total}` : ""
   const body = `${ruleInstrument(rule, { position, level: 2, full: true })}
+
+${renderRuleSources(entry)}
 
 [Read the whole standard](/standard/)
 `
@@ -427,10 +456,13 @@ export function writeAll(repoRoot, outDir) {
   const standardPath = "skills/oss-audit/STANDARD.md"
   const standardText = readFileSync(join(repoRoot, standardPath), "utf8")
   const rules = parseRules(standardText)
+  const ruleSources = JSON.parse(readFileSync(join(repoRoot, "skills/oss-audit/rule-sources.json"), "utf8"))
   for (const rule of rules) {
     const siblings = rules.filter((other) => other.section === rule.section)
     const place = { position: siblings.indexOf(rule) + 1, total: siblings.length }
-    written.push(write(outDir, `rules/${rule.id.toLowerCase()}.md`, renderRulePage(rule, standardPath, place)))
+    written.push(
+      write(outDir, `rules/${rule.id.toLowerCase()}.md`, renderRulePage(rule, standardPath, place, ruleSources[rule.id])),
+    )
   }
   const sections = [...new Set(rules.map((rule) => rule.section))]
   written.push(

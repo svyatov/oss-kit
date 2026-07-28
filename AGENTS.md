@@ -72,6 +72,10 @@ Each `###` line is exactly `### R-<AREA>-<NN>: <statement>`, where AREA is DOC, 
 
 `oss-audit` owns no rule and must not appear in a `Fixed by:` line. It scores the repository and routes each gap to the skill that fixes it, so a rule it owned would route to itself.
 
+Every rule also has an entry in `skills/oss-audit/rule-sources.json`, keyed by ID, holding `sources`, an optional `verified` date, and an optional `note`. `tests/rule-sources.test.ts` enforces two things about it: a `verified` date needs at least one source, because a date with nothing behind it cannot be re-checked; and a rule whose `sources` are empty needs a `note`, because a rule holding this project's own position with no argument recorded is one nobody can challenge. Write that note to answer what was observed, and what would retire the rule. The docs site prints it on the rule page in place of a source list, so it is public prose, not an internal comment. Set `verified` only to a day a source was actually read.
+
+`scripts/rule-freshness.mjs` reports against the rules that have a source and lists the own-position rules separately. It never gates: a metric that fails a build becomes a chore somebody disables.
+
 ## Standard.md rules that do not apply here, or apply later
 
 This repository is scored against `skills/oss-audit/STANDARD.md` like any other. The rules below are recorded here rather than fixed, because they either do not reach this repository or wait on an event that has not happened yet.
@@ -80,10 +84,10 @@ Not applicable:
 
 - R-CI-04: no CI step caches anything, and the rule now says a CI configuration defining no dependency cache falls outside it rather than satisfying it with nothing to check.
 - R-SEC-06: GitLab-only rule; this repository is on GitHub.
-- R-PUB-01, R-PUB-02, R-PUB-03, R-PUB-04: oss-kit ships through git, `npx skills add`, and the Claude Code plugin marketplace, and publishes to no package registry, so the whole PUB area is out of scope by its preamble and its rules are not checked one at a time.
+- R-PUB-01 through R-PUB-06: oss-kit ships through git, `npx skills add`, and the Claude Code plugin marketplace. The PUB preamble now reaches two populations, registry publishers and repositories attaching a built asset to a forge release, and this repository is neither: it publishes to no registry, and its releases carry only the source archives GitHub generates. So the whole area is still out of scope by its preamble and its rules are not checked one at a time. Watch this if a release ever attaches a built file, because R-PUB-05 and R-PUB-06 would both start applying that day.
 - R-CHG-05: no public item has been removed, and the rule now says a project that has removed none falls outside it.
 
-Nothing is pending. R-COM-07 is met: the description, the homepage, and eight topics are set, all three readable with `gh repo view --json description,homepageUrl,repositoryTopics`. They are forge settings, so no file records them and no diff shows them changing. The social preview image is still unset, and R-COM-07 does not ask for one.
+R-COM-08 is met by the Governance section of `CONTRIBUTING.md`: one maintainer decides and releases, only the maintainer has write access so every contribution arrives from a fork, and no succession is arranged. The rule is deliberately satisfiable by a solo project stating that it is one, so the section says that plainly rather than inventing a governance structure. It also records the one decision that is not a judgement call, that a rule changes when there is an upstream source for the change. R-COM-07 is met: the description, the homepage, and eight topics are set, all three readable with `gh repo view --json description,homepageUrl,repositoryTopics`. They are forge settings, so no file records them and no diff shows them changing. The social preview image is still unset, and R-COM-07 does not ask for one.
 
 R-CHG-03 was pending, until 0.2.0 was tagged: three plugin manifests and the newest `CHANGELOG.md` heading said 0.2.0 while the newest tag said `v0.1.0`. Because nothing had ever consumed 0.2.0, the fix folded the accumulated `Unreleased` section into it and dated it at the tag, rather than tagging an old commit and opening 0.3.0. Folding a release that never shipped means dropping every entry that describes a change to something introduced in the same release: the site landed in 0.2.0, so the entries tuning its page titles, sidebar, and search index described a state no user ever saw.
 

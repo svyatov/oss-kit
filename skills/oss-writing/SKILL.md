@@ -84,7 +84,7 @@ Length is not effort. Padding a trivial change into a structured document wastes
 | Prefer active voice | `parser drops trailing commas`, not `trailing commas are dropped`. Keep passive voice when the actor is unknown, irrelevant, or would blame the reader. |
 | Prefer positive form | `the cache expires after 60s`, not `the cache does not persist beyond 60s`. Keep a negative requirement when prohibition is the point. |
 | Specific and concrete | `fails on files over 2 MB`, not `fails on large inputs` |
-| Omit needless words | Cut every word whose removal changes nothing |
+| Omit needless words | Cut every word, clause, or sentence whose removal changes nothing |
 | Related words together | `only the retry path calls this`, not `this is only called by the retry path` |
 | Emphatic word last | End the sentence on the thing that matters |
 | One topic per paragraph | Each paragraph makes exactly one point |
@@ -108,11 +108,12 @@ Check these before returning any text:
 
 - No em dashes, en dashes, or ` -- `: in short technical prose they are a reliable machine-written tell, and a period, comma, colon, or pair of parentheses carries the same break.
 - No emoji anywhere, including headings and bullets: their width and glyph vary by terminal and font, so they break alignment in the fixed-width contexts a repository lives in.
-- No inline-header bullet lists (`- **Performance:** it is faster`): the bolded stub replaces the sentence that would have said what changed, so the reader gets a label instead of a claim. A bolded claim closed with a period is a different shape and is allowed (`- **Fast.** 50% faster than native crypto.randomUUID().`), because there the bold is the claim and what follows is its evidence. Tell them apart by deleting everything after the bold: "Performance." says nothing, so it was a label; "Fast." says something, so it was a claim.
+- No inline-header bullet lists (`- **Performance:** it is faster`): the bolded stub replaces the sentence that would have said what changed, so the reader gets a label instead of a claim. A bolded claim closed with a period is a different shape and is allowed (`- **Both forges.** Scores GitHub and GitLab repositories.`), because there the bold is the claim and what follows is its evidence. Tell them apart by deleting everything after the bold: "Performance." says nothing, so it was a label; "Both forges." says something, so it was a claim.
 - Headings in sentence case, not Title Case: it is what the Google developer style guide prescribes, and mixing the two inside one document reads as text assembled from two sources.
 - No recap section restating what the text just said: the reader just read it, and a recap marks text written to a length rather than to a point.
 - No `Generated with`, `Co-Authored-By: Claude`, or tool attribution footers: a trailer records who is accountable for the change, and a tool cannot be.
 - No boilerplate caveats. State a precondition, limitation, or risk when it changes what the reader should do: a caveat that changes nothing trains the reader to skip the one that matters.
+- No clause that tells the reader how to weigh a fact just stated: delete the clause and see what is lost, and if no fact goes with it, it was defending the sentence rather than extending it. A rejected alternative, a constraint, or a consequence is a fact and stays.
 - Straight ASCII quotes: curly quotes break a copy-paste into a shell or a config file, and the reader cannot tell by eye which they got.
 - A body needs a named trigger, or a required template section asking for it. If neither holds, delete the body and ship the subject.
 

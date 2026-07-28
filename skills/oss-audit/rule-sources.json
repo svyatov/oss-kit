@@ -1,0 +1,315 @@
+{
+  "R-DOC-01": {
+    "sources": [
+      "https://github.com/evilmartians/agent-skills/blob/main/skills/good-readme/SKILL.md",
+      "https://evilmartians.com/chronicles/how-to-make-your-open-source-popular"
+    ],
+    "verified": "2026-07-28",
+    "note": "Neither source is a specification, and both are weaker than the primary sources elsewhere in this file. They are recorded because they are where this opinion actually came from: oss-readme is a fork of that skill, pinned in skills/oss-readme/sources.json at SHA 0813c8304717dc2fa392b6f4a475f3ac6c8f7336, and the essay is the same argument in prose by the same authors. Upstream's opening block asks for what it does in plain conversational language, the user benefit, and the differentiation from alternatives; this rule keeps only the first and caps it at one sentence. The reading on 2026-07-28 was of the current upstream file, not the pinned SHA."
+  },
+  "R-DOC-02": {
+    "sources": [
+      "https://github.com/evilmartians/agent-skills/blob/main/skills/good-readme/SKILL.md",
+      "https://evilmartians.com/chronicles/how-to-make-your-open-source-popular"
+    ],
+    "verified": "2026-07-28",
+    "note": "Same provenance and same caveat as R-DOC-01. Upstream gives the example its own specification, self-explanatory, 4 to 10 lines, output shown in a comment, and requires a getting-started guide explicit enough to copy without thinking. This rule diverges on order, and the divergence is deliberate: upstream runs opening, facts, example, getting started, putting the example before installation, where this rule requires install then example. oss-readme merges the two into one Install and example section to match."
+  },
+  "R-DOC-03": {
+    "sources": [],
+    "note": "That the three files exist is required elsewhere here and counted by a forge's community profile; that the README link them is this step. Observed: a repository can hold all three and still leave a reader guessing, because a forge renders the README and buries the file list, and on a narrow screen the list is a tap away rather than in view. Retire this rule if forges begin surfacing the license, changelog, and contributing guide as reliably as they surface the README."
+  },
+  "R-DOC-04": {
+    "sources": ["https://github.com/evilmartians/agent-skills/blob/main/skills/good-readme/SKILL.md"],
+    "verified": "2026-07-28",
+    "note": "Same provenance and same caveat as R-DOC-01. Upstream states it as 'Never invent facts' and 'A README with fabricated numbers is worse than one without numbers', and tells the author to ask for a benchmark rather than estimate one. That covers the claim half of this rule. Upstream is arguing against fabrication where this rule checks agreement with the repository, so the version and command halves, which are about drift rather than invention, are this standard's own."
+  },
+  "R-DOC-05": {
+    "sources": [
+      "https://github.com/evilmartians/agent-skills/blob/main/skills/good-readme/SKILL.md",
+      "https://evilmartians.com/chronicles/how-to-make-your-open-source-popular"
+    ],
+    "verified": "2026-07-28",
+    "note": "Same provenance and same caveat as R-DOC-01. Upstream carries the plain-language half twice, as 'No jargon' in the skill and as 'Don't use tech speak, write like you'd speak with your colleagues in real life' in the essay. The active-voice requirement and the ban on marketing language are this standard's own. skills/oss-writing separately cites https://www.asd-ste100.org/, a controlled-language specification that would be the stronger source, but it was not re-read for this rule and ASD-STE100 governs technical maintenance documentation rather than a README."
+  },
+  "R-DOC-06": {
+    "sources": [],
+    "note": "Upstream good-readme asks the opening block what the project does and never asks for its boundary, and no README specification asks either. Observed while writing facts lists: the scope bullet is the one most often missing, because a boundary lives in configuration and reference files rather than in the code an author is proud of, and it is the bullet that lets a reader rule themselves out before installing anything. Retire this rule if the supported-platforms question is ever answered by a manifest field that forges render."
+  },
+  "R-DOC-07": {
+    "sources": [],
+    "note": "No README specification addresses where the contents of a code block are supposed to go. Observed: two adjacent fenced blocks, one a shell command and one the body of a configuration file, render identically and get pasted into the same place. A language tag narrows the guess and does not answer it, which is why the check asks for both the tag and a sentence naming the destination. Retire this rule if renderers begin labelling blocks by destination; none does today."
+  },
+  "R-DOC-08": {
+    "sources": [
+      "https://github.com/RichardLitt/standard-readme/blob/main/spec.md",
+      "https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/adding-support-resources-to-your-project"
+    ],
+    "verified": "2026-07-28",
+    "note": "standard-readme's Contributing section is Required and its first requirement is 'State where users can ask questions', under a preamble giving the list normative force. That sources the channel half only. The rule's further qualifiers, that the channel be public, searchable, addressable by URL, usable without proprietary client software, and cover defect reports, are this standard's own position and have no upstream. GitHub's support-resources page confirms SUPPORT may live in root, docs/, or .github/, and endorses linking it from the README."
+  },
+  "R-DOC-09": {
+    "sources": [],
+    "note": "No specification requires a project to state whether it is maintained. The archived flag and the no-maintenance-intended badge are the two mechanisms that exist, both opt-in signals rather than requirements, which is why this check accepts either in place of a sentence. Observed: a project that stopped four years ago and one that shipped last week are indistinguishable in a search result, and a last-commit date reports activity rather than intent. Retire this rule if a forge ever displays maintenance intent on the repository page."
+  },
+  "R-DOC-10": {
+    "sources": [
+      "https://github.com/evilmartians/agent-skills/blob/main/skills/good-readme/SKILL.md",
+      "https://evilmartians.com/chronicles/how-to-make-your-open-source-popular"
+    ],
+    "verified": "2026-07-28",
+    "note": "Same provenance and same caveat as R-DOC-01: a skill and an essay rather than a specification, weaker than the primary sources elsewhere in this file. This rule restores the third clause of upstream's opening block, what makes it different from alternatives, which R-DOC-01 dropped when it capped the opener at one sentence. It differs from upstream in two ways. Upstream puts the differentiator in the first paragraph; this rule accepts it anywhere above the first heading, which is where the facts list already lives. Upstream states it as a writing instruction; the evidence half, that the claim name a boundary, a number, or an alternative by name, is this standard's own, because a differentiator with no checkable noun in it is an adjective."
+  },
+  "R-COM-01": {
+    "sources": ["https://baseline.openssf.org/versions/2026-02-19"],
+    "verified": "2026-07-28",
+    "note": "OSPS-LE-03.01, Maturity 1-3: 'While active, the license for the source code MUST be maintained in the corresponding repository's LICENSE file, COPYING file, or LICENSE/ directory.' Note the divergence: the Baseline treats COPYING and LICENSE/ as equals and does not say root, so it sources a three-location check rather than this rule's root-only one."
+  },
+  "R-COM-02": {
+    "sources": ["https://baseline.openssf.org/versions/2026-02-19"],
+    "verified": "2026-07-28",
+    "note": "OSPS-GV-03.01, Maturity 1-3: 'While active, the project documentation MUST include an explanation of the contribution process.' The Baseline says project documentation rather than a CONTRIBUTING file; naming the file is this standard's tightening."
+  },
+  "R-COM-03": {
+    "sources": ["https://www.contributor-covenant.org/version/3/0/code_of_conduct/"],
+    "verified": "2026-07-28",
+    "note": "Current version is 3.0. Ships the placeholder '[NOTE: describe your means of reporting here.]', which is the placeholder this rule fails on."
+  },
+  "R-COM-04": {
+    "sources": [
+      "https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability"
+    ],
+    "verified": "2026-07-28",
+    "note": "Confirms private reporting is public-repository only and is separate from SECURITY.md, which is why the check accepts it only when enabled. GitLab confidential issues and Service Desk have no source named."
+  },
+  "R-COM-05": {
+    "sources": [
+      "https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository",
+      "https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/creating-a-pull-request-template-for-your-repository"
+    ],
+    "verified": "2026-07-28",
+    "note": "Confirms .github/ISSUE_TEMPLATE/ and issue forms as YAML. The PR template page resolves the other half: pull_request_template.md is valid in the repository root, docs/, or .github/, and multiple templates live in an uppercase PULL_REQUEST_TEMPLATE/ subdirectory selected by the template query parameter rather than applied automatically. A check that globs only for pull_request_template.md reports a false negative on that documented multi-template layout. The GitLab paths have no source named."
+  },
+  "R-COM-06": {
+    "sources": [
+      "https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners"
+    ],
+    "verified": "2026-07-28",
+    "note": "Confirms the .github/, root, and docs/ locations and the catch-all pattern. The page did not state the plan and visibility limits the rule's exemption relies on; that half is unverified."
+  },
+  "R-COM-07": {
+    "sources": [],
+    "note": "GitHub and GitLab both expose a description, topics, and a homepage URL, and neither documents any of them as required. Observed: a search result, a social card, and a forge's own project lists all render the description and none of them render the README, so an empty description serves a blank answer everywhere the README cannot reach. Retire this rule if forges begin deriving the project description from the README."
+  },
+  "R-COM-08": {
+    "sources": [
+      "https://www.bestpractices.dev/en/criteria/1",
+      "https://best.openssf.org/Concise-Guide-for-Developing-More-Secure-Software.html"
+    ],
+    "verified": "2026-07-28",
+    "note": "OpenSSF Best Practices badge Silver carries both halves as MUSTs: governance, 'clearly define and document its project governance model (the way it makes decisions, including key roles)', and access_continuity, the project 'be able to continue with minimal interruption if any one person dies, is incapacitated, or is otherwise unable or unwilling to continue'. Concise Guide item 25 says the same in one line. bus_factor, having more than one maintainer, is only a SHOULD upstream, which is why this rule asks a solo project to state its position rather than fail it."
+  },
+  "R-CI-01": {
+    "sources": ["https://github.com/ossf/scorecard/blob/main/docs/checks.md"],
+    "verified": "2026-07-28",
+    "note": "Scorecard CI-Tests: tests must run before pull requests are merged."
+  },
+  "R-CI-02": {
+    "sources": ["https://baseline.openssf.org/versions/2026-02-19"],
+    "verified": "2026-07-28",
+    "note": "OSPS-QA-06.01, Maturity 2-3: 'Prior to a commit being accepted, the project's CI/CD pipelines MUST run at least one automated test suite to ensure the changes meet expectations.' OSPS-QA-03.01 adds that automated status checks MUST pass or be manually bypassed. Neither mentions a version matrix, so this rule's matrix half has no upstream and is this standard's own position."
+  },
+  "R-CI-03": {
+    "sources": [],
+    "note": "No specification ties a declared support range to a test matrix entry. Observed: the two live in different files, the package manifest and the CI configuration, and nothing on either side fails when they disagree, so a support claim decays silently until a patch release breaks the oldest line still in the range. Retire this rule if package managers begin rejecting a manifest whose support range the project does not test."
+  },
+  "R-CI-04": {
+    "sources": [
+      "https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching",
+      "https://docs.github.com/en/actions/concepts/workflows-and-actions/dependency-caching"
+    ],
+    "verified": "2026-07-28",
+    "note": "The path this rule used to cite, /actions/how-tos/write-workflows/choose-what-workflows-do/cache-dependencies, is a hard 404 with no redirect. The canonical reference is now /actions/reference/workflows-and-actions/dependency-caching, H1 'Dependency caching reference'. It documents mechanism only. The rationale lives on the sibling concepts page, and even there it is conditional selection guidance, 'Use caching when you want to reuse files that don't change often between workflow runs', not a mandate. So the source gives the check its syntax and does not argue that a workflow must cache."
+  },
+  "R-CI-05": {
+    "sources": [
+      "https://docs.github.com/en/actions/reference/limits",
+      "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax",
+      "https://docs.gitlab.com/ci/yaml/"
+    ],
+    "verified": "2026-07-28",
+    "note": "Limits confirms the 6-hour job ceiling the rule cites. Workflow syntax confirms concurrency and cancel-in-progress, and jobs.<job_id>.timeout-minutes carries 'Default: 360'. That default matters to the check: 360 is simultaneously GitHub's default and its hosted ceiling, so every job already has an effective timeout and only an explicit key in the file is observable evidence. Step-level timeout-minutes is a separate key with a maximum of 360 and no default; do not conflate them. GitLab's YAML reference confirms the analogues, timeout as 'a custom job-level timeout that takes precedence over the project-wide setting' and interruptible as whether a job 'can be canceled when made redundant by a newer run'; their defaults were not readable in the fetched excerpt."
+  },
+  "R-SEC-01": {
+    "sources": [
+      "https://docs.github.com/en/actions/reference/secure-use-reference",
+      "https://github.com/ossf/scorecard/blob/main/docs/checks.md"
+    ],
+    "verified": "2026-07-28",
+    "note": "GitHub: 'Pinning an action to a full-length commit SHA is currently the only way to use an action as an immutable release.' Scorecard Pinned-Dependencies agrees."
+  },
+  "R-SEC-02": {
+    "sources": [
+      "https://docs.github.com/en/actions/reference/secure-use-reference",
+      "https://github.com/ossf/scorecard/blob/main/docs/checks.md"
+    ],
+    "verified": "2026-07-28",
+    "note": "GitHub recommends defaulting GITHUB_TOKEN to read access for contents. Scorecard Token-Permissions requires read-only at top level with write declared per job, which is exactly this rule's shape."
+  },
+  "R-SEC-03": {
+    "sources": [
+      "https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference",
+      "https://github.com/ossf/scorecard/blob/main/docs/checks.md"
+    ],
+    "verified": "2026-07-28",
+    "note": "Confirms the github-actions ecosystem covering .github/workflows, and that bun is a supported ecosystem. Scorecard Dependency-Update-Tool accepts Dependabot or Renovate."
+  },
+  "R-SEC-04": {
+    "sources": ["https://github.com/ossf/scorecard/blob/main/docs/checks.md"],
+    "verified": "2026-07-28",
+    "note": "Scorecard Branch-Protection covers force-push prevention, review, and status checks, and names repository rules alongside classic protection. The GitHub and GitLab API endpoints the check reads have no source named."
+  },
+  "R-SEC-05": {
+    "sources": [
+      "https://git-scm.com/docs/git-tag",
+      "https://git-scm.com/docs/git-config",
+      "https://github.com/ossf/scorecard/blob/main/docs/checks.md"
+    ],
+    "verified": "2026-07-28",
+    "note": "git-tag confirms annotated versus lightweight, -s signing through gpg.format, and -v. gpg.ssh.allowedSignersFile was read from the git 2.50.1 man page rather than the web page, which truncates: 'A file containing ssh public keys which you are willing to trust.' Scorecard Signed-Releases covers the why."
+  },
+  "R-SEC-06": {
+    "sources": [
+      "https://docs.gitlab.com/ci/jobs/ci_job_token/",
+      "https://docs.gitlab.com/ci/yaml/",
+      "https://docs.gitlab.com/ci/pipeline_security/"
+    ],
+    "verified": "2026-07-28",
+    "note": "ci_job_token confirms the inbound allowlist is a target-project control defaulting to the project itself, which is the distinction the rule's statement makes. include:integrity is real and documented in the YAML reference, not in includes/: added in GitLab 17.9, 'Use integrity with include:remote to specify a SHA256 hash of the included remote file', value a base64 SHA256 with a sha256- prefix. Scope limit that matters: it covers include:remote only. include:component, the CI/CD Catalog mechanism most GitLab projects actually use for third-party CI content, has no integrity keyword and is pinned by @<version> instead. pipeline_security covers the image digest half."
+  },
+  "R-SEC-07": {
+    "sources": ["https://docs.github.com/en/actions/reference/secure-use-reference"],
+    "verified": "2026-07-28",
+    "note": "Section 'Good practices for mitigating script injection attacks' gives the intermediate env: variable this rule requires, and the page also warns on pull_request_target with untrusted code. The GitLab half remains unsourced, and this is a checked negative rather than an unchecked gap: https://docs.gitlab.com/ci/pipeline_security/ covers secrets, variable masking, and image pinning, and says nothing about untrusted input reaching a job script."
+  },
+  "R-SEC-08": {
+    "sources": ["https://github.com/ossf/scorecard/blob/main/docs/checks.md"],
+    "verified": "2026-07-28",
+    "note": "Scorecard Pinned-Dependencies covers pinning to a hash rather than a range. No source named yet for the frozen-install half (npm ci, bundle install --deployment, uv sync --frozen)."
+  },
+  "R-SEC-09": {
+    "sources": ["https://github.com/ossf/scorecard/blob/main/docs/checks.md"],
+    "verified": "2026-07-28",
+    "note": "Scorecard SAST requires static analysis on pull requests and names CodeQL."
+  },
+  "R-PUB-01": {
+    "sources": [
+      "https://github.com/ossf/scorecard/blob/main/docs/beginner-checks.md",
+      "https://github.com/ossf/scorecard/blob/main/docs/checks.md"
+    ],
+    "verified": "2026-07-28",
+    "note": "beginner-checks states it in Scorecard's own voice: 'Building locally on your laptop may seem simpler at first, but using an automated build process to create your package on your CI/CD system provides you with security benefits that pay off in the long run.' The Packaging check in checks.md is the observable form. Scope limit stated by Scorecard itself: Packaging 'is currently limited to repositories hosted on GitHub, and does not support other source hosting repositories'. If this rule stays Forges: both, its GitLab half is unsourced."
+  },
+  "R-PUB-02": {
+    "sources": [
+      "https://docs.npmjs.com/trusted-publishers/",
+      "https://docs.pypi.org/trusted-publishers/",
+      "https://github.com/rubygems/guides/blob/main/trusted-publishing.md",
+      "https://crates.io/docs/trusted-publishing"
+    ],
+    "verified": "2026-07-28",
+    "note": "All four registries confirm id-token: write and short-lived tokens replacing long-lived ones; the RubyGems guide is explicit that the permission belongs at job level, workflow level discouraged. crates.io is client-rendered and returns only a shell to a fetcher, so it has to be read in a browser, not by fetching; read that way it is complete and shipped. It documents both GitHub and GitLab, GitLab still in public beta, tokens expiring after 30 minutes, and an initial publish that still requires an API token because the crate must already exist. The GitHub path is the rust-lang/crates-io-auth-action@v1 action; the GitLab path is a hand-rolled curl exchange against /api/v1/trusted_publishing/tokens with an id_tokens block, which is worth knowing before a check assumes an action exists on both."
+  },
+  "R-PUB-03": {
+    "sources": [
+      "https://docs.npmjs.com/generating-provenance-statements",
+      "https://docs.npmjs.com/trusted-publishers/",
+      "https://docs.pypi.org/api/integrity/",
+      "https://guides.rubygems.org/trusted-publishing/"
+    ],
+    "verified": "2026-07-28",
+    "note": "npm confirms what provenance attests to, that npm audit signatures verifies it, and that trusted publishing generates it automatically for public packages. PyPI's Integrity API is the verification endpoint: GET /integrity/<project>/<version>/<filename>/provenance, returning attestation bundles with signatures, certificates, transparency log entries, and publisher identity, 404 when a file has no provenance. RubyGems and crates.io are both checked negatives: their trusted publishing pages cover OIDC authentication only and document no attestation or provenance for the published artifact, so on those two registries this rule falls back to a forge attestation and the registry limitation the Check already tells an auditor to report."
+  },
+  "R-PUB-04": {
+    "sources": [
+      "https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments",
+      "https://docs.gitlab.com/ci/environments/deployment_approvals/"
+    ],
+    "verified": "2026-07-28",
+    "note": "GitHub confirms required reviewers gate the job and that 'Prevent self-review' is a separate opt-in setting, which is why the rule says a person other than the triggering automation. GitLab's deployment approvals invert that default in the project's favour: 'All jobs deploying to the environment are blocked and wait for approvals before running', and the person who started the pipeline cannot approve their own deployment unless an administrator enables 'Allow pipeline triggerer to approve deployment'. npm staged publishing has no source named."
+  },
+  "R-PUB-05": {
+    "sources": [
+      "https://baseline.openssf.org/versions/2026-02-19",
+      "https://github.com/ossf/scorecard/blob/main/docs/checks.md",
+      "https://best.openssf.org/Concise-Guide-for-Developing-More-Secure-Software.html"
+    ],
+    "verified": "2026-07-28",
+    "note": "OSPS-QA-02.02, Maturity 3: 'When the project has made a release, all compiled released software assets MUST be delivered with a software bill of materials.' Concise Guide item 18 names SPDX and CycloneDX as the formats. Scorecard's SBOM check supplies the observable form, an SBOM as a file in the source or a release artifact. Note this sits at Level 3 upstream, so it is a maturity target rather than a floor, and the rule's applicability clause is what keeps that honest."
+  },
+  "R-PUB-06": {
+    "sources": [
+      "https://baseline.openssf.org/versions/2026-02-19",
+      "https://docs.github.com/en/actions/concepts/security/artifact-attestations"
+    ],
+    "verified": "2026-07-28",
+    "note": "OSPS-BR-06.01, Maturity 2-3: 'When an official release is created, that release MUST be signed or accounted for in a signed manifest including each asset's cryptographic hashes.' That sentence is where this rule's two accepted forms come from. Distinct from R-SEC-05, which verifies the tag object with git tag -v and covers the commit, not the files attached to the release. GitHub artifact attestations are the keyless path."
+  },
+  "R-CHG-01": {
+    "sources": ["https://keepachangelog.com/en/2.0.0/"],
+    "verified": "2026-07-28",
+    "note": "2.0.0, published 2026-06-07. Confirms the six group names, the Unreleased section, newest-first ordering, and the '**Breaking:**' marker this rule requires."
+  },
+  "R-CHG-02": {
+    "sources": ["https://semver.org/spec/v2.0.0.html", "https://github.com/npm/node-semver"],
+    "verified": "2026-07-28",
+    "note": "SemVer confirms the MUST-declare-a-public-API clause, the increment rules, and that v1.2.3 is a tag name rather than a semantic version. Its clause 4 leaves 0.y.z undefined, so the MINOR-for-incompatible reading is not the spec's; node-semver is what makes it the ecosystem's, expanding ^0.2.3 to >=0.2.3 <0.3.0-0, which puts the break at MINOR below 1.0.0."
+  },
+  "R-CHG-03": {
+    "sources": [],
+    "note": "Keep a Changelog and SemVer both assume one version per release and neither says what to check when a repository ships several version sources. Observed in this repository: three plugin manifests and the newest changelog heading said 0.2.0 while the newest tag said v0.1.0, and nothing failed. The release-unit wording exists so a monorepo of independently versioned packages is not forced to share one number. Retire this rule if a release tool ever owns every version source in a repository."
+  },
+  "R-CHG-04": {
+    "sources": [],
+    "note": "Neither Keep a Changelog nor either forge's release documentation says what a release body should contain, and GitHub's auto-generated notes list merged pull requests, which is the behaviour this rule argues against. Observed: a project that keeps both ends up maintaining two descriptions of one release, and the reader arriving from a release feed finds the weaker one first. Retire this rule if a forge learns to render a tag's changelog section itself."
+  },
+  "R-CHG-05": {
+    "sources": ["https://semver.org/spec/v2.0.0.html"],
+    "verified": "2026-07-28",
+    "note": "Clause 7, read verbatim: 'Minor version Y (x.Y.z | x > 0) MUST be incremented if new, backward compatible functionality is introduced to the public API. It MUST be incremented if any public API functionality is marked as deprecated.' That is the whole upstream basis for deprecating before removing. SemVer says nothing about how long a deprecation must stand or how it must be announced, so the notice period this rule requires is this standard's own position."
+  },
+  "R-SKL-01": {
+    "sources": ["https://agentskills.io/specification"],
+    "verified": "2026-07-28",
+    "note": "The spec defines a skill as a directory holding SKILL.md. The top-level skills/ directory is the skills CLI's discovery layout, not the spec's, and that half has no source named."
+  },
+  "R-SKL-02": {
+    "sources": ["https://agentskills.io/specification"],
+    "verified": "2026-07-28",
+    "note": "Confirms the frontmatter contract this repository's validator enforces: name 1-64 chars, lowercase alphanumeric and hyphens, no leading, trailing, or consecutive hyphen, matching the parent directory; description 1-1024 chars."
+  },
+  "R-SKL-03": {
+    "sources": ["https://agentskills.io/specification"],
+    "verified": "2026-07-28",
+    "note": "'Keep your main SKILL.md under 500 lines' and the under-5000-token recommendation, both in the progressive disclosure section."
+  },
+  "R-SKL-04": {
+    "sources": ["https://agentskills.io/specification"],
+    "verified": "2026-07-28",
+    "note": "The spec makes license optional. This rule requires it, deliberately: installers extract one directory at a time. The divergence is oss-kit's own and is not upstream."
+  },
+  "R-SKL-05": {
+    "sources": ["https://agentskills.io/specification"],
+    "verified": "2026-07-28",
+    "note": "The spec permits scripts/ and names Python, Bash, and JavaScript as common options, saying supported languages depend on the implementation. This rule is deliberately stricter; the reason is oss-kit's own."
+  },
+  "R-SKL-06": {
+    "sources": [],
+    "note": "The Agent Skills specification defines one skill layout and says nothing about installing a repository of skills into any particular host. Observed: hosts read different manifests from different paths, so naming a host in a README proves only that somebody typed the name, and a reader following it reaches a command that fails. Retire this rule if one manifest format is ever read by every host."
+  },
+  "R-SKL-07": {
+    "sources": ["https://agentskills.io/specification"],
+    "verified": "2026-07-28",
+    "note": "Progressive disclosure section plus the description guidance that it should state what the skill does and when to use it. The verification-loop and no-harness-specific-tools parts are oss-kit's own."
+  }
+}

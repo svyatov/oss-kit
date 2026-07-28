@@ -12,7 +12,7 @@ A scaffolded file nobody maintains is worse than no file at all. A CODE_OF_CONDU
 
 ## Scope
 
-The COM rules below (R-COM-*) belong here: what CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, the issue and change-request templates, CODEOWNERS, and the license file must each contain, and the forge project's own description, topics, and homepage. The DOC rules split by concern: R-DOC-01 through R-DOC-04, README structure including the paragraph that links to the license, the changelog, and CONTRIBUTING.md, belong to `oss-readme`; R-DOC-05, the sentences in every file this skill creates, belongs to `oss-writing`. R-SEC-04, enforcing CODEOWNERS review as part of branch protection, belongs to `oss-harden`, as does every other protection, scanning, or token setting; R-COM-07's description, topics, homepage, and feature tabs are the only forge settings this skill touches. Do not reorder or rewrite README sections, decide how a file's sentences are phrased, or configure branch protection while working from this skill; note that the project needs it and hand the work to the owning skill.
+The COM rules below (R-COM-*) belong here: what CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, the issue and change-request templates, CODEOWNERS, and the license file must each contain, and the forge project's own description, topics, and homepage. The DOC rules split by concern: R-DOC-01 through R-DOC-04 and R-DOC-06 through R-DOC-10, README structure including the paragraph that links to the license, the changelog, and CONTRIBUTING.md, belong to `oss-readme`; R-DOC-05, the sentences in every file this skill creates, belongs to `oss-writing`. R-SEC-04, enforcing CODEOWNERS review as part of branch protection, belongs to `oss-harden`, as does every other protection, scanning, or token setting; R-COM-07's description, topics, homepage, and feature tabs are the only forge settings this skill touches. Do not reorder or rewrite README sections, decide how a file's sentences are phrased, or configure branch protection while working from this skill; note that the project needs it and hand the work to the owning skill.
 
 ## Ask rather than invent
 
@@ -80,7 +80,11 @@ The description, homepage, and topics are what a stranger reads in a search resu
 
 A setting is not a file: it takes effect the moment it is applied, it appears in no diff, and it cannot be reviewed before it is public. Apply these only with the maintainer's agreement, and say for each one what it will look like publicly. Branch protection, required reviews, scanning, and tokens are settings too, and they belong to `oss-harden`; note that they are needed and change nothing here.
 
-### Step 10: Present the result
+### Step 10: Governance and succession (R-COM-08)
+
+Write who decides and what happens if they stop. For a project with one maintainer, that is two honest sentences in CONTRIBUTING.md or a GOVERNANCE.md: this person merges and releases, and there is no succession arranged. Do not talk a solo maintainer into inventing a steering committee, and do not name a second maintainer who has not agreed to be one; both read as governance and are neither. Where the repository already sits under an organization or foundation, say which, since that is the succession answer. Read the repository first: an existing GOVERNANCE.md, a CONTRIBUTING.md section on who reviews, or a CODEOWNERS file naming a team rather than a person all tell you what is already true. If nothing does, ask, because this is the one COM file whose content cannot be inferred from the repository at all.
+
+### Step 11: Present the result
 
 List every file written or proposed, every setting changed or proposed, the rule each satisfies, and every fact that came from asking rather than reading, so the maintainer can see what they confirmed. Flag anything left unresolved, such as a CONTRIBUTING.md with no test command because the repository has no tests, rather than silently shipping a gap.
 
@@ -99,3 +103,5 @@ R-COM-05: Issue and change-request templates exist so reports arrive with the fa
 R-COM-06: A CODEOWNERS file assigns a reviewer to every path
 
 R-COM-07: The forge project page says what the project is and where it lives
+
+R-COM-08: A documented statement says who decides, and what happens if they stop

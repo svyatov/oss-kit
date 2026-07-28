@@ -5,12 +5,12 @@ Curated agent skills for open source maintainers.
 [![version](https://img.shields.io/github/v/tag/svyatov/oss-kit?label=version)](https://github.com/svyatov/oss-kit/releases)
 [![CI](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml)
 
-- **46 rules.** Each states the check it is scored by and the one skill that
+- **50 rules.** Each states the check it is scored by and the one skill that
   fixes it.
 - **Seven areas.** Documentation, community files, CI, security posture,
   release publishing, changelog discipline, and the agent skills a repository
   ships.
-- **Both forges.** 43 of the 46 rules score GitHub and GitLab alike. Two are
+- **Both forges.** 47 of the 50 rules score GitHub and GitLab alike. Two are
   GitHub-only, one is GitLab-only, and every rule says which.
 - **Four registries.** Release publishing for npm, RubyGems, PyPI, and
   crates.io.
@@ -31,8 +31,8 @@ It answers with the gaps and nothing else, each keyed to the rule it missed and
 routed to the skill that fixes it. Rules that already pass do not appear:
 
 ```text
-Audited 41 applicable rules: 38 pass, 2 fail, 1 unknown, 5 not applicable
-(4 PUB, the project publishes no package; 1 GitLab-only).
+Audited 43 applicable rules: 40 pass, 2 fail, 1 unknown, 7 not applicable
+(6 PUB, the project publishes no package; 1 GitLab-only).
 
 1. R-COM-04 fail, no SECURITY.md, run oss-community
 2. R-SEC-01 fail, two uses: lines in .github/workflows/validate.yml pin a tag rather than a SHA, run oss-harden

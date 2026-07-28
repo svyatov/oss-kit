@@ -16,7 +16,12 @@
   "modifications": [
     "Renamed from good-readme to oss-readme on migration into oss-kit.",
     "Style guidance removed in favour of citing oss-writing.",
-    "references/badges.md revised: badge row now placed after the opening sentence instead of directly below the H1, badge count changed from a fixed three to optional and at most three, the inline-header bullet example was rewritten as a plain declarative, and direct provider badges replace unnecessary Shields.io proxies where providers document native badges.",
+    "Badges reversed. Upstream's Clean up step removes every badge as a drag on readability. This fork keeps at most three, version then CI then coverage, in their own paragraph below the opening sentence, because each shows a live fact that changes without anyone editing the README. Everything else is still cut.",
+    "references/badges.md is new in this fork. Upstream is a single SKILL.md with no references directory, verified at the pinned SHA and on main. The file carries the per-ecosystem URL templates, prefers a provider's documented native badge over a Shields.io proxy, and states the live-fact test that decides what never gets a badge.",
+    "Opening block narrowed. Upstream asks the first paragraph for three things: what it does in plain language, how the user benefits, and what makes it different from alternatives. R-DOC-01 keeps only what it does, adds who it is for, and caps it at one sentence. The differentiator moved to the edge bullet of the facts list, which R-DOC-10 checks.",
+    "Section order changed. Upstream runs opening, facts, example, getting started, putting the example before any install step. R-DOC-02 requires install then example, and the two are merged into one Install and example section to match.",
+    "Worked examples come from this repository rather than from a named third party. Upstream demonstrates its opening block with a well-known project's README. Every such README breaks a rule this standard holds, usually R-DOC-01 or R-DOC-02, so quoting one teaches the departure along with the shape, and a quoted README goes stale the day its project edits it. The numbers in these examples are checked against STANDARD.md by tests/rule-counts.test.ts.",
+    "Sections added with no upstream counterpart: where to start for a project with more than one entry point, help and status, links to the license, changelog, and contributing guide, and the rule that every fenced block says what consumes it.",
     "Clean-environment verification, renderer-specific alerts, generated outlines, installation provenance, and image accessibility were aligned with current GitHub, GitLab, Codecov, and upstream package documentation."
   ],
   "license": "MIT",

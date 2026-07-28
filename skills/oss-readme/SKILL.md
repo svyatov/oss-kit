@@ -6,7 +6,7 @@ license: MIT
 
 # README structure
 
-Apply the structure below when creating or improving a README. It follows Evil Martians' approach to promoting open source projects such as PostCSS, Nano ID, imgproxy, and AnyCable: put the reason to keep reading at the top, and the details below.
+Apply the structure below when creating or improving a README. It follows Evil Martians' approach to promoting open source projects: put the reason to keep reading at the top, and the details below.
 
 This skill owns section order and what each section must contain. It does not own how a sentence reads. Once the sections below are in place, apply oss-writing to the prose inside them.
 
@@ -22,7 +22,7 @@ A `#` heading naming the project. Nothing else goes in the heading text.
 
 Immediately below the title, one sentence stating what the project is and who it is for. Nothing may come before it: no badge row, no table of contents, no other heading.
 
-Say what the project does in plain terms, without jargon a newcomer would have to look up. If you do not know who the project is for or what makes it different from the alternative a reader already knows, ask rather than guessing at a differentiator.
+Say what the project does in plain terms, without jargon a newcomer would have to look up. If you do not know who the project is for or what makes it different from the alternative a reader already knows, ask rather than guessing at a differentiator. The differentiator does not belong in this sentence. It goes in the `edge` bullet of the facts list below, which is where R-DOC-10 looks for it and where a number can sit beside it.
 
 Keep it short. The standard-readme spec caps a description at 120 characters, which is a useful ceiling rather than a limit this skill enforces. A two-sentence opener earns its second sentence only when the second sentence carries a fact the first cannot.
 
@@ -32,13 +32,15 @@ The same sentence appears in three places a reader may meet first: the README, t
 
 Optional, and at most three: version, CI, coverage, in that order. Own paragraph directly below the opening sentence, one badge per source line, so Markdown joins them into a single rendered row. Omit any of the three that does not apply and keep the rest in order; a repository where none apply gets no badge row. Exact URL templates per ecosystem are in [references/badges.md](references/badges.md); read that file before writing or editing a badge row.
 
-Many well-known projects put their badge row above the `#` heading instead. This skill diverges on purpose. R-DOC-01 exists so a reader's first five seconds buy them the sentence, and a row above the title spends them on shields. The divergence is safe here only because of the cap of three; do not move the row up, and do not raise the cap.
+Many well-known projects put their badge row above the `#` heading, and the skill this one was forked from deletes badges altogether as a drag on readability. This skill diverges from both on purpose. R-DOC-01 exists so a reader's first five seconds buy them the sentence, and a row above the title spends them on shields; the three kept here survive because each shows a live fact that changes without anyone editing the README, which is the test [references/badges.md](references/badges.md) applies and the reason it cuts everything else. The divergence is safe only because of the cap of three; do not move the row up, and do not raise the cap.
 
 When improving an existing README, delete every badge beyond those three. If a deleted badge carried a real fact, such as a bundle size or a dependency count, state that fact as a bullet in the facts list instead, where it reads stronger than a badge.
 
 ### 4. Facts
 
 Three to five bullets directly under the tagline, or under the badge row when there is one. No heading introduces them. A `## Features` heading turns a pitch into a spec sheet and pushes the list below the fold, which is the one place it cannot do its job.
+
+This list is where R-DOC-10 is satisfied: at least one bullet has to name a boundary, a measured number, or a competing project, and that name has to be checkable against the repository. A list of five adjectives passes no rule here.
 
 Every bullet answers a question the reader is actually asking. The five questions are:
 
@@ -56,7 +58,7 @@ A screenshot or diagram may replace a bullet where it replaces a paragraph of te
 
 A candidate that answers none of the five questions is cut, however easy it was to extract from the source tree and however true it is. Ease of extraction is the trap: an author reading their own repository finds the facts the repository states about itself, not the facts a stranger needs.
 
-Worked example. "Every skill body stays under 500 lines" is true, checkable, and sitting in plain sight. It answers no reader question: a reader does not install a project to obtain short files. The same evidence answers `fit` once it is turned around, as in "runs on Node 22 or Bun with nothing installed". The fact was never wrong, only pointed at the maintainer instead of the reader.
+Worked example, from this kit's own repository. "Every skill body stays under 500 lines" is true, checkable, and sitting in plain sight. It answers no reader question: nobody installs a project to obtain short files. The same evidence answers `fit` once it is turned around, as in "runs on Node 22 or Bun with nothing installed". The fact was never wrong, only pointed at the maintainer instead of the reader.
 
 #### Gather, then let the maintainer pick
 
@@ -68,19 +70,21 @@ Never choose the final bullets alone. Sweep the repository for every candidate, 
 4. Ask the maintainer to pick three to five, and to supply anything the repository cannot prove, such as a benchmark, a real differentiator, or a support claim.
 5. Write only what they picked.
 
-The slate reads like this:
+A slate reads like this. This one is the slate this kit's own README came from:
 
 ```text
 Candidate facts  (pick 3 to 5)
 
-  scope  1. GitHub and GitLab, 40 of 41 rules on both
+  scope  1. GitHub and GitLab, 47 of 50 rules on both
             src: STANDARD.md, Forges: lines
   scope  2. Publishing for npm, RubyGems, PyPI, crates.io
             src: skills/oss-publish/references/
-  scale  3. 45 rules, each with the check it is scored by
-            src: STANDARD.md, 45 "### R-" headings
+  scale  3. 50 rules, each with the check it is scored by
+            src: STANDARD.md, 50 "### R-" headings
   fit    4. Node 22 or Bun, nothing installed
-            src: scripts/validate.mjs, .github/workflows/validate.yml
+            src: skills/oss-skill/scripts/validate.mjs
+  edge   5. Scores a repository, where a checklist only lists it
+            src: skills/oss-audit/SKILL.md
 
 Rejected, answers no reader question:
   - every skill body under 500 lines
@@ -94,11 +98,11 @@ Stopping here costs one round trip and is the only reliable filter. A writer lef
 Lead with the claim in bold, close it with a period, then give the evidence:
 
 ```markdown
-- **Fast.** 50% faster than native `crypto.randomUUID()`.
 - **Both forges.** Scores GitHub and GitLab repositories.
+- **No install.** The validator runs on Node 22 or Bun with nothing added.
 ```
 
-The bold must be the claim, not a label. `- **Performance:** it is faster` is banned by oss-writing, and the carve-out that permits the form above is written there. Test it by deleting everything after the bold: "Performance." says nothing, so it was a label; "Fast." says something, so it was a claim.
+The bold must be the claim, not a label. `- **Performance:** it is faster` is banned by oss-writing, and the carve-out that permits the form above is written there. Test it by deleting everything after the bold: "Performance." says nothing, so it was a label; "Both forges." says something, so it was a claim.
 
 Bold is optional. A plain sentence bullet is fine, and a project whose facts do not compress into one-word claims should not force them.
 
@@ -106,26 +110,33 @@ Bold is optional. A plain sentence bullet is fine, and a project whose facts do 
 
 Two fenced code blocks back to back: an install command, then a minimal usage example, in that order. The second block must show the project being used, not a second way to install it; two install blocks with no usage block fails this section even when the two commands differ. Both must appear before any section about design, motivation, or comparisons.
 
-Keep the usage example small, 4 to 10 lines, and show its result when a short language comment can do so without making the example invalid or misleading. Otherwise show the output in a separate fenced block. Nano ID's opener packs the title, the opening sentence, the facts, and this pair on one screen:
+Keep the usage example small, 4 to 10 lines, and show its result when a short language comment can do so without making the example invalid or misleading. Otherwise show the output in a separate fenced block. The title, the opening sentence, the facts, and this pair fit on one screen together. Here is that shape, carrying the slate above through to what it produced. This is `README.md` from the repository this skill ships in, abridged to two facts and with its badge row cut:
 
 ````markdown
-# Nano ID
+# oss-kit
 
-A tiny, secure, URL-friendly, unique string ID generator for JavaScript.
+Curated agent skills for open source maintainers.
 
-- 118 bytes minified and brotlied, no dependencies
-- 50% faster than uuid
-- uses a hardware random generator, safe in clusters
+- **50 rules.** Each states the check it is scored by and the one skill that
+  fixes it.
+- **Both forges.** 47 of the 50 rules score GitHub and GitLab alike.
 
 ```bash
-npm install nanoid
+npx skills add svyatov/oss-kit --skill '*'
 ```
 
-```js
-import { nanoid } from 'nanoid'
-nanoid() //=> "V1StGXR8_Z5jdHi6B-myT"
+Then ask your agent:
+
+```text
+Audit this repository against the oss-kit standard.
+```
+
+```text
+Audited 43 applicable rules: 40 pass, 2 fail, 1 unknown, 7 not applicable.
 ```
 ````
+
+The example is this repository on purpose, and not a project you have heard of. Well-known projects put a logo, a row of translation links, or a pull quote between the title and the opening sentence, and many place the install command well below the first example. Each is a defensible choice for a project with that problem, and each fails R-DOC-01 or R-DOC-02, so quoting one would teach the departure along with the shape. An invented project would carry no such baggage but would name a package somebody can register later, pointing an install command at code nobody vetted.
 
 If the project has no install step, for example a script meant to be copied, say so instead of showing an empty or invented command.
 
@@ -228,18 +239,19 @@ Before finishing, read every package manifest, the lockfile, the CI configuratio
 4. The facts list ran through the slate: candidates gathered with their sources, rejects named, and the maintainer picked the three to five that shipped.
 5. A scope bullet names the forges, platforms, registries, or runtimes supported, unless the project genuinely has no boundary.
 6. No shipped bullet describes how the project is built rather than what a reader gets.
-7. The install and usage blocks appear in that order, before any design, motivation, or comparison content.
-8. The usage example is self-explanatory and shows its result without invalid or misleading syntax.
-9. Every fenced block carries a language tag, and every block not destined for a shell has a sentence above it naming where it goes.
-10. A project with more than one entry point names exactly one to run first, and covers the empty-repository case when it differs.
-11. The getting-started guide works in an isolated directory with the lowest supported runtime and only its stated prerequisites.
-12. A public, searchable channel is linked for questions and for defect reports.
-13. The maintenance status is stated, or an equivalent repository signal carries it.
-14. The license, changelog, and contributing links resolve to files that exist.
-15. Every version, command, and support claim matches the manifest, the CI configuration, and the source.
-16. Skimming only headings and the facts list still tells the story.
-17. The draft has been through oss-writing.
-18. Every image has meaningful alt text, and repository images use relative paths.
+7. At least one bullet above the first `##` heading names a boundary, a measured number, or a competing project, and the repository backs it.
+8. The install and usage blocks appear in that order, before any design, motivation, or comparison content.
+9. The usage example is self-explanatory and shows its result without invalid or misleading syntax.
+10. Every fenced block carries a language tag, and every block not destined for a shell has a sentence above it naming where it goes.
+11. A project with more than one entry point names exactly one to run first, and covers the empty-repository case when it differs.
+12. The getting-started guide works in an isolated directory with the lowest supported runtime and only its stated prerequisites.
+13. A public, searchable channel is linked for questions and for defect reports.
+14. The maintenance status is stated, or an equivalent repository signal carries it.
+15. The license, changelog, and contributing links resolve to files that exist.
+16. Every version, command, and support claim matches the manifest, the CI configuration, and the source.
+17. Skimming only headings and the facts list still tells the story.
+18. The draft has been through oss-writing.
+19. Every image has meaningful alt text, and repository images use relative paths.
 
 ## Rules this skill owns
 
@@ -258,3 +270,5 @@ R-DOC-07: Every fenced code block in the README says what consumes it
 R-DOC-08: The README links a public place to ask a question and report a problem
 
 R-DOC-09: The README says whether the project is maintained
+
+R-DOC-10: The README names one thing that sets the project apart, with evidence

@@ -19,9 +19,9 @@ Forges: both
 
 ### R-DOC-02: The README shows how to install the project and one runnable example, in that order, near the top
 
-Installation and a working snippet answer the two questions every visitor has. Burying them under motivation, philosophy, or comparison tables costs you the readers who would have used the project.
+Installation and a working snippet answer the two questions every visitor has. Burying them under motivation, philosophy, or comparison tables costs you the readers who would have used the project. A snippet that never shows what it returns makes the reader install the project to find out, which is the work the snippet was there to save.
 
-Check: `README.md` contains a fenced code block with an install command, followed by a second fenced code block showing minimal usage, and both appear before any section about design, motivation, or comparisons.
+Check: `README.md` contains a fenced code block with an install command, followed by a second fenced code block showing minimal usage whose result is visible in a comment inside the block or in a block immediately below it, and both appear before any section about design, motivation, or comparisons.
 
 Fixed by: oss-readme
 Forges: both
@@ -89,6 +89,15 @@ Check: `README.md` carries a statement of maintenance or support status, or the 
 Fixed by: oss-readme
 Forges: both
 
+### R-DOC-10: The README names one thing that sets the project apart, with evidence
+
+A reader who has understood what the project does still has to decide against whatever they are already using. A README that never answers that leaves the comparison to them, and the alternative they already know wins by default. The evidence half is what stops the answer being an adjective: a boundary, a measurement, or a named competitor can be checked, and "powerful" cannot.
+
+Check: `README.md`, before its first `##` heading, presents at least one claim as what distinguishes the project from the alternatives a reader already has, that claim names a supported boundary, a measured number, or an alternative project by name, and it is traceable to the source, a manifest, the CI configuration, or a linked measurement. A number stated somewhere in the opening for another purpose does not satisfy this.
+
+Fixed by: oss-readme
+Forges: both
+
 ## Community
 
 ### R-COM-01: The repository ships a license file whose license matches the package manifest
@@ -150,6 +159,15 @@ Forges: both
 A search result, a social card, and the forge's own project lists show the description and the topics, and none of them render the README. A project with an empty description is findable only by someone who already has the link.
 
 Check: the forge project has a non-empty description, at least one topic, and, where the project publishes a documentation site or a package page, a homepage URL pointing at it. Read these from the forge, with `gh repo view --json description,homepageUrl,repositoryTopics` or the GitLab projects API, rather than inferring them from files in the repository.
+
+Fixed by: oss-community
+Forges: both
+
+### R-COM-08: A documented statement says who decides, and what happens if they stop
+
+A contributor weighing whether to invest in a project and a user weighing whether to depend on it are asking the same two questions: who can merge and release, and does this survive its current maintainers. Leaving both unanswered does not read as informality, it reads as a project nobody has thought past this week.
+
+Check: a tracked file states how decisions get made and who makes them, and says what becomes of the project if the current maintainers stop, whether that is a named successor, an organization or foundation holding the repository, or a plain statement that the project has one maintainer and no succession arranged. A single-maintainer project satisfies this rule by saying so; naming a second maintainer is not required.
 
 Fixed by: oss-community
 Forges: both
@@ -286,7 +304,7 @@ Forges: both
 
 ## Release and publishing
 
-This area applies only to a repository that publishes an artifact to a package registry, evidenced by a manifest declaring a public package, a release workflow naming a publish command, or an existing registry page. Where none exists, the area is not applicable as a whole and its rules are not checked one at a time. A repository that ships through git tags, a forge release, or an installer that reads its source tree publishes nothing to secure here.
+This area applies to a repository that ships a built artifact to people who did not build it, in either of two forms: a package published to a registry, evidenced by a manifest declaring a public package, a release workflow naming a publish command, or an existing registry page; or a built asset attached to a forge release, evidenced by a release carrying a file the repository does not contain. Where neither exists, the area is not applicable as a whole and its rules are not checked one at a time. A repository that ships only its source, through git tags or an installer that reads the source tree, publishes nothing to secure here.
 
 ### R-PUB-01: Publishing happens in CI, triggered by a tag, never from a developer machine
 
@@ -301,7 +319,7 @@ Forges: both
 
 A long-lived registry token in CI secrets is the single credential that turns any workflow compromise into a supply-chain compromise. Trusted publishing exchanges a short-lived OIDC token per run, so there is nothing to steal between releases.
 
-Check: the publish job requests `id-token: write` and publishes through the registry's OIDC flow (npm trusted publishing, PyPI trusted publishers, RubyGems OIDC, crates.io trusted publishing). Where the registry offers no OIDC flow, a scoped token limited to one package is below the bar and permitted.
+Check: the publish job requests `id-token: write` and publishes through the registry's OIDC flow (npm trusted publishing, PyPI trusted publishers, RubyGems OIDC, crates.io trusted publishing). Where the registry offers no OIDC flow, a scoped token limited to one package is below the bar and permitted. A repository that publishes to no registry, shipping only built assets on a forge release, falls outside this rule rather than failing it.
 
 Fixed by: oss-publish
 Forges: both
@@ -320,6 +338,24 @@ Forges: both
 A registry publish cannot be undone. An approval gate is the last point where a compromised tag, a wrong version, or a bad artifact can be stopped.
 
 Check: before public availability, a person other than an automation account must approve through a GitHub environment with required reviewers, a GitLab protected environment with a manual job and approval rules, or a registry proof-of-presence gate such as npm staged publishing with 2FA approval. Verify the configured gate through the forge or registry API. If the repository visibility or forge plan does not provide a native gate and the registry has no equivalent, report the rule as unmet rather than substituting an unverified approval action.
+
+Fixed by: oss-publish
+Forges: both
+
+### R-PUB-05: A built artifact ships with an inventory of what went into it
+
+Nobody can read a compiled binary to find out which dependency versions are inside it. Without an inventory, a newly disclosed vulnerability in a bundled library leaves every downstream user unable to answer whether they are affected, and the maintainer unable to tell them.
+
+Check: a release that carries a built asset also carries a software bill of materials in SPDX or CycloneDX format, published as a release asset or at a path the README or release notes name, covering the dependencies that went into that asset. A release carrying only the source archives the forge generates falls outside this rule rather than failing it.
+
+Fixed by: oss-publish
+Forges: both
+
+### R-PUB-06: Release assets are signed, or listed by hash in a signed manifest
+
+A signed tag covers the commit, not the files attached to the release, and those files are uploaded by whatever held the token. A downloader who cannot verify an asset cannot tell a legitimate release from one replaced after the fact, and reads the tag signature as though it covered both.
+
+Check: each built asset on the newest release either carries a detached signature or appears with its cryptographic hash in a manifest that is itself signed, and the verifying key or attestation identity is discoverable from the repository rather than only from the release itself. A forge attestation covering the exact asset satisfies this. A release carrying only the source archives the forge generates falls outside this rule rather than failing it.
 
 Fixed by: oss-publish
 Forges: both

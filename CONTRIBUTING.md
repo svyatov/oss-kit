@@ -60,3 +60,11 @@ Before you open the pull request:
 - If this adds or changes a rule, check that `AGENTS.md` still describes how this repository scores against it.
 
 This repository merges by squash with the pull request description as the commit message, so write the description as the commit body it becomes: paragraphs, no headings, and no hard wrapping.
+
+## Governance
+
+One maintainer, Leonid Svyatov, decides what goes into oss-kit and publishes every release. Decisions happen in the open, in issues and pull requests, and anyone may argue for or against a change there. Only the maintainer has write access, so every contribution arrives as a pull request from a fork and merges only with their approval.
+
+One kind of decision is not a judgement call. A rule in `STANDARD.md` changes when there is an upstream source for the change, and `skills/oss-audit/rule-sources.json` records which source each rule rests on and when it was last read. A rule this project holds on its own opinion says so there, and carries the argument for it: what was observed, and what would retire the rule. Both are published on the rule's page on the docs site, so a reader can tell a sourced rule from an opinion and argue with the opinion.
+
+No succession is arranged. If the maintainer stops, nothing here continues on its own: nobody else holds write access, and no organization or foundation owns the repository. The license lets anyone fork and carry on, and the standard is one Markdown file with no service behind it, which is deliberate and makes that fork cheap. If you depend on oss-kit and want a better answer than this one, open an issue and say so.
