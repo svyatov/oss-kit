@@ -17,7 +17,7 @@
   },
   "R-DOC-03": {
     "sources": [],
-    "note": "This standard's own position. That the three files exist is required elsewhere here and counted by a forge's community profile; that the README link them is this step. Observed: a repository can hold all three and still leave a reader guessing, because a forge renders the README and buries the file list, and on a narrow screen the list is a tap away rather than in view. Retire this rule if forges begin surfacing the license, changelog, and contributing guide as reliably as they surface the README."
+    "note": "That the three files exist is required elsewhere here and counted by a forge's community profile; that the README link them is this step. Observed: a repository can hold all three and still leave a reader guessing, because a forge renders the README and buries the file list, and on a narrow screen the list is a tap away rather than in view. Retire this rule if forges begin surfacing the license, changelog, and contributing guide as reliably as they surface the README."
   },
   "R-DOC-04": {
     "sources": ["https://github.com/evilmartians/agent-skills/blob/main/skills/good-readme/SKILL.md"],
@@ -34,11 +34,11 @@
   },
   "R-DOC-06": {
     "sources": [],
-    "note": "This standard's own position. Upstream good-readme asks the opening block what the project does and never asks for its boundary, and no README specification asks either. Observed while writing facts lists: the scope bullet is the one most often missing, because a boundary lives in configuration and reference files rather than in the code an author is proud of, and it is the bullet that lets a reader rule themselves out before installing anything. Retire this rule if the supported-platforms question is ever answered by a manifest field that forges render."
+    "note": "Upstream good-readme asks the opening block what the project does and never asks for its boundary, and no README specification asks either. Observed while writing facts lists: the scope bullet is the one most often missing, because a boundary lives in configuration and reference files rather than in the code an author is proud of, and it is the bullet that lets a reader rule themselves out before installing anything. Retire this rule if the supported-platforms question is ever answered by a manifest field that forges render."
   },
   "R-DOC-07": {
     "sources": [],
-    "note": "This standard's own position. No README specification addresses where the contents of a code block are supposed to go. Observed: two adjacent fenced blocks, one a shell command and one the body of a configuration file, render identically and get pasted into the same place. A language tag narrows the guess and does not answer it, which is why the check asks for both the tag and a sentence naming the destination. Retire this rule if renderers begin labelling blocks by destination; none does today."
+    "note": "No README specification addresses where the contents of a code block are supposed to go. Observed: two adjacent fenced blocks, one a shell command and one the body of a configuration file, render identically and get pasted into the same place. A language tag narrows the guess and does not answer it, which is why the check asks for both the tag and a sentence naming the destination. Retire this rule if renderers begin labelling blocks by destination; none does today."
   },
   "R-DOC-08": {
     "sources": [
@@ -50,7 +50,7 @@
   },
   "R-DOC-09": {
     "sources": [],
-    "note": "This standard's own position. No specification requires a project to state whether it is maintained. The archived flag and the no-maintenance-intended badge are the two mechanisms that exist, both opt-in signals rather than requirements, which is why this check accepts either in place of a sentence. Observed: a project that stopped four years ago and one that shipped last week are indistinguishable in a search result, and a last-commit date reports activity rather than intent. Retire this rule if a forge ever displays maintenance intent on the repository page."
+    "note": "No specification requires a project to state whether it is maintained. The archived flag and the no-maintenance-intended badge are the two mechanisms that exist, both opt-in signals rather than requirements, which is why this check accepts either in place of a sentence. Observed: a project that stopped four years ago and one that shipped last week are indistinguishable in a search result, and a last-commit date reports activity rather than intent. Retire this rule if a forge ever displays maintenance intent on the repository page."
   },
   "R-DOC-10": {
     "sources": [
@@ -99,7 +99,7 @@
   },
   "R-COM-07": {
     "sources": [],
-    "note": "This standard's own position. GitHub and GitLab both expose a description, topics, and a homepage URL, and neither documents any of them as required. Observed: a search result, a social card, and a forge's own project lists all render the description and none of them render the README, so an empty description serves a blank answer everywhere the README cannot reach. Retire this rule if forges begin deriving the project description from the README."
+    "note": "GitHub and GitLab both expose a description, topics, and a homepage URL, and neither documents any of them as required. Observed: a search result, a social card, and a forge's own project lists all render the description and none of them render the README, so an empty description serves a blank answer everywhere the README cannot reach. Retire this rule if forges begin deriving the project description from the README."
   },
   "R-COM-08": {
     "sources": [
@@ -121,7 +121,7 @@
   },
   "R-CI-03": {
     "sources": [],
-    "note": "This standard's own position. No specification ties a declared support range to a test matrix entry. Observed: the two live in different files, the package manifest and the CI configuration, and nothing on either side fails when they disagree, so a support claim decays silently until a patch release breaks the oldest line still in the range. Retire this rule if package managers begin rejecting a manifest whose support range the project does not test."
+    "note": "No specification ties a declared support range to a test matrix entry. Observed: the two live in different files, the package manifest and the CI configuration, and nothing on either side fails when they disagree, so a support claim decays silently until a patch release breaks the oldest line still in the range. Retire this rule if package managers begin rejecting a manifest whose support range the project does not test."
   },
   "R-CI-04": {
     "sources": [
@@ -267,11 +267,11 @@
   },
   "R-CHG-03": {
     "sources": [],
-    "note": "This standard's own position. Keep a Changelog and SemVer both assume one version per release and neither says what to check when a repository ships several version sources. Observed in this repository: three plugin manifests and the newest changelog heading said 0.2.0 while the newest tag said v0.1.0, and nothing failed. The release-unit wording exists so a monorepo of independently versioned packages is not forced to share one number. Retire this rule if a release tool ever owns every version source in a repository."
+    "note": "Keep a Changelog and SemVer both assume one version per release and neither says what to check when a repository ships several version sources. Observed in this repository: three plugin manifests and the newest changelog heading said 0.2.0 while the newest tag said v0.1.0, and nothing failed. The release-unit wording exists so a monorepo of independently versioned packages is not forced to share one number. Retire this rule if a release tool ever owns every version source in a repository."
   },
   "R-CHG-04": {
     "sources": [],
-    "note": "This standard's own position. Neither Keep a Changelog nor either forge's release documentation says what a release body should contain, and GitHub's auto-generated notes list merged pull requests, which is the behaviour this rule argues against. Observed: a project that keeps both ends up maintaining two descriptions of one release, and the reader arriving from a release feed finds the weaker one first. Retire this rule if a forge learns to render a tag's changelog section itself."
+    "note": "Neither Keep a Changelog nor either forge's release documentation says what a release body should contain, and GitHub's auto-generated notes list merged pull requests, which is the behaviour this rule argues against. Observed: a project that keeps both ends up maintaining two descriptions of one release, and the reader arriving from a release feed finds the weaker one first. Retire this rule if a forge learns to render a tag's changelog section itself."
   },
   "R-CHG-05": {
     "sources": ["https://semver.org/spec/v2.0.0.html"],
@@ -305,7 +305,7 @@
   },
   "R-SKL-06": {
     "sources": [],
-    "note": "This standard's own position. The Agent Skills specification defines one skill layout and says nothing about installing a repository of skills into any particular host. Observed: hosts read different manifests from different paths, so naming a host in a README proves only that somebody typed the name, and a reader following it reaches a command that fails. Retire this rule if one manifest format is ever read by every host."
+    "note": "The Agent Skills specification defines one skill layout and says nothing about installing a repository of skills into any particular host. Observed: hosts read different manifests from different paths, so naming a host in a README proves only that somebody typed the name, and a reader following it reaches a command that fails. Retire this rule if one manifest format is ever read by every host."
   },
   "R-SKL-07": {
     "sources": ["https://agentskills.io/specification"],
