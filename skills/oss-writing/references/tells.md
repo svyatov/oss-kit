@@ -18,7 +18,7 @@ The lexicon that marks prose as machine-written. Each row names a pattern and wh
 | Passive or subjectless: `was refactored`, `no config needed` | Name the actor: `the loader now caches`, `you do not need a config file` |
 | Filler: `in order to`, `due to the fact that`, `has the ability to`, `it is important to note that` | `to`, `because`, `can`, delete |
 | Hedging stacks: `may potentially`, `could possibly` | Pick one modal or drop it |
-| Generic upbeat closer: `this improves maintainability going forward` | Delete the sentence |
+| Generic closer, upbeat (`this improves maintainability going forward`) or defensive (`and that is the finding rather than a gap to paper over`) | Delete it |
 | Signposting: `let's dive in`, `here's what you need to know`, `this PR aims to`, `in this change, we` | Start with the content |
 | Fragmented header: a heading followed by a line restating the heading | Delete the restatement |
 | Aphorism formulas: `X is the Y of Z`, `X becomes a trap` | The concrete claim underneath |

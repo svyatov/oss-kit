@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 ### Changed
 
 - **Breaking:** the release and publishing area applies to any repository shipping a built artifact to people who did not build it, where it previously applied only to repositories publishing to a package registry. A repository attaching built assets to a forge release was excluded by the old preamble and is now in scope for the whole area. R-PUB-02 carries its own registry scoping, since trusted publishing has nothing to authenticate to without one. A repository shipping only source is still outside the area.
+- `oss-writing` bans a clause that tells the reader how to weigh a fact just stated, such as `and that is the finding rather than a gap to paper over`. The tell catalog covered only the upbeat form of this, and only as a whole sentence, so the defensive form passed every check the skill ran. `Omit needless words` now names the clause and the sentence alongside the word.
 
 ### Fixed
 

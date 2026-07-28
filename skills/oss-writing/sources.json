@@ -41,7 +41,8 @@
     "Replaced the per-artifact content table for commits and change requests with one length ladder: the body defaults to none and exists only on one of six named triggers. The table listed what a body carries and read as a checklist to cover. A template's required sections still win over the ladder, which decides how much each one gets rather than whether it appears.",
     "Split the GitHub and GitLab render mechanics into references/forge-rendering.md, loaded only at the branch that needs it, per R-SKL-07. The body keeps one forge-agnostic wrapping rule. Nothing upstream has this content.",
     "Replaced the bad-and-good example pairs for git prose with finished artifacts at each rung, each named for the trigger that earned its body. The bad halves demonstrated the padded output the skill was still producing, so the recognition half was not working. Pairs stay in references/tells.md, where the contrast is the lesson.",
-    "Narrowed the ban on working-process narration to the author's route to the fix. Naming the failure a change targets is a reproduction, which Git's SubmittingPatches requires of a commit body."
+    "Narrowed the ban on working-process narration to the author's route to the fix. Naming the failure a change targets is a reproduction, which Git's SubmittingPatches requires of a commit body.",
+    "Added a hard constraint against a clause that tells the reader how to weigh a fact just stated. Upstream's closer patterns are promotional; the defensive form is not upbeat, carries none of the significance-inflation vocabulary, and passes the sentence-length caps, so nothing already in the skill fired on it."
   ],
   "license": "MIT",
   "copyright": [
