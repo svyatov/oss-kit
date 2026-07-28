@@ -91,10 +91,12 @@ test("parseRules rejects a malformed heading", () => {
 })
 
 test("renderRulePage titles the page by the rule, not by its ID", () => {
-  const page = renderRulePage(parseRules(TWO_RULES)[1]!, "skills/oss-audit/STANDARD.md", {
-    position: 1,
-    total: 9,
-  })
+  const page = renderRulePage(
+    parseRules(TWO_RULES)[1]!,
+    "skills/oss-audit/STANDARD.md",
+    { position: 1, total: 9 },
+    { sources: ["https://example.com/spec"], verified: "2026-07-28" },
+  )
   expect(page.startsWith("---\n")).toBe(true)
   expect(page).toContain('title: "Pin every third-party action to a full commit SHA"')
   expect(page).toContain('description: "A tag moves."')
@@ -107,6 +109,11 @@ test("renderRulePage titles the page by the rule, not by its ID", () => {
   // A visitor arriving from search needs to know which area they landed in.
   expect(page).toContain("1 of 9")
   expect(page).toContain('<a href="/rules/sec/">')
+  // The provenance section is the reason renderRulePage takes an entry at all.
+  // Without this, deleting the renderRuleSources call empties every rule page
+  // on the site and the suite stays green.
+  expect(page).toContain("Where this comes from")
+  expect(page).toContain('<a href="https://example.com/spec">')
 })
 
 test("renderRuleSources tells a sourced rule apart from this standard's own position", () => {
@@ -120,6 +127,13 @@ test("renderRuleSources tells a sourced rule apart from this standard's own posi
   // Verbatim upstream quotes carry angle brackets, and CommonMark eats them as tags.
   expect(sourced).toContain("/integrity/&lt;project&gt;/provenance")
   expect(sourced).not.toContain("<project>")
+
+  // A source nobody has re-read yet carries no date. The date belongs to the
+  // list it was read against, so conflating "has sources" with "has been
+  // verified" would print "Last read against these sources on undefined".
+  const unread = renderRuleSources({ sources: ["https://example.com/spec"] })
+  expect(unread).toContain('<a href="https://example.com/spec">')
+  expect(unread).not.toContain("Last read")
 
   // A rule with no upstream must say so, not render an empty list: telling the
   // two apart is the whole reason these are published.
@@ -265,7 +279,15 @@ test("writeAll produces every page the site needs", () => {
   expect(existsSync(join(out, "skills/oss-publish/npm.md"))).toBe(true)
   expect(existsSync(join(out, "guides/install.md"))).toBe(false)
 
-  expect(read(join(out, "rules/r-sec-01.md"), "utf8")).toContain("/skills/oss-harden/")
+  const secOne = read(join(out, "rules/r-sec-01.md"), "utf8")
+  expect(secOne).toContain("/skills/oss-harden/")
+  // End to end from rule-sources.json onto a written page. renderRuleSources is
+  // unit-tested on a literal, so only this catches writeAll reading the wrong
+  // file, keying it wrong, or passing no entry at all.
+  expect(secOne).toContain("Where this comes from")
+  expect(secOne).toContain("https://docs.github.com/en/actions/reference/secure-use-reference")
+  // A rule holding this standard's own position must say so on its own page.
+  expect(read(join(out, "rules/r-doc-03.md"), "utf8")).toContain("oss-kit's own position")
 
   // An area index is the page an audit routes a maintainer to, so it renders
   // through the same rack as /rules/ and /skills/ rather than a bullet list.
