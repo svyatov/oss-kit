@@ -84,6 +84,7 @@ Both are read by someone already stuck, so they answer a different question than
 
 Read the draft against this list and fix what it catches.
 
+- Find the longest sentence and count its words. Over 25, or over 20 in a numbered step, and it splits. Two clauses joined by `and` or `so` are usually two sentences; a relative clause opening with `which` is usually the second half of one. This is the limit a draft breaks most often, and the only one that needs counting rather than reading.
 - No em dashes, en dashes, or ` -- `: in short technical prose they are a reliable machine-written tell, and a period, comma, colon, or pair of parentheses carries the same break.
 - No emoji anywhere, including headings and bullets: their width and glyph vary by terminal and font, so they break alignment in the fixed-width contexts a repository lives in.
 - No inline-header bullet lists (`- **Performance:** it is faster`): the bolded stub replaces the sentence that would have said what changed, so the reader gets a label instead of a claim. A bolded claim closed with a period is a different shape and is allowed (`- **Both forges.** Scores GitHub and GitLab repositories.`), because there the bold is the claim and what follows is its evidence. Tell them apart by deleting everything after the bold: "Performance." says nothing, so it was a label; "Both forges." says something, so it was a claim.
