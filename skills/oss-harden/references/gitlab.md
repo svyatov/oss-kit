@@ -135,6 +135,43 @@ variables:
 
 The built-in template belongs to the GitLab instance version, so it is not an external `include:` that R-SEC-06 can pin. Do not use the documented component example at `@main`; if a project chooses the component instead, resolve it to a full commit SHA. Confirm the merge request pipeline contains the SAST job and that "Pipelines must succeed" blocks a merge when the job fails.
 
-## Read OpenSSF Scorecard results (Step 12)
+## Detection controls (R-SEC-10, R-SEC-11)
+
+Neither rule maps onto a GitHub command here. GitLab splits both outcomes across a paid control and a pipeline job, so establish the project's tier before proposing anything, and reach the outcome through the job where the tier withholds the control.
+
+### Secret detection (R-SEC-10)
+
+Secret push protection is Ultimate. It reads and writes through the project security settings:
+
+```bash
+curl --header "PRIVATE-TOKEN: $TOKEN" \
+  "https://gitlab.example.com/api/v4/projects/:id/security_settings"
+curl --request PUT --header "PRIVATE-TOKEN: $TOKEN" \
+  --data "secret_push_protection_enabled=true" \
+  "https://gitlab.example.com/api/v4/projects/:id/security_settings"
+```
+
+The `GET` returns `secret_push_protection_enabled` alongside the auto-fix and continuous-scanning fields, so it is both the write path and the read-back. The field was named `pre_receive_secret_detection_enabled` before GitLab 17.11; a project on an older self-managed instance answers under the old name. Setting it for a whole group is `PUT /groups/:id/security_settings` with the same parameter, and GitLab documents no `GET` there, so read the group's projects back one at a time rather than assuming the group write took.
+
+Pipeline secret detection is available on Free, Premium, and Ultimate, and is the path for a project the Ultimate control is out of reach for. It is one include:
+
+```yaml
+include:
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+```
+
+Two things about its coverage need saying to the maintainer rather than discovering later. It scans the current state of the repository and everything committed after it, so a secret already in history is not found by turning it on; a historic scan is a separate run and is slow on a large repository. And it detects rather than blocks: the pipeline reports the finding after the push has landed, which is weaker than push protection and is why R-SEC-10 names the Ultimate control first.
+
+Where push protection is on and blocks a legitimate push, GitLab documents two skips: `git push -o secret_push_protection.skip_all`, or `[skip secret push protection]` in a commit message. Both are audit-logged. Give the maintainer the skip rather than watching them turn the control off.
+
+### Dependency vulnerabilities (R-SEC-11)
+
+Dependency Scanning is Ultimate, and so is the dependency list that would show what it covers. A Free project has no platform control here at all, which means the rule is met by a job rather than by a setting, and the sweep should say that plainly instead of reporting a gap the tier makes unfixable.
+
+For that job, use a scanner that reads the project's committed lockfiles against a public advisory database and fails on what the merge request introduces, while a scheduled pipeline runs the repository-wide scan that only reports. GitLab has no dependency graph of its own on Free, so there is no coverage comparison to run the way there is on GitHub; the scanner's own lockfile support is the coverage, and it should be checked against every lockfile the project commits.
+
+Where the project already runs Renovate for R-SEC-03, its `osvVulnerabilityAlerts` option checks dependencies against the OSV database and defaults to `true`, so that half may already be in place. It raises update merge requests rather than gating one, so it does not on its own satisfy the requirement that a vulnerability the change introduces blocks its merge.
+
+## Read OpenSSF Scorecard results (Step 13)
 
 OpenSSF's current weekly public dataset derives its project list from GitHub only, and its GitHub Action is the documented path for publishing repository-owned results to the REST API. Do not claim a GitLab project has current public API coverage without a successful dated response. If a result exists, report its date and use it only as supplementary evidence. If it does not, report no public result. Running the CLI is a separate task that requires installation and authentication, so do not add or run it unless the user asks.
