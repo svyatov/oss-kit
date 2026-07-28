@@ -82,6 +82,8 @@ jobs:
 
 Every permission not named in a `permissions:` block is set to `none`, not left at whatever the default would have been; a block naming only `contents: read` also implicitly drops every other scope, which is the intended effect.
 
+A job that calls a reusable workflow is the one place where trimming a scope breaks the run rather than tightening it. The called workflow declares its own `permissions:`, and granting it less fails the whole run before any job starts, with `The workflow is requesting 'security-events: write', but is only allowed 'security-events: none'.` An input that disables the step needing the scope does not change this, because the check compares the two declarations rather than what the run goes on to do. Read the called workflow's top-level block and grant exactly that, then narrow what it does through its inputs.
+
 ## Automated dependency updates (R-SEC-03)
 
 `dependabot.yml` version 2 needs one `updates` entry per ecosystem, each with `package-ecosystem`, `directory`, and `schedule.interval`:
