@@ -208,12 +208,13 @@ export function renderStandardBody(standardText, rules) {
  */
 export function renderRuleSources(entry) {
   const urls = entry?.sources ?? []
+  // A date belongs to the list it was read against, so it rides the sourced branch.
+  const verified = entry?.verified ? `\n<p class="doc-verified">Last read against these sources on ${entry.verified}.</p>` : ""
+  const list = urls.map((url) => `  <li><a href="${inlineCodeHtml(url)}">${inlineCodeHtml(url)}</a></li>`).join("\n")
   const body =
     urls.length === 0
       ? "<p>No upstream source. This is oss-kit's own position, and the argument for it is below.</p>"
-      : `<ul>\n${urls.map((url) => `  <li><a href="${inlineCodeHtml(url)}">${inlineCodeHtml(url)}</a></li>`).join("\n")}\n</ul>${
-          entry?.verified ? `\n<p class="doc-verified">Last read against these sources on ${entry.verified}.</p>` : ""
-        }`
+      : `<ul>\n${list}\n</ul>${verified}`
   // Notes quote upstream verbatim, and upstream writes things like
   // GET /integrity/<project>/<version>/. Unescaped, CommonMark eats them as tags.
   return `<section class="doc-sources">

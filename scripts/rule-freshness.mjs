@@ -25,8 +25,9 @@ const rows = ids.map((id) => {
 // measured against the rules that have a source, and listed separately.
 const sourceless = rows.filter((r) => r.sourceless)
 const sourced = rows.filter((r) => !r.sourceless)
-const fresh = sourced.filter((r) => r.verified && r.verified >= cutoffDay)
-const stale = sourced.filter((r) => !fresh.includes(r)).sort((a, b) => (a.verified ?? "").localeCompare(b.verified ?? ""))
+const isFresh = (r) => r.verified !== null && r.verified >= cutoffDay
+const fresh = sourced.filter(isFresh)
+const stale = sourced.filter((r) => !isFresh(r)).sort((a, b) => (a.verified ?? "").localeCompare(b.verified ?? ""))
 
 const pct = Math.round((fresh.length / sourced.length) * 100)
 console.log(`${fresh.length}/${sourced.length} sourced rules verified within ${WINDOW_MONTHS} months (${pct}%)`)
