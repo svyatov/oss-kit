@@ -24,6 +24,10 @@ The durable body defaults to none. The subject carries the change, and most chan
 
 Prose earns its place when it carries one of four things: the reason the behavior exists, the constraint that forced an unobvious choice, the alternative rejected and why, or the compatibility, security, or operational consequence. A body that paraphrases the diff is noise.
 
+The consequence condition reaches the case a trivial-looking change most often needs. Where the safety of a change rests on a fact the diff cannot show, one line states that fact. A version bump that is metadata-only, a removed symbol that had no callers, an edit leaving the built artifact byte-identical, a plan reporting no changes. The diff shows what moved. It cannot show that nothing broke, and for a small change that is the only question a reviewer has. Where the diff does show it, say nothing.
+
+The size of the change does not decide this. A one-character edit can carry a consequence the reviewer cannot see, and a large refactor can carry none. Read the facts, not the line count.
+
 A body that exists says what is wrong now, then why this is better, then what was discarded, in that order. Write the status quo in the present tense: `the loader retries forever`, not `the loader used to retry forever`. The commit is what turns that sentence into history.
 
 Keep it self-contained. Summarize the discussion that led here instead of linking to it, and cite a prior commit with `git show -s --pretty=reference`, which prints `f86a374 (subject, 2026-07-28)`.
