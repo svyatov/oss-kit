@@ -1,24 +1,35 @@
 {
   "R-DOC-01": {
-    "sources": ["https://evilmartians.com/chronicles/how-to-make-your-open-source-popular"],
+    "sources": [
+      "https://github.com/evilmartians/agent-skills/blob/main/skills/good-readme/SKILL.md",
+      "https://evilmartians.com/chronicles/how-to-make-your-open-source-popular"
+    ],
     "verified": "2026-07-28",
-    "note": "Not a specification. A practitioner essay by PostCSS's author, recorded because it is where this opinion came from, and weaker than the primary sources elsewhere in this file. It asks the opening block to carry a clear description, why the product is useful, and how it differs from others. This rule is narrower than that, requiring one sentence saying what the project does; the usefulness and differentiation halves are not required here and the one-sentence limit is this standard's own."
+    "note": "Neither source is a specification, and both are weaker than the primary sources elsewhere in this file. They are recorded because they are where this opinion actually came from: oss-readme is a fork of that skill, pinned in skills/oss-readme/sources.json at SHA 0813c8304717dc2fa392b6f4a475f3ac6c8f7336, and the essay is the same argument in prose by the same authors. Upstream's opening block asks for what it does in plain conversational language, the user benefit, and the differentiation from alternatives; this rule keeps only the first and caps it at one sentence. The reading on 2026-07-28 was of the current upstream file, not the pinned SHA."
   },
   "R-DOC-02": {
-    "sources": ["https://evilmartians.com/chronicles/how-to-make-your-open-source-popular"],
+    "sources": [
+      "https://github.com/evilmartians/agent-skills/blob/main/skills/good-readme/SKILL.md",
+      "https://evilmartians.com/chronicles/how-to-make-your-open-source-popular"
+    ],
     "verified": "2026-07-28",
-    "note": "Not a specification, same caveat as R-DOC-01. It argues for code examples and 'specific getting-started guides, tailored to different cases', and for a README that explains at a high level first and a granular one after, which is the argument for putting both near the top. It says nothing about install preceding the example, so that ordering is this standard's own."
+    "note": "Same provenance and same caveat as R-DOC-01. Upstream gives the example its own specification, self-explanatory, 4 to 10 lines, output shown in a comment, and requires a getting-started guide explicit enough to copy without thinking. This rule diverges on order, and the divergence is deliberate: upstream runs opening, facts, example, getting started, putting the example before installation, where this rule requires install then example. oss-readme merges the two into one Install and example section to match."
   },
   "R-DOC-03": {
     "sources": []
   },
   "R-DOC-04": {
-    "sources": []
+    "sources": ["https://github.com/evilmartians/agent-skills/blob/main/skills/good-readme/SKILL.md"],
+    "verified": "2026-07-28",
+    "note": "Same provenance and same caveat as R-DOC-01. Upstream states it as 'Never invent facts' and 'A README with fabricated numbers is worse than one without numbers', and tells the author to ask for a benchmark rather than estimate one. That covers the claim half of this rule. Upstream is arguing against fabrication where this rule checks agreement with the repository, so the version and command halves, which are about drift rather than invention, are this standard's own."
   },
   "R-DOC-05": {
-    "sources": ["https://evilmartians.com/chronicles/how-to-make-your-open-source-popular"],
+    "sources": [
+      "https://github.com/evilmartians/agent-skills/blob/main/skills/good-readme/SKILL.md",
+      "https://evilmartians.com/chronicles/how-to-make-your-open-source-popular"
+    ],
     "verified": "2026-07-28",
-    "note": "Not a specification, same caveat as R-DOC-01. It carries the plain-language half: 'Don't use tech speak, write like you'd speak with your colleagues in real life.' The active-voice and no-marketing-language halves are this standard's own. skills/oss-writing separately cites https://www.asd-ste100.org/, which is a controlled-language specification and would be the stronger source, but it was not re-read for this rule and ASD-STE100 governs technical maintenance documentation rather than a README."
+    "note": "Same provenance and same caveat as R-DOC-01. Upstream carries the plain-language half twice, as 'No jargon' in the skill and as 'Don't use tech speak, write like you'd speak with your colleagues in real life' in the essay. The active-voice requirement and the ban on marketing language are this standard's own. skills/oss-writing separately cites https://www.asd-ste100.org/, a controlled-language specification that would be the stronger source, but it was not re-read for this rule and ASD-STE100 governs technical maintenance documentation rather than a README."
   },
   "R-DOC-06": {
     "sources": []
