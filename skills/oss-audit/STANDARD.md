@@ -93,7 +93,7 @@ Forges: both
 
 A reader who has understood what the project does still has to decide against whatever they are already using. A README that never answers that leaves the comparison to them, and the alternative they already know wins by default. The evidence half is what stops the answer being an adjective: a boundary, a measurement, or a named competitor can be checked, and "powerful" cannot.
 
-Check: `README.md` states, before its first `##` heading, at least one claim naming a supported boundary, a measured number, or an alternative project by name, and every such claim is traceable to the source, a manifest, the CI configuration, or a linked measurement.
+Check: `README.md`, before its first `##` heading, presents at least one claim as what distinguishes the project from the alternatives a reader already has, that claim names a supported boundary, a measured number, or an alternative project by name, and it is traceable to the source, a manifest, the CI configuration, or a linked measurement. A number stated somewhere in the opening for another purpose does not satisfy this.
 
 Fixed by: oss-readme
 Forges: both
