@@ -210,6 +210,25 @@
     "verified": "2026-07-28",
     "note": "Scorecard SAST requires static analysis on pull requests and names CodeQL."
   },
+  "R-SEC-10": {
+    "sources": [
+      "https://docs.gitlab.com/user/application_security/secret_detection/secret_push_protection/",
+      "https://docs.gitlab.com/user/application_security/secret_detection/pipeline/",
+      "https://docs.gitlab.com/api/project_security_settings/"
+    ],
+    "verified": "2026-07-28",
+    "note": "The GitLab sources set the tier split the rule records: push protection is Ultimate, pipeline secret detection is Free. The GitHub half has no document behind it and rests on an observation against svyatov/oss-kit: a repository PATCH setting secret_scanning_non_provider_patterns and secret_scanning_validity_checks returned 200 and left both disabled, which is what puts those two switches outside the rule and what the read-back requirement exists to catch. A GitHub document stating that the PATCH discards unavailable fields would retire the observation in favour of a source."
+  },
+  "R-SEC-11": {
+    "sources": [
+      "https://docs.github.com/en/code-security/reference/supply-chain-security/dependency-graph-supported-package-ecosystems",
+      "https://docs.github.com/en/code-security/concepts/supply-chain-security/about-dependabot-alerts",
+      "https://google.github.io/osv-scanner/supported-languages-and-lockfiles/",
+      "https://docs.gitlab.com/user/application_security/dependency_scanning/"
+    ],
+    "verified": "2026-07-28",
+    "note": "Alert coverage follows dependency graph support rather than the updater's ecosystem list, which is why the rule compares what the forge reports watching against the resolved set instead of treating alerting as on or off. The GitLab source establishes the Ultimate tier; the Free-tier scanner path it leaves open is this project's own position, taken because a rule no Free project could ever satisfy would exclude most of the population the standard is written for."
+  },
   "R-PUB-01": {
     "sources": [
       "https://github.com/ossf/scorecard/blob/main/docs/beginner-checks.md",
