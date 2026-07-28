@@ -20,12 +20,16 @@ const rows = ids.map((id) => {
   return { id, verified: entry.verified ?? null, sourceless: (entry.sources ?? []).length === 0 }
 })
 
-const fresh = rows.filter((r) => r.verified && r.verified >= cutoffDay)
-const stale = rows.filter((r) => !fresh.includes(r)).sort((a, b) => (a.verified ?? "").localeCompare(b.verified ?? ""))
+// A sourceless rule has nothing to re-read, so counting it as unverified caps
+// the number below 100% forever and the report stops meaning anything. It is
+// measured against the rules that have a source, and listed separately.
 const sourceless = rows.filter((r) => r.sourceless)
+const sourced = rows.filter((r) => !r.sourceless)
+const fresh = sourced.filter((r) => r.verified && r.verified >= cutoffDay)
+const stale = sourced.filter((r) => !fresh.includes(r)).sort((a, b) => (a.verified ?? "").localeCompare(b.verified ?? ""))
 
-const pct = Math.round((fresh.length / rows.length) * 100)
-console.log(`${fresh.length}/${rows.length} rules verified within ${WINDOW_MONTHS} months (${pct}%)`)
+const pct = Math.round((fresh.length / sourced.length) * 100)
+console.log(`${fresh.length}/${sourced.length} sourced rules verified within ${WINDOW_MONTHS} months (${pct}%)`)
 
 if (stale.length > 0) {
   console.log(`\n${stale.length} stale or never verified, oldest first:`)
@@ -33,6 +37,6 @@ if (stale.length > 0) {
 }
 
 if (sourceless.length > 0) {
-  console.log(`\n${sourceless.length} with no upstream source named:`)
+  console.log(`\n${sourceless.length} holding this standard's own position, each with its argument in the note:`)
   for (const r of sourceless) console.log(`  ${r.id}`)
 }

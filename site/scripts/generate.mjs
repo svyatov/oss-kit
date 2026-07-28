@@ -210,7 +210,7 @@ export function renderRuleSources(entry) {
   const urls = entry?.sources ?? []
   const body =
     urls.length === 0
-      ? "<p>No upstream source. This is oss-kit's own position, held because the practice has no governing specification we can point at.</p>"
+      ? "<p>No upstream source. This is oss-kit's own position, and the argument for it is below.</p>"
       : `<ul>\n${urls.map((url) => `  <li><a href="${inlineCodeHtml(url)}">${inlineCodeHtml(url)}</a></li>`).join("\n")}\n</ul>${
           entry?.verified ? `\n<p class="doc-verified">Last read against these sources on ${entry.verified}.</p>` : ""
         }`

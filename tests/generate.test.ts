@@ -129,6 +129,12 @@ test("renderRuleSources tells a sourced rule apart from this standard's own posi
     expect(own).not.toContain("<ul>")
     expect(own).not.toContain("Last read")
   }
+
+  // rule-sources.test.ts requires the note when there is no source, so the
+  // sourceless copy has to hand off to it rather than end the section.
+  const argued = renderRuleSources({ sources: [], note: "Retire this rule if forges render it." })
+  expect(argued).toContain("the argument for it is below")
+  expect(argued).toContain("Retire this rule if forges render it.")
 })
 
 test("summarize cuts prose to one sentence a search result can show", () => {

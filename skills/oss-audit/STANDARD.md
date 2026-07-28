@@ -19,9 +19,9 @@ Forges: both
 
 ### R-DOC-02: The README shows how to install the project and one runnable example, in that order, near the top
 
-Installation and a working snippet answer the two questions every visitor has. Burying them under motivation, philosophy, or comparison tables costs you the readers who would have used the project.
+Installation and a working snippet answer the two questions every visitor has. Burying them under motivation, philosophy, or comparison tables costs you the readers who would have used the project. A snippet that never shows what it returns makes the reader install the project to find out, which is the work the snippet was there to save.
 
-Check: `README.md` contains a fenced code block with an install command, followed by a second fenced code block showing minimal usage, and both appear before any section about design, motivation, or comparisons.
+Check: `README.md` contains a fenced code block with an install command, followed by a second fenced code block showing minimal usage whose result is visible in a comment inside the block or in a block immediately below it, and both appear before any section about design, motivation, or comparisons.
 
 Fixed by: oss-readme
 Forges: both
@@ -85,6 +85,15 @@ Forges: both
 A project that stopped four years ago and one that shipped last week look the same in a search result. Saying which costs a sentence and saves a reader a day.
 
 Check: `README.md` carries a statement of maintenance or support status, or the repository carries an equivalent signal: `DEPRECATED` as the first heading of `README.md`, `DEPRECATED` at the start of the repository description, a no-maintenance-intended badge, or the archived flag set.
+
+Fixed by: oss-readme
+Forges: both
+
+### R-DOC-10: The README names one thing that sets the project apart, with evidence
+
+A reader who has understood what the project does still has to decide against whatever they are already using. A README that never answers that leaves the comparison to them, and the alternative they already know wins by default. The evidence half is what stops the answer being an adjective: a boundary, a measurement, or a named competitor can be checked, and "powerful" cannot.
+
+Check: `README.md` states, before its first `##` heading, at least one claim naming a supported boundary, a measured number, or an alternative project by name, and every such claim is traceable to the source, a manifest, the CI configuration, or a linked measurement.
 
 Fixed by: oss-readme
 Forges: both

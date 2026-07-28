@@ -16,7 +16,8 @@
     "note": "Same provenance and same caveat as R-DOC-01. Upstream gives the example its own specification, self-explanatory, 4 to 10 lines, output shown in a comment, and requires a getting-started guide explicit enough to copy without thinking. This rule diverges on order, and the divergence is deliberate: upstream runs opening, facts, example, getting started, putting the example before installation, where this rule requires install then example. oss-readme merges the two into one Install and example section to match."
   },
   "R-DOC-03": {
-    "sources": []
+    "sources": [],
+    "note": "This standard's own position. That the three files exist is required elsewhere here and counted by a forge's community profile; that the README link them is this step. Observed: a repository can hold all three and still leave a reader guessing, because a forge renders the README and buries the file list, and on a narrow screen the list is a tap away rather than in view. Retire this rule if forges begin surfacing the license, changelog, and contributing guide as reliably as they surface the README."
   },
   "R-DOC-04": {
     "sources": ["https://github.com/evilmartians/agent-skills/blob/main/skills/good-readme/SKILL.md"],
@@ -32,10 +33,12 @@
     "note": "Same provenance and same caveat as R-DOC-01. Upstream carries the plain-language half twice, as 'No jargon' in the skill and as 'Don't use tech speak, write like you'd speak with your colleagues in real life' in the essay. The active-voice requirement and the ban on marketing language are this standard's own. skills/oss-writing separately cites https://www.asd-ste100.org/, a controlled-language specification that would be the stronger source, but it was not re-read for this rule and ASD-STE100 governs technical maintenance documentation rather than a README."
   },
   "R-DOC-06": {
-    "sources": []
+    "sources": [],
+    "note": "This standard's own position. Upstream good-readme asks the opening block what the project does and never asks for its boundary, and no README specification asks either. Observed while writing facts lists: the scope bullet is the one most often missing, because a boundary lives in configuration and reference files rather than in the code an author is proud of, and it is the bullet that lets a reader rule themselves out before installing anything. Retire this rule if the supported-platforms question is ever answered by a manifest field that forges render."
   },
   "R-DOC-07": {
-    "sources": []
+    "sources": [],
+    "note": "This standard's own position. No README specification addresses where the contents of a code block are supposed to go. Observed: two adjacent fenced blocks, one a shell command and one the body of a configuration file, render identically and get pasted into the same place. A language tag narrows the guess and does not answer it, which is why the check asks for both the tag and a sentence naming the destination. Retire this rule if renderers begin labelling blocks by destination; none does today."
   },
   "R-DOC-08": {
     "sources": [
@@ -46,7 +49,16 @@
     "note": "standard-readme's Contributing section is Required and its first requirement is 'State where users can ask questions', under a preamble giving the list normative force. That sources the channel half only. The rule's further qualifiers, that the channel be public, searchable, addressable by URL, usable without proprietary client software, and cover defect reports, are this standard's own position and have no upstream. GitHub's support-resources page confirms SUPPORT may live in root, docs/, or .github/, and endorses linking it from the README."
   },
   "R-DOC-09": {
-    "sources": []
+    "sources": [],
+    "note": "This standard's own position. No specification requires a project to state whether it is maintained. The archived flag and the no-maintenance-intended badge are the two mechanisms that exist, both opt-in signals rather than requirements, which is why this check accepts either in place of a sentence. Observed: a project that stopped four years ago and one that shipped last week are indistinguishable in a search result, and a last-commit date reports activity rather than intent. Retire this rule if a forge ever displays maintenance intent on the repository page."
+  },
+  "R-DOC-10": {
+    "sources": [
+      "https://github.com/evilmartians/agent-skills/blob/main/skills/good-readme/SKILL.md",
+      "https://evilmartians.com/chronicles/how-to-make-your-open-source-popular"
+    ],
+    "verified": "2026-07-28",
+    "note": "Same provenance and same caveat as R-DOC-01: a skill and an essay rather than a specification, weaker than the primary sources elsewhere in this file. This rule restores the third clause of upstream's opening block, what makes it different from alternatives, which R-DOC-01 dropped when it capped the opener at one sentence. It differs from upstream in two ways. Upstream puts the differentiator in the first paragraph; this rule accepts it anywhere above the first heading, which is where the facts list already lives. Upstream states it as a writing instruction; the evidence half, that the claim name a boundary, a number, or an alternative by name, is this standard's own, because a differentiator with no checkable noun in it is an adjective."
   },
   "R-COM-01": {
     "sources": ["https://baseline.openssf.org/versions/2026-02-19"],
@@ -86,7 +98,8 @@
     "note": "Confirms the .github/, root, and docs/ locations and the catch-all pattern. The page did not state the plan and visibility limits the rule's exemption relies on; that half is unverified."
   },
   "R-COM-07": {
-    "sources": []
+    "sources": [],
+    "note": "This standard's own position. GitHub and GitLab both expose a description, topics, and a homepage URL, and neither documents any of them as required. Observed: a search result, a social card, and a forge's own project lists all render the description and none of them render the README, so an empty description serves a blank answer everywhere the README cannot reach. Retire this rule if forges begin deriving the project description from the README."
   },
   "R-COM-08": {
     "sources": [
@@ -107,7 +120,8 @@
     "note": "OSPS-QA-06.01, Maturity 2-3: 'Prior to a commit being accepted, the project's CI/CD pipelines MUST run at least one automated test suite to ensure the changes meet expectations.' OSPS-QA-03.01 adds that automated status checks MUST pass or be manually bypassed. Neither mentions a version matrix, so this rule's matrix half has no upstream and is this standard's own position."
   },
   "R-CI-03": {
-    "sources": []
+    "sources": [],
+    "note": "This standard's own position. No specification ties a declared support range to a test matrix entry. Observed: the two live in different files, the package manifest and the CI configuration, and nothing on either side fails when they disagree, so a support claim decays silently until a patch release breaks the oldest line still in the range. Retire this rule if package managers begin rejecting a manifest whose support range the project does not test."
   },
   "R-CI-04": {
     "sources": [
@@ -252,10 +266,12 @@
     "note": "SemVer confirms the MUST-declare-a-public-API clause, the increment rules, and that v1.2.3 is a tag name rather than a semantic version. Its clause 4 leaves 0.y.z undefined, so the MINOR-for-incompatible reading is not the spec's; node-semver is what makes it the ecosystem's, expanding ^0.2.3 to >=0.2.3 <0.3.0-0, which puts the break at MINOR below 1.0.0."
   },
   "R-CHG-03": {
-    "sources": []
+    "sources": [],
+    "note": "This standard's own position. Keep a Changelog and SemVer both assume one version per release and neither says what to check when a repository ships several version sources. Observed in this repository: three plugin manifests and the newest changelog heading said 0.2.0 while the newest tag said v0.1.0, and nothing failed. The release-unit wording exists so a monorepo of independently versioned packages is not forced to share one number. Retire this rule if a release tool ever owns every version source in a repository."
   },
   "R-CHG-04": {
-    "sources": []
+    "sources": [],
+    "note": "This standard's own position. Neither Keep a Changelog nor either forge's release documentation says what a release body should contain, and GitHub's auto-generated notes list merged pull requests, which is the behaviour this rule argues against. Observed: a project that keeps both ends up maintaining two descriptions of one release, and the reader arriving from a release feed finds the weaker one first. Retire this rule if a forge learns to render a tag's changelog section itself."
   },
   "R-CHG-05": {
     "sources": ["https://semver.org/spec/v2.0.0.html"],
@@ -288,7 +304,8 @@
     "note": "The spec permits scripts/ and names Python, Bash, and JavaScript as common options, saying supported languages depend on the implementation. This rule is deliberately stricter; the reason is oss-kit's own."
   },
   "R-SKL-06": {
-    "sources": []
+    "sources": [],
+    "note": "This standard's own position. The Agent Skills specification defines one skill layout and says nothing about installing a repository of skills into any particular host. Observed: hosts read different manifests from different paths, so naming a host in a README proves only that somebody typed the name, and a reader following it reaches a command that fails. Retire this rule if one manifest format is ever read by every host."
   },
   "R-SKL-07": {
     "sources": ["https://agentskills.io/specification"],

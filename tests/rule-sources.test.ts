@@ -29,6 +29,10 @@ describe("rule-sources.json", () => {
       }
       // A verified date with nothing to have verified against is a date nobody can re-check.
       if (entry.verified !== undefined) expect(entry.sources?.length).toBeGreaterThan(0)
+      // A rule claiming its own position with no argument recorded is a rule
+      // nobody can challenge. The note carries what was observed and what
+      // would retire the rule, and the site renders it in place of a source.
+      if ((entry.sources?.length ?? 0) === 0) expect(entry.note?.trim()).toBeTruthy()
     })
   }
 })

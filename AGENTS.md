@@ -72,6 +72,10 @@ Each `###` line is exactly `### R-<AREA>-<NN>: <statement>`, where AREA is DOC, 
 
 `oss-audit` owns no rule and must not appear in a `Fixed by:` line. It scores the repository and routes each gap to the skill that fixes it, so a rule it owned would route to itself.
 
+Every rule also has an entry in `skills/oss-audit/rule-sources.json`, keyed by ID, holding `sources`, an optional `verified` date, and an optional `note`. `tests/rule-sources.test.ts` enforces two things about it: a `verified` date needs at least one source, because a date with nothing behind it cannot be re-checked; and a rule whose `sources` are empty needs a `note`, because a rule holding this project's own position with no argument recorded is one nobody can challenge. Write that note to answer what was observed, and what would retire the rule. The docs site prints it on the rule page in place of a source list, so it is public prose, not an internal comment. Set `verified` only to a day a source was actually read.
+
+`scripts/rule-freshness.mjs` reports against the rules that have a source and lists the own-position rules separately. It never gates: a metric that fails a build becomes a chore somebody disables.
+
 ## Standard.md rules that do not apply here, or apply later
 
 This repository is scored against `skills/oss-audit/STANDARD.md` like any other. The rules below are recorded here rather than fixed, because they either do not reach this repository or wait on an event that has not happened yet.
