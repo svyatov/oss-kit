@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+### Added
+
+- Three rules, taking the standard from 46 to 49. R-PUB-05 requires a release that carries a built asset to carry a software bill of materials describing it. R-PUB-06 requires those assets to be signed, or listed by hash in a signed manifest; it is separate from R-SEC-05, which covers the tag object and not the files attached to the release. R-COM-08 requires a documented statement of who decides and what happens if they stop, and a single-maintainer project satisfies it by saying so.
+- `CONTRIBUTING.md` has a Governance section, which is how this repository satisfies its own R-COM-08: one maintainer decides and releases, contributions arrive from forks because nobody else has write access, and no succession is arranged.
+- Each rule page on the docs site now shows where its opinion comes from: the upstream sources it was last read against, the date, and what that reading did and did not cover. A rule with no upstream says so in those words instead of rendering an empty list.
+
+### Changed
+
+- **Breaking:** the release and publishing area applies to any repository shipping a built artifact to people who did not build it, where it previously applied only to repositories publishing to a package registry. A repository attaching built assets to a forge release was excluded by the old preamble and is now in scope for the whole area. R-PUB-02 carries its own registry scoping, since trusted publishing has nothing to authenticate to without one. A repository shipping only source is still outside the area.
+
 ### Fixed
 
 - The site's changelog page publishes released versions only. The generator copied this file whole, so the page carried an `Unreleased` heading that renders empty between releases and advertises uninstallable work the rest of the time, along with a comparison link that moves on every merge to `main`.

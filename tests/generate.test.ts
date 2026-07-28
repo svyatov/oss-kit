@@ -6,6 +6,7 @@ import {
   parseRules,
   summarize,
   renderRulePage,
+  renderRuleSources,
   renderSkillPage,
   renderStandardBody,
   rewriteLinks,
@@ -106,6 +107,28 @@ test("renderRulePage titles the page by the rule, not by its ID", () => {
   // A visitor arriving from search needs to know which area they landed in.
   expect(page).toContain("1 of 9")
   expect(page).toContain('<a href="/rules/sec/">')
+})
+
+test("renderRuleSources tells a sourced rule apart from this standard's own position", () => {
+  const sourced = renderRuleSources({
+    sources: ["https://example.com/spec"],
+    verified: "2026-07-28",
+    note: "Upstream writes GET /integrity/<project>/provenance.",
+  })
+  expect(sourced).toContain('<a href="https://example.com/spec">')
+  expect(sourced).toContain("Last read against these sources on 2026-07-28.")
+  // Verbatim upstream quotes carry angle brackets, and CommonMark eats them as tags.
+  expect(sourced).toContain("/integrity/&lt;project&gt;/provenance")
+  expect(sourced).not.toContain("<project>")
+
+  // A rule with no upstream must say so, not render an empty list: telling the
+  // two apart is the whole reason these are published.
+  for (const empty of [{ sources: [] }, undefined]) {
+    const own = renderRuleSources(empty)
+    expect(own).toContain("oss-kit's own position")
+    expect(own).not.toContain("<ul>")
+    expect(own).not.toContain("Last read")
+  }
 })
 
 test("summarize cuts prose to one sentence a search result can show", () => {
