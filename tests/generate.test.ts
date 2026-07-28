@@ -14,9 +14,9 @@ import {
   stripUnreleased,
   writeAll,
 } from "../site/scripts/generate.mjs"
-import { existsSync, mkdtempSync, readFileSync as read, rmSync } from "node:fs"
+import { existsSync, mkdtempSync, readFileSync as read, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { join, resolve } from "node:path"
 
 const currentRules = parseRules(read("skills/oss-audit/STANDARD.md", "utf8"))
 
@@ -304,12 +304,42 @@ test("stripUnreleased ends the section at a release, not at an entry in bracket 
 
 ### Changed
 
-[Keep a Changelog] is the format, and this line is prose rather than a definition.
+[Note]: this line has the label and the colon but no URL, so it is prose.
 - A second entry that must go too.
 
 ${RELEASED}[Unreleased]: https://example.com/compare/v0.2.0...HEAD
 `
   expect(stripUnreleased(text)).toBe(RELEASED)
+})
+
+test("stripUnreleased ends the section at the definitions when no release follows", () => {
+  // A project before its first release. This is the only input that reaches
+  // the terminator's second alternative, since every other case stops at the
+  // next `##` heading. The issue reference definition is what makes the case
+  // observable: a terminator that ran to the end of the file would take it
+  // too, and oss-changelog asks for forge links to be collected this way.
+  const unreleased = `## [Unreleased]
+
+### Added
+
+- The first thing, not yet released. See [#12].
+
+[Unreleased]: https://example.com/compare/v0.0.0...HEAD
+[#12]: https://example.com/issues/12
+`
+  expect(stripUnreleased(unreleased)).toBe("[#12]: https://example.com/issues/12\n")
+})
+
+test("the changelog link check fails the build on a target that does not exist", () => {
+  const root = mkdtempSync(join(tmpdir(), "oss-kit-repo-"))
+  const out = mkdtempSync(join(tmpdir(), "oss-kit-site-"))
+  symlinkSync(resolve("skills"), join(root, "skills"))
+  symlinkSync(resolve("README.md"), join(root, "README.md"))
+  writeFileSync(join(root, "CHANGELOG.md"), read("CHANGELOG.md", "utf8").replaceAll("README.md#", "GONE.md#"))
+
+  expect(() => writeAll(root, out)).toThrow(/changelog links a missing file: GONE\.md/)
+  rmSync(root, { recursive: true, force: true })
+  rmSync(out, { recursive: true, force: true })
 })
 
 test("the changelog page publishes released versions only", () => {
