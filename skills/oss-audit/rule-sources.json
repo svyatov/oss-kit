@@ -109,6 +109,14 @@
     "verified": "2026-07-28",
     "note": "OpenSSF Best Practices badge Silver carries both halves as MUSTs: governance, 'clearly define and document its project governance model (the way it makes decisions, including key roles)', and access_continuity, the project 'be able to continue with minimal interruption if any one person dies, is incapacitated, or is otherwise unable or unwilling to continue'. Concise Guide item 25 says the same in one line. bus_factor, having more than one maintainer, is only a SHOULD upstream, which is why this rule asks a solo project to state its position rather than fail it."
   },
+  "R-COM-09": {
+    "sources": [
+      "https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository",
+      "https://docs.github.com/en/discussions/guides/best-practices-for-community-conversations-on-github"
+    ],
+    "verified": "2026-07-28",
+    "note": "The first page documents contact_links in .github/ISSUE_TEMPLATE/config.yml as the mechanism that adds a destination to the chooser, and blank_issues_enabled as the separate switch this rule deliberately leaves alone. The second is GitHub's own case for keeping open-ended conversation out of the tracker, which is why the rule fires only where a second channel already exists: whether to run one is the project's decision, and this rule scores only whether the chooser admits it. The check reads the linked URL because a contact_links entry pointing at a forum nobody opened is the failure the rule exists to catch, and nothing in the file distinguishes it from a working one."
+  },
   "R-CI-01": {
     "sources": ["https://github.com/ossf/scorecard/blob/main/docs/checks.md"],
     "verified": "2026-07-28",

@@ -172,6 +172,15 @@ Check: a tracked file states how decisions get made and who makes them, and says
 Fixed by: oss-community
 Forges: both
 
+### R-COM-09: When questions and defects have different homes, the issue chooser says so
+
+A project that opens a discussion forum and then leaves the issue chooser silent has two channels and one visible door. Every question still arrives as an issue, and the forum stays empty while the tracker stays noisy.
+
+Check: where the project runs a public non-defect channel such as GitHub Discussions, a forum, or a mailing list, `.github/ISSUE_TEMPLATE/config.yml` names it under `contact_links` with a URL that resolves. A project running no such channel falls outside this rule.
+
+Fixed by: oss-community
+Forges: github
+
 ## Continuous integration
 
 ### R-CI-01: CI runs on every push to the default branch and on every change request

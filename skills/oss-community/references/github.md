@@ -70,7 +70,7 @@ Element types and their required attributes:
 
 Issue forms are not available for pull requests.
 
-### Template chooser config
+### Template chooser config (R-COM-09)
 
 `.github/ISSUE_TEMPLATE/config.yml` controls the chooser shown when someone clicks New issue:
 
@@ -78,13 +78,31 @@ Issue forms are not available for pull requests.
 blank_issues_enabled: false
 contact_links:
   - name: Ask a question
-    url: https://github.com/orgs/ORG/discussions
+    url: https://github.com/OWNER/REPO/discussions
     about: Please ask and answer questions here.
 ```
 
-`blank_issues_enabled: false` hides the blank-issue option from contributors with read or triage access; it stays visible, labeled "Maintainers only," for anyone with write access or above. `contact_links` adds external destinations, such as a discussion forum or a security bounty page, to the chooser.
+`blank_issues_enabled: false` hides the blank-issue option from contributors with read or triage access; it stays visible, labeled "Maintainers only," for anyone with write access or above. `contact_links` adds external destinations, such as a discussion forum or a security bounty page, to the chooser. Each entry needs all three of `name`, `url`, and `about`.
+
+Repository Discussions live at `https://github.com/OWNER/REPO/discussions`, organization Discussions at `https://github.com/orgs/ORG/discussions`, and a single category at `.../discussions/categories/CATEGORY-SLUG`. Link the category when the project wants a specific kind of traffic there, such as Q&A, and the top level when it wants anything that is not a defect.
 
 Prefix filenames with a zero-padded number, such as `01-bug.yml`, to control chooser order; templates are otherwise listed alphanumerically with YAML files before Markdown files.
+
+## Discussion category forms
+
+A discussion category can carry a form in the same schema as an issue form. The file goes in `.github/DISCUSSION_TEMPLATE/` on the default branch, and the filename is the category's slug: `.github/DISCUSSION_TEMPLATE/q-a.yml` for a category named Q&A, `announcements.yml` for Announcements. There is no chooser config here; the mapping is the filename and nothing else, so a typo in the slug produces a form that never appears rather than an error.
+
+Only three top-level keys apply, all fewer than an issue form has:
+
+| Key | Required | Type |
+|---|---|---|
+| `body` | yes | array of form elements |
+| `title` | no | string |
+| `labels` | no | array or comma-delimited string |
+
+`name` and `description` do not apply, because the category already supplies both. Neither do `assignees`, `type`, and `projects`, since a discussion is not assigned or tracked the way an issue is. The `body` elements are the same set the issue form schema defines, and `body` must hold at least one element that is not `markdown`. Writing this file needs write access to the repository.
+
+Categories themselves are a repository setting rather than a file. GitHub creates six by default, each in one of three formats: open-ended discussion, question and answer, or announcement. A category can be renamed, have its format changed, or be deleted, and deleting one moves its discussions into a category chosen at delete time rather than removing them. The limit is 25 per repository or organization.
 
 ## Pull request template
 

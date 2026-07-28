@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+### Added
+
+- R-COM-09 requires the issue chooser to name the project's non-defect channel, taking the standard from 50 rules to 51. A project that opens a discussion forum and leaves `.github/ISSUE_TEMPLATE/config.yml` silent has two channels and one visible door, so the questions keep arriving as issues and the forum stays empty. The rule reaches only a project that already runs such a channel, since whether to run one is the project's decision and not the standard's business, and it deliberately says nothing about `blank_issues_enabled`, which is a separate switch. It is GitHub-only because `contact_links` is.
+- `oss-community` documents discussion category forms, which GitHub reads from `.github/DISCUSSION_TEMPLATE/<category-slug>.yml` using the same form schema as an issue form with three top-level keys instead of seven. The skill covered the issue chooser and the issue forms and said nothing about them, so a project routing questions to Discussions had no way to learn that the destination can collect structured reports too. The reference also carries the repository, organization, and per-category Discussions URL shapes, since `contact_links` needs one and they are easy to confuse.
+
+### Changed
+
+- The README sends questions to Discussions and keeps Issues for a defect, a rule proposal, or a skill change. The two used to share the tracker. The chooser now says the same thing, and it also answers the case no form covers: `02-rule-proposal.yml` requires a mechanical check, so somebody who thinks a rule is wrong without having one to offer had nowhere to file. The blank issue is off, which was not available before Discussions existed, because hiding it would have closed the only channel a question had.
+
 ## [0.4.0] - 2026-07-28
 
 Every rule now names the upstream it rests on, or argues its own case, and four new rules take the standard to 50.
