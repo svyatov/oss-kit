@@ -6,13 +6,19 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-07-28
+
+Three new rules take the standard to 53, and two of them ask for evidence no file in the repository can show.
+
 ### Added
 
+- R-SEC-10 and R-SEC-11 add the detection half of the SEC area, taking the standard from 51 rules to 53. Every SEC rule before them scored a file or a setting, so a repository could pin every action, commit a lockfile, and guard its default branch while secret scanning and dependency alerting sat switched off, and `oss-audit` scored it green. Both state an outcome and let the `Check` enumerate per-forge evidence, so a GitLab Free project reaches R-SEC-10 through the pipeline secret-detection template rather than being told to buy Ultimate. A repository that gates CI on a clean `oss-audit` run starts failing the day it upgrades, until it enables the two controls or records why neither reaches it.
 - R-COM-09 requires the issue chooser to name the project's non-defect channel, taking the standard from 50 rules to 51. A project that opens a discussion forum and leaves `.github/ISSUE_TEMPLATE/config.yml` silent has two channels and one visible door, so the questions keep arriving as issues and the forum stays empty. The rule reaches only a project that already runs such a channel, since whether to run one is the project's decision and not the standard's business, and it deliberately says nothing about `blank_issues_enabled`, which is a separate switch. It is GitHub-only because `contact_links` is.
 - `oss-community` documents discussion category forms, which GitHub reads from `.github/DISCUSSION_TEMPLATE/<category-slug>.yml` using the same form schema as an issue form with three top-level keys instead of seven. The skill covered the issue chooser and the issue forms and said nothing about them, so a project routing questions to Discussions had no way to learn that the destination can collect structured reports too. The reference also carries the repository, organization, and per-category Discussions URL shapes, since `contact_links` needs one and they are easy to confuse.
 
 ### Changed
 
+- `oss-harden` derives which detection controls apply from the forge, its tier, and the ecosystems the project ships, rather than checking a fixed list, and it reports a control as enabled only after reading the value back. GitHub's repository `PATCH` answers 200 while silently discarding a field the repository has no entitlement for, and `security_and_analysis` is absent rather than `disabled` for a caller without admin, so a run that trusted the write, or read a missing key as off, would report a control that is not on and a gap that may not exist. The skill also closes with what the maintainer has to enable by hand, kept separate from the rule findings so an unmet rule and an available extra do not read alike.
 - The README sends questions to Discussions and keeps Issues for a defect, a rule proposal, or a skill change. The two used to share the tracker. The chooser now says the same thing, and it also answers the case no form covers: `02-rule-proposal.yml` requires a mechanical check, so somebody who thinks a rule is wrong without having one to offer had nowhere to file. The blank issue is off, which was not available before Discussions existed, because hiding it would have closed the only channel a question had.
 
 ## [0.4.0] - 2026-07-28
@@ -145,7 +151,8 @@ Five new rules, and `oss-audit` now reports the gaps alone rather than every rul
 - `oss-audit` scores a repository against `STANDARD.md`, reports each gap with the rule it fails, and names the skill that fixes it.
 - `oss-skill` fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` conformance to the Agent Skills specification, oversized bodies that belong in `references/`, and the license field an extracted skill carries with it.
 
-[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/svyatov/oss-kit/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/svyatov/oss-kit/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/svyatov/oss-kit/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/svyatov/oss-kit/compare/v0.2.0...v0.3.0
