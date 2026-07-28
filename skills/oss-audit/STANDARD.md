@@ -311,6 +311,24 @@ Check: where the repository contains source in a language a static analyzer supp
 Fixed by: oss-harden
 Forges: both
 
+### R-SEC-10: Committed secrets are detected before they reach the default branch
+
+A leaked credential is live from the moment it is pushed, and rewriting history does not revoke it. Detection at the push is the difference between rotating one key and auditing everything that key could reach.
+
+Check: on GitHub, `gh api repos/{owner}/{repo} --jq .security_and_analysis` reports both `secret_scanning` and `secret_scanning_push_protection` as `enabled`, read back after any write rather than inferred from one, because the repository `PATCH` answers 200 while silently discarding a field it will not honour; an absent `security_and_analysis` key means the caller is not an admin, which is unknown rather than disabled. Non-provider patterns and validity checks are GitHub Secret Protection, a paid product, and fall outside this rule. On GitLab, either `GET /projects/:id/security_settings` reports `secret_push_protection_enabled` true, which requires Ultimate, or the project's pipeline includes `Jobs/Secret-Detection.gitlab-ci.yml`, which is available on Free.
+
+Fixed by: oss-harden
+Forges: both
+
+### R-SEC-11: Every dependency ecosystem the project ships is watched for known vulnerabilities
+
+An updater (R-SEC-03) moves dependencies forward on a schedule. It never says which of today's pinned versions is now known-bad, so without a watcher the freeze that R-SEC-01 and R-SEC-08 create is a freeze nobody is told to break.
+
+Check: the package set the forge reports watching matches the project's resolved dependency set, so coverage of a manifest's direct dependencies does not read as coverage of the lockfile; where the forge cannot parse the project's lockfile, a scanner that can reads it and covers the residual. On GitHub, `gh api repos/{owner}/{repo}/vulnerability-alerts` answers 204 when enabled and 404 when disabled, and `gh api repos/{owner}/{repo}/dependency-graph/sbom` lists what is actually watched; read every control back after a write for the reason R-SEC-10 gives, and treat an absent `security_and_analysis` key as unknown rather than disabled. On GitLab, Dependency Scanning requires Ultimate, and a Free project reaches the same outcome through a job running an advisory-database scanner. A vulnerability the change introduces blocks its merge; the repository-wide scan reports rather than blocks, because an advisory published against a dependency with no fix is not something a contributor can resolve.
+
+Fixed by: oss-harden
+Forges: both
+
 ## Release and publishing
 
 This area applies to a repository that ships a built artifact to people who did not build it, in either of two forms: a package published to a registry, evidenced by a manifest declaring a public package, a release workflow naming a publish command, or an existing registry page; or a built asset attached to a forge release, evidenced by a release carrying a file the repository does not contain. Where neither exists, the area is not applicable as a whole and its rules are not checked one at a time. A repository that ships only its source, through git tags or an installer that reads the source tree, publishes nothing to secure here.

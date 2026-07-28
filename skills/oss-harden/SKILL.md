@@ -1,6 +1,6 @@
 ---
 name: oss-harden
-description: "Harden the security posture of an open source repository: pin CI actions to full commit SHAs, restrict workflow permissions, keep untrusted input out of shell commands, enable automated dependency updates, lock dependency resolution, run static analysis on pull requests, configure branch protection, enforce code owner review, and sign tags. Use when the user asks to harden a repo, improve supply chain security, fix an OpenSSF Scorecard finding, pin actions, fix a workflow script injection, or lock down CI. Covers GitHub and GitLab. Publishing belongs to oss-publish."
+description: "Harden the security posture of an open source repository: pin CI actions to full commit SHAs, restrict workflow permissions, keep untrusted input out of shell commands, enable automated dependency updates, lock dependency resolution, run static analysis on pull requests, detect committed secrets before they reach the default branch, watch every shipped dependency ecosystem for known vulnerabilities, configure branch protection, enforce code owner review, and sign tags. Use when the user asks to harden a repo, improve supply chain security, fix an OpenSSF Scorecard finding, pin actions, fix a workflow script injection, enable secret scanning or push protection, turn on dependency vulnerability alerts, or lock down CI. Covers GitHub and GitLab. Publishing belongs to oss-publish."
 license: MIT
 ---
 
@@ -78,13 +78,27 @@ R-SEC-08 requires the package manager's lockfile to be committed and CI to insta
 
 R-SEC-09 applies only where the repository holds source in a language a static analyzer supports, so establish that first and say plainly that the rule does not reach the repository when it does not, rather than reporting a violation. Where it does apply, check that an analysis workflow runs on pull requests to the default branch and that its result is a required check, since an analyzer whose failure does not block merge is advisory. On GitHub, prefer CodeQL default setup, which is a repository setting rather than a workflow file the project has to maintain, and give the resolved settings URL the same way Step 6 does; the reference file names the endpoint that reports whether it is already enabled. Where Step 6 set up a ruleset, add its code scanning rule too, which blocks a merge on what the analysis found rather than only on whether it reported, and so also catches the case where the analysis configuration is deleted and the required check simply stops appearing.
 
-### Step 12: Read OpenSSF Scorecard results
+### Step 12: Enable the detection controls this repository can actually use
+
+R-SEC-10 and R-SEC-11 ask whether the repository receives signal: that a committed secret is caught before it reaches the default branch, and that every ecosystem the project ships is watched for known vulnerabilities. Every other rule in this area checks something the project controls. These two check whether anything is looking, which is what the pinning and locking in Steps 3, 5, and 10 assume when they freeze a dependency until somebody says it is now known-bad.
+
+Do not work from a fixed list of switches. Derive the applicable set from three things already known: the forge from Step 1, the plan tier that forge reports for this repository or project, and the ecosystems the manifests and lockfiles read in Step 10 declare. A control the tier withholds is not a failing rule, and a control for an ecosystem the project does not ship is not a gap. Name both out loud rather than dropping them, so the reader can tell a control that does not reach this repository from one the sweep never considered.
+
+For each control in that set, establish whether the forge exposes an API for it. Where it does, write the value and then read it back with a separate call. A write that returns success is not evidence: GitHub's repository `PATCH` answers 200 and silently discards a field the repository has no entitlement for, so a control can appear set and still be off. Where the forge exposes no API, which is true of several switches on the same settings page, resolve the settings URL for this repository and present it the way Step 6 does, then read back whatever the API can read and say plainly which part of the claim rests on the user's confirmation rather than on a reading.
+
+A read can also fail to answer. On GitHub the `security_and_analysis` object is absent rather than `disabled` for a caller without admin, so a missing value means unknown, and reporting it as off would be wrong. Say which of the two readings you got.
+
+For R-SEC-11, switching the forge's alerting on does not finish the check. Compare the package set the forge reports watching against what the project actually resolves: a forge that cannot parse the project's lockfile still parses its manifests, so the security overview looks the same whether it covers ten packages or five hundred. Where the two sets differ, that residual is the finding, and the fix is a scanner that reads the lockfile the forge cannot. Scope what blocks a merge to what the change introduces, and let the repository-wide scan report instead. An advisory published overnight against a dependency with no fix available is not something a contributor can act on, and a check that fails for that reason teaches the maintainer to dismiss alerts.
+
+### Step 13: Read OpenSSF Scorecard results
 
 Use Scorecard as supplementary evidence after the direct checks above, never as a substitute for them. Query the public API for an existing result and report its date, Scorecard version, per-check reason, and details. The weekly public dataset currently derives its project list from GitHub only and omits some API-expensive checks, while repository-published results depend on a configured Scorecard GitHub Action. A missing or stale result is normal and must not change a directly verified rule status. Map `Pinned-Dependencies`, `Token-Permissions`, `Dependency-Update-Tool`, and `Branch-Protection` only where their evidence matches the rule, and never map `Signed-Releases` to signed git tags because that check examines release artifacts. Do not offer to install or run another scanner unless the user asks for that expansion.
 
-### Step 13: Present the result
+### Step 14: Present the result
 
-Show what Steps 2 through 12 found and fixed, grouped by rule ID: which files this skill edited directly, which settings still need the user's confirmation with the resolved URL for each, and the supply-chain observation from Step 3 if one applies. Where a Scorecard result was read in Step 12, include its dated findings as supplementary evidence alongside this skill's direct findings. Do not mark a rule fixed until the file is written or the setting is confirmed and verified; a settings block the user has not yet confirmed stays listed as pending.
+Show what Steps 2 through 13 found and fixed, grouped by rule ID: which files this skill edited directly, which settings still need the user's confirmation with the resolved URL for each, and the supply-chain observation from Step 3 if one applies. Where a Scorecard result was read in Step 13, include its dated findings as supplementary evidence alongside this skill's direct findings. Do not mark a rule fixed until the file is written or the setting is confirmed and verified; a settings block the user has not yet confirmed stays listed as pending.
+
+Then close with what the maintainer could still turn on that this skill could not reach itself. Give each item what it does, why the skill could not set it, and what enabling it would take. Three kinds belong here: a control the forge exposes no API for, which only a click reaches; a control the forge's tier withholds, named with the tier it needs; and a control that strengthens the repository beyond what any rule in `STANDARD.md` requires. Keep this list separate from the rule findings and label it as optional. A maintainer reading an unmet rule and an available extra in one list cannot tell which of the two the standard actually asks for, and the one that reads as less urgent is the one that gets skipped.
 
 ## Rules this skill owns
 
@@ -105,3 +119,7 @@ R-SEC-07: Untrusted input never reaches a privileged context
 R-SEC-08: Registry dependencies resolve through a committed lockfile
 
 R-SEC-09: Static analysis runs on pull requests where the language supports it
+
+R-SEC-10: Committed secrets are detected before they reach the default branch
+
+R-SEC-11: Every dependency ecosystem the project ships is watched for known vulnerabilities

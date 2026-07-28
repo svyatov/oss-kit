@@ -5,12 +5,12 @@ Curated agent skills for open source maintainers.
 [![version](https://img.shields.io/github/v/tag/svyatov/oss-kit?label=version)](https://github.com/svyatov/oss-kit/releases)
 [![CI](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml)
 
-- **51 rules.** Each states the check it is scored by and the one skill that
+- **53 rules.** Each states the check it is scored by and the one skill that
   fixes it.
 - **Seven areas.** Documentation, community files, CI, security posture,
   release publishing, changelog discipline, and the agent skills a repository
   ships.
-- **Both forges.** 47 of the 51 rules score GitHub and GitLab alike. Three are
+- **Both forges.** 49 of the 53 rules score GitHub and GitLab alike. Three are
   GitHub-only, one is GitLab-only, and every rule says which.
 - **Four registries.** Release publishing for npm, RubyGems, PyPI, and
   crates.io.
@@ -31,7 +31,7 @@ It answers with the gaps and nothing else, each keyed to the rule it missed and
 routed to the skill that fixes it. Rules that already pass do not appear:
 
 ```text
-Audited 44 applicable rules: 41 pass, 2 fail, 1 unknown, 7 not applicable
+Audited 46 applicable rules: 43 pass, 2 fail, 1 unknown, 7 not applicable
 (6 PUB, the project publishes no package; 1 GitLab-only).
 
 1. R-COM-04 fail, no SECURITY.md, run oss-community

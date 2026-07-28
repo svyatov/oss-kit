@@ -82,6 +82,8 @@ jobs:
 
 Every permission not named in a `permissions:` block is set to `none`, not left at whatever the default would have been; a block naming only `contents: read` also implicitly drops every other scope, which is the intended effect.
 
+A job that calls a reusable workflow is the one place where trimming a scope breaks the run rather than tightening it. The called workflow declares its own `permissions:`, and granting it less fails the whole run before any job starts, with `The workflow is requesting 'security-events: write', but is only allowed 'security-events: none'.` An input that disables the step needing the scope does not change this, because the check compares the two declarations rather than what the run goes on to do. Read the called workflow's top-level block and grant exactly that, then narrow what it does through its inputs.
+
 ## Automated dependency updates (R-SEC-03)
 
 `dependabot.yml` version 2 needs one `updates` entry per ecosystem, each with `package-ecosystem`, `directory`, and `schedule.interval`:
@@ -206,7 +208,53 @@ A `tool` name that matches nothing the repository reports reads as "not configur
 
 GitHub Code Quality adds a second rule of the same shape, `code_quality`, whose `parameters.severity` names the level at or above which a result blocks the merge; `errors` is the value verified against a live ruleset. Two cautions belong with any recommendation of it. It is absent from the rulesets REST reference, which documents `code_scanning` and not this rule, so the API accepting it is currently better evidence than the reference is. And it is a licensed product that must be turned on per repository or organization and that consumes Actions minutes for its CodeQL passes plus per-seat licensing and AI credits for the rest, so name that cost before proposing it, and do not add the rule to a repository where Code Quality is not already on: a rule requiring a tool that never reports blocks every merge. R-SEC-09 does not require it, and CodeQL default setup with the `code_scanning` rule satisfies the rule on its own.
 
-## Read OpenSSF Scorecard results (Step 12)
+## Detection controls (R-SEC-10, R-SEC-11)
+
+Three endpoints set everything the two rules need. They do not share a shape, so read the value back from the endpoint that owns it rather than from the one you wrote to.
+
+```bash
+gh api -X PATCH repos/{owner}/{repo} \
+  -F 'security_and_analysis[secret_scanning][status]=enabled' \
+  -F 'security_and_analysis[secret_scanning_push_protection][status]=enabled'
+gh api -X PUT repos/{owner}/{repo}/vulnerability-alerts
+gh api -X PUT repos/{owner}/{repo}/automated-security-fixes
+```
+
+```bash
+gh api repos/{owner}/{repo} --jq .security_and_analysis
+gh api repos/{owner}/{repo}/vulnerability-alerts -i | head -1
+```
+
+The first read returns one object per switch, each with a `status` of `enabled` or `disabled`. The second answers `204 No Content` when alerts are on and `404` when they are off, with no body either way, which is why it needs `-i`. Dependabot security updates report back inside the first object as `dependabot_security_updates`, not through the endpoint that set them.
+
+### The write is not the evidence
+
+The repository `PATCH` answers `200` and returns the full repository object even for a field it will not honour. Setting `secret_scanning_non_provider_patterns` and `secret_scanning_validity_checks` on a public repository without GitHub Secret Protection succeeds by every signal the response gives and leaves both `disabled`. Those two switches are Secret Protection, a paid product; secret scanning, push protection, Dependabot alerts, and Dependabot security updates are free on a public repository. Never report a control enabled on the strength of the write.
+
+### Absent is not disabled
+
+`security_and_analysis` is omitted from `GET /repos/{owner}/{repo}` entirely for a caller without admin on the repository. The switches are still whatever they are; the caller cannot see them. A missing key is an unknown reading, and an audit that prints it as `disabled` reports a gap that may not exist. Say which of the two you got, and where the caller lacks admin, say that the reading needs an admin to resolve.
+
+### Controls with no API
+
+Dependabot malware alerts and grouped security updates are set on `https://github.com/{owner}/{repo}/settings/security_analysis` and have no endpoint, neither to write nor to read. Resolve that URL, name the two checkboxes, wait for the user to confirm, and record that the claim rests on their confirmation rather than on a reading. Automatic dependency submission lives on the same page and covers NuGet, Gradle, Maven, pip, and Poetry, so it is a gap only for a project shipping one of those.
+
+### What the graph actually watches
+
+Enabling alerts covers the ecosystems the dependency graph can parse, and its lockfile support is narrower than its manifest support. Where the project's lockfile is unsupported, the graph falls back to the manifests and reports the direct dependencies alone, with nothing in the security overview distinguishing that from full coverage. Compare the two sets directly:
+
+```bash
+gh api repos/{owner}/{repo}/dependency-graph/sbom \
+  --jq '[.sbom.packages[].externalRefs[]?.referenceLocator | select(. != null) | split("/")[0]] | group_by(.) | map({(.[0]): length}) | add'
+```
+
+This groups the SBOM by purl ecosystem. Read the project's own resolved count out of its lockfile and compare. On this repository the SBOM reports 10 `pkg:npm` packages against 492 resolved in `site/bun.lock`, because `bun.lock` is not a file the graph parses; the 482 residual is the finding, and the fix is a scanner that reads the lockfile rather than a switch. `pkg:githubactions` entries come from the workflow files and cover R-SEC-01's pins.
+
+### When push protection fires
+
+Push protection rejects the push rather than the commit, and the maintainer sees a git error rather than a security message. The output names the detection, the commit holding it, and a one-time link that allows that specific detection. Read the link out of the push output rather than constructing it, and treat a false positive as one allowed detection rather than as a reason to turn the control off.
+
+## Read OpenSSF Scorecard results (Step 13)
 
 Query the public API rather than running the scan:
 
