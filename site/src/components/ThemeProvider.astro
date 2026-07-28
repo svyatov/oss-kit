@@ -3,8 +3,12 @@ import ThemeProvider from "@astrojs/starlight/components/ThemeProvider.astro"
 ---
 
 <script is:inline>
+  // Dark is the house default, but a stated OS preference outranks it. Forcing
+  // dark unconditionally stranded anyone browsing in light, because the theme
+  // control is the one thing a small viewport has no room to show.
   try {
-    if (localStorage.getItem("starlight-theme") === null) {
+    const prefersLight = window.matchMedia("(prefers-color-scheme: light)").matches
+    if (!prefersLight && localStorage.getItem("starlight-theme") === null) {
       localStorage.setItem("starlight-theme", "dark")
     }
   } catch {}

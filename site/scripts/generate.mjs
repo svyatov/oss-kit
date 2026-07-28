@@ -14,7 +14,7 @@ import { dirname, join } from "node:path"
 const HEADING = /^### (R-([A-Z]{2,3})-(\d{2})): (.+)$/ // areas are 2 or 3 letters (CI is two)
 const ANY_HEADING = /^#{1,6} /
 /** @type {Record<string, string>} */
-const FORGE_LABEL = { github: "GitHub only", gitlab: "GitLab only", both: "GitHub and GitLab" }
+export const FORGE_LABEL = { github: "GitHub only", gitlab: "GitLab only", both: "GitHub and GitLab" }
 
 /**
  * @typedef {object} Rule
@@ -121,20 +121,93 @@ export function pageDescription(markdown, fallback) {
   return summarize(firstParagraph(markdown)) || fallback
 }
 
-/** @param {Rule} rule @param {string} sourcePath */
-export function renderRulePage(rule, sourcePath) {
-  const body = `<dl class="doc-instrument-meta">
-  <div><dt>Rule</dt><dd>${rule.id}</dd></div>
-  <div><dt>Forge scope</dt><dd>${FORGE_LABEL[rule.forges]}</dd></div>
-  <div><dt>Fixed by</dt><dd><a href="/skills/${rule.fixedBy}/">${rule.fixedBy}</a></dd></div>
+/**
+ * The body of one rule: what it is, why it exists, and how to observe it. The
+ * standard renders every rule through this too, so a rule reads the same
+ * whether a visitor lands on its own page or scrolls past it in the whole set.
+ * @param {Rule} rule
+ * @param {object} opts
+ * @param {string} [opts.position] suffix for the area cell
+ * @param {2|4} opts.level the heading level of the check panel. The rule page
+ *   has the statement as its h1 and wants h2 here; the standard already spends
+ *   h2 on areas and h3 on rules, and h4 keeps the panel out of its contents
+ *   list.
+ * @param {boolean} opts.full whether to carry the Rule and Area cells. A rule
+ *   page needs both: a visitor arriving from search has only the statement, so
+ *   the ID and the area are the two things they cannot see. The standard shows
+ *   the ID in the heading directly above and the area in the `##` above that,
+ *   so there both cells restate what is already on screen, 46 times over.
+ */
+function ruleInstrument(rule, { position = "", level, full }) {
+  const area = rule.area.toLowerCase()
+  const cells = [
+    ...(full
+      ? [
+          `<div><dt>Rule</dt><dd>${rule.id}</dd></div>`,
+          `<div><dt>Area</dt><dd><a href="/rules/${area}/">${rule.section}</a>${position}</dd></div>`,
+        ]
+      : []),
+    `<div><dt>Forge scope</dt><dd>${FORGE_LABEL[rule.forges]}</dd></div>`,
+    // The fragment lands on the rule's entry in the skill's own list of what it
+    // fixes. A skill page is several thousand words of agent instruction, and
+    // the bare link dropped a reader who asked "how do I fix R-SEC-01" at the
+    // top of it with nothing naming the rule they came from.
+    `<div><dt>Fixed by</dt><dd><a href="/skills/${rule.fixedBy}/#${rule.id.toLowerCase()}">${rule.fixedBy}</a></dd></div>`,
+  ]
+  return `<dl class="doc-instrument-meta">
+  ${cells.join("\n  ")}
 </dl>
 
 ${rule.why}
 
 <section class="doc-check">
-  <h2>Observable check</h2>
+  <h${level}>Observable check</h${level}>
   <p>${inlineCodeHtml(rule.check)}</p>
-</section>
+</section>`
+}
+
+/**
+ * Rewrites the standard so each rule carries the same meta strip and check
+ * panel as its own page, and leaves every other line of it alone. The prose
+ * between the rules is the argument the standard makes, and it stays verbatim.
+ * @param {string} standardText
+ * @param {Rule[]} rules
+ */
+export function renderStandardBody(standardText, rules) {
+  const byId = new Map(rules.map((rule) => [rule.id, rule]))
+  /** @type {string[]} */
+  const out = []
+  let inRule = false
+  for (const line of standardText.split("\n")) {
+    const heading = HEADING.exec(line)
+    if (heading) {
+      const rule = byId.get(heading[1] ?? "")
+      if (!rule) throw new Error(`rule heading with no parsed rule: ${line}`)
+      // The trailing blank line closes the HTML block, or CommonMark swallows
+      // the next heading into it.
+      out.push(line, "", ruleInstrument(rule, { level: 4, full: false }), "")
+      inRule = true
+      continue
+    }
+    if (inRule) {
+      if (!ANY_HEADING.test(line)) continue
+      inRule = false
+    }
+    out.push(line)
+  }
+  return out.join("\n")
+}
+
+/**
+ * @param {Rule} rule
+ * @param {string} sourcePath
+ * @param {{position: number, total: number}} [place] where the rule sits in its
+ *   area. Search resolves to a rule page rather than to the standard, so a
+ *   visitor commonly arrives here with no idea which area they landed in.
+ */
+export function renderRulePage(rule, sourcePath, place) {
+  const position = place ? ` · ${place.position} of ${place.total}` : ""
+  const body = `${ruleInstrument(rule, { position, level: 2, full: true })}
 
 [Read the whole standard](/standard/)
 `
@@ -166,10 +239,15 @@ export function rewriteLinks(markdown, resolve) {
   })
 }
 
-/** @param {string} sourcePath */
+/**
+ * The second sentence is for the human reader. Everything below the notice is
+ * written to be loaded by an agent, and without it the page reads as
+ * documentation somebody forgot to finish.
+ * @param {string} sourcePath
+ */
 export function agentNotice(sourcePath) {
   return `:::note
-This page is the instruction text an agent loads, reproduced verbatim from [\`${sourcePath}\`](${BLOB}/${sourcePath}).
+This page is the instruction text an agent loads, reproduced verbatim from [\`${sourcePath}\`](${BLOB}/${sourcePath}). You do not have to read it: install the kit and ask your agent for the skill by name.
 :::`
 }
 
@@ -192,14 +270,77 @@ export function splitFrontmatter(text) {
   return { fields, body: lines.slice(close + 1).join("\n") }
 }
 
-/** @param {string} sourcePath @param {string} text */
-export function renderSkillPage(sourcePath, text) {
+/**
+ * The README table is the human-facing one-line summary of each skill. A
+ * SKILL.md description is written to make an agent load the skill, so it reads
+ * as trigger phrasing and is not prose to open a page with.
+ * @param {string} readmeText @returns {Map<string, string>}
+ */
+export function skillSummaries(readmeText) {
+  const rows = [...readmeText.matchAll(/^\| `(oss-[a-z-]+)` \| (.+?) \|$/gm)]
+  if (rows.length === 0) throw new Error("no skills parsed from the README table")
+  return new Map(rows.map(([, name = "", summary = ""]) => [name, summary]))
+}
+
+const OWNED_LINE = /^(R-[A-Z]{2,3}-\d{2}): (.+)$/gm
+
+/**
+ * Most skills already list what they own as plain lines under their own
+ * heading. Those lines become the anchor a rule page's Fixed by cell links to,
+ * and a link back to the rule, rather than the page growing a second list of
+ * the same rules. The wrapper is a paragraph, not a heading, so a skill owning
+ * nine rules adds nothing to the table of contents.
+ * @param {string} body @param {Map<string, Rule>} byId
+ */
+function anchorOwnedRules(body, byId) {
+  return body.replace(OWNED_LINE, (whole, /** @type {string} */ id, /** @type {string} */ statement) => {
+    if (!byId.has(id)) return whole
+    const slug = id.toLowerCase()
+    return `<p class="skill-rule" id="${slug}"><a href="/rules/${slug}/"><code>${id}</code> <span>${statement}</span></a></p>`
+  })
+}
+
+/**
+ * The fallback for a skill that names its rules only inside prose, so the
+ * transform above finds no line to anchor and a Fixed by link would land
+ * nowhere. Raw HTML, so the heading stays out of the table of contents.
+ * @param {Rule[]} rules
+ */
+function ownedRules(rules) {
+  if (rules.length === 0) return ""
+  const items = rules.map(
+    (rule) =>
+      `  <li id="${rule.id.toLowerCase()}"><a href="/rules/${rule.id.toLowerCase()}/"><code>${rule.id}</code> <span>${rule.statement}</span></a></li>`,
+  )
+  return `<section class="skill-rules">
+<h2>Rules this skill fixes</h2>
+<ul>
+${items.join("\n")}
+</ul>
+</section>
+
+`
+}
+
+/**
+ * @param {string} sourcePath
+ * @param {string} text
+ * @param {string} [summary] the README one-liner. It takes the slot the body's
+ *   own `# ` heading held, which the page title already renders: two h1 at the
+ *   same size read as two pages stacked.
+ * @param {Rule[]} [rules] the rules this skill is named as fixing
+ */
+export function renderSkillPage(sourcePath, text, summary, rules = []) {
   const { fields, body } = splitFrontmatter(text)
   const title = fields.name ?? sourcePath
   const description = fields.description ?? ""
+  const lede = summary ? `<p class="doc-lede">${summary}</p>\n\n` : ""
+  const byId = new Map(rules.map((rule) => [rule.id, rule]))
+  const anchored = anchorOwnedRules(body.replace(/^# .*\n/m, ""), byId)
+  const fallback = anchored === body.replace(/^# .*\n/m, "") ? ownedRules(rules) : ""
   return frontmatter(
     { title, description, sidebar: { badge: "Skill" }, editUrl: `${EDIT}/${sourcePath}` },
-    `<p class="doc-kind-label">Agent instruction · canonical source</p>\n\n${agentNotice(sourcePath)}\n\n${body}`,
+    `${lede}${agentNotice(sourcePath)}\n\n${fallback}${anchored}`,
   )
 }
 
@@ -237,26 +378,29 @@ export function writeAll(repoRoot, outDir) {
   const standardText = readFileSync(join(repoRoot, standardPath), "utf8")
   const rules = parseRules(standardText)
   for (const rule of rules) {
-    written.push(write(outDir, `rules/${rule.id.toLowerCase()}.md`, renderRulePage(rule, standardPath)))
+    const siblings = rules.filter((other) => other.section === rule.section)
+    const place = { position: siblings.indexOf(rule) + 1, total: siblings.length }
+    written.push(write(outDir, `rules/${rule.id.toLowerCase()}.md`, renderRulePage(rule, standardPath, place)))
   }
   const sections = [...new Set(rules.map((rule) => rule.section))]
   written.push(
     write(
       outDir,
-      "rules/index.md",
+      "rules/index.mdx",
       frontmatter(
         {
           title: "Rules",
           description: "Browse the current oss-kit standard by maintainer responsibility.",
           sidebar: { label: "All rules" },
+          tableOfContents: false,
         },
-        sections
-          .map((section) => {
-            const members = rules.filter((rule) => rule.section === section)
-            const area = members[0]?.area.toLowerCase()
-            return `- [${section}](/rules/${area}/) (${members.length} rules)`
-          })
-          .join("\n"),
+        `import Rack from "../../../components/Rack.astro";
+import { domainRackItems } from "../../../lib/content.mjs";
+
+The standard groups its ${rules.length} rules into ${sections.length} maintainer responsibilities. Each
+one names the skills that fix its rules.
+
+<Rack items={domainRackItems} />`,
       ),
     ),
   )
@@ -266,19 +410,23 @@ export function writeAll(repoRoot, outDir) {
     written.push(
       write(
         outDir,
-        `rules/${area}/index.md`,
+        `rules/${area}/index.mdx`,
         frontmatter(
           {
             title: section,
             description: `The ${section.toLowerCase()} rules in the oss-kit standard.`,
             sidebar: { label: `About ${section.toLowerCase()}` },
+            // The page is one rack and carries no heading, so a contents list
+            // here announced a region holding a single entry.
+            tableOfContents: false,
           },
-          members
-            .map(
-              (rule) =>
-                `- [${rule.id}: ${rule.statement}](/rules/${rule.id.toLowerCase()}/) · [${rule.fixedBy}](/skills/${rule.fixedBy}/)`,
-            )
-            .join("\n"),
+          `import Rack from "../../../../components/Rack.astro";
+import { areaRackItems } from "../../../../lib/content.mjs";
+
+${section} holds ${members.length} of the standard's ${rules.length} rules. Each one names the evidence
+that settles it and the skill that fixes it.
+
+<Rack items={areaRackItems.${area}} variant="rules" />`,
         ),
       ),
     )
@@ -296,7 +444,7 @@ export function writeAll(repoRoot, outDir) {
           // same rule twice for one query, so search resolves to the rule page.
           pagefind: false,
         },
-        `${agentNotice(standardPath)}\n\n${standardText.replace(/^# .*\n/m, "")}`,
+        `${agentNotice(standardPath)}\n\n${renderStandardBody(standardText.replace(/^# .*\n/m, ""), rules)}`,
       ),
     ),
   )
@@ -304,24 +452,24 @@ export function writeAll(repoRoot, outDir) {
   const skillNames = readdirSync(join(repoRoot, "skills"), { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
-  const skillEntries = skillNames.map((name) => {
-    const source = `skills/${name}/SKILL.md`
-    const { fields } = splitFrontmatter(readFileSync(join(repoRoot, source), "utf8"))
-    return { name, description: fields.description ?? "" }
-  })
   written.push(
     write(
       outDir,
-      "skills/index.md",
+      "skills/index.mdx",
       frontmatter(
         {
           title: "Skills",
           description: "The current curated set of agent skills for open source maintainers.",
           sidebar: { label: "All skills" },
+          tableOfContents: false,
         },
-        `oss-kit currently ships ${skillEntries.length} skills. Install the full collection, or choose the responsibility you need.\n\n${skillEntries
-          .map(({ name, description }) => `## [${name}](/skills/${name}/)\n\n${description}`)
-          .join("\n\n")}`,
+        `import Rack from "../../../components/Rack.astro";
+import { skillRackItems } from "../../../lib/content.mjs";
+
+oss-kit ships ${skillNames.length} skills. Install the full collection, or take the one that owns
+the job in front of you.
+
+<Rack items={skillRackItems} variant="skills" />`,
       ),
     ),
   )
@@ -341,9 +489,15 @@ export function writeAll(repoRoot, outDir) {
     return null
   }
 
+  const summaries = skillSummaries(readFileSync(join(repoRoot, "README.md"), "utf8"))
   for (const name of skillNames) {
     const source = `skills/${name}/SKILL.md`
-    const page = renderSkillPage(source, readFileSync(join(repoRoot, source), "utf8"))
+    const page = renderSkillPage(
+      source,
+      readFileSync(join(repoRoot, source), "utf8"),
+      summaries.get(name),
+      rules.filter((rule) => rule.fixedBy === name),
+    )
     written.push(write(outDir, `skills/${name}.md`, rewriteLinks(page, resolve(name))))
     for (const ref of safeReaddir(join(repoRoot, "skills", name, "references"))) {
       const refSource = `skills/${name}/references/${ref}`
@@ -376,7 +530,10 @@ export function writeAll(repoRoot, outDir) {
           description: "Every notable change to oss-kit.",
           editUrl: `${EDIT}/CHANGELOG.md`,
         },
-        changelog.replace(/^# .*\n/m, ""),
+        // A bare div, blank-line separated, so CommonMark closes the HTML block
+        // and parses the releases as Markdown. The headings stay real headings,
+        // which is what keeps the anchors and the table of contents working.
+        `<div class="release-rail">\n\n${changelog.replace(/^# .*\n/m, "").trim()}\n\n</div>`,
       ),
     ),
   )
