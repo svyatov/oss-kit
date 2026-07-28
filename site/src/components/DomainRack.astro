@@ -1,6 +1,7 @@
 ---
 import DomainIcon from "./FaIcon.astro"
-import { domains, rules } from "../lib/content.mjs"
+import Rack from "./Rack.astro"
+import { domainRackItems, rules } from "../lib/content.mjs"
 ---
 
 <section class="home-domains" aria-labelledby="current-kit">
@@ -18,24 +19,9 @@ import { domains, rules } from "../lib/content.mjs"
   <a class="audit-span" href="/skills/oss-audit/">
     <span><DomainIcon name="audit" /> Cross-domain instrument</span>
     <strong>oss-audit</strong>
-    <span>Observable evidence, prioritized gaps, and one fixing skill per rule</span>
+    <span class="audit-span__note">Observable evidence, prioritized gaps, and one fixing skill per rule</span>
     <DomainIcon name="arrow" />
   </a>
 
-  <ol class="domain-rack">
-    {
-      domains.map((domain, index) => (
-        <li>
-          <a href={`/rules/${domain.area.toLowerCase()}/`}>
-            <span class="domain-rack__number">{String(index + 1).padStart(2, "0")}</span>
-            <span class="domain-rack__icon"><DomainIcon name={domain.area.toLowerCase()} /></span>
-            <span class="domain-rack__name">{domain.section}</span>
-            <span class="domain-rack__skills">{domain.skills.join(" + ")}</span>
-            <span class="domain-rack__rules">{domain.rules.length} rules</span>
-            <DomainIcon name="arrow" />
-          </a>
-        </li>
-      ))
-    }
-  </ol>
+  <Rack items={domainRackItems} />
 </section>

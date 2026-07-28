@@ -6,8 +6,10 @@ const command = "npx skills add svyatov/oss-kit --skill '*'"
 ---
 
 <kit-copy-command class:list={["install-command", { "install-command--compact": compact }]}>
-  <span class="install-command__prompt" aria-hidden="true">$</span>
-  <code>{command}</code>
+  <span class="install-command__line">
+    <span class="install-command__prompt" aria-hidden="true">$</span>
+    <code tabindex="0">{command}</code>
+  </span>
   <button type="button" data-copy aria-label="Copy install command">
     <FaIcon name="copy" />
     <span data-label aria-live="polite" aria-atomic="true">Copy</span>
@@ -22,6 +24,20 @@ const command = "npx skills add svyatov/oss-kit --skill '*'"
       const label = this.querySelector<HTMLElement>("[data-label]")
       const code = this.querySelector("code")
       if (!button || !label || !code) return
+
+      // Nothing in CSS asks whether an element overflows, so the fade that
+      // says "this line continues" has to be set from here.
+      const edges = () => {
+        const hidden = code.scrollWidth - code.clientWidth
+        code.dataset.overflow =
+          hidden < 2 ? "" : code.scrollLeft < 2 ? "end" : code.scrollLeft > hidden - 2 ? "start" : "both"
+      }
+      new ResizeObserver(edges).observe(code)
+      code.addEventListener("scroll", edges)
+      // The observer watches the box, and the box is a fixed grid track. Only
+      // the text inside it grows when the mono font arrives, so the first
+      // reading is taken against fallback metrics and nothing fires again.
+      document.fonts.ready.then(edges)
 
       button.addEventListener("click", async () => {
         try {

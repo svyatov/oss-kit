@@ -1,0 +1,35 @@
+---
+// One indexed rack, shared by the homepage domain section, the rules hub, the
+// skills hub, and each area index. They list the same kind of thing (a numbered
+// route into the standard), so they are one component rather than four lists.
+//
+// An item may supply its own `number`, which a rule does: its ID is the handle
+// the product tells people to cite, so an invented sequence number beside it
+// would be a second, weaker one. An item may omit `icon`, which a rule also
+// does: every rule on an area page shares that area's icon, and nine copies of
+// one glyph mark nothing.
+import FaIcon from "./FaIcon.astro"
+
+const { items, variant } = Astro.props
+---
+
+<ol class:list={["domain-rack", variant && `domain-rack--${variant}`]}>
+  {
+    items.map((item, index) => (
+      <li>
+        <a href={item.href}>
+          <span class="domain-rack__number">{item.number ?? String(index + 1).padStart(2, "0")}</span>
+          {item.icon && (
+            <span class="domain-rack__icon">
+              <FaIcon name={item.icon} />
+            </span>
+          )}
+          <span class="domain-rack__name">{item.name}</span>
+          <span class="domain-rack__skills">{item.meta}</span>
+          <span class="domain-rack__rules">{item.count}</span>
+          <FaIcon name="arrow" />
+        </a>
+      </li>
+    ))
+  }
+</ol>

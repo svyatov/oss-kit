@@ -7,7 +7,9 @@ import {
   summarize,
   renderRulePage,
   renderSkillPage,
+  renderStandardBody,
   rewriteLinks,
+  skillSummaries,
   splitFrontmatter,
   writeAll,
 } from "../site/scripts/generate.mjs"
@@ -87,7 +89,10 @@ test("parseRules rejects a malformed heading", () => {
 })
 
 test("renderRulePage titles the page by the rule, not by its ID", () => {
-  const page = renderRulePage(parseRules(TWO_RULES)[1]!, "skills/oss-audit/STANDARD.md")
+  const page = renderRulePage(parseRules(TWO_RULES)[1]!, "skills/oss-audit/STANDARD.md", {
+    position: 1,
+    total: 9,
+  })
   expect(page.startsWith("---\n")).toBe(true)
   expect(page).toContain('title: "Pin every third-party action to a full commit SHA"')
   expect(page).toContain('description: "A tag moves."')
@@ -95,8 +100,11 @@ test("renderRulePage titles the page by the rule, not by its ID", () => {
   expect(page).toContain("edit/main/skills/oss-audit/STANDARD.md")
   expect(page).toContain("A tag moves.")
   expect(page).toContain("every <code>uses:</code> line resolves to a 40-character SHA.")
-  expect(page).toContain("/skills/oss-harden/")
+  expect(page).toContain("/skills/oss-harden/#r-sec-01")
   expect(page).toContain("GitHub only")
+  // A visitor arriving from search needs to know which area they landed in.
+  expect(page).toContain("1 of 9")
+  expect(page).toContain('<a href="/rules/sec/">')
 })
 
 test("summarize cuts prose to one sentence a search result can show", () => {
@@ -138,14 +146,78 @@ test("agentNotice names the source file and links to it", () => {
   expect(notice).toContain("https://github.com/svyatov/oss-kit/blob/main/skills/oss-readme/SKILL.md")
 })
 
-test("renderSkillPage keeps the body verbatim under the notice", () => {
+test("agentNotice tells a human reader what to do with a page written for an agent", () => {
+  expect(agentNotice("skills/oss-readme/SKILL.md")).toContain("You do not have to read it")
+})
+
+test("renderSkillPage anchors the rule list the skill body already carries", () => {
+  const owned = parseRules(TWO_RULES).slice(1)
+  const body = "# Harden\n\nBody line.\n\n## Rules this skill owns\n\nR-SEC-01: Pin every third-party action to a full commit SHA\n"
+  const page = renderSkillPage("skills/oss-harden/SKILL.md", `---\nname: oss-harden\n---\n\n${body}`, undefined, owned)
+  expect(page).toContain('<p class="skill-rule" id="r-sec-01"><a href="/rules/r-sec-01/">')
+  expect(page).toContain("<code>R-SEC-01</code>")
+  // One list, not two: the body already had it, so no panel is added.
+  expect(page).not.toContain("skill-rules")
+  // A rule ID inside a sentence is prose, not a list row.
+  expect(page).toContain("## Rules this skill owns")
+})
+
+test("renderSkillPage falls back to a generated panel when the body lists no rules", () => {
+  const source = `---\nname: oss-skill\n---\n\n# Skills\n\nR-SKL-01 is named only inside this sentence.\n`
+  const page = renderSkillPage("skills/oss-skill/SKILL.md", source, undefined, parseRules(TWO_RULES).slice(1))
+  expect(page).toContain('<li id="r-sec-01">')
+  // Raw HTML, not a Markdown heading: nine owned rules would otherwise be nine
+  // entries in the table of contents.
+  expect(page).toContain("<h2>Rules this skill fixes</h2>")
+  expect(page).not.toContain("## Rules this skill fixes")
+  // A skill that owns no rule renders no empty panel.
+  expect(renderSkillPage("skills/oss-audit/SKILL.md", source, undefined, [])).not.toContain("skill-rules")
+})
+
+test("renderSkillPage drops the body heading the page title already renders", () => {
   const source = `---\nname: oss-readme\ndescription: "Write a README."\nlicense: MIT\n---\n\n# Write a README\n\nBody line.\n`
-  const page = renderSkillPage("skills/oss-readme/SKILL.md", source)
+  const page = renderSkillPage("skills/oss-readme/SKILL.md", source, "Orders the README.")
   expect(page).toContain('title: "oss-readme"')
   expect(page).toContain("Write a README.")
   expect(page).toContain("Body line.")
   expect(page).not.toContain("license: MIT")
+  expect(page).not.toContain("# Write a README")
+  expect(page).toContain('<p class="doc-lede">Orders the README.</p>')
+  expect(page.indexOf("doc-lede")).toBeLessThan(page.indexOf("instruction text"))
   expect(page.indexOf("instruction text")).toBeLessThan(page.indexOf("Body line."))
+})
+
+test("skillSummaries reads the README table and rejects a README with no table", () => {
+  const summaries = skillSummaries(read("README.md", "utf8"))
+  expect(summaries.get("oss-audit")).toContain("routes each gap")
+  expect(summaries.size).toBe(9)
+  expect(() => skillSummaries("# No table here\n")).toThrow("README table")
+})
+
+test("renderStandardBody gives every rule the instrument its own page has", () => {
+  const body = renderStandardBody(TWO_RULES.replace(/^# .*\n/m, ""), parseRules(TWO_RULES))
+
+  // The prose between the rules is the argument the standard makes; it stays.
+  expect(body).toContain("Preamble prose that is not a rule.")
+  expect(body).toContain("Section preamble prose.")
+  expect(body).toContain("### R-DOC-01: The README opens")
+
+  expect(body.match(/doc-instrument-meta/g)).toHaveLength(2)
+  // The fragment lands on the rule's row in the skill's own list of what it
+  // fixes, rather than at the top of several thousand words of agent text.
+  expect(body).toContain('<a href="/skills/oss-harden/#r-sec-01">oss-harden</a>')
+  // Two cells, not four. The heading above carries the ID and the `##` above
+  // that carries the area, so both cells would restate the screen 46 times.
+  expect(body).not.toContain("<dt>Rule</dt>")
+  expect(body).not.toContain("<dt>Area</dt>")
+  expect(body).toContain("<dt>Forge scope</dt>")
+  // h4, not h2: the standard spends h2 on areas and h3 on rules, and a
+  // 54-entry contents list of "Observable check" is not a contents list.
+  expect(body).toContain("<h4>Observable check</h4>")
+  expect(body).not.toContain("<h2>Observable check</h2>")
+  // A raw HTML block runs to the next blank line, so without one the heading
+  // after it is swallowed and never becomes an anchor.
+  expect(body).toContain("</section>\n\n### R-SEC-01")
 })
 
 test("writeAll produces every page the site needs", () => {
@@ -154,16 +226,24 @@ test("writeAll produces every page the site needs", () => {
 
   expect(written.filter((path) => /^rules\/r-[a-z]+-\d{2}\.md$/.test(path))).toHaveLength(currentRules.length)
   expect(existsSync(join(out, "rules/r-sec-01.md"))).toBe(true)
-  expect(existsSync(join(out, "rules/index.md"))).toBe(true)
-  expect(existsSync(join(out, "rules/sec/index.md"))).toBe(true)
+  expect(existsSync(join(out, "rules/index.mdx"))).toBe(true)
+  expect(existsSync(join(out, "rules/sec/index.mdx"))).toBe(true)
   expect(existsSync(join(out, "standard.md"))).toBe(true)
   expect(existsSync(join(out, "changelog.md"))).toBe(true)
-  expect(existsSync(join(out, "skills/index.md"))).toBe(true)
+  expect(existsSync(join(out, "skills/index.mdx"))).toBe(true)
   expect(existsSync(join(out, "skills/oss-audit.md"))).toBe(true)
   expect(existsSync(join(out, "skills/oss-publish/npm.md"))).toBe(true)
   expect(existsSync(join(out, "guides/install.md"))).toBe(false)
 
   expect(read(join(out, "rules/r-sec-01.md"), "utf8")).toContain("/skills/oss-harden/")
+
+  // An area index is the page an audit routes a maintainer to, so it renders
+  // through the same rack as /rules/ and /skills/ rather than a bullet list.
+  const area = read(join(out, "rules/sec/index.mdx"), "utf8")
+  expect(area).toContain('<Rack items={areaRackItems.sec} variant="rules" />')
+  expect(area).toContain("../../../../components/Rack.astro")
+  expect(area).toContain("tableOfContents: false")
+  expect(area).not.toContain("- [R-SEC-01")
   rmSync(out, { recursive: true, force: true })
 })
 
@@ -171,7 +251,7 @@ test("every page has a unique title and a description that is not a copy of it",
   const out = mkdtempSync(join(tmpdir(), "oss-kit-site-"))
   const { written } = writeAll(".", out)
   const pages = written
-    .filter((p) => p.endsWith(".md"))
+    .filter((p) => p.endsWith(".md") || p.endsWith(".mdx"))
     .map((p) => {
       const { fields } = splitFrontmatter(read(join(out, p), "utf8"))
       return { path: p, title: fields.title, description: fields.description }

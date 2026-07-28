@@ -16,7 +16,15 @@
   --kit-line-soft: #19211d;
   --kit-text: #edf3ef;
   --kit-muted: #94a09a;
-  --kit-faint: #69736e;
+  /* Faint annotates at the size below, so it is held to the 4.5:1 body floor
+     rather than the 3:1 large-text one. Worst pairing is on --kit-panel-strong. */
+  --kit-faint: #7b8580;
+  /* The floor for anything a reader has to read. Instrument annotations had
+     drifted to 8.6px, which passes every contrast check and is still too small
+     to read; contrast is not the only thing that decides legibility. Nothing
+     carrying content goes below this. Marks that carry none, like the mono
+     eyebrow rules, are not exempt either: they are words. */
+  --kit-annotation: 0.7rem;
   --kit-signal: #56f27b;
   --kit-signal-strong: #56f27b;
   --kit-signal-low: #102e19;
@@ -61,8 +69,8 @@
   --kit-line: #cbd3cf;
   --kit-line-soft: #dfe5e1;
   --kit-text: #111714;
-  --kit-muted: #56615c;
-  --kit-faint: #737e78;
+  --kit-muted: #4d5853;
+  --kit-faint: #5f6a64;
   --kit-signal: #23b653;
   --kit-signal-strong: #147a35;
   --kit-signal-low: #d9f6e1;
@@ -114,6 +122,13 @@ body {
 :focus-visible {
   outline: 2px solid var(--kit-signal);
   outline-offset: 3px;
+}
+
+/* On light, --kit-signal sits at 2.4:1 against the page, under the 3:1 that
+   WCAG 1.4.11 asks of a focus indicator. The ring reads as visible and still
+   fails the measurement. The strong tone clears it at 4.9:1. */
+html[data-theme="light"] :focus-visible {
+  outline-color: var(--kit-signal-strong);
 }
 
 h1,
@@ -241,6 +256,9 @@ a {
 .kit-header__nav a,
 .kit-header__github {
   position: relative;
+  /* WCAG 2.5.8 puts the floor at 24px, and the text alone drew a 22.6px box.
+     The underline below compensates so the mark sits where it always did. */
+  padding-block: 0.2rem;
   color: var(--kit-muted);
   font-size: 0.82rem;
   font-weight: 550;
@@ -250,7 +268,7 @@ a {
 .kit-header__nav a::after {
   position: absolute;
   right: 0;
-  bottom: -0.55rem;
+  bottom: -0.35rem;
   left: 0;
   height: 1px;
   background: var(--kit-signal);
@@ -318,17 +336,32 @@ a {
 
 /* Install control */
 
+/* Flex rather than a grid row, so the button drops below the command in a box
+   too narrow to hold both. The alternative is the command giving up its last
+   flag to a fade, and the button is the part that can move. */
 .install-command {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 0.8rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
   align-items: center;
-  width: min(100%, 31rem);
+  width: 100%;
+  max-width: 36rem;
   min-height: 3.6rem;
   padding: 0.45rem 0.55rem 0.45rem 0.9rem;
   border: 1px solid var(--kit-line);
   border-radius: 0.5rem;
   background: var(--kit-panel);
+}
+
+/* The prompt and the command are one unit. Left as separate flex children they
+   wrapped apart, stranding a `$` on a line of its own. */
+.install-command__line {
+  display: flex;
+  flex: 1 0 21.5rem;
+  gap: 0.5rem;
+  align-items: center;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .install-command__prompt {
@@ -337,28 +370,62 @@ a {
   font-weight: 600;
 }
 
+/* The command never breaks. Ellipsis hid `--skill '*'` and wrapping split it
+   across two lines, and either one costs the reader the difference between
+   installing the kit and installing one skill. Narrow viewports scroll it. */
 .install-command code {
-  overflow: hidden;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
   padding: 0;
   background: transparent;
   color: var(--kit-text);
   font-size: 0.83rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.5;
+  white-space: pre;
+  /* A scrollable region is a tab stop, or a keyboard reader cannot reach the
+     end of the command. */
+  scrollbar-width: thin;
+}
+
+/* The hero column is narrower than the command at most laptop widths, and an
+   overlay scrollbar shows nothing until someone already scrolling. The fade is
+   the only thing telling a reader the line continues. It is set from script,
+   because no CSS query asks whether an element overflows. */
+.install-command code[data-overflow="end"] {
+  mask-image: linear-gradient(90deg, #000 calc(100% - 2.5rem), transparent);
+}
+
+.install-command code[data-overflow="start"] {
+  mask-image: linear-gradient(90deg, transparent, #000 2.5rem);
+}
+
+.install-command code[data-overflow="both"] {
+  mask-image: linear-gradient(90deg, transparent, #000 2.5rem, #000 calc(100% - 2.5rem), transparent);
 }
 
 .install-command button {
   display: inline-flex;
   gap: 0.45rem;
   align-items: center;
+  /* Keeps the button at the right edge on the row it shares with the command
+     and on the row it drops to, so the control does not appear to reorganize. */
+  margin-inline-start: auto;
   min-height: 2.5rem;
-  padding-inline: 0.75rem;
+  padding-inline: 0.6rem;
   border: 1px solid transparent;
   border-radius: 0.35rem;
   background: transparent;
   color: var(--kit-muted);
   cursor: pointer;
   font: 600 0.75rem/1 var(--kit-body);
+}
+
+/* Copy becoming Copied is two characters wider, which moved the button and
+   reflowed the row at the moment the reader is watching it for confirmation. */
+.install-command button [data-label] {
+  min-width: 2.6rem;
+  text-align: start;
 }
 
 .install-command button:hover {
@@ -371,7 +438,7 @@ a {
 }
 
 .install-command--compact {
-  width: min(100%, 29rem);
+  max-width: 32rem;
 }
 
 /* Homepage first viewport */
@@ -398,7 +465,9 @@ a {
 
 .kit-hero {
   display: grid;
-  grid-template-columns: minmax(19rem, 0.72fr) minmax(42rem, 1.55fr);
+  /* The copy column has to hold the install command on one line, or the
+     primary action ships with its last flag faded out on every desktop. */
+  grid-template-columns: minmax(19rem, 0.85fr) minmax(42rem, 1.55fr);
   gap: clamp(2.5rem, 5vw, 5.5rem);
   align-items: center;
   width: min(100% - 3rem, 92rem);
@@ -430,10 +499,10 @@ a {
 }
 
 .kit-hero h1 {
-  max-width: 9.5ch;
+  max-width: 13ch;
   margin: 0;
-  font-size: clamp(4rem, 6vw, 5.8rem);
-  line-height: 0.88;
+  font-size: clamp(3.6rem, 5.2vw, 5rem);
+  line-height: 0.9;
   letter-spacing: -0.035em;
 }
 
@@ -456,7 +525,9 @@ a {
   border: 1px solid var(--kit-line);
   border-radius: 0.75rem;
   background: var(--kit-surface);
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.2);
+  /* 50px of blur on a dark surface reads as haze rather than as lift. This is
+     a machined panel, so the shadow is tight enough to look like one. */
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
 }
 
 .maintenance-map::before,
@@ -488,7 +559,7 @@ a {
   padding-inline: 1rem;
   border-bottom: 1px solid var(--kit-line);
   color: var(--kit-faint);
-  font-size: 0.61rem;
+  font-size: var(--kit-annotation);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -557,7 +628,7 @@ a {
   padding-inline: 0.7rem;
   border-bottom: 1px solid var(--kit-line);
   color: var(--kit-faint);
-  font: 600 0.58rem/1 var(--kit-mono);
+  font: 600 var(--kit-annotation)/1 var(--kit-mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -584,12 +655,14 @@ a {
     linear-gradient(transparent 49.5%, var(--kit-line-soft) 50%, transparent 50.5%);
 }
 
+/* The checklist glyph is scenery. At --kit-text it was the brightest thing in
+   the hero after the headline, outranking the domain names it introduces. */
 .repo-hub__mark span {
   display: block;
   width: 72%;
   height: 0.24rem;
   margin-inline: auto;
-  background: var(--kit-text);
+  background: var(--kit-muted);
 }
 
 .repo-hub__mark span:first-child,
@@ -621,7 +694,7 @@ a {
   gap: 0.65rem;
   padding: 0.55rem 0.7rem;
   border-top: 1px solid var(--kit-line-soft);
-  font: 500 0.58rem/1.35 var(--kit-mono);
+  font: 500 var(--kit-annotation)/1.35 var(--kit-mono);
 }
 
 .repo-hub dt,
@@ -675,9 +748,13 @@ a {
   content: "";
 }
 
+/* Four cells, not five. The fifth listed each area's skills at 8.6px, which the
+   annotation floor will not carry and the bay is too narrow to hold legibly.
+   The rack below already maps areas to skills, so the hero showing it too made
+   two views of one table; now the hero is the map and the rack is the index. */
 .domain-bay a {
   display: grid;
-  grid-template-columns: 2rem 1.3rem minmax(7rem, 1fr) minmax(6rem, auto) auto;
+  grid-template-columns: 2rem 1.3rem minmax(7rem, 1fr) auto;
   gap: 0.55rem;
   align-items: center;
   min-height: 3.65rem;
@@ -704,7 +781,7 @@ a {
 .domain-bay__number,
 .domain-bay__count {
   color: var(--kit-faint);
-  font-size: 0.58rem;
+  font-size: var(--kit-annotation);
 }
 
 .domain-bay__icon {
@@ -718,14 +795,6 @@ a {
 .domain-bay__name {
   font-size: 0.7rem;
   font-weight: 650;
-}
-
-.domain-bay__skills {
-  overflow: hidden;
-  color: var(--kit-muted);
-  font: 500 0.54rem/1.2 var(--kit-mono);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .rule-route::before {
@@ -760,13 +829,13 @@ a {
 
 .rule-route dt {
   margin-bottom: 0.35rem;
-  font: 600 0.54rem/1 var(--kit-mono);
+  font: 600 var(--kit-annotation)/1 var(--kit-mono);
   letter-spacing: 0.06em;
 }
 
 .rule-route dd {
   overflow-wrap: anywhere;
-  font-size: 0.61rem;
+  font-size: var(--kit-annotation);
   line-height: 1.4;
 }
 
@@ -799,7 +868,7 @@ a {
 }
 
 .home-domains {
-  padding-block: clamp(5rem, 10vw, 9rem);
+  padding-block: clamp(3.5rem, 6vw, 5.5rem);
   border-top: 1px solid var(--kit-line);
 }
 
@@ -853,6 +922,14 @@ a {
   font: 500 0.7rem/1.3 var(--kit-mono);
 }
 
+/* The first span is a label and reads as one in mono. This one is a sentence,
+   and eleven-pixel monospace is the wrong instrument for a sentence. Named
+   rather than positional: the arrow icon also renders as a span, so
+   `:last-of-type` styles the arrow and leaves the sentence alone. */
+.audit-span > .audit-span__note {
+  font: 450 0.85rem/1.45 var(--kit-body);
+}
+
 .audit-span strong {
   color: var(--kit-signal-strong);
   font: 600 0.95rem/1 var(--kit-mono);
@@ -863,7 +940,11 @@ a {
   border-top: 1px solid var(--kit-line);
 }
 
+/* The rack is a table of routes, not prose, so it opts out of the 72ch measure
+   the markdown content applies to every li. That cap was ending each row at
+   little over half the band it sits in. */
 .domain-rack li {
+  max-width: none;
   border-bottom: 1px solid var(--kit-line);
 }
 
@@ -887,7 +968,7 @@ a {
 .domain-rack__number,
 .domain-rack__rules {
   color: var(--kit-faint);
-  font-size: 0.68rem;
+  font-size: var(--kit-annotation);
 }
 
 .domain-rack__icon {
@@ -901,14 +982,47 @@ a {
 
 .domain-rack__skills {
   color: var(--kit-muted);
-  font: 500 0.68rem/1.25 var(--kit-mono);
+  font: 500 var(--kit-annotation)/1.25 var(--kit-mono);
+}
+
+/* Same rack, different payload: a skill name is a short identifier and its
+   summary is a sentence, so the two middle columns swap weight and face. */
+.domain-rack--skills a {
+  grid-template-columns: 3rem 1.4rem 10rem minmax(16rem, 1fr) auto auto;
+}
+
+.domain-rack--skills .domain-rack__name {
+  font: 600 0.9rem/1 var(--kit-mono);
+}
+
+.domain-rack--skills .domain-rack__skills {
+  font: 400 0.88rem/1.45 var(--kit-body);
+}
+
+/* Same rack, third payload: one area's rules. No icon column, because every row
+   on the page shares that area's glyph. The number column holds the rule ID at
+   full width and in the signal colour, since it is both the label and the thing
+   a reader copies into a pull request. */
+.domain-rack--rules a {
+  grid-template-columns: 6rem minmax(18rem, 1fr) 9rem auto auto;
+}
+
+.domain-rack--rules .domain-rack__number {
+  color: var(--kit-signal-strong);
+  font: 600 0.8rem/1 var(--kit-mono);
+}
+
+.domain-rack--rules .domain-rack__name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.35;
 }
 
 .home-principle {
   display: grid;
   grid-template-columns: minmax(19rem, 1fr) minmax(20rem, 0.85fr);
-  gap: clamp(3rem, 10vw, 10rem);
-  padding-block: clamp(6rem, 12vw, 11rem);
+  gap: clamp(3rem, 8vw, 7rem);
+  padding-block: clamp(3.5rem, 6vw, 5.5rem);
   border-top: 1px solid var(--kit-line);
 }
 
@@ -930,7 +1044,7 @@ a {
 }
 
 .home-workflow {
-  padding-block: clamp(5rem, 10vw, 9rem);
+  padding-block: clamp(3.5rem, 6vw, 5.5rem);
   border-top: 1px solid var(--kit-line);
 }
 
@@ -967,7 +1081,7 @@ a {
 
 .workflow-trace__step {
   color: var(--kit-signal-strong);
-  font-size: 0.65rem;
+  font-size: var(--kit-annotation);
   letter-spacing: 0.04em;
 }
 
@@ -995,9 +1109,9 @@ a {
 .home-standard {
   display: grid;
   grid-template-columns: minmax(20rem, 0.9fr) minmax(24rem, 1.1fr);
-  gap: clamp(3rem, 9vw, 9rem);
+  gap: clamp(3rem, 7vw, 7rem);
   align-items: center;
-  padding-block: clamp(6rem, 12vw, 11rem);
+  padding-block: clamp(3.5rem, 6vw, 5.5rem);
   border-top: 1px solid var(--kit-line);
 }
 
@@ -1017,7 +1131,7 @@ a {
   padding: 0.85rem 1rem;
   border-bottom: 1px solid var(--kit-line);
   color: var(--kit-faint);
-  font-size: 0.66rem;
+  font-size: var(--kit-annotation);
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -1026,13 +1140,18 @@ a {
   color: var(--kit-signal-strong);
 }
 
-.standard-sheet > code {
+/* Scoped under the markdown wrapper on purpose. Unscoped this is (0,1,1) and
+   loses to `.sl-markdown-content :where(code):not(pre code)` at (0,1,3), which
+   drew these two field labels as full-width outlined chips instead of the
+   annotations above each field. */
+.sl-markdown-content .standard-sheet > code {
   display: block;
   margin: 1.25rem 1.25rem 0.45rem;
   padding: 0;
+  border: 0;
   background: transparent;
   color: var(--kit-faint);
-  font-size: 0.65rem;
+  font-size: var(--kit-annotation);
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -1050,7 +1169,7 @@ a {
   padding: 0.9rem 1.25rem;
   border-top: 1px solid var(--kit-line);
   color: var(--kit-muted);
-  font: 500 0.67rem/1.3 var(--kit-mono);
+  font: 500 var(--kit-annotation)/1.3 var(--kit-mono);
 }
 
 .standard-sheet__meta strong {
@@ -1058,7 +1177,7 @@ a {
 }
 
 .home-support {
-  padding-block: clamp(5rem, 10vw, 9rem);
+  padding-block: clamp(3.5rem, 6vw, 5.5rem);
   border-top: 1px solid var(--kit-line);
 }
 
@@ -1100,8 +1219,13 @@ a {
   font-size: 1.02rem;
 }
 
+/* `ch` is the advance of a zero, which is wider than this font's average
+   letter, so 72ch measured 84 characters a line on the standard: well past the
+   65 to 75 a body column reads comfortably at. 58ch measures about 68. Only
+   running prose is capped. Code blocks, tables and the rule instrument keep
+   the full pane, because wrapping an install command harder is not a fix. */
 .sl-markdown-content :where(p, li) {
-  max-width: 72ch;
+  max-width: 58ch;
 }
 
 .sl-markdown-content h2 {
@@ -1154,6 +1278,17 @@ a {
   font-family: var(--kit-mono);
 }
 
+/* A rule heading is a full sentence and the standard carries 46 of them, so the
+   contents list is either a wall of prose nobody scans or, cut to bare IDs, a
+   column a screen reader cannot choose a destination from. One line each is
+   both: the ID leads, the statement runs as far as the column allows, and the
+   whole statement stays in the accessibility tree. */
+.right-sidebar-panel a {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .right-sidebar-panel h2 {
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -1170,26 +1305,30 @@ a {
   border-color: var(--kit-signal);
 }
 
+/* Four cells that wrap. The 1px gap over a line-colored backing draws the
+   dividers, so they stay correct on whichever row a cell lands. */
 .doc-instrument-meta {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1px;
+  overflow: hidden;
   margin: 0 0 2rem;
   border: 1px solid var(--kit-line);
   border-radius: 0.5rem;
-  background: var(--kit-panel);
+  background: var(--kit-line);
 }
 
 .doc-instrument-meta > div {
+  /* The markdown content adds a top margin to adjacent siblings, which pulled
+     every cell but the first 1rem down inside its own grid track. */
+  margin: 0;
   padding: 0.8rem 1rem;
-}
-
-.doc-instrument-meta > div + div {
-  border-left: 1px solid var(--kit-line);
+  background: var(--kit-panel);
 }
 
 .doc-instrument-meta dt {
   color: var(--kit-faint);
-  font: 600 0.62rem/1 var(--kit-mono);
+  font: 600 var(--kit-annotation)/1 var(--kit-mono);
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -1213,11 +1352,11 @@ a {
   background: var(--kit-panel);
 }
 
-.doc-check h2 {
+.doc-check :is(h2, h4) {
   margin: 0 0 0.75rem;
   color: var(--kit-faint);
   font-family: var(--kit-mono);
-  font-size: 0.68rem;
+  font-size: var(--kit-annotation);
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -1225,6 +1364,201 @@ a {
 .doc-check p {
   margin: 0;
   color: var(--kit-text);
+}
+
+/* One row of the list a skill already keeps of what it owns, now a link to the
+   rule and the anchor a rule page's Fixed by cell lands on. */
+.sl-markdown-content .skill-rule {
+  max-width: none;
+  margin: 0;
+  /* The header is fixed over the top of the page, so a row jumped to would
+     otherwise land underneath it. */
+  scroll-margin-top: calc(var(--sl-nav-height) + 1rem);
+}
+
+.skill-rule + .skill-rule {
+  border-top: 1px solid var(--kit-line);
+}
+
+.skill-rule a,
+.skill-rules a {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr;
+  gap: 0.5rem 1rem;
+  align-items: baseline;
+  padding: 0.7rem 0.2rem;
+  color: var(--kit-text);
+  text-decoration: none;
+}
+
+.skill-rule a:hover span,
+.skill-rules a:hover span {
+  color: var(--kit-signal-strong);
+}
+
+.skill-rule:target {
+  background: var(--kit-panel-strong);
+}
+
+/* The fallback panel, for a skill that names its rules only inside prose. */
+.skill-rules {
+  margin-block: 2rem;
+  padding: 1.2rem;
+  border: 1px solid var(--kit-line);
+  border-radius: 0.5rem;
+  background: var(--kit-panel);
+}
+
+.skill-rules h2 {
+  margin: 0 0 0.9rem;
+  color: var(--kit-faint);
+  font-family: var(--kit-mono);
+  font-size: var(--kit-annotation);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.skill-rules ul {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skill-rules li {
+  margin: 0;
+  /* The Fixed by link jumps here, and the header is fixed over the top of the
+     page, so the row would otherwise land underneath it. */
+  scroll-margin-top: calc(var(--sl-nav-height) + 1rem);
+}
+
+.skill-rules li + li {
+  border-top: 1px solid var(--kit-line);
+}
+
+/* Scoped like `.standard-sheet > code` above, and for the same reason: the
+   markdown wrapper's code rule is (0,1,3) and would draw a chip here. */
+.sl-markdown-content :is(.skill-rule, .skill-rules) code {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--kit-signal-strong);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.skill-rule span,
+.skill-rules span {
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.skill-rules li:target {
+  background: var(--kit-panel-strong);
+}
+
+@media (max-width: 34rem) {
+  .skill-rule a,
+  .skill-rules a {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+}
+
+/* Asides ship blue, purple, orange, and red out of the box. Every skill page,
+   every reference page, and the standard opens with a note, so those defaults
+   made the most repeated element on the site the one off-palette thing on it.
+   Each variant keeps its own signal; none of them borrows a second hue. */
+.starlight-aside {
+  border-inline-start-width: 1px;
+  border-radius: 0.5rem;
+  padding: 1rem 1.15rem;
+}
+
+.starlight-aside--note,
+.starlight-aside--tip,
+.starlight-aside--caution,
+.starlight-aside--danger {
+  --sl-color-asides-text-accent: var(--kit-signal-strong);
+  --sl-color-asides-border: var(--kit-line);
+  background-color: var(--kit-panel);
+}
+
+.starlight-aside--caution,
+.starlight-aside--danger {
+  --sl-color-asides-border: var(--kit-signal);
+  border-inline-start-width: 2px;
+}
+
+.starlight-aside__title {
+  font-family: var(--kit-mono);
+  font-size: var(--kit-annotation);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.starlight-aside__icon {
+  font-size: 1em;
+}
+
+.starlight-aside :where(p, li) {
+  color: var(--sl-color-gray-2);
+}
+
+/* The aside already sits on a raised panel. Filling the code chip on top of it
+   pushed a green link inside one to 4.37:1; the hairline marks it just as well. */
+.starlight-aside :where(code):not(pre code) {
+  background: transparent;
+}
+
+/* Keep a Changelog gives every version a link, which rendered each release
+   heading as oversized underlined accent type that outweighed its own entries.
+   The version reads as a marker on a rail instead. */
+.release-rail h2 {
+  position: relative;
+  margin-top: 3rem;
+  padding-left: 1.1rem;
+  font-size: clamp(1.5rem, 2.5vw, 1.9rem);
+}
+
+.release-rail h2::before {
+  position: absolute;
+  top: 0.18em;
+  bottom: 0.1em;
+  left: 0;
+  width: 2px;
+  background: var(--kit-signal);
+  content: "";
+}
+
+.release-rail h2 a {
+  color: var(--kit-text);
+  text-decoration: none;
+}
+
+.release-rail h3 {
+  margin-top: 1.9rem;
+  padding-left: 1.1rem;
+  color: var(--kit-faint);
+  font-family: var(--kit-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.release-rail ul {
+  padding-left: 2.4rem;
+}
+
+/* Stands where the body's own `# ` heading used to, saying in a reader's terms
+   what the instruction text below it is for. */
+.doc-lede {
+  margin: 0 0 1.6rem;
+  color: var(--kit-muted);
+  font-size: 1.1rem;
+  line-height: 1.5;
 }
 
 .doc-kind-label {
@@ -1266,6 +1600,10 @@ a {
   margin-inline: auto;
 }
 
+.kit-footer {
+  container-type: inline-size;
+}
+
 .kit-footer__install {
   display: grid;
   grid-template-columns: minmax(18rem, 1fr) auto;
@@ -1297,6 +1635,26 @@ a {
 .kit-footer__install > .install-command {
   justify-self: start;
   margin-right: clamp(1rem, 8vw, 8rem);
+}
+
+/* A docs footer is 768px wide whatever the viewport is, because it sits in the
+   content column. A viewport media query therefore cannot tell whether the two
+   install tracks fit, and on a docs page they never do: the copy column asks
+   for 18rem and the command refuses to shrink below its own text, so the pair
+   overran the panel and pushed the page sideways at 1280. The footer asks about
+   its own width instead. This has to follow the two-column rules above, not
+   precede them: same specificity, so the later declaration is the one that
+   wins. */
+@container (max-width: 52rem) {
+  .kit-footer__install {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .kit-footer__install > div,
+  .kit-footer__install > .install-command {
+    justify-self: start;
+    margin-right: 0;
+  }
 }
 
 .kit-footer__utility {
@@ -1361,10 +1719,6 @@ a {
   .domain-bay a {
     grid-template-columns: 1.8rem 1.2rem minmax(7rem, 1fr) auto;
   }
-
-  .domain-bay__skills {
-    display: none;
-  }
 }
 
 @media (max-width: 64rem) {
@@ -1377,7 +1731,10 @@ a {
   }
 
   .kit-hero {
-    grid-template-columns: 1fr;
+    /* minmax(0, …), not 1fr: the install control refuses to shrink below the
+       command, and a bare 1fr track would size to that and push the column
+       past the viewport. */
+    grid-template-columns: minmax(0, 1fr);
     width: min(100% - 2rem, 54rem);
     padding-block: 4.5rem;
   }
@@ -1407,7 +1764,9 @@ a {
     grid-template-columns: 1fr auto;
   }
 
-  .audit-span > span:last-of-type {
+  /* Named, not positional. `:last-of-type` here stretched the arrow icon,
+     which is also a span, and left the sentence in one narrow cell. */
+  .audit-span__note {
     grid-column: 1 / -1;
   }
 
@@ -1417,6 +1776,21 @@ a {
 
   .domain-rack__skills {
     display: none;
+  }
+
+  /* On the skills rack the summary is the content, not an annotation, so it
+     moves to its own row rather than being dropped. */
+  .domain-rack--skills a {
+    grid-template-columns: 2.4rem 1.2rem minmax(0, 1fr) auto auto;
+    align-items: start;
+    padding-block: 0.9rem;
+  }
+
+  .domain-rack--skills .domain-rack__skills {
+    display: block;
+    grid-column: 3 / -1;
+    grid-row: 2;
+    margin-top: 0.3rem;
   }
 
   .workflow-trace {
@@ -1434,7 +1808,7 @@ a {
 
   .kit-footer__install,
   .kit-footer__utility {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .kit-footer__install > div,
@@ -1454,6 +1828,15 @@ a {
   }
 
   .page > .header {
+    padding-inline: 1rem;
+  }
+
+  /* Starlight fixes its Menu button to the right edge, so a page that has one
+     needs the header to keep clear of it. The splash page has no sidebar and no
+     Menu button, and reserving the gap there anyway pushed its own nav toggle
+     past the right edge below 380px. Nothing overflowed the page, because the
+     header clips its own child, so the control was simply unreachable. */
+  .page:has(starlight-menu-button) > .header {
     padding-inline: 1rem 4rem;
   }
 
@@ -1465,21 +1848,44 @@ a {
 
   .kit-header__brand span {
     font-size: 0.95rem;
+    /* The hyphen is a break opportunity, so the wordmark rendered as "oss-"
+       over "kit" at 390px. A broken wordmark is the first thing a phone
+       visitor sees. */
+    white-space: nowrap;
   }
 
-  .kit-header__github,
-  .kit-header__install,
-  .kit-header__tools starlight-theme-select {
+  .kit-header__github {
     display: none;
   }
 
   .kit-header__tools {
+    gap: 0.4rem;
     margin-left: auto;
   }
 
+  /* The theme control and Install both stay. Hiding the first left a phone with
+     no way back to light; hiding the second removed the site's primary action
+     from every page a reader is most likely to arrive on. */
+  .kit-header__tools starlight-theme-select select,
+  .kit-header__install {
+    min-height: 2.75rem;
+  }
+
+  .kit-header__install {
+    padding-inline: 0.7rem;
+    font-size: 0.75rem;
+  }
+
+  .kit-header__tools site-search button[data-open-modal],
+  starlight-menu-button button,
+  .kit-mobile-nav summary {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
+
   .kit-header__tools site-search button[data-open-modal] {
-    width: 2.25rem;
-    height: 2.25rem;
+    width: 2.75rem;
+    height: 2.75rem;
   }
 
   .kit-mobile-nav {
@@ -1488,7 +1894,9 @@ a {
   }
 
   .kit-mobile-nav summary {
-    min-height: 2.25rem;
+    /* No min-height here. The 2.75rem tap-target floor is set above, and a
+       second declaration in the same block silently won, rendering the only
+       navigation control on a phone at 36px. */
     padding: 0.63rem 0.72rem;
     border: 1px solid var(--kit-line);
     border-radius: 0.375rem;
@@ -1536,12 +1944,6 @@ a {
     background: var(--kit-panel-strong);
   }
 
-  .kit-mobile-nav nav .kit-mobile-nav__install {
-    margin-top: 0.35rem;
-    background: var(--kit-signal);
-    color: #080b0a;
-  }
-
   starlight-menu-button button {
     border: 1px solid var(--kit-line);
     border-radius: 0.375rem;
@@ -1549,39 +1951,16 @@ a {
     color: var(--kit-text);
     box-shadow: none;
   }
+}
 
-  .kit-hero,
-  .home-domains,
-  .home-principle,
-  .home-workflow,
-  .home-standard,
-  .home-support {
-    width: min(100% - 2rem, 38rem);
-  }
-
-  .kit-hero {
-    gap: 3rem;
-    padding-block: 3.5rem 4rem;
-  }
-
-  .kit-hero h1 {
-    max-width: 10.5ch;
-    font-size: clamp(3.3rem, 17vw, 4.8rem);
-  }
-
-  .kit-hero__lede {
-    font-size: 1rem;
-  }
-
-  .install-command {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-  }
-
-  .kit-hero__actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
+/* The map stacks a repository hub above its domain bays here rather than at the
+   26rem the header shrinks at. Its two-column form needs about 510px of body,
+   so between 418px and 526px it stayed side by side inside a 396px container
+   and clipped the bays: the count column, the whole right edge of every bay,
+   and the active bay's marker were all unreachable. Nothing overflowed the
+   page, because the map clips its own child, so a page-level scroll check read
+   zero. 33rem is the first width where one column is not needed. */
+@media (max-width: 33rem) {
   .maintenance-map__rail {
     grid-template-columns: auto 1fr;
   }
@@ -1633,6 +2012,64 @@ a {
 
   .domain-bay__count {
     white-space: nowrap;
+  }
+}
+
+/* Below about 400px the header row cannot seat a wordmark, a theme control, an
+   Install button and a menu at full width: it needed 399px and had 288. Every
+   control shrinks rather than one of them being dropped. The theme select keeps
+   its icon and loses its label, the brand keeps its mark and loses its text
+   (the link carries the name), and Install tightens. Dropping one instead would
+   take either the only route back to light mode or the primary action off the
+   page a phone visitor lands on first. */
+@media (max-width: 26rem) {
+  .kit-header {
+    gap: 0.5rem;
+  }
+
+  .kit-header__tools {
+    gap: 0.3rem;
+  }
+
+  .kit-header__brand span {
+    display: none;
+  }
+
+  .kit-header__tools starlight-theme-select select {
+    width: 2.75rem;
+  }
+
+  .kit-header__install {
+    padding-inline: 0.5rem;
+    font-size: 0.72rem;
+  }
+
+  .kit-hero,
+  .home-domains,
+  .home-principle,
+  .home-workflow,
+  .home-standard,
+  .home-support {
+    width: min(100% - 2rem, 38rem);
+  }
+
+  .kit-hero {
+    gap: 3rem;
+    padding-block: 3.5rem 4rem;
+  }
+
+  .kit-hero h1 {
+    max-width: 10.5ch;
+    font-size: clamp(3.3rem, 17vw, 4.8rem);
+  }
+
+  .kit-hero__lede {
+    font-size: 1rem;
+  }
+
+  .kit-hero__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 
   .home-domains,
