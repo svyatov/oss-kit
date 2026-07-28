@@ -8,7 +8,7 @@
  * runtime-specific global, so node and bun both run it.
  */
 
-import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 
 const HEADING = /^### (R-([A-Z]{2,3})-(\d{2})): (.+)$/ // areas are 2 or 3 letters (CI is two)
@@ -239,16 +239,21 @@ export function rewriteLinks(markdown, resolve) {
   })
 }
 
-const UNRELEASED = /^## \[Unreleased\][^\n]*\n(?:(?!^## |^\[[^\]]+\]: )[^\n]*\n)*/m
-const UNRELEASED_DEF = /^\[Unreleased\]: [^\n]*\n/m
+const UNRELEASED = /^## \[Unreleased\][^\n]*\n(?:(?!^## |^\[[^\]\n]+\]: https?:)[^\n]*\n)*/m
+const UNRELEASED_DEF = /^\[Unreleased\]: [^\n]*\n?/m
 
 /**
  * The site publishes released versions only. Keep a Changelog requires the
  * section in the file, where it stages the next release, but on a page it
  * either renders as an empty heading or advertises work nobody can install.
  * Its reference definition goes too, so the word reaches neither the page nor
- * the search index. The section ends at the next `##` heading or at the
- * reference definitions, and only a definition carries the colon and space.
+ * the search index.
+ *
+ * The section ends at the next `##` heading, or at the reference definitions
+ * when no release follows it. A definition is a bracketed label, a colon, and
+ * a URL: matching on the brackets alone would end the section early on an
+ * entry that opens one, and letting the label span a newline turns the scan
+ * quadratic on a line that opens a bracket it never closes.
  * @param {string} markdown
  */
 export function stripUnreleased(markdown) {
@@ -538,10 +543,14 @@ the job in front of you.
   const changelog = readFileSync(join(repoRoot, "CHANGELOG.md"), "utf8")
   // A relative target in the changelog names a file in the repository, and this
   // is the one page with no sibling page to point at, so it goes to the source.
-  const releases = rewriteLinks(
-    stripUnreleased(changelog).replace(/^# .*\n/m, "").trim(),
-    (target) => `${BLOB}/${target}`,
-  )
+  // The check throws rather than returning null, because rewriteLinks raises
+  // only on a target ending in `.md` and every target here carries an anchor.
+  // Returning null would put back the raw relative link that used to 404.
+  const releases = rewriteLinks(stripUnreleased(changelog).replace(/^# .*\n/m, "").trim(), (target) => {
+    const path = target.replace(/#.*$/, "")
+    if (!existsSync(join(repoRoot, path))) throw new Error(`changelog links a missing file: ${path}`)
+    return `${BLOB}/${target}`
+  })
   written.push(
     write(
       outDir,

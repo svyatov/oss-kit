@@ -14,9 +14,9 @@ import {
   stripUnreleased,
   writeAll,
 } from "../site/scripts/generate.mjs"
-import { existsSync, mkdtempSync, readFileSync as read, rmSync } from "node:fs"
+import { existsSync, mkdtempSync, readFileSync as read, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { join, resolve } from "node:path"
 
 const currentRules = parseRules(read("skills/oss-audit/STANDARD.md", "utf8"))
 
@@ -293,18 +293,76 @@ ${RELEASED}[Unreleased]: https://example.com/compare/v0.2.0...HEAD
 `
   expect(stripUnreleased(empty)).toBe(RELEASED)
   expect(stripUnreleased(RELEASED)).toBe(RELEASED)
+  // The definition is the last line of a file that does not end in a newline.
+  expect(stripUnreleased(`${RELEASED}[Unreleased]: https://example.com/h`)).toBe(RELEASED)
+})
+
+test("stripUnreleased ends the section at a release, not at an entry in bracket form", () => {
+  // A definition is a label, a colon, and a URL. An entry that opens with a
+  // bracket has the first two, and stopping there left the rest on the page.
+  const text = `## [Unreleased]
+
+### Changed
+
+[Note]: this line has the label and the colon but no URL, so it is prose.
+- A second entry that must go too.
+
+${RELEASED}[Unreleased]: https://example.com/compare/v0.2.0...HEAD
+`
+  expect(stripUnreleased(text)).toBe(RELEASED)
+})
+
+test("stripUnreleased ends the section at the definitions when no release follows", () => {
+  // A project before its first release. This is the only input that reaches
+  // the terminator's second alternative, since every other case stops at the
+  // next `##` heading. The issue reference definition is what makes the case
+  // observable: a terminator that ran to the end of the file would take it
+  // too, and oss-changelog asks for forge links to be collected this way.
+  const unreleased = `## [Unreleased]
+
+### Added
+
+- The first thing, not yet released. See [#12].
+
+[Unreleased]: https://example.com/compare/v0.0.0...HEAD
+[#12]: https://example.com/issues/12
+`
+  expect(stripUnreleased(unreleased)).toBe("[#12]: https://example.com/issues/12\n")
+})
+
+test("the changelog link check fails the build on a target that does not exist", () => {
+  const root = mkdtempSync(join(tmpdir(), "oss-kit-repo-"))
+  const out = mkdtempSync(join(tmpdir(), "oss-kit-site-"))
+  symlinkSync(resolve("skills"), join(root, "skills"))
+  symlinkSync(resolve("README.md"), join(root, "README.md"))
+  writeFileSync(join(root, "CHANGELOG.md"), read("CHANGELOG.md", "utf8").replaceAll("README.md#", "GONE.md#"))
+
+  expect(() => writeAll(root, out)).toThrow(/changelog links a missing file: GONE\.md/)
+  rmSync(root, { recursive: true, force: true })
+  rmSync(out, { recursive: true, force: true })
 })
 
 test("the changelog page publishes released versions only", () => {
   const out = mkdtempSync(join(tmpdir(), "oss-kit-site-"))
   writeAll(".", out)
   const page = read(join(out, "changelog.md"), "utf8")
+  const source = read("CHANGELOG.md", "utf8")
+  const count = (text: string, pattern: RegExp) => text.match(pattern)?.length ?? 0
 
-  expect(page).not.toContain("Unreleased")
+  // Assert the construct, not the word: a released entry may discuss the
+  // Unreleased section in prose, and one of them does.
+  expect(page).not.toMatch(/^## \[Unreleased\]/m)
+  expect(page).not.toMatch(/^\[Unreleased\]: /m)
+
   // Every release heading is a shortcut reference link, so it renders as
   // literal brackets if its definition is dropped along with the section's.
-  expect(page).toMatch(/^## \[\d+\.\d+\.\d+\] - \d{4}-\d{2}-\d{2}$/m)
-  expect(page).toMatch(/^\[\d+\.\d+\.\d+\]: https:/m)
+  // Counting against the source catches a strip that ate a real release, which
+  // an assertion that merely finds one surviving release would pass.
+  const headings = /^## \[\d+\.\d+\.\d+\] - \d{4}-\d{2}-\d{2}$/gm
+  const definitions = /^\[\d+\.\d+\.\d+\]: https:/gm
+  expect(count(page, headings)).toBe(count(source, headings))
+  expect(count(page, definitions)).toBe(count(source, definitions))
+  expect(count(page, headings)).toBeGreaterThan(0)
 
   // The changelog is the only page with no sibling page to link, so a relative
   // target used to ship raw and 404 on the site.
