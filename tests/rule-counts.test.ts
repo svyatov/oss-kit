@@ -1,14 +1,14 @@
 import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 
-// README.md and the worked examples in oss-readme and oss-audit quote how many
-// rules the standard holds, how many score both forges, and how an audit of one
-// repository splits them. Nothing derived those numbers, so adding a rule left
-// them stale and no check failed: the slate in oss-readme claimed 45 rules and
-// 40 of 41 rules on both forges long after the standard passed each, and all
-// three audit examples went on summing to 46 after the standard reached 50.
-// Every one of these files is an exemplar of R-DOC-04, the rule against exactly
-// this drift, so they are the last that should carry an unchecked number.
+// README.md and the slate in oss-readme quote how many rules the standard
+// holds, how many score both forges, and how an audit of one repository splits
+// them. Nothing derived those numbers, so adding a rule left them stale and no
+// check failed: the slate offered 45 rules and 40 of 41 rules on both forges
+// long after the standard passed each, and both audit examples went on summing
+// to 46 after the standard reached 50. Both files are exemplars of R-DOC-04,
+// the rule against exactly this drift, so they are the last that should carry
+// an unchecked number.
 const standard = readFileSync("skills/oss-audit/STANDARD.md", "utf8")
 
 const total = [...standard.matchAll(/^### R-[A-Z]+-\d{2}:/gm)].length
@@ -29,8 +29,14 @@ const AUDIT =
   /Audited (\d+) applicable rules: (\d+) pass, (\d+) fail, (\d+) unknown, (\d+) not applicable\.?\s*(?:\((\d+) PUB)?/g
 const audits = (text: string) => [...text.matchAll(AUDIT)].map((m) => m.slice(1).map((n) => (n ? Number(n) : null)))
 
+// The audit check rides along with the totals check rather than reaching
+// further. Both files below already have to change when a rule is added, so
+// checking their breakdown costs one more number in an edit that was happening
+// anyway. oss-audit's own SKILL.md quotes no total, so guarding it would invent
+// a new chore on every rule addition, and the reader it would protect is an
+// agent learning the shape of the output, which sums nothing.
 const quotingTotals = ["README.md", "skills/oss-readme/SKILL.md"]
-const quotingAudits = [...quotingTotals, "skills/oss-audit/SKILL.md"]
+const quotingAudits = quotingTotals
 
 describe("rule counts quoted in prose", () => {
   test("the standard parses to a sane set of counts", () => {
