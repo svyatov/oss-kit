@@ -51,7 +51,7 @@ Say in a parenthetical why the not-applicable rules were skipped, grouped by rea
 Then list every fail and every unknown, most important first, one line each. A line carries the rule ID, the status, the evidence you found, and the skill named in that rule's `Fixed by:` line:
 
 ```text
-Audited 34 applicable rules: 28 pass, 4 fail, 2 unknown, 5 not applicable (4 PUB, the project publishes no package; 1 GitLab-only).
+Audited 43 applicable rules: 37 pass, 4 fail, 2 unknown, 7 not applicable (6 PUB, the project publishes no package; 1 GitLab-only).
 
 1. R-COM-01 fail, no LICENSE file, run oss-community
 2. R-DOC-01 fail, README.md opens with a badge row before any sentence about the project, run oss-readme

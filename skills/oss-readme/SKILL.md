@@ -132,7 +132,7 @@ Audit this repository against the oss-kit standard.
 ```
 
 ```text
-Audited 41 applicable rules: 38 pass, 2 fail, 1 unknown, 5 not applicable.
+Audited 43 applicable rules: 40 pass, 2 fail, 1 unknown, 7 not applicable.
 ```
 ````
 
