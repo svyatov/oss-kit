@@ -34,7 +34,7 @@ A change-request description differs from a commit body in one way: its reader a
 
 A required template section is not optional. Answer each at the shortest length that answers it. Where a section's honest answer is nothing, write that word rather than a paragraph. Where it asks for a status you do not have, write `Not run: <reason>`. Invent no scaffolding the repository does not ship.
 
-A review comment names the concrete defect, states its consequence, and gives the required outcome, in about two sentences. Say whether it blocks or is optional, and use a suggestion block when the exact edit is known.
+A review comment names the concrete defect, states its consequence, and gives the required outcome, in about two sentences. Say whether it blocks or is optional, and use a suggestion block when the exact edit is known. Where the repository has adopted Conventional Comments, open with its label and decoration, as `issue (blocking):` or `nitpick (non-blocking):`, and keep the two sentences behind it.
 
 ## Agent slop
 
@@ -100,6 +100,8 @@ Read the draft against this list and fix what it catches.
 - A body needs one of the four things above, or a required template section asking for it. If neither holds, delete the body and ship the subject.
 
 If the draft still reads padded, generic, or promotional after that pass, the remaining fault is lexical. Check it against [references/tells.md](references/tells.md), which names each pattern and what to write instead.
+
+To enforce the mechanical half of this list in a repository's CI rather than in review, see [references/linting.md](references/linting.md), which maps each checkable rule onto a checker and says which rules no checker can decide.
 
 ## Do not touch
 
