@@ -51,7 +51,7 @@ The prose checker also runs on every commit, once you point git at the hooks thi
 sh skills/oss-writing/scripts/install-hooks.sh
 ```
 
-That sets `core.hooksPath`, which is local configuration, so it is yours to opt into and `git commit --no-verify` bypasses it. A word the heading check does not know, usually a product name, belongs in `oss-writing.allow` in `.oss-kit.json` at the repository root.
+That sets `core.hooksPath`, which is local configuration, so it is yours to opt into and `git commit --no-verify` bypasses it.
 
 `bun run build` in `site/` is a required check, so run it before you open a pull request. The site is generated from `STANDARD.md` and the skills, which means a rule you renamed or a reference link you moved fails this build and nothing else.
 

@@ -7,9 +7,8 @@ import { PATTERNS, maskProse, scan } from "../skills/oss-writing/scripts/check-t
 
 const CHECKER = "skills/oss-writing/scripts/check-tells.mjs"
 
-// Run from a directory with no .oss-kit.json above it. With the repository root
-// as the working directory the checker would find this repository's own
-// allowlist, and a heading test would pass on a word it never declared.
+// Run from an empty directory, so a relative path a test writes cannot collide
+// with a file of the same name in the repository.
 const SANDBOX = mkdtempSync(join(tmpdir(), "check-tells-cwd-"))
 
 const run = (args: string[], stdin?: string) =>
@@ -199,8 +198,8 @@ test("every catalog entry carries a token, a global pattern, and a replacement",
 
 const headings = (text: string, file = "t.md") => scan(text, file).map((f) => f.tell)
 
-test("a title-case heading reports one offence per offending word", () => {
-  expect(headings("## Setting Up The Cache\n")).toEqual(["Up", "The", "Cache"])
+test("a title-case heading reports the heading once", () => {
+  expect(headings("## Setting Up The Cache\n")).toEqual(["Setting Up The Cache"])
 })
 
 test("a sentence-case heading reports nothing", () => {
@@ -211,73 +210,44 @@ test("a heading whose first word is capitalized reports nothing", () => {
   expect(headings("## Setting up the cache\n")).toHaveLength(0)
 })
 
-test("a rule heading label is not the sentence start", () => {
+test("one lowercase word clears a heading of proper nouns", () => {
+  expect(headings("## read the Actions log\n")).toHaveLength(0)
+})
+
+test("two capitalized words are a product name, not Title Case", () => {
+  expect(headings("## configure GitHub Actions\n")).toHaveLength(0)
+})
+
+test("a rule heading needs no label rule to clear the check", () => {
   expect(headings("### R-DOC-01: The README opens with one sentence\n")).toHaveLength(0)
 })
 
-test("a two-token step label is not the sentence start", () => {
+test("a step heading needs no label rule to clear the check", () => {
   expect(headings("## Step 1: Find STANDARD.md\n")).toHaveLength(0)
 })
 
-test("a unit label closed with a period is not the sentence start", () => {
-  expect(headings("## U1. Prose extraction and the pipeline\n")).toHaveLength(0)
+test("an all-caps acronym does not count toward the run", () => {
+  expect(headings("## Read The CHANGELOG Now\n")).toHaveLength(0)
 })
 
-test("a colon past the second token does not create a label", () => {
-  expect(headings("## use the cache well: Only In Production\n")).toEqual(["Only", "In", "Production"])
+test("a path or a filename does not count toward the run", () => {
+  expect(headings("## Generate site/src/content From AGENTS.md\n")).toHaveLength(0)
 })
 
-test("an allowlisted proper noun is not an offence", () => {
-  expect(headings("## use GitHub Actions\n")).toEqual(["Actions"])
+test("a heading ending in a period still counts its last word", () => {
+  expect(headings("## Warm The Cache Now.\n")).toEqual(["Warm The Cache Now."])
 })
 
-test("an all-caps acronym is not an offence", () => {
-  expect(headings("## read the CHANGELOG\n")).toHaveLength(0)
-})
-
-test("a path or a filename is not an offence", () => {
-  expect(headings("## generate site/src/content from AGENTS.md\n")).toHaveLength(0)
-})
-
-test("a heading ending in a period still checks its last word", () => {
-  expect(headings("## warm the Cache.\n")).toEqual(["Cache"])
-})
-
-test("a capitalized word inside a code span is not an offence", () => {
-  expect(headings("## read the `Foo` table\n")).toHaveLength(0)
+test("a code span is not prose, so its words do not count", () => {
+  expect(headings("## Read `the` Cache Now Today\n")).toEqual(["Read `the` Cache Now Today"])
 })
 
 test("a hash inside a fenced block is not a heading", () => {
-  expect(headings("```\n# Not A Heading\n```\n")).toHaveLength(0)
+  expect(headings("```\n# Not A Heading Here\n```\n")).toHaveLength(0)
 })
 
-test("a per-invocation allowlist clears a heading that otherwise fails", () => {
-  expect(scan("## build with Astro and Starlight\n", "t.md", { allow: ["Astro", "Starlight"] })).toHaveLength(0)
-})
-
-test("--allow clears the same heading from the command line", () => {
-  const dir = mkdtempSync(join(tmpdir(), "tells-"))
-  const file = join(dir, "a.md")
-  writeFileSync(file, "## build with Astro and Starlight\n")
-  expect(run([file]).exitCode).toBe(1)
-  expect(run(["--allow", "Astro,Starlight", file]).exitCode).toBe(0)
-})
-
-test("an .oss-kit.json above the file supplies the allowlist", () => {
-  const dir = mkdtempSync(join(tmpdir(), "tells-"))
-  writeFileSync(join(dir, ".oss-kit.json"), JSON.stringify({ "oss-writing": { allow: ["Astro"] } }))
-  const file = join(dir, "a.md")
-  writeFileSync(file, "## build with Astro\n")
-  expect(Bun.spawnSync(["node", join(process.cwd(), CHECKER), "a.md"], { cwd: dir }).exitCode).toBe(0)
-})
-
-test("a malformed .oss-kit.json exits non-zero rather than scoring on defaults", () => {
-  const dir = mkdtempSync(join(tmpdir(), "tells-"))
-  writeFileSync(join(dir, ".oss-kit.json"), "{ not json")
-  writeFileSync(join(dir, "a.md"), "clean prose.\n")
-  const result = Bun.spawnSync(["node", join(process.cwd(), CHECKER), "a.md"], { cwd: dir })
-  expect(result.exitCode).not.toBe(0)
-  expect(result.stderr.toString()).toContain(".oss-kit.json")
+test("a CRLF file quotes the heading, not the line after it", () => {
+  expect(headings("intro line\r\n\r\n## Setting Up The Cache\r\n")).toEqual(["Setting Up The Cache"])
 })
 
 const COC = `# Code of conduct
@@ -286,26 +256,21 @@ const COC = `# Code of conduct
 
 We pledge to make participation a harassment-free experience.
 
-## Attribution
+## Enforcement Guidelines
 
-This code of conduct is adapted from the Contributor Covenant, version 2.1,
-available at https://www.contributor-covenant.org/version/2/1/code_of_conduct.html.
+## 3. Temporary Ban
 `
 
-test("an attributed code of conduct keeps its preserved headings", () => {
+// The check used to exempt a code of conduct that attributed a third-party
+// document, because it reported every capitalized word. Deciding on the whole
+// heading makes the exemption unnecessary: the Contributor Covenant's headings
+// are one or two words long, so none of them reaches the run length.
+test("a verbatim code of conduct clears the check with no exemption", () => {
   expect(scan(COC, "CODE_OF_CONDUCT.md")).toHaveLength(0)
 })
 
-test("an attributed code of conduct is still checked for dashes and emoji", () => {
+test("a code of conduct is still checked for dashes and emoji", () => {
   expect(scan(`${COC}\nan em — dash \u{1F680}\n`, "CODE_OF_CONDUCT.md")).toHaveLength(2)
-})
-
-test("a code of conduct with no attribution has its headings checked", () => {
-  expect(scan(COC.replace(/Contributor Covenant/, "nothing"), "CODE_OF_CONDUCT.md").map((f) => f.tell)).toEqual(["Pledge"])
-})
-
-test("another file mentioning the Contributor Covenant still has its headings checked", () => {
-  expect(scan(COC, "CONTRIBUTING.md").map((f) => f.tell)).toEqual(["Pledge"])
 })
 
 const fixture = (files: Record<string, string>, init = true) => {
@@ -408,17 +373,6 @@ test("--rule gives the same answer from any working directory", () => {
   expect(rule(dir).stdout.toString()).toBe(here)
 })
 
-test("--rule reads a root-level allowlist rather than a flag", () => {
-  const dir = fixture({
-    "README.md": "## build with Astro\n",
-    ".oss-kit.json": JSON.stringify({ "oss-writing": { allow: ["Astro"] } }),
-  })
-  expect(rule(dir).exitCode).toBe(0)
-  const rejected = rule(dir, ["R-DOC-05", "--allow", "Astro"])
-  expect(rejected.exitCode).toBe(2)
-  expect(rejected.stderr.toString()).toContain("--allow")
-})
-
 test("--rule takes at most one root", () => {
   const dir = fixture({ "README.md": "clean.\n" })
   const result = Bun.spawnSync(["node", join(process.cwd(), CHECKER), "--rule", "R-DOC-05", dir, dir])
@@ -450,11 +404,11 @@ test("--rule says so when the rule's file set is empty", () => {
 
 test("a file named like an option is checked, not swallowed", () => {
   const dir = mkdtempSync(join(tmpdir(), "check-tells-"))
-  const file = join(dir, "--allow=x.md")
+  const file = join(dir, "--rule=x.md")
   writeFileSync(file, "an em — dash\n")
   const result = run(["--", file])
   expect(result.exitCode).toBe(1)
-  expect(result.stdout.toString()).toContain("--allow=x.md")
+  expect(result.stdout.toString()).toContain("--rule=x.md")
 })
 
 test("an astral character does not shift the mask off its target", () => {

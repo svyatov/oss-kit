@@ -19,7 +19,6 @@ site/                    public docs site, content, and own dependency tree
 site/src/content/docs/   tracked public prose and generated site pages
 scripts/                 maintenance scripts, including the drift check
 tests/                   the test suites for the shipped scripts and the drift check
-.oss-kit.json            repository settings the shipped scripts read
 AGENTS.md                this file
 CLAUDE.md                symlink to AGENTS.md
 ```
@@ -104,7 +103,7 @@ A ruleset has no "Do not allow bypassing the above settings" checkbox; the equiv
 
 1. Update the skills table in `README.md` if the skill's one-line description changed.
 2. Run `bash scripts/check-drift.sh`, which fails when a skill cites a rule ID that `STANDARD.md` does not define, when `STANDARD.md` names a rule as fixed by a skill that does not claim it, or when a rule names `oss-audit` as its owner.
-3. Run `bun run lint:prose`, which fails on a mechanical prose tell and prints, without failing, on a word only a reader can judge. A product name the heading check does not know goes in `oss-writing.allow` in `.oss-kit.json`.
+3. Run `bun run lint:prose`, which fails on a mechanical prose tell and prints, without failing, on a word only a reader can judge.
 4. Run `bun run validate` and `bun test`. `CONTRIBUTING.md` lists the full check sequence CI runs.
 5. Confirm the `SKILL.md` body is still under 500 lines.
 6. Before a release, bump `version` in `.claude-plugin/plugin.json`.

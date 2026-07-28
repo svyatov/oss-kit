@@ -127,7 +127,9 @@ git log -1 --format=%B | node <skill-dir>/scripts/check-tells.mjs -
 
 The `--` ends the options. Without it a file whose name begins with a hyphen is read as a flag and never checked.
 
-An offence exits non-zero. A suspicion prints and does not, because the token alone cannot tell `a key improvement` from `a cache key`: read the line and decide. Where a heading capitalizes a product name the script does not know, add the word to `oss-writing.allow` in `.oss-kit.json` at the repository root rather than lowercasing the name.
+An offence exits non-zero. A suspicion prints and does not, because the token alone cannot tell `a key improvement` from `a cache key`: read the line and decide.
+
+The heading check reports a heading whose words past the first are all capitalized, three or more of them. It takes no configuration and knows no proper nouns, so `## configure GitHub Actions` clears it on the count and `## read the Actions log` clears it on `the`. Title Case that lowercases its short prepositions escapes it, so `## Getting Started with Docker` is yours to catch by reading.
 
 The composition rules and the judgment tells stay yours. A clean run is not a finished draft.
 
