@@ -547,7 +547,7 @@ the job in front of you.
   // only on a target ending in `.md` and every target here carries an anchor.
   // Returning null would put back the raw relative link that used to 404.
   const releases = rewriteLinks(stripUnreleased(changelog).replace(/^# .*\n/m, "").trim(), (target) => {
-    const path = target.split("#")[0]
+    const path = target.replace(/#.*$/, "")
     if (!existsSync(join(repoRoot, path))) throw new Error(`changelog links a missing file: ${path}`)
     return `${BLOB}/${target}`
   })
