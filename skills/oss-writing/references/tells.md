@@ -7,7 +7,7 @@ The lexicon that marks prose as machine-written. Each row names a pattern and wh
 | Significance inflation: `pivotal`, `testament to`, `underscores`, `marks a shift`, and `key` or `critical` used as importance adjectives (`a key improvement`). The nouns are fine: `cache key`, `API key`, `critical section` | State the fact and stop |
 | Tacked-on `-ing` clauses: `ensuring reliability`, `enabling faster builds`, `allowing users to` | Split into a sentence, or cut |
 | Nominalized gerund chains: `improving the handling of the processing of` | Name the action once, with a finite verb: `the loader now retries` |
-| Promotional adjectives: `robust`, `powerful`, `seamless`, `elegant`, `comprehensive`, `rich` | Name the property: `retries 3x`, `no config file` |
+| Promotional adjectives: `robust`, `powerful`, `seamless`, `elegant`, `comprehensive`, `rich`, `blazing`, `effortless` | Name the property: `retries 3x`, `no config file` |
 | Vague attribution: `best practices suggest`, `it is widely believed`, `studies show` | Name the source, or drop the claim. Never invent one |
 | Copula avoidance: vague `serves as`, `acts as`, `boasts`, or `features` | `is`, `has`, or a precise verb |
 | AI vocabulary, and any rare word where a common one is exact: `leverage`, `utilize`, `delve`, `streamline`, `facilitate`, `holistic`, `obviate`, `predicated on`, `additionally`, `furthermore` | `use`, `and`, or nothing. Reserve a rare word for where it is more precise, never for where it is more impressive |

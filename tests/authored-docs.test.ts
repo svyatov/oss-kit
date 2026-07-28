@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test"
 import { readFileSync, readdirSync } from "node:fs"
 
+import { PATTERNS, scan } from "../skills/oss-writing/scripts/check-tells.mjs"
+
 const PAGES = [
   "site/src/content/docs/guides/install.md",
   "site/src/content/docs/guides/getting-started.md",
@@ -16,19 +18,18 @@ test("every authored page declares one title in frontmatter", () => {
   }
 })
 
+// The dash checks run through the shipped checker, which reads prose only:
+// quoted code, output, and config are reproduced verbatim, and a rule may name
+// the pattern it forbids inside backticks. That is looser than reading the raw
+// bytes, and deliberately so.
+const DASHES = PATTERNS.filter((p) => ["em-dash", "en-dash", "double-hyphen"].includes(p.id))
+const dashes = (file: string) => scan(readFileSync(file, "utf8"), file, { patterns: DASHES })
+
 test("no authored page uses a dash character the house style forbids", () => {
   for (const page of PAGES) {
-    const text = readFileSync(page, "utf8")
-    expect(text.includes("—"), page).toBe(false)
-    expect(text.includes("–"), page).toBe(false)
-    expect(text.includes(" -- "), page).toBe(false)
+    expect(dashes(page), page).toEqual([])
   }
 })
-
-// Strips fenced blocks and inline code, so the scan reads only prose. This is
-// the skill's own exception: quoted code, output, and config are reproduced
-// verbatim, and a rule may name the pattern it forbids inside backticks.
-const proseOnly = (text: string) => text.replace(/```[\s\S]*?```/g, "").replace(/`[^`\n]*`/g, "")
 
 test("no repository prose uses a dash the house style forbids", () => {
   const skillFiles = readdirSync("skills", { recursive: true, encoding: "utf8" })
@@ -39,10 +40,7 @@ test("no repository prose uses a dash the house style forbids", () => {
   const rootDocs = ["README.md", "CONTRIBUTING.md", "AGENTS.md", "CHANGELOG.md", "SECURITY.md"]
 
   for (const file of [...skillFiles, ...rootDocs]) {
-    const prose = proseOnly(readFileSync(file, "utf8"))
-    expect(prose.includes("—"), `em dash in ${file}`).toBe(false)
-    expect(prose.includes("–"), `en dash in ${file}`).toBe(false)
-    expect(prose.includes(" -- "), `" -- " in ${file}`).toBe(false)
+    expect(dashes(file), file).toEqual([])
   }
 })
 

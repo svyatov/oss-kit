@@ -116,6 +116,25 @@ Check these before returning any text:
 - Straight ASCII quotes: curly quotes break a copy-paste into a shell or a config file, and the reader cannot tell by eye which they got.
 - A body needs a named trigger, or a required template section asking for it. If neither holds, delete the body and ship the subject.
 
+## Check the draft
+
+`scripts/check-tells.mjs` in this skill's own directory finds the mechanical subset of the rules above: the dashes, emoji, curly quotes, inline-header bullets, heading case, tool attribution, and the fixed vocabulary of [references/tells.md](references/tells.md). It reads prose only, needs nothing installed, and runs on Node 22 or later and on Bun. Resolve it from the absolute directory this `SKILL.md` was loaded from, since the working directory is the repository being written about. Give it the files you changed, or pipe a draft message through it:
+
+```bash
+node <skill-dir>/scripts/check-tells.mjs -- README.md CHANGELOG.md
+git log -1 --format=%B | node <skill-dir>/scripts/check-tells.mjs -
+```
+
+The `--` ends the options. Without it a file whose name begins with a hyphen is read as a flag and never checked.
+
+An offence exits non-zero. A suspicion prints and does not, because the token alone cannot tell `a key improvement` from `a cache key`: read the line and decide.
+
+The heading check reports a heading whose words past the first are all capitalized, three or more of them. It takes no configuration and knows no proper nouns, so `## configure GitHub Actions` clears it on the count and `## read the Actions log` clears it on `the`. Title Case that lowercases its short prepositions escapes it, so `## Getting Started with Docker` is yours to catch by reading.
+
+The composition rules and the judgment tells stay yours. A clean run is not a finished draft.
+
+When a run reports an offence and `git config --get core.hooksPath` does not already name this skill's `scripts/hooks` directory, offer once to install the wiring with `sh <skill-dir>/scripts/install-hooks.sh`, then drop the subject whatever the answer. The installer records the directory with its symlinks resolved, so compare against the resolved path rather than the one you were loaded through. Where it is already installed, say nothing: the absence of the wiring is the only record of whether the offer has been made.
+
 ## Do not touch
 
 - Existing quoted code, error strings, log output, stack traces, and config samples: reproduce verbatim, including their dashes. This exception does not protect newly authored strings from review.

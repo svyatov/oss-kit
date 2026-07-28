@@ -18,5 +18,10 @@
     "noFallthroughCasesInSwitch": true,
     "types": ["bun"]
   },
-  "include": ["scripts/**/*.ts", "tests/**/*.ts", "skills/oss-skill/scripts/**/*.mjs"]
+  "include": [
+    "scripts/**/*.ts",
+    "tests/**/*.ts",
+    "skills/oss-skill/scripts/**/*.mjs",
+    "skills/oss-writing/scripts/**/*.mjs"
+  ]
 }
