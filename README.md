@@ -161,5 +161,5 @@ incompatible change ships in a MINOR release.
 ## License
 
 MIT. See [LICENSE](LICENSE). A skill that derives from third-party work carries
-a `sources.json` naming what it came from and who holds copyright alongside the
-maintainer.
+a `sources.json` naming what it came from, who holds copyright alongside the
+maintainer, and how this fork differs.

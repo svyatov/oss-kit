@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+### Changed
+
+- The `sources.json` in each derived skill records how the fork differs from its upstream now, rather than every edit that got it there. `oss-writing` had 34 entries, 16 of them appended one per commit. Two pairs cancelled outright: one entry recorded adding guidance for error messages and log lines, and another recorded dropping it. Across the four files 61 entries become 33. `AGENTS.md` states the rule, and `tests/authored-docs.test.ts` now parses each file, so the prose in it is checked for the dashes the house style forbids.
+
 ## [0.5.0] - 2026-07-28
 
 Three new rules take the standard to 53, and two of them ask for evidence no file in the repository can show.
