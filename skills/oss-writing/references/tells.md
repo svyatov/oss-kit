@@ -1,6 +1,6 @@
 # Tell catalog
 
-The lexicon that marks prose as machine-written. Each row names a pattern and what to write instead. The composition rules and the check list in `SKILL.md` handle the common case; this file is the lookup for a specific suspicion, so read the row that matches rather than running the whole table over every draft.
+The lexicon that marks prose as machine-written. Each row names a pattern and what to write instead. The composition rules and the check list in `SKILL.md` handle the common case. This file is the lookup for a specific suspicion, so read the row that matches rather than running the whole table over every draft.
 
 | Tell | Write instead |
 |------|---------------|

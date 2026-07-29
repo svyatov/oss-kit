@@ -6,7 +6,7 @@ A review comment names the concrete defect, states its consequence, and gives th
 
 - Follow the convention the repository declares.
 - Comment on the code, not the person.
-- Explain your reasoning. State the problem; let the author choose the fix.
+- Explain your reasoning. State the problem, then give the fix only when you know the exact edit. Otherwise leave the choice to the author.
 - As author: do not reply in anger. If you do not understand, ask. If you disagree, state tradeoffs and collaborate.
 
 ## If the repository adopted Conventional Comments
@@ -14,7 +14,7 @@ A review comment names the concrete defect, states its consequence, and gives th
 - Prefix each comment with a label: praise, nitpick, suggestion, issue, todo, question, thought, chore, note.
 - Add a decoration when it helps: (blocking), (non-blocking), (if-minor).
 - Format: `label (decoration): subject`. Add a discussion line for the why and the next step.
-- Pair an `issue` with a `suggestion`.
+- Pair an `issue` with a `suggestion` when you know the exact edit.
 - Leave at least one `praise` per review when one is honest.
 
 ### Worked review exchange

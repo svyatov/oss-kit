@@ -22,7 +22,7 @@ Read this when setting up prose linting for a repository, not while drafting.
 | Body line over 72 characters | commitlint `body-max-line-length`, for a message typed in an editor rather than a forge field |
 | Conventional Commits shape, where the repository has adopted it | commitlint `type-enum` and `subject-empty` |
 
-Two figures need an explicit override rather than a default. `@commitlint/config-conventional` ships `header-max-length` at 72, which is the ceiling this skill wants, so a repository that prefers Git's 50 sets it deliberately and accepts that `type(scope): ` spends 15 to 20 of those characters. A body wrapped at 72 is correct for a message composed in an editor and wrong for text typed into a forge field, which reflows on its own.
+Two figures need an explicit override rather than a default. `@commitlint/config-conventional` ships `header-max-length` at 72, which is the ceiling this skill wants. A repository that prefers Git's 50 sets it deliberately, and accepts that `type(scope): ` spends 15 to 20 of those characters. A body wrapped at 72 is correct for a message composed in an editor. It is wrong for text typed into a forge field, which reflows on its own.
 
 ## What a checker cannot decide
 
@@ -36,7 +36,7 @@ Do not try to lint these. A rule that fires on correct prose gets the whole lint
 
 ## Banned words and phrases
 
-The `Write instead` column in `tells.md` carries the reasoning. This is the same list flattened for a `substitution` rule.
+This table flattens three lists: the tell catalog in `tells.md`, the promotional adjectives in `SKILL.md`, and the timeless-language words in `docs-and-readme.md`. It holds only terms a substitution rule can decide on sight. A tell like `features` used as a verb stays out, because no rule can tell it from the noun. `tells.md` carries the reasoning for each.
 
 | Banned | Use |
 |---|---|
@@ -49,8 +49,10 @@ The `Write instead` column in `tells.md` carries the reasoning. This is the same
 | facilitate | help, or name the step |
 | functionality | the feature's name |
 | delve | (cut) |
+| obviate | remove the need for |
+| predicated on | based on |
 | holistic, comprehensive | (cut, or name the scope) |
-| robust, powerful | (cut, or state the property) |
+| robust, powerful, elegant, rich | (cut, or state the property) |
 | seamless, seamlessly, effortless | (cut) |
 | blazing, blazingly fast | (cut, or give the number) |
 | streamline | (cut, or name the step removed) |
@@ -58,6 +60,6 @@ The `Write instead` column in `tells.md` carries the reasoning. This is the same
 | ensuring, enabling, allowing | (split into a sentence, or cut) |
 | it is important to note, it's worth noting that, please note | (cut) |
 | best practices suggest, studies show | name the source, or drop the claim |
-| very, simply, just, easily | (cut) |
+| very, simply, just, easily, of course | (cut) |
 | serves as, acts as, boasts | is, has, or a precise verb |
 | currently, presently, at present, as of this writing | (cut, outside a commit, changelog, or migration guide) |
