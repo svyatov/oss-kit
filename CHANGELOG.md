@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+### Changed
+
+- `oss-community` derives a change-request template's sections from what the project's review needs, and writes the template for the forge that renders it. It had one paragraph on the subject, all of it about which fields to collect. A description is read on the forge before the diff, so the template uses headings the forge renders, one bullet per separable part of the change, and a table where the answer is a list of things and a fact about each. A repository that reuses the description as its squash commit message is no longer a reason to write one flat paragraph. Each section's guidance goes in an HTML comment under its heading, and the template says that a heading with nothing under it should be deleted, since neither forge can require a field and an empty section reads as an unanswered one. The skill now proposes those sections to the maintainer before writing the file, which it already did for issue fields.
+- `oss-writing` no longer lets a change-request description inherit the rules written for a commit body. The two shared one reference, and the shaping rules there assume a commit: default to silence, no markup, one paragraph per line. A description is rendered on the forge and read before the diff, so it uses the markup the forge renders, gives a change with separable parts one bullet each, and earns its length from what review needs rather than from what a commit body earns.
+
 ## [0.5.1] - 2026-07-29
 
 `oss-writing` is rebuilt from its sources and split by artifact, and it decides a commit body from the facts a change carries rather than from the size of its diff.
