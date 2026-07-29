@@ -76,6 +76,18 @@ Every rule also has an entry in `skills/oss-audit/rule-sources.json`, keyed by I
 
 `scripts/rule-freshness.mjs` reports against the rules that have a source and lists the own-position rules separately. It never gates: a metric that fails a build becomes a chore somebody disables.
 
+## Provenance in sources.json
+
+A skill derived from third-party work carries a `sources.json` naming the upstream it came from, the copyright holders, and how this fork differs. The `modifications` array is that last part. It records the difference as it stands now, not the route taken to reach it.
+
+Write an entry when a change that ships moves the fork further from upstream. Fold one release's worth of change to one skill into as few entries as the divergence needs. While a release is unreleased, amend its newest entry rather than appending another. A tag freezes that entry, and the next change starts a new one. Never append one entry per commit, and never during an editing session.
+
+Where a later change reverses an earlier one, delete both entries. A third entry recording the reversal leaves a reader replaying the sequence to learn the standing difference. `CHANGELOG.md` carries what each release changed and git history carries the rest, so an entry that duplicates either is the wrong entry.
+
+Read the file an entry describes before keeping the entry. An entry survives only while what it claims is still true. One carried forward on trust once advertised guidance the skill no longer had.
+
+This prose is public. `README.md` points a reader at it for attribution. It is also the record of change that the Google developer documentation style guide's CC BY 4.0 terms require. `tests/authored-docs.test.ts` parses each file and fails on an em dash, an en dash, or ` -- `, which is the only check any of them gets.
+
 ## Standard.md rules that do not apply here, or apply later
 
 This repository is scored against `skills/oss-audit/STANDARD.md` like any other. The rules below are recorded here rather than fixed, because they either do not reach this repository or wait on an event that has not happened yet.
@@ -119,7 +131,8 @@ Neither `osv-scanner` job meets R-CI-05, and neither can. A job that calls a reu
 2. Run `bash scripts/check-drift.sh`, which fails when a skill cites a rule ID that `STANDARD.md` does not define, when `STANDARD.md` names a rule as fixed by a skill that does not claim it, or when a rule names `oss-audit` as its owner.
 3. Run `bun run validate` and `bun test`. `CONTRIBUTING.md` lists the full check sequence CI runs.
 4. Confirm the `SKILL.md` body is still under 500 lines.
-5. Before a release, bump `version` in `.claude-plugin/plugin.json`.
+5. Where the change moves a derived skill further from its upstream, amend that skill's newest `sources.json` entry. Start a new entry only when the last one already shipped in a release.
+6. Before a release, bump `version` in `.claude-plugin/plugin.json`.
 
 ## Gotchas
 

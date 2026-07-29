@@ -29,11 +29,8 @@
     "Merged the registry-independent process into SKILL.md and moved npm, RubyGems, PyPI, and crates.io details into references.",
     "Added GitHub Actions and GitLab CI/CD coverage where each registry officially supports them, with explicit gaps for unsupported combinations.",
     "Added tag-to-manifest version checks, exact artifact handoffs, native approval gates, and post-publish provenance verification.",
-    "Updated GitHub examples to the current majors, read from each action's own latest release on 2026-07-27: checkout v7 (v7.0.1), setup-node v7 (v7.0.0), setup-python v7 (v7.0.0), upload-artifact v7 (v7.0.1), download-artifact v8 (v8.0.1), and actions/attest v4 (v4.2.0). The three v7 bumps are drop-in for these snippets: checkout and setup-node changed no input they use, and setup-python v7 removed only pip-install, which no snippet sets.",
-    "Made npm stage the exact tarball produced by npm pack and pinned Node 24.18.0, whose official archive records bundled npm 11.16.0.",
-    "Made PyPI's GitLab flow generate and upload PEP 740 attestations explicitly; plain trusted publishing does not create them there.",
-    "Made RubyGems sign and push the exact built gem explicitly instead of depending on client-version-specific implicit behavior.",
-    "Hardened crates.io's GitLab token exchange so it fails closed, never prints either token, and installs no packages after OIDC becomes available.",
+    "Updated GitHub examples to the current majors, read from each action's own latest release on 2026-07-27: checkout v7, setup-node v7, setup-python v7, upload-artifact v7, download-artifact v8, and actions/attest v4. The three v7 bumps are drop-in for these snippets. checkout and setup-node changed no input they use, and setup-python v7 removed only pip-install, which no snippet sets.",
+    "Made each registry's flow publish the exact artifact it built, rather than depending on client behavior. npm stages the tarball produced by npm pack, on Node 24.18.0, whose official archive records bundled npm 11.16.0. RubyGems signs and pushes the built gem explicitly. PyPI's GitLab flow generates and uploads PEP 740 attestations explicitly, since plain trusted publishing does not create them there. The crates.io GitLab token exchange fails closed, prints neither token, and installs no package once OIDC is available.",
     "Recorded that crates.io serves no provenance. GitHub attests the exact uploaded .crate independently; GitLab remains below R-PUB-03.",
     "Recorded GitHub and GitLab plan limits for native approval gates and forbade unverified third-party approval substitutes."
   ],

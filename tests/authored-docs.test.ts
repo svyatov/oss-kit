@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { readFileSync, readdirSync } from "node:fs"
+import { existsSync, readFileSync, readdirSync } from "node:fs"
 
 const PAGES = [
   "site/src/content/docs/guides/install.md",
@@ -43,6 +43,29 @@ test("no repository prose uses a dash the house style forbids", () => {
     expect(prose.includes("—"), `em dash in ${file}`).toBe(false)
     expect(prose.includes("–"), `en dash in ${file}`).toBe(false)
     expect(prose.includes(" -- "), `" -- " in ${file}`).toBe(false)
+  }
+})
+
+// The scan above reads Markdown. A derived skill also carries public prose in
+// sources.json, which README.md points a reader at for attribution, and parsing
+// it here is the only thing that holds these files to valid JSON.
+test("no sources.json prose uses a dash the house style forbids", () => {
+  const files = readdirSync("skills", { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => `skills/${entry.name}/sources.json`)
+    .filter((file) => existsSync(file))
+  expect(files.length).toBeGreaterThanOrEqual(4)
+
+  for (const file of files) {
+    const record: { modifications: string[]; sources: { note?: string }[] } = JSON.parse(
+      readFileSync(file, "utf8"),
+    )
+    const prose = [...record.modifications, ...record.sources.map((source) => source.note ?? "")]
+    for (const text of prose) {
+      expect(text.includes("—"), `em dash in ${file}`).toBe(false)
+      expect(text.includes("–"), `en dash in ${file}`).toBe(false)
+      expect(text.includes(" -- "), `" -- " in ${file}`).toBe(false)
+    }
   }
 })
 
