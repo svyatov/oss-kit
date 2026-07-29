@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-07-29
+
+A change request stops being written as though it were a commit.
+
 ### Changed
 
 - `oss-community` derives a change-request template's sections from what the project's review needs, and writes the template for the forge that renders it. It had one paragraph on the subject, all of it about which fields to collect. A description is read on the forge before the diff, so the template uses headings the forge renders, one bullet per separable part of the change, and a table where the answer is a list of things and a fact about each. A repository that reuses the description as its squash commit message is no longer a reason to write one flat paragraph. Each section's guidance goes in an HTML comment under its heading, and the template says that a heading with nothing under it should be deleted, since neither forge can require a field and an empty section reads as an unanswered one. The skill now proposes those sections to the maintainer before writing the file, which it already did for issue fields.
@@ -172,7 +176,8 @@ Five new rules, and `oss-audit` now reports the gaps alone rather than every rul
 - `oss-audit` scores a repository against `STANDARD.md`, reports each gap with the rule it fails, and names the skill that fixes it.
 - `oss-skill` fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` conformance to the Agent Skills specification, oversized bodies that belong in `references/`, and the license field an extracted skill carries with it.
 
-[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/svyatov/oss-kit/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/svyatov/oss-kit/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/svyatov/oss-kit/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/svyatov/oss-kit/compare/v0.3.1...v0.4.0
