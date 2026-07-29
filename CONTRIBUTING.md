@@ -51,7 +51,7 @@ Edit files under `skills/`, never through the `.agents/skills` or `.claude/skill
 
 ## Submitting a change
 
-Fork the repository, create a branch, and open a pull request against `main`. Use Conventional Commits for commit messages: `type(scope): description`.
+Fork the repository, create a branch, and open a pull request against `main`. Name the branch `type/kebab-description` using the Conventional Commits types, as in `feat/forge-detection-controls`. Use Conventional Commits for commit messages too: `type(scope): description`.
 
 Before you open the pull request:
 

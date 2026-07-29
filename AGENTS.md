@@ -51,7 +51,7 @@ Prose follows the `skills/oss-writing` skill in this repo: no em dashes, no en d
 
 Forge scope is GitHub and GitLab. A rule that applies to only one says so in its `Forges:` line.
 
-Commits use Conventional Commits: `type(scope): description`.
+Commits use Conventional Commits: `type(scope): description`. Branches use the same types: `type/kebab-description`, as in `feat/forge-detection-controls` or `fix/site-omit-unreleased`. A release branch is `chore/release-X.Y.Z`.
 
 ## Rule format in STANDARD.md
 
