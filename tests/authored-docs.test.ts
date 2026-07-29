@@ -36,7 +36,14 @@ test("no repository prose uses a dash the house style forbids", () => {
     .map((f) => `skills/${f}`)
   expect(skillFiles.length).toBeGreaterThan(9)
 
-  const rootDocs = ["README.md", "CONTRIBUTING.md", "AGENTS.md", "CHANGELOG.md", "SECURITY.md"]
+  const rootDocs = [
+    "README.md",
+    "CONTRIBUTING.md",
+    "AGENTS.md",
+    "CHANGELOG.md",
+    "SECURITY.md",
+    ".github/pull_request_template.md",
+  ]
 
   for (const file of [...skillFiles, ...rootDocs]) {
     const prose = proseOnly(readFileSync(file, "utf8"))

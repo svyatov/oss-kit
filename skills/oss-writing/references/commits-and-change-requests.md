@@ -51,3 +51,6 @@ A change request is a GitHub pull request or a GitLab merge request.
 
 - Follow the convention the repository declares.
 - Use the repository's template when it ships one, such as `pull_request_template.md` or `.gitlab/merge_request_templates/`.
+- A description is rendered on the forge and read before the diff. Use the markup the forge renders.
+- Give a change with separable parts one bullet each. A reviewer reads that list to decide where to start.
+- The default-to-silence rule above governs a commit body. A description earns its length from what review needs.
