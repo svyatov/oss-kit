@@ -454,6 +454,15 @@ Check: every public item under Removed appeared under Deprecated in an earlier r
 Fixed by: oss-changelog
 Forges: both
 
+### R-CHG-06: A release that fixes a publicly known run-time vulnerability names it in the changelog
+
+A reader deciding whether an upgrade is urgent is asking one question, and a fixed vulnerability they can look up is the fact that answers it. Scoping this to what reached users is what keeps the Security group worth reading: a vulnerability in a development-only dependency never reached one, and a Security heading that cries wolf over those is one readers stop opening. A build toolchain is on the other side of that line whenever the project ships what the toolchain produced.
+
+Check: the changelog entry for each release that resolved a publicly known vulnerability in the shipped code or in a run-time dependency names every such vulnerability under Security, each by an identifier from a published advisory. A development-only dependency is not a run-time vulnerability. Where the project ships a built artifact, its build toolchain is one, because a compromised bundler or code generator injects into the thing users install; where the project ships only source, a build-only dependency stays outside. On GitHub, `gh api repos/{owner}/{repo}/dependabot/alerts?state=fixed` reports which advisories were resolved and when, which is what locates them in a release; on GitLab, the project's vulnerability report carries the same and requires Ultimate, so a Free project resolves it from the advisory identifiers its scanner job recorded. A project that has fixed no publicly known run-time vulnerability falls outside this rule rather than satisfying it with nothing to check.
+
+Fixed by: oss-changelog
+Forges: both
+
 ## Agent skills
 
 This area applies only to a repository that ships agent skills, meaning a repository holding at least one `SKILL.md`. Where none exists, the area is not applicable as a whole and its rules are not checked one at a time.

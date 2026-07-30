@@ -318,6 +318,14 @@
     "verified": "2026-07-28",
     "note": "Clause 7, read verbatim: 'Minor version Y (x.Y.z | x > 0) MUST be incremented if new, backward compatible functionality is introduced to the public API. It MUST be incremented if any public API functionality is marked as deprecated.' That is the whole upstream basis for deprecating before removing. SemVer says nothing about how long a deprecation must stand or how it must be announced, so the notice period this rule requires is this standard's own position."
   },
+  "R-CHG-06": {
+    "sources": [
+      "https://www.bestpractices.dev/en/criteria/0",
+      "https://keepachangelog.com/en/2.0.0/"
+    ],
+    "verified": "2026-07-30",
+    "note": "OpenSSF Best Practices badge Passing, criterion 'release_notes_vulns', MUST with N/A allowed and a justification required: 'The release notes MUST identify every publicly known run-time vulnerability fixed in this release that already had a CVE assignment or similar when the release was created. This criterion may be marked as not applicable (N/A) if users typically cannot practically update the software themselves. This criterion applies only to the project results, not to its dependencies. If there are no release notes or there have been no publicly known vulnerabilities, choose N/A.' Keep a Changelog 2.0.0 names the group the entry lives in, Security, 'in case of vulnerabilities'. Two parts of this rule go past the badge and are this project's own position. The badge scopes to project results and excludes dependencies; this rule covers a run-time dependency too, because a user deciding whether to upgrade is asking one question and cannot tell whose code the vulnerability was in. The badge also says run-time and stops there, so counting a build toolchain as run-time where the project ships a built artifact is this project's carve-back; it keys on whether a release carries a built asset, the applicability shape R-PUB-05 already uses, and retires if build output stops reaching users. On identifiers the divergence is smaller than it looks: the badge says 'a CVE assignment or similar' while its checker hint examines the release notes for CVE identifiers, and this rule makes 'or similar' explicit by accepting an identifier from any published advisory, because enumerating CVE and GHSA would write GitLab advisory and ecosystem-database identifiers out of a rule scoped to both forges."
+  },
   "R-SKL-01": {
     "sources": ["https://agentskills.io/specification"],
     "verified": "2026-07-28",
