@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-30
+
 Nine skills were reviewed against Anthropic's current skill-authoring baseline. This release carries the defects those reviews found, the structural sweep that followed them, and the additions that close what a description promised and a body did not have. The defects were a skill telling a reader to do one thing in one place and the opposite in another, a command that could not run where the reader was told to run it, and a step whose output another step already needed. The sweep took out what a skill stated twice, what it restated from `STANDARD.md`, and what carried a date that expires without telling anybody. No rule statement, `Check:` line, `Fixed by:` line, or `Forges:` line changed, and no repository's score moves.
 
 ### Added
@@ -234,7 +236,8 @@ Five new rules, and `oss-audit` now reports the gaps alone rather than every rul
 - `oss-audit` scores a repository against `STANDARD.md`, reports each gap with the rule it fails, and names the skill that fixes it.
 - `oss-skill` fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` conformance to the Agent Skills specification, oversized bodies that belong in `references/`, and the license field an extracted skill carries with it.
 
-[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/svyatov/oss-kit/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/svyatov/oss-kit/compare/v0.5.2...v0.6.0
 [0.5.2]: https://github.com/svyatov/oss-kit/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/svyatov/oss-kit/compare/v0.5.0...v0.5.1
