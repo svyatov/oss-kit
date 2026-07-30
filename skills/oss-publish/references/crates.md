@@ -46,10 +46,14 @@ At the same settings page, choose GitLab and enter:
 In the pipeline, the publish job needs:
 
 ```yaml
+environment:
+  name: release
 id_tokens:
   CRATES_IO_ID_TOKEN:
     aud: crates.io
 ```
+
+The `environment` name has to match the form's Environment field exactly. crates.io compares the `environment` claim in the OIDC token against what the form recorded, and that string comparison is the whole of the check: GitLab also emits an `environment_protected` claim, and crates.io does not read it, so naming an environment is not on its own a restriction. Make it a protected environment with deploy access restricted to whoever is allowed to release, which GitLab offers on Premium and Ultimate. On a tier without protected environments any job in the project can claim the name, and the claim is then self-asserted. That is the difference between a control and a label here, because the form binds namespace, project, and workflow filepath and no ref at all: with the environment unprotected, a pipeline on any branch a contributor can push satisfies every claim crates.io checks.
 
 crates.io has no equivalent to `crates-io-auth-action` for GitLab; the pipeline exchanges the OIDC token for a publish token itself. The exchange needs `curl` and `jq`. Use a project-controlled release image that contains the project's exact Rust toolchain plus these tools, and pin the image by digest. Build and provenance-check that image before adding `id_tokens` to the job. Do not run `apt-get` after the job has received its OIDC token.
 
@@ -67,7 +71,11 @@ export CARGO_REGISTRY_TOKEN=$token
 unset token response CRATES_IO_ID_TOKEN
 ```
 
-Save that as `exchange-token.sh` and source it with `. ./exchange-token.sh` in the same shell that runs `cargo publish`; executing it as a child process loses the exported variable. The script disables command tracing, fails on HTTP or JSON errors, never prints the short-lived token or error response, and removes the original OIDC token from the environment. This follows crates.io's documented exchange endpoint while closing the token leak in its minimal example. Treat GitLab support's public beta label as a reason to re-check the endpoint before every implementation.
+Save that as `exchange-token.sh` and source it with `. ./exchange-token.sh` in the same shell that runs `cargo publish`; executing it as a child process loses the exported variable. The script disables command tracing, fails on HTTP or JSON errors, never prints the short-lived token or error response, and removes the original OIDC token from the environment.
+
+Sourcing it also leaves `set -eu` active for the rest of the job's `script:` block, which is not what the reader asked for and is worth knowing before the next command runs. Keep `errexit`: a publish step that continues past a failed command is the failure this whole flow exists to prevent, and GitLab's own default is to stop on a nonzero exit anyway. `nounset` is the one to scope, because the remaining commands are the project's own and any of them reading an unset optional variable now aborts the job with a message about the variable rather than about the publish. Add `set +u` as the script's last line. A subshell is not the fix here: the token has to survive into the parent shell, which is the reason the script is sourced at all.
+
+`--fail-with-body` needs curl 7.76 or later; an older curl rejects it as an unknown option and the exchange fails before it reaches crates.io. Check the release image's curl version when you pin its digest. This follows crates.io's documented exchange endpoint while closing the token leak in its minimal example. Treat GitLab support's public beta label as a reason to re-check the endpoint before every implementation.
 
 ## Write the hardened release workflow (Step 3)
 
@@ -87,7 +95,7 @@ jobs:
         with:
           persist-credentials: false
       - run: cargo test --all-features  # oss-ci decides the actual command from CONTRIBUTING.md (R-CI-02)
-      - run: <project-specific tag and Cargo.toml version equality check>
+      - run: test "${GITHUB_REF_NAME#v}" = "$(cargo metadata --format-version 1 --no-deps | jq -er --arg n "<crate name>" '.packages[] | select(.name == $n) | .version')"
       - run: cargo publish --dry-run
 
   publish:
@@ -113,7 +121,7 @@ jobs:
           subject-path: target/package/*.crate
 ```
 
-Use the package selector and version source discovered in Step 1 for workspaces. The publish command creates the exact `.crate` it uploads under `target/package/`; the following attestation therefore covers the uploaded bytes. `--no-verify` is safe only because the required dry run already succeeded for the same tag commit and toolchain.
+The version check above names the crate in `<crate name>` and strips one leading `v` from the tag; derive both from what the repository actually does, since a workspace publishes more than one name and a project tagging `1.2.3` has no prefix to strip. `jq -e` is what makes an unmatched name fail the step rather than compare the tag against an empty string. `jq` is preinstalled on GitHub-hosted Ubuntu runners, and on GitLab it comes from the release image the token exchange already requires. Use the package selector and version source discovered in Step 1 for workspaces. The publish command creates the exact `.crate` it uploads under `target/package/`; the following attestation therefore covers the uploaded bytes. `--no-verify` is safe only because the required dry run already succeeded for the same tag commit and toolchain.
 
 `oss-harden` pins every `uses:` line above to a commit SHA and sets the test job's minimal permissions; this skill includes the publish permissions required for authentication and provenance. On GitLab CI/CD, give the publish job the `id_tokens` block above, source `exchange-token.sh`, then run `cargo publish --no-verify`, restricted to version tags with `rules:`. The preceding uncredentialed job must run the same version check and `cargo publish --dry-run`.
 
