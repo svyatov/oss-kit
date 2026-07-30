@@ -26,6 +26,14 @@ Call the project's own automation instead of writing shell logic inside the pipe
 
 Present policy choices instead of guessing at them, even when the repository already contains tests, a Dockerfile, or a pipeline. What runs on a change request, what triggers a release build, and how deployment happens are decisions the user makes; code only tells you what is possible, not what is wanted.
 
+## Two ways in
+
+The request decides which one runs. Read it before starting the process below.
+
+To set up CI, or to extend what a project already has, run Steps 1 to 8 in order.
+
+To review CI without changing it, run Steps 1 and 2, then stop and report. Read the existing workflow or pipeline against each R-CI rule's `Check:` line and against the reference file for its forge. Report every check that fails, anchored at the file and line it fails at, and name what would fix it. Change no file unless the user asks for the fix after reading the report.
+
 ## Process
 
 ### Step 1: Detect the forge

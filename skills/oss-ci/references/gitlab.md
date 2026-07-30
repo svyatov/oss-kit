@@ -14,6 +14,7 @@ Every keyword below was checked against the current GitLab CI/CD YAML reference 
 - [Timeout and cancellation of superseded runs (R-CI-05)](#timeout-and-cancellation-of-superseded-runs-r-ci-05)
 - [Test reports](#test-reports)
 - [Deploying a static site to GitLab Pages](#deploying-a-static-site-to-gitlab-pages)
+- [CI/CD variables](#cicd-variables)
 
 ## Pipeline structure
 
@@ -179,3 +180,27 @@ In GitLab 17.10 and later, the `pages.publish` path is appended to `artifacts:pa
 `interruptible: false` is deliberate here and is the one place R-CI-05's cancellation guidance inverts, for the reason the timeout section above gives: a deploy cancelled mid-publish can leave the previous build live. Leave the rest of the pipeline interruptible.
 
 Pages settings that a pipeline cannot set for itself, including the primary domain, a custom domain and its certificate, and access control on a private project, live under Deploy > Pages in the project settings; present them in Step 8 with the resolved project URL rather than changing them.
+
+## CI/CD variables
+
+A pipeline reads a secret from a project CI/CD variable. Add one under Settings > CI/CD > Variables in the project, or with the `glab` CLI:
+
+```bash
+glab variable set NPM_TOKEN -v "$NPM_TOKEN" --masked --protected
+```
+
+Both flags are off by default. The default is an unmasked, unprotected variable that GitLab prints in full in any job log that echoes it, so name both flags in the command rather than relying on what the form defaults to.
+
+Masking replaces the value with `[MASKED]` in the job log. GitLab masks a value only when it is one line, has no spaces, and is 8 characters or longer. A value that fails those conditions cannot be masked, so change the value rather than dropping the flag. A job that transforms the value before printing it, by escaping or encoding it, defeats the masking either way.
+
+`--protected` restricts the variable to pipelines running on protected branches and protected tags. A merge request pipeline reaches a protected variable only when all three of these hold:
+
+- the source branch and the target branch are both protected
+- both branches belong to the same project
+- the user who triggered the pipeline can push to the target branch
+
+A merge request from a fork reaches no protected variable, whatever the branches are called. A check that needs the variable on every merge request therefore gives up either the protection or the run on forks. Present that choice in Step 3 rather than shipping a job that fails only for outside contributors.
+
+Take the value from an environment variable or from stdin. A literal on the command line lands in shell history, and `glab variable set SERVER_TOKEN < token.txt` reads the value from a file instead.
+
+List every variable a generated pipeline needs, with the `glab variable set` command to add it, but do not run that command; setting a variable is the project owner's action, not this skill's. Print the command whether or not `glab` is installed here, because the owner runs it on their own machine.
