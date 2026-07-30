@@ -110,7 +110,21 @@ Push rules, the project-level settings that reject unsigned commits, enforce a c
 
 ## Signed tags (R-SEC-05)
 
-The evidence is git's own, not the forge's. Establish whether the tag uses OpenPGP, SSH, or X.509, get the maintainer's key or certificate through a maintainer-controlled channel, and configure Git for that format. SSH verification requires `gpg.format=ssh` and `gpg.ssh.allowedSignersFile`; X.509 uses `gpg.format=x509`. Then run `git fetch --tags`, `git tag -v {tag}`, and `git cat-file -t {tag}`, expecting verification to succeed and the object type to be `tag`.
+The evidence is git's own, not the forge's, so the sequence is the same one `references/github.md` sets out and only the key fetch differs. Run `git fetch --tags` first, then `git cat-file -t {tag}` expecting `tag`, then read the tagger and the signature format together:
+
+```bash
+git for-each-ref --format='%(taggeremail:trim) %(contents:signature)' refs/tags/{tag}
+```
+
+GitLab serves an account's keys at `GET /users/:id/keys` for SSH and `GET /users/:id/gpg_keys` for OpenPGP. Resolve which account publishes the key rather than assuming the namespace owner does: a group namespace has no keys of its own, so report the tagger address the read above returned and ask. Do not derive the account from the release publisher or the tagged commit's author, since either can differ from the tagger. Fetching a key by account proves an account published it, never that the human behind it is the maintainer; confirm that through a channel the maintainer controls.
+
+For SSH, build an allowed-signers file whose line is the tagger address, then `namespaces="git"`, then the key, and pass it inline:
+
+```bash
+git -c gpg.ssh.allowedSignersFile=allowed_signers tag -v {tag}
+```
+
+With that option unset, git prints `error: gpg.ssh.allowedSignersFile needs to be configured and exist for ssh signature verification` and exits 1, the same status a bad signature gives. Read the message rather than the status: this one means the check did not run, so R-SEC-05 is unknown and not failed. X.509 uses `gpg.format=x509` and a configured certificate trust chain.
 
 ## Untrusted input and variables (R-SEC-07)
 

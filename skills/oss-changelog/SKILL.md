@@ -6,13 +6,25 @@ license: MIT
 
 # Changelog and versioning
 
-Keep `CHANGELOG.md` in Keep a Changelog 2.0.0 format, decide the Semantic Versioning bump a set of merged changes forces, write the release entry from the merged work, and run a deprecation window before an API is removed. The sentences themselves follow `oss-writing`; this skill decides what goes in and what version it ships under. Publishing the tagged release, the workflow that builds and uploads it, belongs to `oss-publish`.
+Keep `CHANGELOG.md` in the convention it declares, Keep a Changelog 2.0.0 where the project has none yet, decide the Semantic Versioning bump a set of merged changes forces, write the release entry from the merged work, and run a deprecation window before an API is removed. The sentences themselves follow `oss-writing`; this skill decides what goes in and what version it ships under. Publishing the tagged release, the workflow that builds and uploads it, belongs to `oss-publish`.
 
 ## The exception to describing what is
 
 `oss-writing` bans diff-anchored documentation: a doc describes the current state of the code, not the history that produced it, because a reader who wants that history reads the commit log. A changelog entry is the documented exception to that rule. Its whole job is to describe a change: what was added, what behavior is different, what stopped working, so a user who skipped a few versions can read what happened to them without diffing tags. Write changelog entries as changes, not as a description of the current state; that is the one place in this kit where `oss-writing`'s default does not apply.
 
+## Read what is already there
+
+Find `CHANGELOG.md` and read its preamble before writing anything. A changelog that already exists is a file the project's users read, and it lands in one of three states.
+
+There is no changelog. Write one from the structure below. Backfill only the releases the repository can establish from its own tags, and stop there rather than reconstructing entries from commit history, which produces a list of commits wearing a changelog's headings.
+
+There is a changelog and it declares Keep a Changelog 2.0.0. Add the entry under `## [Unreleased]` and change nothing else. Not the preamble, not the heading style of older releases, not the category names they used.
+
+There is a changelog and it declares a different convention, or an earlier version of this one. Follow what the file declares and leave its pin alone. The convention it names is what its readers and any tooling reading it expect, and a version bump is a change to the file's contract that happens to arrive inside somebody's bug-fix release. Where migrating would genuinely help, propose it to the maintainer as its own piece of work, with what would change; do not perform it while adding an entry.
+
 ## Keep a Changelog structure
+
+This section is what a new changelog is written from, and what an existing one is read against rather than rewritten to.
 
 Open with `# Changelog` and a two-sentence preamble that says all notable changes are recorded here, links to the pinned [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.0.0/) convention, and names the project's versioning scheme. Do not claim Semantic Versioning until the project has declared the public API it covers.
 

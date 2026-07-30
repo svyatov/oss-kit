@@ -120,11 +120,69 @@ R-SEC-12 adds review to the same `pull_request` rule, on a repository where two 
 
 Two more `pull_request` parameters are worth setting on any repository, and neither needs a second person. `required_review_thread_resolution` blocks the merge while a review comment is unresolved, including one the maintainer left themselves. `allowed_merge_methods` takes any non-empty subset of `merge`, `squash`, and `rebase`, and setting it is not redundant with the repository's own merge-method checkboxes: the repository setting is what a maintainer can change in one click, where the ruleset entry is a branch-level control that survives that change and shows up in the ruleset history. Set it to the method the project's history is already written in.
 
-Where the user prefers the API to the settings page, `POST /repos/{owner}/{repo}/rulesets` takes the whole thing at once, which is also how it gets recorded and repeated on the next repository:
+Where the user prefers the API to the settings page, `POST /repos/{owner}/{repo}/rulesets` takes the whole thing at once, which is also how it gets recorded and repeated on the next repository. This is the complete body, written for a repository R-SEC-12 does not reach:
+
+```json
+{
+  "name": "main",
+  "target": "branch",
+  "enforcement": "active",
+  "bypass_actors": [],
+  "conditions": { "ref_name": { "include": ["~DEFAULT_BRANCH"], "exclude": [] } },
+  "rules": [
+    {
+      "type": "pull_request",
+      "parameters": {
+        "required_approving_review_count": 0,
+        "require_code_owner_review": false,
+        "dismiss_stale_reviews_on_push": false,
+        "require_last_push_approval": false,
+        "required_review_thread_resolution": true,
+        "allowed_merge_methods": ["squash"]
+      }
+    },
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "strict_required_status_checks_policy": true,
+        "required_status_checks": [
+          { "context": "<check name from the derivation below>", "integration_id": 15368 }
+        ]
+      }
+    },
+    { "type": "required_linear_history" },
+    { "type": "non_fast_forward" },
+    { "type": "deletion" }
+  ]
+}
+```
 
 ```bash
 gh api -X POST repos/{owner}/{repo}/rulesets --input ruleset.json
 ```
+
+Copy exactly: `target`, `enforcement`, the `~DEFAULT_BRANCH` condition, the empty `bypass_actors`, and the `non_fast_forward` and `deletion` rules. Those are what R-SEC-04 asks for and none of them is a preference.
+
+The reader sets five things. `name` is theirs. `allowed_merge_methods` takes any non-empty subset of `merge`, `squash`, and `rebase`; set it to the method the project's history is already written in. `required_linear_history` belongs only where that method is `squash` or `rebase`, so drop it on a project that merges. `strict_required_status_checks_policy` at `true` additionally requires the branch to be current with its base before merging, which catches a change that passes alone and fails against what landed meanwhile, at the cost of an update per merge; drop it to `false` on a busy repository where that becomes a queue. `required_status_checks` is derived, below.
+
+The four review fields sit at their off values because that is correct where one principal holds every merge path, and they are in the body rather than omitted so a reader can see what they are turning on. Once two or more principals can merge, R-SEC-12 applies and those values are wrong: raise `required_approving_review_count` to 1 or more, and set `require_code_owner_review` where CODEOWNERS exists. `dismiss_stale_reviews_on_push` and `require_last_push_approval` go on with them, for the reasons above. A body shipped with all four off to a multi-principal repository reads like the kit's complete answer and is not one, which is why they are here rather than left out.
+
+### Deriving the required checks
+
+Read the checks that actually report, twice, and require their union:
+
+```bash
+gh api repos/{owner}/{repo}/commits/{ref}/check-runs \
+  --jq '[.check_runs[] | {context: .name, integration_id: .app.id}] | unique'
+```
+
+Run it once against the default branch and once against the head commit of a recently merged pull request. One read is not enough: the endpoint returns only what reported on the commit named, so a workflow triggered by `pull_request` alone never appears on a default-branch commit and drops out of the ruleset silently. This repository is the worked example, since `.github/workflows/osv-scanner.yml` triggers on `pull_request` and `schedule` only. The checks most often scoped to pull requests are the security scans, and a ruleset that reports complete while the scan gates nothing is the failure R-SEC-04 exists to prevent.
+
+The command returns `integration_id` alongside each context for the reason given above: without it, anything reporting the same context name satisfies the check. A check reported by more than one app is the escape hatch, and takes the bare `context` with no `integration_id`. The known cost of pinning is that a check migrating to a different app makes the requirement unsatisfiable until somebody edits the ruleset.
+
+### Updating an existing ruleset
+
+`POST` creates a new ruleset every time, so a rerun stacks a second one beside the first and both then apply. Read the ruleset list first, and where one already exists for this branch, send `PUT /repos/{owner}/{repo}/rulesets/{ruleset_id}` with the same body instead. The `id` comes from `gh api repos/{owner}/{repo}/rulesets`.
 
 ### The bypass list
 
@@ -158,16 +216,62 @@ A repository still on classic protection reports through `gh api repos/{owner}/{
 
 ## Signed tags (R-SEC-05)
 
-First identify the tag's signature format and establish a maintainer-controlled trust source. For OpenPGP, GitHub serves the keys attached to an account at `https://github.com/{username}.gpg`:
+Fetch the tags first, then establish what the tag actually is before reaching for a key. A run against a tag the checkout never fetched otherwise fails somewhere further down and reads as a bad signature:
+
+```bash
+git fetch --tags
+git cat-file -t {tag}
+git for-each-ref --format='%(taggeremail:trim) %(contents:signature)' refs/tags/{tag}
+```
+
+`git cat-file -t` printing `tag` means the tag is annotated rather than lightweight; anything else and there is no signature to check. The `for-each-ref` read gives both remaining facts at once: the tagger's email, and a signature block whose first line names the format, `SSH SIGNATURE` for SSH and `PGP SIGNATURE` for OpenPGP. `:trim` drops the angle brackets git otherwise wraps the address in.
+
+### Resolve which account publishes the key
+
+The key comes from an account, and the tag does not name one. Ask GitHub what the repository owner is:
+
+```bash
+gh api users/{owner} --jq .type
+```
+
+On `User`, the owner is that account and R-SEC-05's own command applies as written, with `{owner}` as the account. Do not treat the account as the maintainer on that basis alone: `users/{account}/ssh_signing_keys` proves an account published a key, and never that the human behind it is who the release claims. Confirm that separately, through a channel the maintainer controls.
+
+On `Organization`, the owner has no signing keys of its own and there is nothing to fetch. Report the `%(taggeremail:trim)` already in hand and ask which account publishes the key for it. Do not derive the account from the release publisher or from the tagged commit's author: either can differ from the tagger, and using one has the skill assert an identity it inferred, which is the single thing R-SEC-05 exists to prevent. Once an account is named, the same caveat applies to it: the fetch proves publication, not control.
+
+### SSH
+
+Fetch the account's signing keys, build an allowed-signers file naming the tagger's email, and verify against it:
+
+```bash
+gh api users/{account}/ssh_signing_keys --jq '.[].key' > keys.txt
+sed 's|^|{tagger-email} namespaces="git" |' keys.txt > allowed_signers
+git -c gpg.ssh.allowedSignersFile=allowed_signers tag -v {tag}
+```
+
+Each line is the principals field, then options, then the key, space separated. `namespaces="git"` restricts the key to git's own signature namespace, which is the namespace `git tag -v` reports on success.
+
+### OpenPGP
+
+GitHub serves the keys attached to an account at `https://github.com/{username}.gpg`:
 
 ```bash
 curl -fsSL https://github.com/{username}.gpg | gpg --import
-git fetch --tags
 git tag -v {tag}
-git cat-file -t {tag}
 ```
 
-`git tag -v` succeeding and `git cat-file -t {tag}` printing `tag` together confirm a trusted signature on an annotated tag. For SSH, set `gpg.format=ssh` and point `gpg.ssh.allowedSignersFile` at an allowed-signers file containing the maintainer's verified public key. For X.509, set `gpg.format=x509` and configure the certificate trust chain. Do not treat any key found by username alone as trusted without confirming the maintainer controls it.
+The caveat is at its sharpest here, because the URL takes nothing but a username: a key found by username alone is not a trusted key until the maintainer is confirmed to control the account.
+
+For X.509, set `gpg.format=x509` and configure the certificate trust chain.
+
+### A configuration error is not a bad signature
+
+With SSH signatures and `gpg.ssh.allowedSignersFile` unset, git prints
+
+```
+error: gpg.ssh.allowedSignersFile needs to be configured and exist for ssh signature verification
+```
+
+and exits 1. That is the same exit status a bad signature gives, so a run that only checks the status reports an unsigned or forged tag when the tag is fine and the verifier is not configured. Read the message before scoring: this text means the check did not run, and R-SEC-05 is unknown rather than failed. Passing the file inline with `-c`, as above, is what keeps this from depending on the machine's git configuration at all.
 
 ## Untrusted input (R-SEC-07)
 

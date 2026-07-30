@@ -4,18 +4,20 @@ Most of this skill is judgement and cannot be checked by a tool. Some of it is m
 
 Read this when setting up prose linting for a repository, not while drafting.
 
+Two tools carry everything below. [Vale](https://vale.sh) ([errata-ai/vale](https://github.com/errata-ai/vale)) checks the prose, and [commitlint](https://commitlint.js.org) ([conventional-changelog/commitlint](https://github.com/conventional-changelog/commitlint)) checks the commit message. Install each from the command its own documentation publishes.
+
 ## What a checker can decide
 
 | Rule | Checker |
 |------|---------|
-| Sentence over 25 words, or over 20 in a numbered step | Vale, `Metrics` or a custom `occurrence` rule |
+| Sentence over 25 words, or over 20 in a numbered step | Vale `metric` with a custom formula, or an `occurrence` rule |
 | Banned word or phrase present | Vale `substitution` rule, from the table below |
 | Em dash, en dash, or ` -- ` | regex for U+2014, U+2013, and ` -- ` |
 | Curly quote | regex for U+2018, U+2019, U+201C, U+201D |
 | Emoji | regex for `\p{Extended_Pictographic}` |
 | Inline-header bullet | regex `^\s*[-*] \*\*[^*]+:\*\*\s` |
 | Tool attribution trailer | regex `Co-Authored-By:` or `Generated with` |
-| Heading not in sentence case | Vale `Heading` style with a proper-noun exception list |
+| Heading not in sentence case | Vale `capitalization` with a proper-noun exception list |
 | Subject over 72 characters | commitlint `header-max-length` |
 | Subject ends in a period | commitlint `subject-full-stop` |
 | Missing blank line after the subject | commitlint `body-leading-blank` |

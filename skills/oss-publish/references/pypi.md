@@ -6,7 +6,7 @@ Source: [PyPI Docs, Trusted publishers](https://docs.pypi.org/trusted-publishers
 
 ## Gather facts (Step 1)
 
-Read `pyproject.toml` (the `project.name` and `project.urls` tables), or `setup.cfg` or `setup.py` if the project has not migrated. Get the owner and repository from the project's URL metadata, falling back to `git remote get-url origin`. Check whether the package is already published with `curl -s -o /dev/null -w '%{http_code}' https://pypi.org/pypi/<name>/json`; a `404` means it is not.
+Read `pyproject.toml` (the `project.name` and `project.urls` tables), or `setup.cfg` or `setup.py` if the project has not migrated. Get the owner and repository from the project's URL metadata, falling back to `git remote get-url origin`. Check whether the package is already published with `curl -s -o /dev/null -w '%{http_code}' https://pypi.org/pypi/<name>/json`; a `404` means it is not, and [Not yet published projects](#not-yet-published-projects) below covers that case.
 
 ## Configure trusted publishing (Step 2)
 
@@ -46,10 +46,14 @@ At the same settings page, choose GitLab and enter:
 In the pipeline, the publish job needs:
 
 ```yaml
+environment:
+  name: pypi
 id_tokens:
   PYPI_ID_TOKEN:
     aud: pypi
 ```
+
+The `environment` name has to match the form's Environment name field exactly. PyPI compares the `environment` claim in the OIDC token against what the form recorded, and that string comparison is the whole of the check: nothing else about the environment reaches the registry, so naming one is not on its own a restriction. Make it a protected environment with deploy access restricted to whoever is allowed to release, which GitLab offers on Premium and Ultimate. On a tier without protected environments any job in the project can claim the name, and the claim is then self-asserted. That is the difference between a control and a label here, because the form binds namespace, project, and pipeline filepath and no ref at all: with the environment unprotected, a pipeline on any branch a contributor can push satisfies every claim PyPI checks.
 
 With that token present, current Twine uses trusted publishing automatically; no explicit credential handling is needed. Resolve Twine's current release from the PyPA repository before writing the pipeline, then lock that exact version and every transitive dependency with hashes. Do not install `twine -U` in the job that receives the OIDC token.
 
@@ -86,7 +90,7 @@ jobs:
         with:
           python-version: '3.13'
       - run: <frozen build-tool install command>
-      - run: <project-specific tag and version equality check>
+      - run: python -c "import os,sys,tomllib; sys.exit(tomllib.load(open('pyproject.toml','rb'))['project']['version'] != os.environ['GITHUB_REF_NAME'].removeprefix('v'))"
       - run: <documented build command>
       - uses: actions/upload-artifact@v7
         with:
@@ -108,7 +112,7 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@release/v1
 ```
 
-Replace the angle-bracket commands from the repository's contributing guide, lockfiles, build backend, and version source. Do not assume every project uses editable installs, pytest, a static `project.version`, or the `build` frontend. If the repository has no frozen build-tool install, add one using the project's existing lock workflow after verifying the build frontend through its upstream documentation.
+Replace the remaining angle-bracket commands from the repository's contributing guide, lockfiles, and build backend. The version check above reads a static `project.version` and strips one leading `v` from the tag. Derive both halves from what the repository actually does: a project declaring `dynamic = ["version"]` has nothing at that key and the check raises a `KeyError` rather than comparing anything, and a project tagging `1.2.3` has no prefix to strip. Where the version is dynamic, move the comparison after the build step and read it from the built distribution's metadata, which is the only place it exists. Do not assume every project uses editable installs, pytest, or the `build` frontend. If the repository has no frozen build-tool install, add one using the project's existing lock workflow after verifying the build frontend through its upstream documentation.
 
 `oss-harden` pins every `uses:` line above to a commit SHA and sets this workflow's `permissions:`, including the `contents: read` this skill left off the test and build jobs above; do not pin them or add permissions here.
 

@@ -24,13 +24,17 @@ Each rule in `STANDARD.md` is a block with an ID (`R-<AREA>-<NN>`), a statement,
 
 Detect which forge the repository under audit uses: look for `.github/workflows/` or `.gitlab-ci.yml`, check the git remote, or ask if neither signal is present. Skip a rule whose `Forges:` line names only the other forge, and report it as not applicable rather than folding it into the pass, fail, or unknown counts.
 
-One area is scoped by repository type rather than by forge. The SKL area carries a preamble scoping it to a repository that ships agent skills. Look for at least one `SKILL.md`, resolving symlinked directories as R-SKL-01's check requires. Where none exists, mark the whole area not applicable in one step and report it that way, rather than checking its rules one at a time.
+A rule marked retired is not scored, and appears in no count. Its number is kept so nobody reuses it, which is the whole of what it is still doing there.
+
+Some areas carry a preamble under their own `##` heading that gates the area rather than any single rule, scoping it to a kind of repository rather than to a forge. Read that preamble before the area's first rule. Where its precondition is unmet, mark the whole area not applicable in one step and report it that way, rather than checking its rules one at a time. Where a precondition names a file, resolve symlinked directories before concluding the file is absent, as R-SKL-01's check requires.
 
 ## Step 3: Check each rule, area by area
 
-`STANDARD.md`'s areas, DOC, COM, CI, SEC, PUB, CHG, and SKL, are independent and share no state, so they can be checked in any order. SKL is the one area gated on a precondition, stated in its own preamble and resolved in Step 2. More than one skill can own rules within one area, so read each rule's own `Fixed by:` line rather than assuming every rule in an area routes to the same place.
+`STANDARD.md`'s areas, DOC, COM, CI, SEC, PUB, CHG, and SKL, are independent and share no state, so they can be checked in any order. An area gated on a precondition states that precondition in its own preamble, and Step 2 resolved it. More than one skill can own rules within one area, so read each rule's own `Fixed by:` line rather than assuming every rule in an area routes to the same place.
 
 For every applicable rule, turn its `Check:` line into an observation against the repository: open the file or configuration it names, and record what is actually there. A `Check:` line asking whether the README's first paragraph is a single sentence before any heading is answered by reading `README.md`. A `Check:` line asking whether every `uses:` line resolves to a 40-character SHA is answered by reading every workflow file. Mark the rule pass when the evidence matches what the `Check:` line asks for and fail when it does not. Hold both to the same standard of evidence, whether or not the rule reaches the report: a fail with no evidence is a guess rather than a finding, and a pass with no evidence is the score that discredits every other one.
+
+A rule met by a fallback the standard marks below the bar is a pass, and counts as one. Give that rule a report line naming which fallback carried it, which is the one place a pass earns a line of its own. `STANDARD.md`'s preamble tells the reader to revisit a below-the-bar fallback when the platform catches up, and an unqualified pass leaves them nothing to revisit: a maintainer publishing on a long-lived scoped token reads that pass and never learns they are on the degraded variant.
 
 Mark a rule not applicable only when its area preamble, rule text, or `Check:` line states a precondition that the repository does not meet. Do not infer an unstated precondition from missing evidence: where the rule requires a file, setting, or value and does not define an exception, its absence is a failure. Record the scope sentence that made each rule not applicable so another audit reaches the same result.
 
@@ -42,7 +46,7 @@ Where you actually have the access a `Check:` line asks for, network reachable, 
 
 ## Output format
 
-Report only what the maintainer has to act on. A rule that passed gets no line of its own. You checked every applicable rule and you hold the evidence for every one of them, but a reader who came for the gaps does not need thirty rows confirming what already works, and printing them pushes the four that matter off the screen.
+Report only what the maintainer has to act on. A rule that passed gets no line of its own, unless a below-the-bar fallback carried it. You checked every applicable rule and you hold the evidence for every one of them, but a reader who came for the gaps does not need thirty rows confirming what already works, and printing them pushes the four that matter off the screen.
 
 Open with one count line: how many rules were applicable, how many of those passed, failed, or came back unknown, and how many were marked not applicable, whether for forge scope or for a missing precondition. State the unknown count on its own, next to the fail count, not folded into either the pass or the fail total. On a repository with nothing to fix this line is the whole report, and it is what tells the reader the audit ran rather than stalled.
 

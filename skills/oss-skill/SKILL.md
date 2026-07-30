@@ -9,7 +9,7 @@ compatibility: Requires Node 22+ or Bun to run the bundled validator
 
 Fix the mechanics that decide whether a skill loads, then verify that it improves the task it claims to handle. Format conformance cannot prove output quality, and model behavior is nondeterministic, so never infer reliable behavior from a validator exit code alone.
 
-Most of what this skill fixes is mechanical, and the validator this skill ships at `scripts/validate.mjs` in its own directory names the fault precisely (R-SKL-02). It reads files, needs nothing installed, and runs on Node or Bun: `node scripts/validate.mjs <repository>`. Run it before reading further into any repository; its output tells you which of the rules below is in play.
+Most of what this skill fixes is mechanical, and the validator this skill ships at `scripts/validate.mjs` in its own directory names the fault precisely (R-SKL-02). It reads files, needs nothing installed, and runs on Node or Bun: `node /path/to/oss-skill/scripts/validate.mjs /path/to/repository`. Both paths are absolute on purpose, because the script lives in this skill's installed directory and not in the repository under audit, where a bare `scripts/validate.mjs` would resolve and fail; [references/hosts.md](references/hosts.md) names where each host installs a skill. Run it before reading further into any repository; its output tells you which of the rules below is in play.
 
 ## Scope
 
@@ -34,10 +34,10 @@ Where a repository ships skills only as a plugin and keeps them under a nested p
 Run the bundled validator over the repository and fix what it names:
 
 ```bash
-node scripts/validate.mjs /path/to/repository
+node /path/to/oss-skill/scripts/validate.mjs /path/to/repository
 ```
 
-It needs Node 22 or later, or Bun, and nothing installed. It reads files: it writes nothing, spawns nothing, and makes no network call. It reports an error for every violation of R-SKL-01 through R-SKL-05, warns where a frontmatter construct is one it does not read, and exits 1 if any error was found.
+It needs Node 22 or later, or Bun, and nothing installed. It reads files: it writes nothing, spawns nothing, and makes no network call. It reports an error for every violation of R-SKL-01 through R-SKL-05, and exits 1 if any error was found. It warns in two cases, and a warning never moves the exit code. The first is a frontmatter construct it does not read, which says nothing about whether the construct is valid. The second is a value that breaks a constraint a host enforces and the specification does not; that warning names the constraint and the host, and says the specification permits the value. Read which kind you have before acting: the first asks you to check the construct with a YAML parser, and the second asks you to change a file that already conforms.
 
 The faults come in a small set.
 
@@ -48,6 +48,8 @@ An invalid name means the value breaks the character rules: 1 to 64 characters, 
 An over-long description means the field exceeds 1024 characters. Cut the parts a reader already knows, keeping both halves the field must carry: what the skill does, and when to use it. Cutting the when half to fit the limit produces a skill that validates and never triggers.
 
 A missing required field means `name` or `description` is absent or empty. Both are required and neither has a default.
+
+A reserved word or an XML tag is the host-constraint warning. Anthropic's platform rejects a `name` containing "anthropic" or "claude", and rejects an XML tag in `name` or `description`; the specification imposes neither, which is why these carry no rule ID and leave the exit code alone. Rename the skill and its directory together, or write the description in plain text. A skill that ships as it stands conforms to the specification and is refused on upload, so the warning is the only notice you get.
 
 Frontmatter that fails to parse needs a YAML fix, not a guessed rewrite. Quote single-line descriptions as the repository convention. If the bundled validator warns that it cannot read a valid YAML construct such as a block scalar, check that construct with a strict YAML parser before changing it.
 

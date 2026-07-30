@@ -54,7 +54,7 @@ The reverse case is worth naming too, because it is the one a maintainer creates
 
 ## What this looks like for a project that runs inside a host
 
-An issue form for a repository of agent skills, showing the boundary axis from the fifth source, the dropdown and input decision, and prefill in the top-level keys:
+An issue form for a repository of agent skills, showing the boundary axis from the fifth source, the dropdown and input decision, and prefill in the top-level keys. It illustrates the derivation rather than offering a form to copy: a project that is not a repository of agent skills runs inside no host, so its boundary axis names something else entirely and its fields follow from that, not from this file.
 
 ```yaml
 name: Bug report
