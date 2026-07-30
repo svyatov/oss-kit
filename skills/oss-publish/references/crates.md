@@ -1,6 +1,6 @@
 # crates.io
 
-Concrete flow for the decisions `SKILL.md` makes, for a crate published to crates.io. crates.io accepts two trusted publishing providers: GitHub Actions and GitLab CI/CD. GitLab CI/CD support is in public beta and, like PyPI's, works only for projects on gitlab.com; a self-managed GitLab instance has no path yet. Trusted publishing requires the crate to already exist on crates.io; the very first publish of a new crate still needs an interactive `cargo publish` with a personal API token, from the maintainer's own machine.
+Concrete flow for the decisions `SKILL.md` makes, for a crate published to crates.io. crates.io accepts two trusted publishing providers: GitHub Actions and GitLab CI/CD. Its GitLab CI/CD support covers projects on gitlab.com only, with no path for a self-managed instance; confirm that scope in the documentation linked below before writing the GitLab flow. Trusted publishing requires the crate to already exist on crates.io; the very first publish of a new crate still needs an interactive `cargo publish` with a personal API token, from the maintainer's own machine.
 
 Source: [crates.io Docs, Trusted Publishing](https://crates.io/docs/trusted-publishing) and [Rust Blog, crates.io development update, 2026-01-21](https://blog.rust-lang.org/2026/01/21/crates-io-development-update).
 
@@ -75,7 +75,7 @@ Save that as `exchange-token.sh` and source it with `. ./exchange-token.sh` in t
 
 Sourcing it also leaves `set -eu` active for the rest of the job's `script:` block, which is not what the reader asked for and is worth knowing before the next command runs. Keep `errexit`: a publish step that continues past a failed command is the failure this whole flow exists to prevent, and GitLab's own default is to stop on a nonzero exit anyway. `nounset` is the one to scope, because the remaining commands are the project's own and any of them reading an unset optional variable now aborts the job with a message about the variable rather than about the publish. Add `set +u` as the script's last line. A subshell is not the fix here: the token has to survive into the parent shell, which is the reason the script is sourced at all.
 
-`--fail-with-body` needs curl 7.76 or later; an older curl rejects it as an unknown option and the exchange fails before it reaches crates.io. Check the release image's curl version when you pin its digest. This follows crates.io's documented exchange endpoint while closing the token leak in its minimal example. Treat GitLab support's public beta label as a reason to re-check the endpoint before every implementation.
+`--fail-with-body` needs curl 7.76 or later; an older curl rejects it as an unknown option and the exchange fails before it reaches crates.io. Check the release image's curl version when you pin its digest. This follows crates.io's documented exchange endpoint while closing the token leak in its minimal example. Re-read that endpoint's documentation before every implementation, because GitLab support is the newer of the two providers.
 
 ## Write the hardened release workflow (Step 3)
 
@@ -133,11 +133,11 @@ Pin the publish job to `environment: release` as above, and create that environm
 
 ## Verify provenance (Step 5): a gap, not a check
 
-crates.io has no build provenance mechanism today: no cryptographic signature on a published crate, no attestation object, and nothing comparable to npm's `npm audit signatures` or PyPI's PEP 740 integrity endpoint for this skill to verify against. A Sigstore integration was proposed for crates.io (RFC 3403), but the RFC was closed without merging in 2023 and nothing has replaced it; treat Sigstore signing as not on the roadmap rather than pending. Trusted publishing itself still gives real value here, an OIDC-verified link between the publish action and the repository and workflow that ran it, but that link lives in crates.io's internal audit trail, not in anything the registry serves back for a consumer to check.
+crates.io publishes no build provenance for this skill to verify against: no cryptographic signature on a published crate, no attestation object, and nothing comparable to npm's `npm audit signatures` or PyPI's PEP 740 integrity endpoint. Read the trusted publishing documentation linked above before reporting that, and treat the closed RFC below as a rejected proposal rather than a pending one. Trusted publishing itself still gives real value here, an OIDC-verified link between the publish action and the repository and workflow that ran it, but that link lives in crates.io's internal audit trail, not in anything the registry serves back for a consumer to check.
 
 Source: [rust-lang/rfcs#3403, Sigstore-based signing for crates.io (closed, not merged)](https://github.com/rust-lang/rfcs/pull/3403).
 
-The strongest substitute on GitHub is the `actions/attest` step in the workflow above. Download the exact published `.crate`, then verify it:
+The strongest substitute on GitHub is the `actions/attest` step in the workflow above. This needs the `gh` CLI installed and authenticated against the host holding the repository; `gh auth status` prints the active account per host. Download the exact published `.crate`, then verify it:
 
 ```bash
 gh attestation verify <name>-<version>.crate --repo <owner>/<repo>
