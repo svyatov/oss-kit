@@ -83,6 +83,8 @@ The specification permits Python, Bash, TypeScript, dependencies, and other host
 
 Fix a violation by rewriting the script against Node built-ins, or by moving the work into the skill's prose where an agent performs it directly.
 
+Where the work is writing a script rather than judging one, read [references/scripts.md](references/scripts.md) first. It covers what R-SKL-05 does not reach: handling a failure instead of deferring it, giving every constant its reason, error messages that name what was expected, stating whether a pointer means run or read, and naming the runtime floor and every external command in place of the package list a shipped script cannot have.
+
 ## Step 6: Make the procedure earn its context (R-SKL-07)
 
 Start from real task evidence: upstream documentation, project artifacts, recurring corrections, and failure cases. Remove generic knowledge the agent already has. Keep one coherent unit of work whose output and boundary can be stated precisely.
@@ -105,7 +107,7 @@ Inside the body:
 6. Bundle a tested script only when repeated runs otherwise recreate the same deterministic logic.
 7. End state-changing work with validation, correction, and re-validation.
 
-Evaluate behavior separately from format. Start with at least three realistic tasks, including an edge case, and define observable success before running them. Run each in a clean context with the skill and against a no-skill or previous-version baseline. Grade assertions with concrete evidence, review the execution trace for wasted steps, and record time and token cost. Keep a change only when it improves the target result enough to justify its cost. For trigger tuning, use varied positive prompts and near-miss negatives, repeat runs because activation is nondeterministic, and keep a held-out validation set.
+Evaluate behavior separately from format. A validator exit code says a skill loads, not that it helps. Where the work is to establish that a skill improves the task it claims, or to decide whether a change to one was worth making, read [references/evaluating.md](references/evaluating.md): it covers the task records, the two-session loop that keeps an author from grading their own instructions, and what the read order of the bundled files says about where the body points.
 
 ## Step 7: Check the install path behind every claimed host
 

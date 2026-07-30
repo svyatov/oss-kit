@@ -13,6 +13,7 @@ Source: [npm Docs, Trusted publishing for npm packages](https://docs.npmjs.com/t
 - [Write the hardened release workflow (Step 3)](#write-the-hardened-release-workflow-step-3)
 - [Gate on manual approval (Step 4)](#gate-on-manual-approval-step-4)
 - [Verify provenance (Step 5)](#verify-provenance-step-5)
+- [Describe and sign what the release attaches (Step 6)](#describe-and-sign-what-the-release-attaches-step-6)
 - [Not yet published packages](#not-yet-published-packages)
 - [Monorepo packages](#monorepo-packages)
 
@@ -134,7 +135,7 @@ jobs:
 
 The version comparison assumes tags such as `v1.2.3`; derive the comparison from the repository's actual tag format. `npm pack` creates the exact tarball handed to `npm stage publish`, so the credentialed job does not check out source, install dependencies, or rebuild. `package-manager-cache: false` prevents `setup-node` from automatically restoring a package-manager cache in the credentialed job.
 
-`oss-harden` pins every `uses:` line above to a commit SHA and sets this workflow's `permissions:`, including the `contents: read` this skill left off the test and build jobs above; do not pin them or add permissions here. On GitLab CI/CD, use separate test and build jobs, pass the resulting `.tgz` as an artifact, and make the publish job run only `npm stage publish package/*.tgz --ignore-scripts`. Give that job `environment: name: release` with `when: manual`, plus the `id_tokens` block from Step 2.
+`oss-harden` pins every `uses:` line above to a commit SHA and sets the test and build jobs' minimal permissions, including the `contents: read` this skill left off them; do not pin them or narrow them here. This skill writes only the grants a job needs to authenticate, to publish, and to attest: the publish job's two above, and the release job's four in Step 6. On GitLab CI/CD, use separate test and build jobs, pass the resulting `.tgz` as an artifact, and make the publish job run only `npm stage publish package/*.tgz --ignore-scripts`. Give that job `environment: name: release` with `when: manual`, plus the `id_tokens` block from Step 2.
 
 If an existing workflow uses `secrets.NPM_TOKEN`, remove it from the YAML now and tell the user to delete the corresponding secret and revoke the token once the new flow is verified.
 
@@ -161,10 +162,67 @@ The output must report verified provenance for that dependency. The package page
 
 Source: [npm Docs, Trusted publishing for npm packages](https://docs.npmjs.com/trusted-publishers/) and [npm Docs, Viewing package provenance](https://docs.npmjs.com/viewing-package-provenance/).
 
+## Describe and sign what the release attaches (Step 6)
+
+Only for a release that attaches a built asset to the forge release. Publishing to npm attaches nothing to GitHub, and the source archives GitHub generates for a tag are not built assets, so a project that only publishes goes to Step 7 instead.
+
+npm generates the bill of materials itself, so no third-party tool enters the release workflow. `npm sbom` reads the installed tree and writes JSON to stdout, so it runs in the build job after `npm ci`:
+
+```yaml
+      - run: npm sbom --sbom-format=cyclonedx --omit=dev > <name>-<version>.cyclonedx.json  # placeholder: the package name and version from Step 1
+      - uses: actions/upload-artifact@v7
+        with:
+          name: package-tarball
+          path: |
+            *.tgz
+            *.cyclonedx.json
+          retention-days: 1
+```
+
+Name `--omit=dev` rather than relying on the default. `npm sbom` omits development dependencies only when `NODE_ENV` is `production`, so the default describes the build environment rather than what a consumer installs. Where the job has a lockfile but no `node_modules`, add `--package-lock-only`.
+
+Attach and attest in a third job, after the publish job:
+
+```yaml
+  release:
+    runs-on: ubuntu-latest
+    needs: [publish]
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: package-tarball
+          path: dist/
+      - run: gh release upload "$GITHUB_REF_NAME" dist/*.tgz dist/*.cyclonedx.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - uses: actions/attest@v4
+        with:
+          subject-path: dist/*.tgz
+      - uses: actions/attest@v4
+        with:
+          subject-path: dist/*.tgz
+          sbom-path: dist/<name>-<version>.cyclonedx.json  # placeholder: the same filename as above
+```
+
+The two attestation steps are not a duplicate. `actions/attest` generates SLSA build provenance when it is given a subject alone, and an SBOM attestation when it is also given `sbom-path`, so the first step records how the tarball was built and the second records what is inside it. A consumer reads the second with `gh attestation verify <file>.tgz --repo <owner>/<repo> --predicate-type https://cyclonedx.org/bom`, because `gh` looks for SLSA provenance unless told otherwise.
+
+`gh release upload` fails when no release exists for the tag. Either create it in this job with `gh release create "$GITHUB_REF_NAME" --generate-notes` before the upload, or have the maintainer publish the release from the tag first. This reference does not choose between them, because release notes are the project's own.
+
+A third job is what makes the grants above safe, so copy the job boundary along with them. The build job runs `npm ci` and `npm run build`, so giving it release-asset writes and an attestation identity is exactly the credential split Step 3 exists to enforce, and it would write assets before the approval gate. The publish job holds the registry identity and runs nothing beyond the actions Step 3 names. Only a separate job satisfies both, and `needs: [publish]` is what keeps the assets behind the gate.
+
+The four grants above are copied exactly, on this job only. The workflow's top-level block stays `contents: read`. Narrowing anything else, pinning each `uses:` to a commit SHA, and auditing the result are `oss-harden`'s.
+
 ## Not yet published packages
 
 A trusted publisher is configured on the package's npm settings page, which does not exist until the package is published once. If `npm view <name>` returned `E404`: confirm the name is actually free rather than restricted, then have the user publish the first version manually and interactively, with 2FA, from their own machine: `npm publish --ignore-scripts` (add `--access public` for a scoped package). That single release has no provenance and no trusted publisher; every release after it goes through the flow above, starting with adding the trusted publisher immediately after the manual publish.
 
 ## Monorepo packages
 
-Every public workspace package needs its own trusted publisher entry pointing at the same repository and workflow filename; a package left out stays unprotected. `npm stage` is unaware of workspaces. Pack each publishable workspace in the build job, then stage each resulting tarball explicitly, preferably in one approval-gated publish job per independently versioned package. Match each job's tag trigger and version check to that package.
+Every public workspace package needs its own trusted publisher entry pointing at the same repository and workflow filename; a package left out stays unprotected. `npm stage` is unaware of workspaces. Pack each publishable workspace in the build job, then stage each resulting tarball explicitly, preferably in one approval-gated publish job per independently versioned package. Match each job's tag trigger and version check to that package. `npm sbom --workspace <name>` scopes Step 6's bill of materials to one of them.
+
+Step 7 is in `SKILL.md`: read each R-PUB rule's `Check:` line against what this file produced, and fix what fails before reporting done.

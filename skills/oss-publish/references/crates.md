@@ -13,6 +13,7 @@ Source: [crates.io Docs, Trusted Publishing](https://crates.io/docs/trusted-publ
 - [Write the hardened release workflow (Step 3)](#write-the-hardened-release-workflow-step-3)
 - [Gate on manual approval (Step 4)](#gate-on-manual-approval-step-4)
 - [Verify provenance (Step 5): a gap, not a check](#verify-provenance-step-5-a-gap-not-a-check)
+- [Describe and sign what the release attaches (Step 6)](#describe-and-sign-what-the-release-attaches-step-6)
 
 ## Gather facts (Step 1)
 
@@ -154,3 +155,55 @@ gh attestation verify <name>-<version>.crate --repo <owner>/<repo>
 ```
 
 crates.io does not surface or link to that attestation. GitLab CI/CD has no equivalent forge attestation in this skill's scope, so R-PUB-03 remains unmet there. Report both limitations plainly; trusted publishing proves the publishing workflow's identity, not the provenance of the uploaded bytes.
+
+## Describe and sign what the release attaches (Step 6)
+
+Only for a release that attaches a built asset to the forge release. The `.crate` this workflow uploads is attested in the publish job in Step 3, and the source archives GitHub generates for a tag are not built assets. What this section covers is compiled binaries, which a crate shipping a command-line tool commonly attaches and a library crate does not.
+
+Build those binaries in an uncredentialed job that carries no registry token, alongside the test job, and hand them on as a workflow artifact. Do not build them in the publish job: everything running there could publish the crate, which is why Step 3 keeps that job down to the token exchange and `cargo publish`.
+
+This reference names no SBOM generator for Rust. The ones in common use are third-party tools rather than part of the toolchain, and a tool that reads the dependency tree inside the release workflow is one the maintainer vets before it goes there. Until one is vetted, publish the hashes of what the release attaches and sign those, which needs nothing the runner does not already ship:
+
+```yaml
+  release:
+    runs-on: ubuntu-latest
+    needs: [publish]
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: binaries
+          path: dist/
+      - run: (cd dist && sha256sum *) > SHA256SUMS
+      - uses: actions/attest@v4
+        with:
+          subject-checksums: SHA256SUMS
+      - run: gh release upload "$GITHUB_REF_NAME" dist/* SHA256SUMS
+        env:
+          GH_TOKEN: ${{ github.token }}
+```
+
+`sha256sum` runs from inside `dist/` so the names it writes are the names the assets carry on the release. A manifest listing `dist/tool-x86_64-linux` cannot be checked against a downloaded `tool-x86_64-linux`.
+
+`subject-checksums` makes every file listed in `SHA256SUMS` a subject of the attestation in its own right, by name and digest, and it takes the format `sha256sum` writes. Attesting `SHA256SUMS` itself with `subject-path` instead would leave a consumer able to verify the manifest and nothing about the assets it lists. This matters more here than elsewhere, because a downloaded binary is the whole of what most consumers of a tool crate ever run.
+
+A consumer verifies an asset, then checks the rest of the download against the manifest:
+
+```bash
+gh attestation verify <asset> --repo <owner>/<repo>
+sha256sum -c SHA256SUMS
+```
+
+Run the first command against each asset downloaded, never against `SHA256SUMS`, which is a subject of nothing. It proves that this workflow in this repository produced those exact bytes, and it prints the signing workflow it accepted; `--signer-workflow <owner>/<repo>/.github/workflows/release.yml` pins that, so an attestation from any other workflow in the repository fails. The second command is what a consumer without `gh` has. It proves the files match a list published beside them, and nothing about who produced either.
+
+`gh release upload` fails when no release exists for the tag. Either create it in this job with `gh release create "$GITHUB_REF_NAME" --generate-notes` before the upload, or have the maintainer publish the release from the tag first. This reference does not choose between them, because release notes are the project's own.
+
+The four grants above are copied exactly, on this job only, and `needs: [publish]` is what keeps the assets behind the approval gate. The workflow's top-level block stays `contents: read`. Narrowing anything else, pinning each `uses:` to a commit SHA, and auditing the result are `oss-harden`'s.
+
+On GitLab CI/CD none of this applies: the forge attestation above is GitHub's. A GitLab release can carry the same `SHA256SUMS`, generated the same way, but nothing signs it, so say that rather than presenting the file as provenance.
+
+Step 7 is in `SKILL.md`: read each R-PUB rule's `Check:` line against what this file produced, and fix what fails before reporting done.

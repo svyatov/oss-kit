@@ -12,6 +12,16 @@ This skill owns section order and what each section must contain. It does not ow
 
 The README rules belong here: R-DOC-01 opening sentence, R-DOC-02 install and example, R-DOC-03 required links, R-DOC-04 claim accuracy, R-DOC-06 scope statement, R-DOC-07 code block destinations, R-DOC-08 question channel, R-DOC-09 maintenance status, and R-DOC-10 differentiator evidence. R-DOC-05, how each sentence reads, belongs to `oss-writing`.
 
+## Three ways in
+
+The request decides which one runs. Read it before reading the structure below.
+
+To create a README from nothing, write sections 1 to 9 in the order given.
+
+To improve one that exists, read it against the checklist at the end of this skill first. Then fix what fails, in section order, so each fix lands where the reader meets it.
+
+To review one without editing it, report every checklist item that fails. Anchor each finding at the line it fails at, and name what would fix it. Change no file. Write no replacement prose, even where the fix is one word. A request to review, audit, or check a README asks for findings, and a rewrite answers a question nobody asked.
+
 Never invent facts. If the repository does not contain a piece of data you need, such as a benchmark, a file size, a real differentiator from alternatives, or a supported platform list, or you are not sure a number is accurate, ask for it instead of guessing. A README with a fabricated number is worse than one with no number at all.
 
 ## Section order
