@@ -10,14 +10,6 @@ Write with clarity and force for a reader whose first language is not English. B
 
 This skill owns how the sentence reads. The skill that owns the artifact owns what goes in it, and where a caller states an exception, the caller wins.
 
-## Limited context strategy
-
-When context is tight:
-
-1. Write your draft using judgment
-2. Copyedit the draft against the reference for that artifact, with only those two in context
-3. Ship the revision, not the draft
-
 ## Read the local contract first
 
 Before drafting, read the repository's instructions, contribution guide, templates, and the most recent accepted examples of the same artifact. They decide the commit convention, the required sections, the terminology, and the audience. Follow the convention the repository declares rather than inventing one, and keep required template sections and legally mandated wording.
@@ -67,6 +59,8 @@ Verify every claim against the diff, the source, or command output. Prose that r
 - Before writing or replying to a review comment, read [references/code-review.md](references/code-review.md).
 - Before writing a README or documentation, read [references/docs-and-readme.md](references/docs-and-readme.md).
 - Before writing agent-facing text (AGENTS.md, skills, prompts), hold every sentence to 20 words and keep one meaning per word.
+
+Ship the revision, not the draft.
 
 ## Check before returning
 
