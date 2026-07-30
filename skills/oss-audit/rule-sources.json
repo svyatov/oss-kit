@@ -148,6 +148,14 @@
     "verified": "2026-07-28",
     "note": "Limits confirms the 6-hour job ceiling the rule cites. Workflow syntax confirms concurrency and cancel-in-progress, and jobs.<job_id>.timeout-minutes carries 'Default: 360'. That default matters to the check: 360 is simultaneously GitHub's default and its hosted ceiling, so every job already has an effective timeout and only an explicit key in the file is observable evidence. Step-level timeout-minutes is a separate key with a maximum of 360 and no default; do not conflate them. GitLab's YAML reference confirms the analogues, timeout as 'a custom job-level timeout that takes precedence over the project-wide setting' and interruptible as whether a job 'can be canceled when made redundant by a newer run'; their defaults were not readable in the fetched excerpt."
   },
+  "R-CI-06": {
+    "sources": [
+      "https://www.bestpractices.dev/en/criteria/0",
+      "https://baseline.openssf.org/versions/2026-02-19"
+    ],
+    "verified": "2026-07-30",
+    "note": "OpenSSF Best Practices badge Passing, criterion 'test', MUST: 'The project MUST use at least one automated test suite that is publicly released as FLOSS (this test suite may be maintained as a separate FLOSS project). The project MUST clearly show or document how to run the test suite(s) (e.g., via a continuous integration (CI) script or via documentation in files such as BUILD.md, README.md, or CONTRIBUTING.md).' The second sentence is why this rule asks for the command and not only the tests. OSPS-QA-06.01, Maturity 2-3, which R-CI-02 already cites, presumes a suite exists rather than requiring one: 'Prior to a commit being accepted, the project's CI/CD pipelines MUST run at least one automated test suite to ensure the changes meet expectations.' Two halves of the check have no upstream and are this project's own position. Neither source excuses a repository that ships no executable code, so that clause copies the applicability shape R-SEC-09 already uses, and it retires if a repository holding no executable code is ever expected to carry tests. Neither source rules out a placeholder either, and a scaffolded test script whose whole body is an echo, a bare true, or an exit 0 satisfies the badge criterion while verifying nothing; the body is readable without running it, which is why the clause is checkable at all. That clause retires when a scaffolded manifest stops shipping such a script."
+  },
   "R-SEC-01": {
     "sources": [
       "https://docs.github.com/en/actions/reference/secure-use-reference",
