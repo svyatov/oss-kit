@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+Required review becomes its own rule, scoped to repositories that have somebody to do the reviewing.
+
+### Added
+
+- R-SEC-12 carries the approving review that R-SEC-04 used to bundle, and reaches only a repository where two or more principals hold push, maintain, or admin access. It reads that access list rather than guessing, with `gh api repos/{owner}/{repo}/collaborators?affiliation=all` or GitLab project members at Developer or above, and reports unknown rather than fail when the caller lacks push access and the endpoint answers `403`. The standard now holds 54 rules.
+
+### Changed
+
+- R-SEC-04 asks a repository of any size only for what works at any size: a change request as the only path onto the default branch, at least one passing CI status check, and no force pushes or deletion. It required an approving review, which a sole maintainer cannot supply. Every repository that met the old rule meets this one, so nothing that passed yesterday fails today. OpenSSF Scorecard's Branch-Protection check, which R-SEC-04 already cited, states the reason in its own voice: requiring code review "is not feasible for all projects, such as those that don't have many active participants". Both rules now say out loud what skipping review costs, because Scorecard gates each tier on the one below it and a repository outside R-SEC-12 therefore caps at 3 of 10 rather than 8.
+- `oss-harden` stops telling a single-maintainer project to exempt itself. It used to require the review and then add Repository admin to the ruleset's bypass list, which left the one person the requirement named as the one person exempt from it, and every pull request reading `BLOCKED` while nothing was blocked. The skill now leaves `required_approving_review_count` at 0 where R-SEC-12 does not reach the repository, and keeps the bypass list empty, which binds the owner to the ruleset instead of exempting them. The four review parameters on the `pull_request` rule are grouped as review controls and go on together; `required_review_thread_resolution` and `allowed_merge_methods` need no reviewer and stay recommended for everyone.
+- R-COM-06 takes the same scope. A CODEOWNERS file on a repository where one principal can merge assigns a reviewer to the only person who could have merged the change anyway, and the enforcement setting behind it now lives in a rule that does not reach there either.
+
 ## [0.5.2] - 2026-07-29
 
 A change request stops being written as though it were a commit.

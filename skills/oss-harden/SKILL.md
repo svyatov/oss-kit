@@ -56,7 +56,9 @@ Pinning freezes a reference until something unfreezes it; R-SEC-03 requires an u
 
 ### Step 6: Branch protection and required review
 
-R-SEC-04 requires the default branch to require at least one approving review, require the CI status check to pass, and reject force pushes and deletion, on both forges. This is a forge setting, not a file, so give the user the resolved settings URL for the repository or project found in Step 1, wait for confirmation, then verify with the read command from Step 2. On GitHub, set this up as a repository ruleset; classic branch protection is the older form, still enforced where it already exists and worth reading, but not what to create today. Where `oss-community` has already written a CODEOWNERS file, this is also where code owner review gets enforced, by turning on the code-owner-approval setting alongside the review requirement; a CODEOWNERS file with nothing enforcing it is a suggestion, not a control. Where the platform's free tier does not offer enforced review, as GitLab's does not, say so plainly and give the strongest control the tier actually has; take that fallback only because the tier leaves no other option, the same spirit `STANDARD.md` states for the fallbacks it marks below the bar, and do not claim a paid capability is active on a free plan.
+R-SEC-04 requires the default branch to take changes only through a change request, require at least one CI status check to pass, and reject force pushes and deletion, on both forges. This is a forge setting, not a file, so give the user the resolved settings URL for the repository or project found in Step 1, wait for confirmation, then verify with the read command from Step 2. On GitHub, set this up as a repository ruleset; classic branch protection is the older form, still enforced where it already exists and worth reading, but not what to create today. Every control in this paragraph works without a second person, so set all of them whatever the repository's size.
+
+R-SEC-12 adds the approving review, and reaches only a repository where two or more principals hold push, maintain, or admin access. Establish that first by reading the access list the rule's check names, and report the rule as outside the repository when one principal holds every merge path. Do not report a violation there, and do not set the requirement anyway and then add a bypass entry to undo it; that trades a control the repository had for a status that blocks nobody. Where the rule does reach, set the review requirement alongside the controls above, and where `oss-community` has already written a CODEOWNERS file, turn on the code-owner-approval setting too; a CODEOWNERS file with nothing enforcing it is a suggestion, not a control. Where the platform's free tier does not offer enforced review, as GitLab's does not, say so plainly and give the strongest control the tier actually has; take that fallback only because the tier leaves no other option, the same spirit `STANDARD.md` states for the fallbacks it marks below the bar, and do not claim a paid capability is active on a free plan.
 
 ### Step 7: GitLab job token scope
 
@@ -108,7 +110,7 @@ R-SEC-02: Workflows declare least-privilege permissions
 
 R-SEC-03: Automated dependency updates cover both application dependencies and CI dependencies
 
-R-SEC-04: The default branch requires review and passing checks before merge, and rejects force pushes
+R-SEC-04: The default branch takes changes only through a change request that passed CI, and rejects force pushes
 
 R-SEC-05: Release tags are signed and verifiable
 
@@ -123,3 +125,5 @@ R-SEC-09: Static analysis runs on pull requests where the language supports it
 R-SEC-10: Committed secrets are detected before they reach the default branch
 
 R-SEC-11: Every dependency ecosystem the project ships is watched for known vulnerabilities
+
+R-SEC-12: Where more than one person can merge, the default branch requires an approving review

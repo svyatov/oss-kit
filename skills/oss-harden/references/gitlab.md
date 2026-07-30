@@ -15,7 +15,7 @@ curl --header "PRIVATE-TOKEN: <token>" \
   "https://gitlab.example.com/api/v4/projects/:id/protected_branches/:name"
 ```
 
-The response's `allow_force_push` and `code_owner_approval_required` booleans, and the `push_access_levels` and `merge_access_levels` arrays, are part of the evidence R-SEC-04 checks for.
+The response's `allow_force_push` boolean and its `push_access_levels` and `merge_access_levels` arrays are part of the evidence R-SEC-04 checks for. `code_owner_approval_required` is review evidence and belongs to R-SEC-12 instead.
 
 The protected-branch response does not report required approval rules or the "Pipelines must succeed" merge check. On Premium or Ultimate, read approval rules separately, and on every tier read the project setting:
 
@@ -92,13 +92,15 @@ GitLab Dependency Scanning finds known-vulnerable dependencies already in use; i
 
 Before adopting Renovate, review its documented trust model: a self-hosted Renovate instance must trust developers of the repositories it monitors and needs credentials for GitLab plus GitHub.com access for changelogs and tools. Store credentials as masked and hidden CI/CD variables, protect them where the schedule runs only on protected refs, and use the narrowest token and repository scope the documented runner supports. Enable only the managers the repository needs. Renovate's `gitlabci` manager covers images, services, and components; verify any additional manager against its current official documentation.
 
-## Branch protection and required review (R-SEC-04)
+## Branch protection and required review (R-SEC-04, R-SEC-12)
 
 Give the user the resolved URL: `https://gitlab.com/{namespace}/{project}/-/settings/repository` (swap the host for a self-managed instance) for protected branches, and `https://gitlab.com/{namespace}/{project}/-/settings/merge_requests` for approval rules and merge checks.
 
-Protected branches, including blocking force pushes and restricting who can push or merge, are available on every GitLab tier. Enforced merge request approval rules, the setting that actually blocks a merge until a named number of people approve, need GitLab Premium or Ultimate; on Free, any Developer can approve a merge request but nothing stops a merge with zero approvals. Where the project is on Free, say plainly that required review is not available at the platform level, and give the strongest available substitute: restrict who can push directly to the protected branch to a small group under "Allowed to push and merge," so a merge request is the only path in even without an enforced approval count. Take this fallback only because GitLab Free leaves no other option for R-SEC-04, and revisit it if the project upgrades tier.
+Protected branches, including blocking force pushes and restricting who can push directly, are available on every GitLab tier. Restricting "Allowed to push and merge" to a small group is what makes a merge request the only path onto the branch, which is what R-SEC-04 asks for, and it needs no paid tier.
 
-Also on Free, GitLab does not read CODEOWNERS for merge request approval at all; both reading the file and enforcing it need Premium or Ultimate. On a tier that supports it, turn on "Require approval from code owners" in the same merge request approvals panel, enforcing the file `oss-community` wrote.
+Enforced merge request approval rules, the setting that actually blocks a merge until a named number of people approve, need GitLab Premium or Ultimate; on Free, any Developer can approve a merge request but nothing stops a merge with zero approvals. This reaches only a project R-SEC-12 applies to, meaning one with two or more members at Developer or above. Where such a project is on Free, say plainly that required review is not available at the platform level, and record the rule as unmet by the tier rather than by the maintainer; the protected-branch restriction above is already in place for R-SEC-04 and is the strongest control the tier has. Revisit it if the project upgrades tier. A project with a single member needs no fallback here, because the rule does not reach it.
+
+Also on Free, GitLab does not read CODEOWNERS for merge request approval at all; both reading the file and enforcing it need Premium or Ultimate. On a tier that supports it, and on a project R-SEC-12 reaches, turn on "Require approval from code owners" in the same merge request approvals panel, enforcing the file `oss-community` wrote.
 
 "Pipelines must succeed," the setting that blocks a merge while the pipeline is failing, is available on every tier, at Settings > Merge requests > Merge checks; turn it on regardless of what the approval rule situation allows.
 
