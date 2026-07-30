@@ -155,6 +155,59 @@ test("an over-long description is an R-SKL-02 error", () => {
   rmSync(root, { recursive: true, force: true })
 })
 
+test("a name containing a reserved word is a warning naming the word, not an error", () => {
+  const root = makeRepo()
+  addSkill(root, "claude-tools", 'name: claude-tools\ndescription: "x"\nlicense: MIT')
+  expect(errors(root)).toEqual([])
+  const warned = validate(root).filter((f) => f.message.includes("reserved word"))
+  expect(warned).toHaveLength(1)
+  expect(warned[0]?.message).toContain('"claude"')
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a name containing anthropic is a warning", () => {
+  const root = makeRepo()
+  addSkill(root, "anthropic-helper", 'name: anthropic-helper\ndescription: "x"\nlicense: MIT')
+  expect(errors(root)).toEqual([])
+  expect(validate(root).some((f) => f.message.includes('reserved word "anthropic"'))).toBe(true)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a reserved word as an inner substring of a name is a warning", () => {
+  const root = makeRepo()
+  addSkill(root, "my-claude-skill", 'name: my-claude-skill\ndescription: "x"\nlicense: MIT')
+  expect(errors(root)).toEqual([])
+  expect(validate(root).some((f) => f.message.includes('reserved word "claude"'))).toBe(true)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a description containing an XML tag is a warning naming the tag", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", 'name: oss-thing\ndescription: "Use the <tool> block."\nlicense: MIT')
+  expect(errors(root)).toEqual([])
+  const warned = validate(root).filter((f) => f.message.includes("XML tag"))
+  expect(warned).toHaveLength(1)
+  expect(warned[0]?.message).toContain("<tool>")
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a lone angle bracket in a description with no closing bracket draws no finding", () => {
+  const root = makeRepo()
+  addSkill(root, "oss-thing", 'name: oss-thing\ndescription: "Use when a < b."\nlicense: MIT')
+  expect(validate(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+})
+
+test("a skill whose only faults are the two host constraints exits 0 and carries no rule ID", () => {
+  const root = makeRepo()
+  addSkill(root, "claude-tools", 'name: claude-tools\ndescription: "Uses <tool> tags."\nlicense: MIT')
+  const found = validate(root)
+  expect(found).toHaveLength(2)
+  expect(errors(root)).toEqual([])
+  expect(rules(found)).toEqual([null, null])
+  rmSync(root, { recursive: true, force: true })
+})
+
 test("an unknown key is a warning with a suggestion, not an error", () => {
   const root = makeRepo()
   addSkill(root, "oss-thing", 'name: oss-thing\ndescripton: "typo"\ndescription: "x"\nlicense: MIT')

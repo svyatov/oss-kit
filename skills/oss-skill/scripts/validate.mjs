@@ -36,8 +36,18 @@ import { fileURLToPath } from "node:url"
 
 const SPEC_KEYS = ["name", "description", "license", "compatibility", "metadata", "allowed-tools"]
 const SKIP_DIRS = new Set([".git", "node_modules"])
+// This charset admits no < or >, so it already enforces on name the XML-tag
+// constraint that checkSpec below tests separately on description. Loosening it
+// would drop that constraint silently, so a name branch has to gain the test
+// the same day.
 const NAME_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const QUOTED_RE = /^("(?:[^"\\]|\\.)*"|'(?:[^']|'')*')\s*(?:#.*)?$/
+
+// Anthropic's platform rejects these in a name and rejects an XML tag in either
+// field. The Agent Skills specification imposes neither, so both findings below
+// are warnings carrying no rule ID: a skill that trips one still conforms.
+const RESERVED_NAME_WORDS = ["anthropic", "claude"]
+const XML_TAG_RE = /<[^>]*>/
 
 // A distinctive phrase from each license's standard text, for identifiers whose
 // own name does not appear in that text. An identifier absent from this table
@@ -412,6 +422,11 @@ export function checkSpec(rel, dirName, fm) {
   const err = (message) => out.push({ severity: "error", rule: "R-SKL-02", file: rel, message })
   /** @param {string} message */
   const warn = (message) => out.push({ severity: "warning", rule: "R-SKL-02", file: rel, message })
+  // A constraint Anthropic's platform enforces that the specification does not.
+  // No rule ID, because tagging it R-SKL-02 would assert a conformance failure
+  // that did not occur.
+  /** @param {string} message */
+  const hostWarn = (message) => out.push({ severity: "warning", rule: null, file: rel, message })
 
   if (!fm.ok) {
     err(
@@ -440,6 +455,12 @@ export function checkSpec(rel, dirName, fm) {
       if (name !== dirName) {
         err(`name "${name}" does not match its directory "${dirName}"; the specification requires them to match`)
       }
+      const reserved = RESERVED_NAME_WORDS.find((word) => name.includes(word))
+      if (reserved !== undefined) {
+        hostWarn(
+          `name "${name}" contains the reserved word "${reserved}"; Anthropic's platform rejects it, though the specification permits it`,
+        )
+      }
     }
   }
 
@@ -449,6 +470,12 @@ export function checkSpec(rel, dirName, fm) {
       err("frontmatter declares no description, which the specification requires")
     } else if (description.length > 1024) {
       err(`description is ${description.length} characters; the limit is 1024`)
+    }
+    const tag = description === undefined ? null : XML_TAG_RE.exec(description)
+    if (tag !== null) {
+      hostWarn(
+        `description contains the XML tag "${tag[0]}"; Anthropic's platform rejects it, though the specification permits it`,
+      )
     }
   }
 
@@ -776,7 +803,11 @@ function main() {
   const findings = validate(root)
   for (const finding of findings) {
     const rule = finding.rule ? ` ${finding.rule}` : ""
-    process.stdout.write(`${finding.severity}${rule} ${finding.file}: ${finding.message}\n`)
+    // Most findings take their path from relative(), which returns backslashes
+    // on Windows. Normalizing here rather than at the two sep literals covers
+    // every finding, whatever built its path.
+    const file = finding.file.replaceAll(sep, "/")
+    process.stdout.write(`${finding.severity}${rule} ${file}: ${finding.message}\n`)
   }
   const errorCount = findings.filter((finding) => finding.severity === "error").length
   process.stdout.write(`${errorCount} error(s), ${findings.length - errorCount} warning(s)\n`)
