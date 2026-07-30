@@ -49,14 +49,7 @@ test:
 
 ## Call project automation, not inline logic (R-CI-02)
 
-The same rule applies as on GitHub Actions: a job's `script:` should call the command a contributor runs locally and that `CONTRIBUTING.md` documents, not a longer invocation with extra flags baked in.
-
-```yaml
-test:
-  stage: test
-  script:
-    - npm test
-```
+`SKILL.md` states this policy under Principles. Its shape here is a `script:` naming the project's own command, as the `lint` job above does.
 
 ## Test matrix (R-CI-03)
 
@@ -72,8 +65,6 @@ test:
   script:
     - npm test
 ```
-
-Include every maintained release line the manifest claims to support, not only the endpoints of a continuous range. Do not add or drop a release line the manifest does not mention.
 
 ## Caching keyed on the lockfile (R-CI-04)
 

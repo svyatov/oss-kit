@@ -54,15 +54,19 @@ Build the version matrix from the supported release lines identified in Step 2, 
 
 ### Step 5: Decide caching
 
-Cache only package-manager download data or another directory the tool's official documentation says is safe to reuse. Prefer the forge's official runtime setup action when it supports the detected package manager and hashes the lockfile. Otherwise key an explicit cache on the lockfile plus every compatibility boundary that changes its contents, such as the operating system, architecture, runtime, and package manager. A fallback key is optional and must not cross one of those boundaries. A project with no lockfile or no reusable download cache gets no cache step.
+Cache only package-manager download data or another directory the tool's official documentation says is safe to reuse. Where the forge ships a first-party mechanism that caches the detected package manager's data and keys on the lockfile, prefer it; the reference file for that forge names it. Otherwise key an explicit cache on the lockfile plus every compatibility boundary that changes its contents, such as the operating system, architecture, runtime, and package manager. A fallback key is optional and must not cross one of those boundaries. A project with no lockfile or no reusable download cache gets no cache step.
 
 ### Step 6: Write the configuration
 
-Open the reference file for the forge chosen in Step 1 and follow its syntax exactly. Both reference files cover triggering on push to the default branch and on every change request (R-CI-01), a timeout on every job with cancellation of superseded runs on the same branch (R-CI-05), and the cache decisions from Step 5 (R-CI-04). Both also carry a Pages deployment section, used only when Step 3 established that the project wants one. Neither reference file covers permissions, SHA pinning, or publishing; those stay out of the file you write here.
+Open the reference file for the forge chosen in Step 1 and follow its syntax exactly. Open only that one. The other forge's file has no syntax this run can use, and reading it costs the run its context for nothing.
+
+Each reference file covers triggering on push to the default branch and on every change request (R-CI-01), a timeout on every job with cancellation of superseded runs on the same branch (R-CI-05), and the cache decisions from Step 5 (R-CI-04). Each also carries a Pages deployment section, used only when Step 3 established that the project wants one. Neither file covers permissions, SHA pinning, or publishing; those stay out of the file you write here.
+
+Order jobs and steps so a fast check fails before a slow one starts: lint before test, test before build. This holds on either forge.
 
 ### Step 7: Validate before presenting
 
-Confirm the configuration is syntactically valid with the forge's own validator where one is available, and confirm that every command it calls exists and succeeds locally in the same order. For GitLab, use CI Lint with included configuration expanded. For GitHub, inspect the workflow in the Actions editor or push it on a branch when the user has authorized that external change; a generic YAML parser cannot validate GitHub expressions or workflow semantics. List any secrets the pipeline needs, with the command to add each one, without running that command. Confirm the matrix matches every supported release line and that every job carries a timeout and participates in cancellation of superseded runs when safe.
+Confirm the configuration is syntactically valid with the forge's own validator where one is available, and confirm that every command it calls exists and succeeds locally in the same order. For GitLab, use CI Lint with included configuration expanded. For GitHub, inspect the workflow in the Actions editor or push it on a branch when the user has authorized that external change; a generic YAML parser cannot validate GitHub expressions or workflow semantics. List any secrets the pipeline needs, with the command to add each one, without running that command. The forge's CLI need not be installed here, because the command is printed for the repository owner to run on their own machine. Confirm the matrix matches every supported release line and that every job carries a timeout and participates in cancellation of superseded runs when safe.
 
 ### Step 8: Present the result
 
