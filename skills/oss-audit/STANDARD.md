@@ -111,9 +111,9 @@ Forges: both
 
 ### R-COM-02: CONTRIBUTING.md tells a newcomer how to set up, test, and submit a change
 
-A contributor who cannot run the tests sends a patch you have to fix yourself. The three commands that get them from clone to green cost you one paragraph and save every future contributor an hour.
+A contributor who cannot run the tests sends a patch you have to fix yourself. The three commands that get them from clone to green cost you one paragraph and save every future contributor an hour. A contributor also needs to know what an acceptable change looks like before writing it, and learning in review that a feature needed a test costs the round trip the guide exists to save.
 
-Check: `CONTRIBUTING.md` exists at the repository root, in `.github/`, or in `docs/` on GitHub, or at the repository root on GitLab, and states the setup command, the test command, and how to open a pull request or merge request.
+Check: `CONTRIBUTING.md` exists at the repository root, in `.github/`, or in `docs/` on GitHub, or at the repository root on GitLab, and states the setup command, the test command, how to open a pull request or merge request, that a change adding functionality arrives with a test, and which document states what an acceptable contribution must satisfy. That document exists at the path or URL the guide names.
 
 Fixed by: oss-community
 Forges: both

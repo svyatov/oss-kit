@@ -40,7 +40,9 @@ A manifest that declares no license at all, because the package is private or th
 
 ### Step 3: CONTRIBUTING.md (R-COM-02)
 
-State the setup command, the test command, and how to open a pull request or merge request, using the commands verified in Step 1's read of the manifest and any build files. Name the actual branch and fork workflow the repository uses; do not describe a generic GitHub flow for a project that requires a different one. Place the file at the repository root unless the project already keeps community files in `.github/` or `docs/` on GitHub, in which case match that convention; GitLab recognizes no alternate location for this file, so keep it at the root there.
+State the setup command, the test command, and how to open a pull request or merge request, using the commands verified in Step 1's read of the manifest and any build files. Name the actual branch and fork workflow the repository uses; do not describe a generic GitHub flow for a project that requires a different one.
+
+Two more sentences close the rule. State that a change adding functionality arrives with a test. Then name the document that says what an acceptable contribution must satisfy, and link it, whether that is a coding standard, a style guide, or the repository's own instructions file. Open the link before shipping the guide, because the rule checks that the document resolves. Where the project has no such document, say so and ask which one to name, rather than inventing requirements nobody agreed to. Place the file at the repository root unless the project already keeps community files in `.github/` or `docs/` on GitHub, in which case match that convention; GitLab recognizes no alternate location for this file, so keep it at the root there.
 
 ### Step 4: CODE_OF_CONDUCT.md (R-COM-03)
 

@@ -66,9 +66,12 @@
     "note": "OSPS-LE-03.01, Maturity 1-3: 'While active, the license for the source code MUST be maintained in the corresponding repository's LICENSE file, COPYING file, or LICENSE/ directory.' Note the divergence: the Baseline treats COPYING and LICENSE/ as equals and does not say root, so it sources a three-location check rather than this rule's root-only one."
   },
   "R-COM-02": {
-    "sources": ["https://baseline.openssf.org/versions/2026-02-19"],
-    "verified": "2026-07-28",
-    "note": "OSPS-GV-03.01, Maturity 1-3: 'While active, the project documentation MUST include an explanation of the contribution process.' The Baseline says project documentation rather than a CONTRIBUTING file; naming the file is this standard's tightening."
+    "sources": [
+      "https://baseline.openssf.org/versions/2026-02-19",
+      "https://www.bestpractices.dev/en/criteria/0"
+    ],
+    "verified": "2026-07-30",
+    "note": "OSPS-GV-03.01, Maturity 1-3: 'While active, the project documentation MUST include an explanation of the contribution process.' The Baseline says project documentation rather than a CONTRIBUTING file; naming the file is this standard's tightening. The two later clauses come from the OpenSSF Best Practices badge Passing criteria. 'test_policy', MUST: 'The project MUST have a general policy (formal or not) that as major new functionality is added to the software produced by the project, tests of that functionality should be added to an automated test suite.' Its sibling 'tests_are_added', MUST, asks for evidence the policy was followed in the most recent major changes; this rule checks the stated policy only, because the guide is the artifact it reads and the evidence half is what R-CI-06 and the project's own history carry. 'contribution_requirements', SHOULD at Passing and MUST at Silver, with met_url_required true: 'The information on how to contribute SHOULD include the requirements for acceptable contributions (e.g., a reference to any required coding standard).' That met_url_required flag is why this rule checks for a named document that resolves rather than for prose about requirements: a URL is observable and a paragraph asserting requirements exist is not. The badge accepts an informal policy stated by word of mouth, which nothing outside the project can read, so requiring the sentence in the file is this standard's tightening."
   },
   "R-COM-03": {
     "sources": ["https://www.contributor-covenant.org/version/3/0/code_of_conduct/"],
