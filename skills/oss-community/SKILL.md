@@ -94,4 +94,6 @@ Write who decides and what happens if they stop. For a project with one maintain
 
 ### Step 11: Present the result
 
-List every file written or proposed, every setting changed or proposed, the rule each satisfies, and every fact that came from asking rather than reading, so the maintainer can see what they confirmed. Flag anything left unresolved, such as a CONTRIBUTING.md with no test command because the repository has no tests, rather than silently shipping a gap.
+Before presenting, read each R-COM rule's `Check:` line in `STANDARD.md` against the files and settings as they now stand, and fix what fails. One fix moves another rule, so start the list again after each one, and do not report done while any cited rule still fails.
+
+Then list every file written or proposed, every setting changed or proposed, the rule each satisfies, and every fact that came from asking rather than reading, so the maintainer can see what they confirmed. Flag anything left unresolved, such as a CONTRIBUTING.md with no test command because the repository has no tests, rather than silently shipping a gap.

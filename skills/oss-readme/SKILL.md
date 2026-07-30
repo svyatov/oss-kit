@@ -250,3 +250,5 @@ Before finishing, read every package manifest, the lockfile, the CI configuratio
 17. Skimming only headings and the facts list still tells the story.
 18. The draft has been through oss-writing.
 19. Every image has meaningful alt text, and repository images use relative paths.
+
+Fix what the checklist catches, then read each R-DOC rule's `Check:` line in `STANDARD.md` against the README as it now stands. Start the checklist again after each fix, since reordering a section moves what the next item is looking at. Do not report done while any item or any cited rule still fails.

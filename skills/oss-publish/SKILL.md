@@ -50,6 +50,10 @@ Once the first tag-triggered release runs, verify the exact published artifact a
 
 Only for a release that attaches a built asset. A source archive the forge generates is not one, and a project that publishes to a registry and attaches nothing else is done at Step 5. Where there is a built asset, add two steps to the build job, before the artifact is handed on: generate a software bill of materials in SPDX or CycloneDX, whichever the ecosystem's tooling already produces, and attach it to the release beside the asset it describes; then either sign each asset or write a manifest of their hashes and sign that. Prefer the forge's own attestation where it covers the exact asset, since it needs no key for the maintainer to hold, publish, or lose. If it does not, say which key verifies the signature and where a downloader finds it, because a signature nobody can trace to a published key verifies nothing. Do not generate an SBOM for the repository's source tree and attach it to a binary release; it describes a different thing and reads as though the rule were met.
 
+### Step 7: Verify before reporting done
+
+Read each R-PUB rule's `Check:` line in `STANDARD.md` against the workflow, the registry configuration, and the released artifact as they now stand, and fix what fails. Start the list again after each fix, because moving a step between jobs changes which rule the credential split satisfies. Report done only when every cited rule passes, and report a rule the platform makes unreachable as unmet with the reason rather than as passed.
+
 ## Scope
 
 The PUB rules belong here: R-PUB-01 tag-triggered CI, R-PUB-02 trusted publishing, R-PUB-03 build provenance, R-PUB-04 human approval, R-PUB-05 artifact inventory, and R-PUB-06 signed assets.

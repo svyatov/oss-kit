@@ -111,7 +111,9 @@ Keep `CHANGELOG.md` canonical. A forge-generated pull request list is useful raw
 
 ### Step 9: Verify, then hand the tag over
 
-Read the changelog section, the manifests, and the proposed tag against each other one more time before reporting done. Then hand the tag and the publish workflow to `oss-publish`, which owns building and uploading what the tag points at.
+Read each R-CHG rule's `Check:` line in `STANDARD.md` against the changelog, the manifests, and the proposed tag as they now stand, and fix what fails. Start the list again after each fix, because setting a version in one place can leave another disagreeing, and do not report done while any cited rule still fails.
+
+Then hand the tag and the publish workflow to `oss-publish`, which owns building and uploading what the tag points at.
 
 ## Deprecation policy
 

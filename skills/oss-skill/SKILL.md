@@ -117,7 +117,9 @@ A skill's name is its identity everywhere downstream: in an installer command, i
 
 Treat it as one. Say so when proposing the rename, and hand the changelog entry and the version decision to `oss-changelog` rather than deciding the bump here.
 
-## Report what you changed
+## Verify, then report what you changed
+
+Re-run the validator after every fix, not once at the end, because one edit can introduce a fault another edit was meant to clear. Then read each SKL rule's `Check:` line in `STANDARD.md` against the repository as it now stands, fix what fails, and start the list again. Completion is gated on both: a clean validator exit and every cited rule passing.
 
 List every skill you touched, the rule each change satisfies, and every fault the validator reported that you did not fix, with the reason. Name the rename separately from the mechanical fixes, since it is the only one with downstream cost.
 

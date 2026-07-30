@@ -69,6 +69,8 @@ Read the draft against this list and fix what it catches.
 - No boilerplate caveats. State a precondition, limitation, or risk when it changes what the reader should do. A caveat that changes nothing trains the reader to skip the one that matters.
 - No clause telling the reader how to weigh a fact just stated. Delete the clause and see what is lost. If no fact goes with it, it was defending the sentence rather than extending it. A rejected alternative, a constraint, or a consequence is a fact and stays.
 
+Fix what the list catches, then read the revision against the list again, because a rewritten sentence can break a rule the original passed. Return the draft only when a full pass catches nothing.
+
 If the draft still reads padded, generic, or promotional after that pass, the remaining fault is lexical. Check it against [references/tells.md](references/tells.md), which names each pattern and what to write instead.
 
 To enforce the mechanical half of this list in CI rather than in review, see [references/linting.md](references/linting.md). It maps each checkable rule onto a checker, and names the rules no checker can decide.

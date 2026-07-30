@@ -44,7 +44,19 @@ Some `Check:` lines name evidence a repository checkout does not carry on its ow
 
 Where you actually have the access a `Check:` line asks for, network reachable, the right credentials available, use it and score the rule on what it returns. Where you do not, or an attempt fails, mark the rule unknown. Unknown is not a softened fail and not a cautious pass; it is a distinct third state, because a rule scored pass on no evidence is the failure mode that discredits every other score in the report. Give unknown its own line in the report, after the fails, and its own count. Never round unknown up to pass because the rest of the repository looks well kept, and never round it down to fail because access was inconvenient to get.
 
-## Output format
+## Step 5: Count what you checked
+
+Count the rules the standard defines before writing any total:
+
+```bash
+grep -c '^### R-' <absolute path to STANDARD.md>
+```
+
+Every rule you read carries exactly one status, so pass, fail, unknown, and not applicable add up to that number once the retired rules are subtracted from both sides. Subtract them explicitly: the grep counts a retired rule's heading, and a bare comparison drops the first retired ID into the unchecked bucket and reintroduces the mis-scoring Step 2 exists to prevent.
+
+Where the four counts fall short, a rule has no status and is unchecked rather than passing. Go back to Step 3, check it, and count again. Do not report until the arithmetic closes.
+
+## Step 6: Report
 
 Report only what the maintainer has to act on. A rule that passed gets no line of its own, unless a below-the-bar fallback carried it. You checked every applicable rule and you hold the evidence for every one of them, but a reader who came for the gaps does not need thirty rows confirming what already works, and printing them pushes the four that matter off the screen.
 
@@ -55,13 +67,15 @@ Say in a parenthetical why the not-applicable rules were skipped, grouped by rea
 Then list every fail and every unknown, most important first, one line each. A line carries the rule ID, the status, the evidence you found, and the skill named in that rule's `Fixed by:` line:
 
 ```text
-Audited 49 applicable rules: 43 pass, 4 fail, 2 unknown, 7 not applicable (6 PUB, the project publishes no package; 1 GitLab-only).
+Audited 40 applicable rules: 34 pass, 4 fail, 2 unknown, 6 not applicable (5 PUB, the project publishes no package; 1 GitLab-only).
 
 1. R-COM-01 fail, no LICENSE file, run oss-community
 2. R-DOC-01 fail, README.md opens with a badge row before any sentence about the project, run oss-readme
 3. R-SEC-01 fail, three uses: lines in .github/workflows/ci.yml pin a tag rather than a SHA, at lines 12, 19, and 31, run oss-harden
 4. R-SEC-04 unknown, the check reads repos/{owner}/{repo}/rulesets and no forge access was available, run oss-harden
 ```
+
+The numbers above illustrate the shape. Derive yours from the count in Step 5.
 
 The order is the priority, so there is no second list saying what to do first. Put every fail ahead of every unknown, since a fail is a confirmed gap and an unknown is only a gap in the audit itself. Within the fails, put a rule that blocks other rules from being checked or fixed ahead of an independent one: a missing license blocks the newcomer-facing community rules that assume the project can legally be used, a missing CONTRIBUTING.md blocks the CI rule that checks its commands match, and a missing SECURITY.md or unset branch protection blocks the security rules that build on it. Order the rest by what most reduces risk or friction for a new contributor.
 
