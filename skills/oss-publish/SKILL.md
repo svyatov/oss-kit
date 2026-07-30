@@ -1,6 +1,6 @@
 ---
 name: oss-publish
-description: "Set up a secure release process for an open source package so no long-lived publishing token exists to steal. Covers trusted publishing with OIDC, build provenance, and approval-gated release workflows for npm, RubyGems, PyPI, and crates.io on both GitHub Actions and GitLab CI/CD. Use for any request to publish a package, secure or harden a release process, set up trusted publishing or provenance, or create a release workflow."
+description: "Set up a secure release process for an open source package so no long-lived publishing token exists to steal. Covers trusted publishing with OIDC, build provenance, and approval-gated release workflows for npm, RubyGems, PyPI, and crates.io on both GitHub Actions and GitLab CI/CD. Use for any request to publish a package, secure or harden a release process, set up trusted publishing or provenance, generate an SBOM, sign release binaries, publish checksums for release assets, or create a release workflow."
 license: MIT
 ---
 

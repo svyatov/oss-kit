@@ -75,9 +75,9 @@ continuous integration.
 | `oss-readme` | Orders the README and checks its claims against the source. |
 | `oss-ci` | Writes the test, lint, and build jobs for either forge. |
 | `oss-harden` | Pins action SHAs, trims permissions, and guards the branch. |
-| `oss-publish` | Sets up publishing to npm, RubyGems, PyPI, and crates.io. |
+| `oss-publish` | Publishes to npm, RubyGems, PyPI, and crates.io, and signs it. |
 | `oss-changelog` | Keeps CHANGELOG.md, picks the bump, writes release notes. |
-| `oss-writing` | Fixes the sentences in commits, pull requests, and docs. |
+| `oss-writing` | Fixes the sentences in commits, reviews, docs, and issues. |
 | `oss-skill` | Fixes the structure and portability of the skills you ship. |
 
 Each skill page on the [documentation site](https://oss-kit.svyatov.com/skills/)

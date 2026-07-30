@@ -1,6 +1,6 @@
 ---
 name: oss-changelog
-description: "Maintain a changelog and make versioning decisions for an open source project: Keep a Changelog structure, semantic version choices, release notes generated from merged work, and deprecation policy. Use when the user asks to write or update a CHANGELOG, decide whether a change is major, minor, or patch, draft release notes, or deprecate an API. The prose style belongs to oss-writing; the publishing mechanics belong to oss-publish."
+description: "Maintain a changelog and make versioning decisions for an open source project: Keep a Changelog structure, semantic version choices, release notes generated from merged work, and deprecation policy. Use when the user asks to write or update a CHANGELOG, decide whether a change is major, minor, or patch, draft release notes, or deprecate an API. Also use when someone asks whether something is a breaking change, whether it needs a major bump, or whether to yank a release. The prose style belongs to oss-writing; the publishing mechanics belong to oss-publish."
 license: MIT
 ---
 
