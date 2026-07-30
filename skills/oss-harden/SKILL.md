@@ -28,7 +28,19 @@ Look for `.github/workflows/` or `.gitlab-ci.yml`, check the git remote for a gi
 
 ### Step 2: Read the current state
 
-Before changing anything, read what already exists, using the commands the matching reference file names for each of the following:
+Settle the credential before the first call rather than discovering the gap on a failed one. Every read and write from here on goes through the forge's API.
+
+On GitHub, the commands assume `gh` is installed and authenticated; `gh auth status` prints the active account per host. The settings reads and writes need admin on the repository, which is also why `security_and_analysis` is absent rather than `disabled` for a caller without it.
+
+On GitLab, an audit-only run and a repair run need different tokens, and the difference is worth keeping. The read set clears with a token carrying the `read_api` scope, which GitLab documents as read access to the API. The write set needs `api`, which GitLab documents as complete read and write access. Provision the read-only token for a sweep that only reports, so a run auditing the settings cannot rewrite them.
+
+Scope is not the whole answer, because several project-settings reads carry a role floor of their own. GitLab documents the job-token scope reads as needing the Maintainer or Owner role, and the security-settings read as needing Security Manager, Developer, Maintainer, or Owner. Both writes, the job-token allowlist and the security settings, need Maintainer or Owner. So a read-only sweep still needs a Maintainer token; do not assume the reads clear at a lower role than the writes.
+
+Read a refusal carefully. GitLab documents 403 as a request that is not allowed and 404 as a resource that could not be accessed, which its own wording extends to a user who is not authorized to reach it. A read denied for role reasons can therefore answer 404, which reads like a control that is off and is not. Report it as unknown.
+
+Supply the token from an environment variable read from the operator's own secret store, and never inline it. A token pasted into a command lands in shell history and in whatever transcript the run produces, which turns one audit into a leaked credential.
+
+With that settled, read what already exists before changing anything, using the commands the matching reference file names for each of the following:
 
 Every workflow or pipeline file, so the `uses:` lines, `image:` and `include:` entries, and `permissions:` blocks that need fixing are known before any edit is proposed.
 
@@ -96,7 +108,9 @@ For R-SEC-11, switching the forge's alerting on does not finish the check. Compa
 
 ### Step 13: Read OpenSSF Scorecard results
 
-Use Scorecard as supplementary evidence after the direct checks above, never as a substitute for them. Query the public API for an existing result and report its date, Scorecard version, per-check reason, and details. The weekly public dataset currently derives its project list from GitHub only and omits some API-expensive checks, while repository-published results depend on a configured Scorecard GitHub Action. A missing or stale result is normal and must not change a directly verified rule status. Map `Pinned-Dependencies`, `Token-Permissions`, `Dependency-Update-Tool`, and `Branch-Protection` only where their evidence matches the rule, and never map `Signed-Releases` to signed git tags because that check examines release artifacts. Do not offer to install or run another scanner unless the user asks for that expansion.
+Use Scorecard as supplementary evidence after the direct checks above, never as a substitute for them. A missing or stale result is normal and must not change a directly verified rule status. Do not offer to install or run another scanner unless the user asks for that expansion.
+
+The Scorecard section of the reference file Step 1 chose carries the rest: `references/github.md` for what the API returns, which checks map to which rule, and how `Branch-Protection` scores a repository that R-SEC-12 does not reach; `references/gitlab.md` for what the public dataset covers on that forge.
 
 ### Step 14: Present the result
 
