@@ -60,7 +60,7 @@ Before you open the pull request:
 - If a skill's description changed, update the skills table in `README.md`.
 - If this adds or changes a rule, check that `AGENTS.md` still describes how this repository scores against it.
 
-This repository merges by squash with the pull request description as the commit message, so write the description as the commit body it becomes: paragraphs, no headings, and no hard wrapping.
+This repository merges by squash with the pull request description as the commit message. Write the description for the forge anyway, because that is where a reviewer reads it before opening the diff. Use the headings `.github/pull_request_template.md` ships, along with paragraphs and bullets, all of which survive the wrap GitHub applies to the stored body at 72 columns. Do not hard wrap, because text you wrapped by hand arrives wrapped twice. A table is for the forge alone and reads ragged in `git log`. Keep `Closes` and any `BREAKING CHANGE:` footer last, so they still parse once the description becomes the commit body.
 
 ## Governance
 
