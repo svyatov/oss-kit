@@ -149,7 +149,7 @@ Forges: both
 
 Without a catch-all owner, a change to an unclaimed directory waits for someone to notice it. With one, the forge requests review automatically.
 
-Check: where the forge supports Code Owners for the repository's visibility and plan, a `CODEOWNERS` file exists in the repository root, `.github/`, `.gitlab/`, or `docs/`, and it contains a `*` rule naming at least one eligible owner. GitLab Free and private repositories on GitHub Free fall outside this rule.
+Check: where the forge supports Code Owners for the repository's visibility and plan, and two or more principals hold push, maintain, or admin access as R-SEC-12 reads it, a `CODEOWNERS` file exists in the repository root, `.github/`, `.gitlab/`, or `docs/`, and it contains a `*` rule naming at least one eligible owner. GitLab Free, private repositories on GitHub Free, and a repository where one principal holds every merge path fall outside this rule.
 
 Fixed by: oss-community
 Forges: both
@@ -257,11 +257,11 @@ Check: the repository contains `.github/dependabot.yml` or a Renovate configurat
 Fixed by: oss-harden
 Forges: both
 
-### R-SEC-04: The default branch requires review and passing checks before merge, and rejects force pushes
+### R-SEC-04: The default branch takes changes only through a change request that passed CI, and rejects force pushes
 
-Branch protection is the only rule here that a repository setting enforces rather than a file. Without it, every other rule in this document can be bypassed by one push.
+Branch protection is the only rule here that a repository setting enforces rather than a file. Without it, every other rule in this document can be bypassed by one push. Every control this rule names binds a repository of any size, including one with a single maintainer, because none of them needs a second person to function.
 
-Check: the default branch is protected, requires at least one approving review, requires the CI status check to pass, and blocks force pushes and deletion. On GitHub the settings live in either of two places, so read both: `gh api repos/{owner}/{repo}/rulesets` for a ruleset, and `gh api repos/{owner}/{repo}/branches/{branch}/protection` for a classic rule, which answers `404 Branch not protected` when a ruleset is what guards the branch. On GitLab, `GET /projects/:id/protected_branches/:name`.
+Check: the default branch is protected, a pull request or merge request is the only path onto it, at least one CI status check must pass before merge, and force pushes and deletion are blocked. On GitHub the settings live in either of two places, so read both: `gh api repos/{owner}/{repo}/rulesets` for a ruleset, and `gh api repos/{owner}/{repo}/branches/{branch}/protection` for a classic rule, which answers `404 Branch not protected` when a ruleset is what guards the branch. On GitLab, `GET /projects/:id/protected_branches/:name`.
 
 Fixed by: oss-harden
 Forges: both
@@ -325,6 +325,17 @@ Forges: both
 An updater (R-SEC-03) moves dependencies forward on a schedule. It never says which of today's pinned versions is now known-bad, so without a watcher the freeze that R-SEC-01 and R-SEC-08 create is a freeze nobody is told to break.
 
 Check: the package set the forge reports watching matches the project's resolved dependency set, so coverage of a manifest's direct dependencies does not read as coverage of the lockfile; where the forge cannot parse the project's lockfile, a scanner that can reads it and covers the residual. On GitHub, `gh api repos/{owner}/{repo}/vulnerability-alerts` answers 204 when enabled and 404 when disabled, and `gh api repos/{owner}/{repo}/dependency-graph/sbom` lists what is actually watched; read every control back after a write for the reason R-SEC-10 gives, and treat an absent `security_and_analysis` key as unknown rather than disabled. On GitLab, Dependency Scanning requires Ultimate, and a Free project reaches the same outcome through a job running an advisory-database scanner. A vulnerability the change introduces blocks its merge; the repository-wide scan reports rather than blocks, because an advisory published against a dependency with no fix is not something a contributor can resolve.
+
+Fixed by: oss-harden
+Forges: both
+
+### R-SEC-12: Where more than one person can merge, the default branch requires an approving review
+
+A review catches what no scanner reads: the change an insider lands on purpose, and the change a stolen account lands in someone else's name. Nobody can approve their own change request, so a repository where one principal holds every merge path cannot satisfy this rule and gains nothing from being asked. Requiring an approval there produces one of two outcomes, a maintainer who cannot merge, or a bypass entry that exempts the only person the rule could bind. Both cost the repository a control it did have. Where two or more people can merge, the approval is the one control that puts a second pair of eyes on the diff before it lands.
+
+Skipping this rule has a scored consequence worth stating. OpenSSF Scorecard tiers the Branch-Protection check and gates each tier on the one below it, with force push and deletion in tier 1, review in tier 2, and status checks in tier 3. A repository that blocks force pushes and requires CI but not review therefore scores 3 out of 10 rather than 8. Meet the standard here, not the score.
+
+Check: where two or more principals hold push, maintain, or admin access, the default branch requires at least one approving review, and where a CODEOWNERS file exists its review is enforced. Read the access list rather than inferring it, with `gh api repos/{owner}/{repo}/collaborators?affiliation=all` plus the repository's teams on GitHub, or project members at Developer or above on GitLab. A repository where one principal holds every merge path falls outside this rule rather than failing it. Where the access list cannot be read, which answers `403 Must have push access to view repository collaborators` for a caller without push access, the rule is unknown rather than pass or fail.
 
 Fixed by: oss-harden
 Forges: both

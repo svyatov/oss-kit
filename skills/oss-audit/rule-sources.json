@@ -95,7 +95,7 @@
       "https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners"
     ],
     "verified": "2026-07-28",
-    "note": "Confirms the .github/, root, and docs/ locations and the catch-all pattern. The page did not state the plan and visibility limits the rule's exemption relies on; that half is unverified."
+    "note": "Confirms the .github/, root, and docs/ locations and the catch-all pattern. The page did not state the plan and visibility limits the rule's exemption relies on; that half is unverified. The solo exemption is not from this page either: it tracks R-SEC-12, because the forge requests review from an owner who is the only person who could merge the change anyway."
   },
   "R-COM-07": {
     "sources": [],
@@ -175,7 +175,7 @@
   "R-SEC-04": {
     "sources": ["https://github.com/ossf/scorecard/blob/main/docs/checks.md"],
     "verified": "2026-07-28",
-    "note": "Scorecard Branch-Protection covers force-push prevention, review, and status checks, and names repository rules alongside classic protection. The GitHub and GitLab API endpoints the check reads have no source named."
+    "note": "Scorecard Branch-Protection covers force-push prevention and status checks, and names repository rules alongside classic protection. Its review requirement is R-SEC-12 rather than this rule. The GitHub and GitLab API endpoints the check reads have no source named."
   },
   "R-SEC-05": {
     "sources": [
@@ -228,6 +228,11 @@
     ],
     "verified": "2026-07-28",
     "note": "Alert coverage follows dependency graph support rather than the updater's ecosystem list, which is why the rule compares what the forge reports watching against the resolved set instead of treating alerting as on or off. The GitLab source establishes the Ultimate tier; the Free-tier scanner path it leaves open is this project's own position, taken because a rule no Free project could ever satisfy would exclude most of the population the standard is written for."
+  },
+  "R-SEC-12": {
+    "sources": ["https://github.com/ossf/scorecard/blob/main/docs/checks.md"],
+    "verified": "2026-07-30",
+    "note": "Scorecard Branch-Protection is where the scope condition comes from, in its own voice: 'Although requiring code review can greatly reduce the chance that unintentional or malicious code enters the \"main\" branch, it is not feasible for all projects, such as those that don't have many active participants.' The same check tiers what R-SEC-04 used to bundle, and gates each tier on the one below it: 'a tier must be fully satisfied before you can earn points from the next tier.' Tier 1 is force push and deletion at 3 of 10, tier 2 is one reviewer at 6, tier 3 is one status check at 8. That gating is what puts the 3 of 10 figure in the rule. Reading the access list to decide whether the rule applies is this project's own position; Scorecard names no participant count and offers no threshold, so the standard picked the smallest one that makes review mean anything, which is a second principal who can merge."
   },
   "R-PUB-01": {
     "sources": [
