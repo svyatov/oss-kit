@@ -77,10 +77,11 @@
   },
   "R-COM-04": {
     "sources": [
-      "https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability"
+      "https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability",
+      "https://www.bestpractices.dev/en/criteria/0"
     ],
-    "verified": "2026-07-28",
-    "note": "Confirms private reporting is public-repository only and is separate from SECURITY.md, which is why the check accepts it only when enabled. GitLab confidential issues and Service Desk have no source named."
+    "verified": "2026-07-30",
+    "note": "GitHub's page confirms private reporting is public-repository only and is separate from SECURITY.md, which is why the check accepts it only when enabled. GitLab confidential issues and Service Desk have no source named. The 14-day ceiling comes from the OpenSSF Best Practices badge Passing criterion 'vulnerability_report_response', MUST with N/A allowed: 'The project's initial response time for any vulnerability report received in the last 6 months MUST be less than or equal to 14 days.' The badge measures reports actually received and marks a project with none N/A; this rule reads the number the policy states instead, because a stated window is what a finder decides when to escalate from and is observable in the file. The ceiling retires if the badge revises it."
   },
   "R-COM-05": {
     "sources": [

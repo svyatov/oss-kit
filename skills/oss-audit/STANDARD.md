@@ -129,9 +129,9 @@ Forges: both
 
 ### R-COM-04: SECURITY.md states a private reporting channel and a response window
 
-Without a stated channel, a finder either opens a public issue that discloses the bug to everyone at once, or gives up. A stated response window tells them when to escalate.
+Without a stated channel, a finder either opens a public issue that discloses the bug to everyone at once, or gives up. A stated response window tells them when to escalate. A window with no ceiling promises nothing, because a policy answering within a year satisfies the words and defeats the point.
 
-Check: `SECURITY.md` exists at the repository root, in `.github/`, or in `docs/` on GitHub, or at the repository root on GitLab, and names a private channel that an unaffiliated reporter can use, together with the time you commit to responding in. Accept GitHub private vulnerability reporting only when the repository is public and the feature is enabled. Accept a GitLab confidential issue only when the intended reporter role can create it as confidential; GitLab Service Desk and a monitored security email are valid alternatives.
+Check: `SECURITY.md` exists at the repository root, in `.github/`, or in `docs/` on GitHub, or at the repository root on GitLab, and names a private channel that an unaffiliated reporter can use, together with the time you commit to responding in, which is no longer than 14 days. Accept GitHub private vulnerability reporting only when the repository is public and the feature is enabled. Accept a GitLab confidential issue only when the intended reporter role can create it as confidential; GitLab Service Desk and a monitored security email are valid alternatives.
 
 Fixed by: oss-community
 Forges: both
