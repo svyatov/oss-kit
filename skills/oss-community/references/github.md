@@ -2,6 +2,22 @@
 
 Concrete syntax and file locations for the decisions `SKILL.md` makes. Verified against the current GitHub documentation source at `github/docs` on the `main` branch. Confirm a field's availability on the repository's own plan before relying on it.
 
+## Contents
+
+- [Issue templates (R-COM-05)](#issue-templates-r-com-05)
+  - [Markdown templates](#markdown-templates)
+  - [Issue forms](#issue-forms)
+  - [Template chooser config (R-COM-09)](#template-chooser-config-r-com-09)
+- [Discussion category forms](#discussion-category-forms)
+- [Pull request template](#pull-request-template)
+- [CODEOWNERS (R-COM-06)](#codeowners-r-com-06)
+- [FUNDING.yml](#fundingyml)
+- [Repository settings (R-COM-07)](#repository-settings-r-com-07)
+  - [The About sidebar](#the-about-sidebar)
+  - [Social preview](#social-preview)
+  - [Feature tabs](#feature-tabs)
+  - [Community profile](#community-profile)
+
 ## Issue templates (R-COM-05)
 
 GitHub recognizes two kinds of issue template, both stored in the hidden `.github/ISSUE_TEMPLATE/` directory on the default branch. Filenames are not case sensitive.

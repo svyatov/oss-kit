@@ -4,6 +4,16 @@ Concrete syntax for the decisions `SKILL.md` makes. This file covers what runs: 
 
 Every `uses:` line below names a version tag, not a commit SHA. Resolving a tag to a full commit SHA is R-SEC-01, which belongs to `oss-harden`; emit the tag form here and let `oss-harden` pin it before the workflow ships. Resolve each action's current major from its own repository before you emit it, because the majors written below age with this file.
 
+## Contents
+
+- [Triggers (R-CI-01)](#triggers-r-ci-01)
+- [Call project automation, not inline logic (R-CI-02)](#call-project-automation-not-inline-logic-r-ci-02)
+- [Test matrix (R-CI-03)](#test-matrix-r-ci-03)
+- [Caching keyed on the lockfile (R-CI-04)](#caching-keyed-on-the-lockfile-r-ci-04)
+- [Timeout and cancellation of superseded runs (R-CI-05)](#timeout-and-cancellation-of-superseded-runs-r-ci-05)
+- [Deploying a static site to GitHub Pages](#deploying-a-static-site-to-github-pages)
+- [Secrets](#secrets)
+
 ## Triggers (R-CI-01)
 
 Run on push to the default branch and on every pull request:

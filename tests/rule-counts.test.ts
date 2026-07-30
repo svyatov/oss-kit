@@ -38,6 +38,22 @@ const audits = (text: string) => [...text.matchAll(AUDIT)].map((m) => m.slice(1)
 const quotingTotals = ["README.md", "skills/oss-readme/SKILL.md"]
 const quotingAudits = quotingTotals
 
+// STANDARD.md's own preamble carries an index: the total, and one line per area
+// naming its ID range. It is the one file that changes whenever a rule is
+// added, so a hand-written number there is the same drift in a worse place, and
+// check-drift.sh's parse contract cannot see a wrong number. Both halves are
+// derived here from the rule headings the rest of the file already parses.
+const INDEX_TOTAL = /^The standard holds (\d+) rules:$/m
+const INDEX_ROW = /^- (.+): R-([A-Z]+)-(\d{2}) through R-([A-Z]+)-(\d{2})$/gm
+
+const ranges = new Map<string, [number, number]>()
+for (const m of standard.matchAll(/^### R-([A-Z]+)-(\d{2}):/gm)) {
+  const area = m[1]!
+  const n = Number(m[2])
+  const seen = ranges.get(area)
+  ranges.set(area, seen ? [Math.min(seen[0], n), Math.max(seen[1], n)] : [n, n])
+}
+
 describe("rule counts quoted in prose", () => {
   test("the standard parses to a sane set of counts", () => {
     expect(total).toBeGreaterThan(0)
@@ -63,6 +79,26 @@ describe("rule counts quoted in prose", () => {
       expect(found.filter((p) => !allowed.has(p))).toEqual([])
     })
   }
+
+  test("STANDARD.md's index states the derived total", () => {
+    const found = INDEX_TOTAL.exec(standard)
+    expect(found).not.toBeNull()
+    expect(Number(found![1])).toBe(total)
+  })
+
+  test("STANDARD.md's index covers every area at its current range", () => {
+    const rows = [...standard.matchAll(INDEX_ROW)]
+    // One row per area, and each row's two IDs name the same area, so a row
+    // reading "R-DOC-01 through R-COM-09" fails rather than half-passing.
+    expect(rows.map((r) => r[2])).toEqual([...ranges.keys()])
+    expect(rows.filter((r) => r[2] !== r[4])).toEqual([])
+    for (const row of rows) {
+      const [low, high] = ranges.get(row[2]!)!
+      expect(`${row[2]} ${row[3]} ${row[5]}`).toBe(
+        `${row[2]} ${String(low).padStart(2, "0")} ${String(high).padStart(2, "0")}`,
+      )
+    }
+  })
 
   for (const path of quotingAudits) {
     test(`${path} shows an audit whose numbers add up`, () => {

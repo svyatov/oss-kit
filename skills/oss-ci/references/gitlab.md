@@ -4,6 +4,17 @@ Concrete syntax for the decisions `SKILL.md` makes, written for `.gitlab-ci.yml`
 
 Every keyword below was checked against the current GitLab CI/CD YAML reference at `docs.gitlab.com/ci/yaml/` before it was written here. GitLab's closest equivalent to a GitHub Actions `uses:` step is a CI/CD component, reusable pipeline configuration consumed through `include:` with a component path and `inputs:`; components reached general availability in GitLab 17.0. A pipeline can also call project commands directly in `script:`, or reuse plain configuration through `include:`.
 
+## Contents
+
+- [Pipeline structure](#pipeline-structure)
+- [Triggers (R-CI-01)](#triggers-r-ci-01)
+- [Call project automation, not inline logic (R-CI-02)](#call-project-automation-not-inline-logic-r-ci-02)
+- [Test matrix (R-CI-03)](#test-matrix-r-ci-03)
+- [Caching keyed on the lockfile (R-CI-04)](#caching-keyed-on-the-lockfile-r-ci-04)
+- [Timeout and cancellation of superseded runs (R-CI-05)](#timeout-and-cancellation-of-superseded-runs-r-ci-05)
+- [Test reports](#test-reports)
+- [Deploying a static site to GitLab Pages](#deploying-a-static-site-to-gitlab-pages)
+
 ## Pipeline structure
 
 A `.gitlab-ci.yml` is a set of jobs, each a top-level key with a `script:`. `stages:` names the stages and their order; jobs run in the stage they declare with `stage:`, and jobs in the same stage run in parallel. If `stages:` is omitted, GitLab uses the default order `.pre`, `build`, `test`, `deploy`, `.post`. `.pre` always runs first and `.post` always runs last regardless of where they appear in the file; a pipeline containing only `.pre` or `.post` jobs does not run, so name at least one job in an ordinary stage.

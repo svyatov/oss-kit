@@ -4,6 +4,16 @@ Concrete flow for the decisions `SKILL.md` makes, for a crate published to crate
 
 Source: [crates.io Docs, Trusted Publishing](https://crates.io/docs/trusted-publishing) and [Rust Blog, crates.io development update, 2026-01-21](https://blog.rust-lang.org/2026/01/21/crates-io-development-update).
 
+## Contents
+
+- [Gather facts (Step 1)](#gather-facts-step-1)
+- [Configure trusted publishing (Step 2)](#configure-trusted-publishing-step-2)
+  - [GitHub Actions](#github-actions)
+  - [GitLab CI/CD](#gitlab-cicd)
+- [Write the hardened release workflow (Step 3)](#write-the-hardened-release-workflow-step-3)
+- [Gate on manual approval (Step 4)](#gate-on-manual-approval-step-4)
+- [Verify provenance (Step 5): a gap, not a check](#verify-provenance-step-5-a-gap-not-a-check)
+
 ## Gather facts (Step 1)
 
 Read `Cargo.toml`'s `package.repository` field for the owner and repository, falling back to `git remote get-url origin`. Check whether the crate is already published with `curl -s -o /dev/null -w '%{http_code}' https://crates.io/api/v1/crates/<name>` (or check the crate's page directly); anything other than `200` means it needs the first interactive publish before any of the flow below applies.

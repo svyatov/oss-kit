@@ -2,6 +2,20 @@
 
 This file records what each host reads, verified against that host's own documentation on the date noted in each section. It does not say which hosts a project should support. That is the project's decision, and `STANDARD.md` states no rule about it.
 
+## Contents
+
+- [The `skills` CLI (`npx skills add`)](#the-skills-cli-npx-skills-add)
+- [Antigravity](#antigravity)
+- [Claude Code](#claude-code)
+- [Codex](#codex)
+- [Cursor](#cursor)
+- [Gemini CLI](#gemini-cli)
+- [GitHub Copilot CLI](#github-copilot-cli)
+- [Kimi Code CLI](#kimi-code-cli)
+- [OpenCode](#opencode)
+- [VS Code](#vs-code)
+- [Keeping this current](#keeping-this-current)
+
 ## The `skills` CLI (`npx skills add`)
 
 Source: the `vercel-labs/skills` README at `github.com/vercel-labs/skills`.

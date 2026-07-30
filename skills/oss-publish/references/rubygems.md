@@ -4,6 +4,18 @@ Concrete flow for the decisions `SKILL.md` makes, for a gem published to rubygem
 
 Source: [RubyGems Guides, Trusted Publishing](https://github.com/rubygems/guides/blob/main/trusted-publishing.md).
 
+## Contents
+
+- [Gather facts (Step 1)](#gather-facts-step-1)
+- [Configure trusted publishing (Step 2)](#configure-trusted-publishing-step-2)
+  - [GitHub Actions](#github-actions)
+  - [GitLab CI/CD: no supported flow](#gitlab-cicd-no-supported-flow)
+- [Write the hardened release workflow (Step 3)](#write-the-hardened-release-workflow-step-3)
+- [Gate on manual approval (Step 4)](#gate-on-manual-approval-step-4)
+- [Verify provenance (Step 5)](#verify-provenance-step-5)
+- [Not yet published gems](#not-yet-published-gems)
+- [Multi-gem repositories](#multi-gem-repositories)
+
 ## Gather facts (Step 1)
 
 Read every `*.gemspec` in the repository; a repository with more than one needs one trusted publisher per gem. Get the owner and repository from the gemspec's `metadata["source_code_uri"]` or `homepage_uri`, falling back to `git remote get-url origin`. Check whether each gem is already published with `curl -s -o /dev/null -w '%{http_code}' https://rubygems.org/api/v1/gems/<name>.json`; a `404` means it is not, and [Not yet published gems](#not-yet-published-gems) below covers that case.

@@ -4,6 +4,17 @@ Concrete flow for the decisions `SKILL.md` makes, for a package published to pyp
 
 Source: [PyPI Docs, Trusted publishers](https://docs.pypi.org/trusted-publishers/adding-a-publisher/), [PyPI Docs, Using a publisher](https://docs.pypi.org/trusted-publishers/using-a-publisher/), and [PyPI Blog, Trusted Publishing is popular, now for GitLab Self-Managed and Organizations](https://blog.pypi.org/posts/2025-11-10-trusted-publishers-coming-to-orgs/).
 
+## Contents
+
+- [Gather facts (Step 1)](#gather-facts-step-1)
+- [Configure trusted publishing (Step 2)](#configure-trusted-publishing-step-2)
+  - [GitHub Actions](#github-actions)
+  - [GitLab CI/CD](#gitlab-cicd)
+- [Write the hardened release workflow (Step 3)](#write-the-hardened-release-workflow-step-3)
+- [Gate on manual approval (Step 4)](#gate-on-manual-approval-step-4)
+- [Verify provenance (Step 5)](#verify-provenance-step-5)
+- [Not yet published projects](#not-yet-published-projects)
+
 ## Gather facts (Step 1)
 
 Read `pyproject.toml` (the `project.name` and `project.urls` tables), or `setup.cfg` or `setup.py` if the project has not migrated. Get the owner and repository from the project's URL metadata, falling back to `git remote get-url origin`. Check whether the package is already published with `curl -s -o /dev/null -w '%{http_code}' https://pypi.org/pypi/<name>/json`; a `404` means it is not, and [Not yet published projects](#not-yet-published-projects) below covers that case.

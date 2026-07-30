@@ -4,6 +4,18 @@ Concrete flow for the decisions `SKILL.md` makes, for a package published to the
 
 Source: [npm Docs, Trusted publishing for npm packages](https://docs.npmjs.com/trusted-publishers/), [npm Docs, Staged publishing](https://docs.npmjs.com/staged-publishing/), and [Node.js download archive, Node 24.18.0](https://nodejs.org/en/download/archive/v24.18.0).
 
+## Contents
+
+- [Gather facts (Step 1)](#gather-facts-step-1)
+- [Configure trusted publishing (Step 2)](#configure-trusted-publishing-step-2)
+  - [GitHub Actions](#github-actions)
+  - [GitLab CI/CD](#gitlab-cicd)
+- [Write the hardened release workflow (Step 3)](#write-the-hardened-release-workflow-step-3)
+- [Gate on manual approval (Step 4)](#gate-on-manual-approval-step-4)
+- [Verify provenance (Step 5)](#verify-provenance-step-5)
+- [Not yet published packages](#not-yet-published-packages)
+- [Monorepo packages](#monorepo-packages)
+
 ## Gather facts (Step 1)
 
 Read the root `package.json`. If it declares `workspaces`, or a `pnpm-workspace.yaml` exists, the repository is a monorepo: enumerate every workspace `package.json`. Only a package without `"private": true` needs npm settings. Get the owner and repository from the `repository` field, normalizing `git+https://github.com/owner/repo.git`, `github:owner/repo`, or `owner/repo`, falling back to `git remote get-url origin`. Check whether each public package is already published with `npm view <name> version`; an `E404` means it is not, and [Not yet published packages](#not-yet-published-packages) below covers that case.
