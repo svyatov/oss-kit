@@ -78,6 +78,25 @@ A bug fix is not automatically a PATCH. Determine whether the old behavior belon
 
 A new required config value is the second case. The instinct is that adding something is growth, so it should be MINOR. But a config value with no default, one the project now refuses to start without, breaks every existing deployment the moment they upgrade without editing their config. Apply the test: a config file that worked, unmodified, on the previous version no longer starts the previous version. That forces MAJOR. A new config value with a default that preserves the old behavior is backward compatible and stays MINOR.
 
+Under `0.y.z` this standard reserves MINOR for an incompatible change, so a compatible addition takes PATCH alongside a compatible fix. That is what keeps a MINOR bump before 1.0.0 meaning "this may break you".
+
+Ten changes and the bump each forces:
+
+| Change | Stable | `0.y.z` | What decides it |
+| --- | --- | --- | --- |
+| New optional argument with a default | MINOR | PATCH | Every existing call still compiles and behaves as before |
+| New config key with a default preserving the old behavior | MINOR | PATCH | An unedited config file still starts |
+| New required config key with no default, and startup fails without it | MAJOR | MINOR | An unedited config file no longer starts |
+| Fix restoring documented behavior, breaking an undocumented workaround | PATCH | PATCH | The workaround was never in the declared API |
+| Fix to a crash, no interface change | PATCH | PATCH | Nothing in the declared API moved |
+| Deprecation notice added, old path still works | MINOR | PATCH | A deprecation is an addition until the removal lands |
+| Public method removed after its deprecation window | MAJOR | MINOR | The window makes the removal expected, not compatible |
+| Error message text changed, not documented as an interface | PATCH | PATCH | Message text is outside the declared API until a project declares it in |
+| Minimum runtime version raised | MAJOR | MINOR | A runtime the project supported yesterday no longer runs it |
+| Development-only dependency bump | no release | no release | Nothing a user installs changed |
+
+Two rows turn on what the project declared rather than on the shape of the change. Where an undocumented behavior is widely relied on, SemVer calls for judgment, and a fix that breaks realistic callers is incompatible whatever the documentation said. Where a project documents its error messages as an interface, for example because a test suite or a log parser matches them, changing one is a public API change. Run the test above against the declaration from Step 1 rather than reading the row alone.
+
 R-CHG-02 checks the bump rule.
 
 ### Step 6: Write or amend the changelog section
@@ -98,6 +117,48 @@ Next comes `## [Unreleased]`, followed by released versions newest first in the 
 Omit empty categories. Mark each incompatible change inside `Changed` or `Removed` with `**Breaking:**`, name the affected public interface, and give the short migration step. Link to a migration guide when the steps would make the entry hard to scan. A release may start with a one- or two-sentence summary before its categories.
 
 Make every bracketed version heading a reference link. `[Unreleased]` compares the newest tag with `HEAD`, each later version compares its tag with the preceding release, and the oldest version links to its tag. Use the repository's actual forge and tag format. Keep issue and pull request links useful and portable, and collect them as reference links rather than filling entries with bare forge numbers.
+
+This is the shape those rules produce. The headings, the category names, the `**Breaking:**` marker, and the structure of the link block are copied as they stand; everything in angle brackets, every version, every date, and every entry comes from the repository:
+
+````markdown
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/2.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [2.0.0] - 2026-07-30
+
+### Added
+
+- `--format` accepts `json` and `csv`, and defaults to `json` ([#128])
+
+### Changed
+
+- **Breaking:** `parse()` returns a result object rather than throwing on bad
+  input. Wrap existing calls, or call `parseOrThrow()`, which keeps the old
+  behavior.
+
+## [1.4.0] - 2026-05-02
+
+### Fixed
+
+- `--quiet` no longer suppresses the exit status
+
+[unreleased]: https://github.com/<owner>/<repo>/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/<owner>/<repo>/compare/v1.4.0...v2.0.0
+[1.4.0]: https://github.com/<owner>/<repo>/releases/tag/v1.4.0
+[#128]: https://github.com/<owner>/<repo>/pull/128
+````
+
+The oldest version links to its tag, because there is no earlier release to compare it against. Every later version compares its tag with the one below it, and `[Unreleased]` compares the newest tag with `HEAD`, so an empty `[Unreleased]` link resolves to an empty diff rather than to nothing.
+
+The link labels are lowercase where the headings are not. Markdown matches a link label case-insensitively, so `[unreleased]` resolves `## [Unreleased]`; match whichever form the file already uses rather than changing it.
+
+On GitLab the same three shapes are `/-/compare/v1.4.0...v2.0.0`, `/-/tags/v1.4.0`, and `/-/merge_requests/128`. Read the forge from the remote rather than assuming GitHub.
 
 R-CHG-01 is the check for this structure.
 
