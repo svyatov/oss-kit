@@ -13,6 +13,7 @@ Source: [PyPI Docs, Trusted publishers](https://docs.pypi.org/trusted-publishers
 - [Write the hardened release workflow (Step 3)](#write-the-hardened-release-workflow-step-3)
 - [Gate on manual approval (Step 4)](#gate-on-manual-approval-step-4)
 - [Verify provenance (Step 5)](#verify-provenance-step-5)
+- [Describe and sign what the release attaches (Step 6)](#describe-and-sign-what-the-release-attaches-step-6)
 - [Not yet published projects](#not-yet-published-projects)
 
 ## Gather facts (Step 1)
@@ -157,6 +158,56 @@ pypi-attestations verify pypi --repository https://<forge>/<owner>/<repo> <distr
 
 Source: [PyPI Docs, Producing attestations](https://docs.pypi.org/attestations/producing-attestations/) and [PyPI Docs, Consuming attestations](https://docs.pypi.org/attestations/consuming-attestations/).
 
+## Describe and sign what the release attaches (Step 6)
+
+Only for a release that attaches a built asset to the forge release. The distributions this workflow uploads to PyPI carry the PEP 740 attestations Step 5 verifies, and the source archives GitHub generates for a tag are not built assets, so a project that attaches nothing beside them goes to Step 7 instead.
+
+This reference names no SBOM generator for Python. The ones in common use are third-party tools rather than part of the packaging toolchain, and a tool that reads the dependency tree inside the release workflow is one the maintainer vets before it goes there. Until one is vetted, publish the hashes of what the release attaches and sign those, which needs nothing the runner does not already ship:
+
+```yaml
+  release:
+    runs-on: ubuntu-latest
+    needs: [publish]
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+      - run: (cd dist && sha256sum *) > SHA256SUMS
+      - uses: actions/attest@v4
+        with:
+          subject-checksums: SHA256SUMS
+      - run: gh release upload "$GITHUB_REF_NAME" dist/* SHA256SUMS
+        env:
+          GH_TOKEN: ${{ github.token }}
+```
+
+`sha256sum` runs from inside `dist/` so the names it writes are the names the assets carry on the release. A manifest listing `dist/foo.whl` cannot be checked against a downloaded `foo.whl`.
+
+`subject-checksums` makes every file listed in `SHA256SUMS` a subject of the attestation in its own right, by name and digest, and it takes the format `sha256sum` writes. Attesting `SHA256SUMS` itself with `subject-path` instead would leave a consumer able to verify the manifest and nothing about the assets it lists.
+
+A consumer verifies an asset, then checks the rest of the download against the manifest:
+
+```bash
+gh attestation verify <asset> --repo <owner>/<repo>
+sha256sum -c SHA256SUMS
+```
+
+Run the first command against each asset downloaded, never against `SHA256SUMS`, which is a subject of nothing. It proves that this workflow in this repository produced those exact bytes, and it prints the signing workflow it accepted; `--signer-workflow <owner>/<repo>/.github/workflows/release.yml` pins that, so an attestation from any other workflow in the repository fails. The second command is what a consumer without `gh` has. It proves the files match a list published beside them, and nothing about who produced either.
+
+`gh release upload` fails when no release exists for the tag. Either create it in this job with `gh release create "$GITHUB_REF_NAME" --generate-notes` before the upload, or have the maintainer publish the release from the tag first. This reference does not choose between them, because release notes are the project's own.
+
+A third job is what makes the grants above safe, so copy the job boundary along with them. The build job runs the project's own build command, so giving it release-asset writes and an attestation identity is exactly the credential split Step 3 exists to enforce, and it would write assets before the approval gate. The publish job holds the OIDC identity PyPI trusts. Only a separate job satisfies both, and `needs: [publish]` is what keeps the assets behind the gate.
+
+The four grants above are copied exactly, on this job only. The workflow's top-level block stays `contents: read`. Narrowing anything else, pinning each `uses:` to a commit SHA, and auditing the result are `oss-harden`'s.
+
 ## Not yet published projects
 
 A trusted publisher can be created before the first release: open `https://pypi.org/manage/account/publishing/` and enter the project name plus the same owner, repository, workflow filename, and environment as above. The first successful publish from that workflow claims the name.
+
+Step 7 is in `SKILL.md`: read each R-PUB rule's `Check:` line against what this file produced, and fix what fails before reporting done.
