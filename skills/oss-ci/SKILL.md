@@ -10,9 +10,11 @@ Decide what runs on push and on every change request, then write it in the synta
 
 ## Scope
 
+The CI rules belong here: R-CI-01 triggers, R-CI-02 project commands, R-CI-03 version matrix, R-CI-04 cache keying, R-CI-05 timeouts and cancellation, and R-CI-06 test suite.
+
 This skill owns what runs: which checks execute, on which triggers, across which versions, with what caching. It shares the workflow and pipeline files it writes with two other skills, and the boundary between them is the rule area, not a description of files.
 
-The CI rules below (R-CI-*) belong here. The SEC rules, security posture of the same files such as pinned action SHAs, minimal permissions, dependency updaters, branch protection, and pinned images, belong to oss-harden. The REL rules, publishing a built artifact to a registry with trusted publishing, provenance, and an approval gate, belong to oss-publish. Do not add a `permissions:` block, pin a SHA, configure branch protection, or write a publish job while working from this skill; note that the project needs it and hand the work to the owning skill. A GitHub Pages deploy is the single exception, and it covers only the two blocks [references/github-actions.md](references/github-actions.md) already emits: top-level `contents: read`, and `pages: write` plus `id-token: write` on the deploying job. Those grants are how the deployment authenticates, so a workflow written without them cannot run at all, and stripping them to honour the ban ships a green pipeline that deploys nothing. Every other permissions question still goes to `oss-harden`.
+The SEC rules, security posture of the same files such as pinned action SHAs, minimal permissions, dependency updaters, branch protection, and pinned images, belong to oss-harden. The REL rules, publishing a built artifact to a registry with trusted publishing, provenance, and an approval gate, belong to oss-publish. Do not add a `permissions:` block, pin a SHA, configure branch protection, or write a publish job while working from this skill; note that the project needs it and hand the work to the owning skill. A GitHub Pages deploy is the single exception, and it covers only the two blocks [references/github-actions.md](references/github-actions.md) already emits: top-level `contents: read`, and `pages: write` plus `id-token: write` on the deploying job. Those grants are how the deployment authenticates, so a workflow written without them cannot run at all, and stripping them to honour the ban ships a green pipeline that deploys nothing. Every other permissions question still goes to `oss-harden`.
 
 Deploying a built static site to the forge's own Pages hosting is also something that runs on a push, so it stays here rather than with oss-publish, which owns registry releases. No rule requires it: a project publishes a site because it has one, so it is written only where the repository builds a site and the user asks for the deployment.
 
@@ -71,17 +73,3 @@ Confirm the configuration is syntactically valid with the forge's own validator 
 ### Step 8: Present the result
 
 Show the generated file, a short summary of what was detected and decided, the list of secrets to configure, and anything left for the user to set at the repository or project level, such as branch protection or environment approvers, naming the skill that owns it rather than attempting it here.
-
-## Rules this skill owns
-
-R-CI-01: CI runs on every push to the default branch and on every change request
-
-R-CI-02: CI runs the same lint, test, and build commands the contributing guide gives to humans
-
-R-CI-03: The test matrix covers every runtime version the project claims to support
-
-R-CI-04: Dependency caches are keyed on the lockfile
-
-R-CI-05: Every job has a timeout, and superseded runs for the same branch are cancelled
-
-R-CI-06: The repository defines an automated test suite and the command that runs it

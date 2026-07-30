@@ -8,7 +8,7 @@ license: MIT
 
 Write with clarity and force for a reader whose first language is not English. Be terse.
 
-This skill owns how the sentence reads. The skill that owns the artifact owns what goes in it, and where a caller states an exception, the caller wins.
+This skill owns how the sentence reads, which is one rule: R-DOC-05 documentation prose. The skill that owns the artifact owns what goes in it, and where a caller states an exception, the caller wins.
 
 ## Read the local contract first
 
@@ -80,7 +80,3 @@ To enforce the mechanical half of this list in CI rather than in review, see [re
 - Identifier names, CLI flags, and file paths.
 - Required legal, license, and externally mandated security-advisory wording.
 - When editing prose a human wrote, fix only what is broken. Their voice is not a defect.
-
-## Rules this skill owns
-
-R-DOC-05: Documentation prose is plain, active, and free of marketing language.

@@ -10,6 +10,8 @@ Apply the structure below when creating or improving a README. It follows Evil M
 
 This skill owns section order and what each section must contain. It does not own how a sentence reads. Once the sections below are in place, apply oss-writing to the prose inside them.
 
+The README rules belong here: R-DOC-01 opening sentence, R-DOC-02 install and example, R-DOC-03 required links, R-DOC-04 claim accuracy, R-DOC-06 scope statement, R-DOC-07 code block destinations, R-DOC-08 question channel, R-DOC-09 maintenance status, and R-DOC-10 differentiator evidence. R-DOC-05, how each sentence reads, belongs to `oss-writing`.
+
 Never invent facts. If the repository does not contain a piece of data you need, such as a benchmark, a file size, a real differentiator from alternatives, or a supported platform list, or you are not sure a number is accurate, ask for it instead of guessing. A README with a fabricated number is worse than one with no number at all.
 
 ## Section order
@@ -248,23 +250,3 @@ Before finishing, read every package manifest, the lockfile, the CI configuratio
 17. Skimming only headings and the facts list still tells the story.
 18. The draft has been through oss-writing.
 19. Every image has meaningful alt text, and repository images use relative paths.
-
-## Rules this skill owns
-
-R-DOC-01: The README opens with one sentence saying what the project does
-
-R-DOC-02: The README shows how to install the project and one runnable example, in that order, near the top
-
-R-DOC-03: The README links to the license, the changelog, and the contributing guide
-
-R-DOC-04: Every version, command, and support claim in the README matches the repository
-
-R-DOC-06: The README names what the project covers and where it runs
-
-R-DOC-07: Every fenced code block in the README says what consumes it
-
-R-DOC-08: The README links a public place to ask a question and report a problem
-
-R-DOC-09: The README says whether the project is maintained
-
-R-DOC-10: The README names one thing that sets the project apart, with evidence

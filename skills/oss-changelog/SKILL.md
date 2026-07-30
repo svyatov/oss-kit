@@ -16,7 +16,9 @@ A changelog section is one version's entry inside `CHANGELOG.md`. A forge releas
 
 ## Scope
 
-This skill owns the changelog and versioning rules below, the R-CHG rules. It does not own the sentences: once an entry's content is decided, phrasing it in plain, active prose free of marketing language is `oss-writing`'s rule, R-DOC-05. It does not own publishing: building the tagged artifact, authenticating to a registry, and gating the release behind approval are `oss-publish`'s R-PUB rules. Do not draft commit or pull request prose, or write a publish workflow, from this skill; note that the project needs it and hand the work to the owning skill.
+The CHG rules belong here: R-CHG-01 changelog format, R-CHG-02 semantic bumps, R-CHG-03 one version, R-CHG-04 release body, R-CHG-05 deprecation window, and R-CHG-06 vulnerability entries.
+
+This skill owns the changelog and versioning rules above. It does not own the sentences: once an entry's content is decided, phrasing it in plain, active prose free of marketing language is `oss-writing`'s rule, R-DOC-05. It does not own publishing: building the tagged artifact, authenticating to a registry, and gating the release behind approval are `oss-publish`'s R-PUB rules. Do not draft commit or pull request prose, or write a publish workflow, from this skill; note that the project needs it and hand the work to the owning skill.
 
 ## Process
 
@@ -116,17 +118,3 @@ Read the changelog section, the manifests, and the proposed tag against each oth
 Deprecate before removing. For a stable SemVer API, release at least one MINOR version where the old path still works before removing it in a later MAJOR version. During initial development, give users at least one earlier release before removal, then make the incompatible change in a later MINOR version. A longer published support policy takes precedence.
 
 The deprecation notice names what is deprecated, its replacement or migration path, and the earliest removal version. Surface it through the interface users actually encounter: a runtime warning for a library, a diagnostic for a CLI or configuration parser, a compiler annotation where the ecosystem supports one, and documentation plus protocol signaling for a remote API. Avoid noisy warnings that fire where the user cannot act. R-CHG-05 checks both the release ordering and the interface-appropriate notice.
-
-## Rules this skill owns
-
-R-CHG-01: Each release unit keeps a discoverable changelog in its declared format
-
-R-CHG-02: Semantic versions reflect changes to the declared public API
-
-R-CHG-03: Every release unit uses one version across its tag, manifests, and changelog
-
-R-CHG-04: Forge release notes derive from the changelog without contradicting it
-
-R-CHG-05: A public API is deprecated in a release before it is removed
-
-R-CHG-06: A release that fixes a publicly known run-time vulnerability names it in the changelog

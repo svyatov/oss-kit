@@ -12,6 +12,8 @@ The concrete syntax for reading and fixing each control differs by forge, so it 
 
 ## Scope
 
+The SEC rules belong here: R-SEC-01 pinned references, R-SEC-02 least-privilege permissions, R-SEC-03 dependency updates, R-SEC-04 branch protection, R-SEC-05 signed tags, R-SEC-06 GitLab pipeline inputs, R-SEC-07 untrusted input, R-SEC-08 committed lockfiles, R-SEC-09 static analysis, R-SEC-10 secret detection, R-SEC-11 vulnerability watching, and R-SEC-12 required review.
+
 This skill owns the security posture of the workflow and pipeline files two other skills also write into, and the boundary is the rule area, not a description of files. `oss-ci` decides what runs and when. `oss-publish` writes the publish job. Treat every mutable external reference and every overly broad or implicit token permission in those files as work for this skill. `oss-community` writes CODEOWNERS but does not enforce it; enforcing code owner review is a branch or merge request protection setting, which belongs here. Do not decide what a job runs, add a product feature, or choose a registry authentication flow while working from this skill; note that the project needs it and hand the work to `oss-ci` or `oss-publish`.
 
 ## Principles
@@ -117,29 +119,3 @@ The Scorecard section of the reference file Step 1 chose carries the rest: `refe
 Show what Steps 2 through 13 found and fixed, grouped by rule ID: which files this skill edited directly, which settings still need the user's confirmation with the resolved URL for each, and the supply-chain observation from Step 3 if one applies. Where a Scorecard result was read in Step 13, include its dated findings as supplementary evidence alongside this skill's direct findings. Do not mark a rule fixed until the file is written or the setting is confirmed and verified; a settings block the user has not yet confirmed stays listed as pending.
 
 Then close with what the maintainer could still turn on that this skill could not reach itself. Give each item what it does, why the skill could not set it, and what enabling it would take. Three kinds belong here: a control the forge exposes no API for, which only a click reaches; a control the forge's tier withholds, named with the tier it needs; and a control that strengthens the repository beyond what any rule in `STANDARD.md` requires. Keep this list separate from the rule findings and label it as optional. A maintainer reading an unmet rule and an available extra in one list cannot tell which of the two the standard actually asks for, and the one that reads as less urgent is the one that gets skipped.
-
-## Rules this skill owns
-
-R-SEC-01: Pin every external action and reusable workflow to a full commit SHA
-
-R-SEC-02: Workflows declare least-privilege permissions
-
-R-SEC-03: Automated dependency updates cover both application dependencies and CI dependencies
-
-R-SEC-04: The default branch takes changes only through a change request that passed CI, and rejects force pushes
-
-R-SEC-05: Release tags are signed and verifiable
-
-R-SEC-06: A GitLab pipeline pins external execution inputs and restricts inbound job-token access
-
-R-SEC-07: Untrusted input never reaches a privileged context
-
-R-SEC-08: Registry dependencies resolve through a committed lockfile
-
-R-SEC-09: Static analysis runs on pull requests where the language supports it
-
-R-SEC-10: Committed secrets are detected before they reach the default branch
-
-R-SEC-11: Every dependency ecosystem the project ships is watched for known vulnerabilities
-
-R-SEC-12: Where more than one person can merge, the default branch requires an approving review
