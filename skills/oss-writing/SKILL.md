@@ -18,14 +18,6 @@ Verify every claim against the diff, the source, or command output. Prose that r
 
 ## Core rules (all artifacts)
 
-- Form the possessive singular by adding 's.
-- Enclose parenthetic expressions between commas.
-- Put a comma before the conjunction introducing a co-ordinate clause.
-- Do not join independent clauses by a comma.
-- Do not break sentences in two.
-- Make a participial phrase at the beginning refer to the grammatical subject.
-- Use active voice. Name who acts.
-- Use the imperative or present tense. Avoid complex tenses.
 - State things in positive form. Keep a negative where prohibition is the point.
 - Use specific, concrete, definite words: `fails on files over 2 MB`, not `fails on large inputs`.
 - Omit needless words. Never drop a word that carries a fact, condition, or scope.
@@ -38,7 +30,6 @@ Verify every claim against the diff, the source, or command output. Prose that r
 - Do not stack more than three nouns in a row.
 - Use parallel form for parallel ideas.
 - Put the most important word at the end of the sentence.
-- Use second person ("you") for the reader. Do not use "we" for the reader.
 - Use serial commas.
 - Put conditions before instructions: "to reset the cache, run `make clean`".
 - Use vertical lists for complex or sequential content.
