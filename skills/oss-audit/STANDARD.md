@@ -230,7 +230,7 @@ Forges: both
 
 ### R-CI-06: The repository defines an automated test suite and the command that runs it
 
-The rules before this one govern where checks run, never whether any exists, so a repository with no tests passes the whole area while its CI verifies nothing. This rule asks only that a suite exist, because once it does R-CI-02 makes CI run it, and a gate clause here would restate that rule.
+The rules before this one govern where checks run, never whether the repository has any tests to run, so a repository with none passes the whole area while its CI verifies nothing. This rule asks only that a suite exist, because once it does R-CI-02 makes CI run it, and a gate clause here would restate that rule.
 
 Check: the repository contains automated tests and a defined command that runs them, whether that is a test script in the package manifest, a task-runner target, or the layout the ecosystem's standard test runner discovers. The command is not a placeholder whose whole body is an echo, a bare `true`, or an `exit 0`, which is what a scaffolded manifest ships before anybody replaces it. A repository shipping no executable code falls outside this rule rather than failing it.
 
