@@ -2,7 +2,17 @@
 
 Concrete syntax for the decisions `SKILL.md` makes. This file covers what runs: triggers, matrices, caching, timeouts, and cancellation. It does not cover the security posture of the same workflow file, such as `permissions:`, pinning `uses:` to a commit SHA, or OIDC; that is `oss-harden`'s reference. It does not cover a publish job; that is `oss-publish`'s reference.
 
-Every `uses:` line below names a version tag, not a commit SHA. Resolving a tag to a full commit SHA is R-SEC-01, which belongs to `oss-harden`; emit the tag form here and let `oss-harden` pin it before the workflow ships.
+Every `uses:` line below names a version tag, not a commit SHA. Resolving a tag to a full commit SHA is R-SEC-01, which belongs to `oss-harden`; emit the tag form here and let `oss-harden` pin it before the workflow ships. Resolve each action's current major from its own repository before you emit it, because the majors written below age with this file.
+
+## Contents
+
+- [Triggers (R-CI-01)](#triggers-r-ci-01)
+- [Call project automation, not inline logic (R-CI-02)](#call-project-automation-not-inline-logic-r-ci-02)
+- [Test matrix (R-CI-03)](#test-matrix-r-ci-03)
+- [Caching keyed on the lockfile (R-CI-04)](#caching-keyed-on-the-lockfile-r-ci-04)
+- [Timeout and cancellation of superseded runs (R-CI-05)](#timeout-and-cancellation-of-superseded-runs-r-ci-05)
+- [Deploying a static site to GitHub Pages](#deploying-a-static-site-to-github-pages)
+- [Secrets](#secrets)
 
 ## Triggers (R-CI-01)
 
@@ -19,7 +29,7 @@ Name the actual default branch; it is not always `main`. A workflow that trigger
 
 ## Call project automation, not inline logic (R-CI-02)
 
-A step should call the same command a contributor runs locally and the one `CONTRIBUTING.md` documents, not a longer invocation with extra flags baked in:
+`SKILL.md` states this policy under Principles. This is its shape in a workflow step:
 
 ```yaml
 # Avoid: logic lives in CI only, cannot be run locally the same way
@@ -31,10 +41,6 @@ A step should call the same command a contributor runs locally and the one `CONT
 - run: npm test
 - run: npm run lint
 ```
-
-When the project has no such script yet, ask whether to add one before writing an inline command into the workflow. An inline command that drifts from what `CONTRIBUTING.md` tells a human is exactly what R-CI-02 checks for.
-
-Order jobs and steps so a fast check fails before a slow one starts: lint before test, test before build.
 
 ## Test matrix (R-CI-03)
 
@@ -51,7 +57,7 @@ steps:
       node-version: ${{ matrix.node-version }}
 ```
 
-`fail-fast: false` lets every matrix cell finish so a contributor sees every version that broke, not just the first. Include every maintained release line the manifest claims to support, not only the endpoints of a continuous range. Do not add or drop a release line the manifest does not mention.
+`fail-fast: false` lets every matrix cell finish so a contributor sees every version that broke, not just the first.
 
 ## Caching keyed on the lockfile (R-CI-04)
 
@@ -143,7 +149,7 @@ Everything not marked a placeholder is copied exactly: the `concurrency` group w
 
 The two jobs exist so the privileged token never sits in the same job as the project's own build command. `upload-pages-artifact` hands the built directory across the job boundary, so the split costs the `needs: build` edge and a second `runs-on`, and it matches GitHub's own Node and Jekyll Pages starters. The reason is consistency rather than exposure: whoever controls `npm run build` already controls the artifact that gets deployed. What it buys is that `oss-ci` and `oss-publish` stop teaching opposite things about where `id-token: write` may sit.
 
-GitHub documents `pages: write` and `id-token: write` as the minimum for the deploying job. Declare them on the job and leave the top-level block at `contents: read`, which is what R-SEC-02 asks for and `oss-harden` owns. GitHub's own starter workflow at `actions/starter-workflows` grants all three at the top level, so a project that copies it verbatim inherits an R-SEC-02 finding along with the deploy. Its pins also lag: it selects `upload-pages-artifact@v3` and `configure-pages@v5` where the current majors are v5 and v6.
+GitHub documents `pages: write` and `id-token: write` as the minimum for the deploying job. Declare them on the job and leave the top-level block at `contents: read`, which is what R-SEC-02 asks for and `oss-harden` owns. GitHub's own starter workflow at `actions/starter-workflows` grants all three at the top level, so a project that copies it verbatim inherits an R-SEC-02 finding along with the deploy.
 
 The `concurrency` block above is the one place R-CI-05's cancellation guidance inverts. Cancelling a superseded test run costs a contributor nothing, and `cancel-in-progress` stays scoped to pull requests in the CI workflow. A deploy cancelled mid-publish can leave the previous build live, so the deploy workflow keeps its own group and never cancels.
 
@@ -174,4 +180,4 @@ jobs:
         run: npm run test:integration
 ```
 
-List every secret a generated workflow needs, with the `gh secret set` command to add it, but do not run that command; setting a secret is the repository owner's action, not this skill's.
+List every secret a generated workflow needs, with the `gh secret set` command to add it, but do not run that command; setting a secret is the repository owner's action, not this skill's. Print the command whether or not `gh` is installed here, because the owner runs it on their own machine.

@@ -1,6 +1,6 @@
 ---
 name: oss-publish
-description: "Set up a secure release process for an open source package so no long-lived publishing token exists to steal. Covers trusted publishing with OIDC, build provenance, and approval-gated release workflows for npm, RubyGems, PyPI, and crates.io on both GitHub Actions and GitLab CI/CD. Use for any request to publish a package, secure or harden a release process, set up trusted publishing or provenance, or create a release workflow."
+description: "Set up a secure release process for an open source package so no long-lived publishing token exists to steal. Covers trusted publishing with OIDC, build provenance, and approval-gated release workflows for npm, RubyGems, PyPI, and crates.io on both GitHub Actions and GitLab CI/CD. Use for any request to publish a package, secure or harden a release process, set up trusted publishing or provenance, generate an SBOM, sign release binaries, publish checksums for release assets, or create a release workflow."
 license: MIT
 ---
 
@@ -40,7 +40,7 @@ Trigger the workflow on a version tag, matching the format found in Step 1. Befo
 
 ### Step 4: Gate on manual approval with two-factor authentication
 
-Pin the publish job to a GitHub environment with required reviewers, or a GitLab protected environment with a manual job and approval rules, naming at least one approver who is not an automation account. Check availability before writing the workflow: GitHub required reviewers are available for public repositories on current plans and for private or internal repositories on GitHub Enterprise Cloud; GitLab protected-environment approval rules require GitLab Premium or Ultimate. Do not simulate a missing native gate with an unverified third-party approval action. Where the registry offers its own proof-of-presence gate, such as npm staged publishing with two-factor approval, use it as an additional gate and as the documented fallback when the forge plan has no native approval gate. For another registry on a plan without a native gate, report that R-PUB-04 cannot be satisfied until the repository visibility or plan changes.
+Pin the publish job to a GitHub environment with required reviewers, or a GitLab protected environment with a manual job and approval rules, naming at least one approver who is not an automation account. Check availability before writing the workflow; the reference file for this registry names the plan each gate needs. Do not simulate a missing native gate with an unverified third-party approval action. Where the registry offers its own proof-of-presence gate, such as npm staged publishing with two-factor approval, use it as an additional gate and as the documented fallback when the forge plan has no native approval gate. For another registry on a plan without a native gate, report that R-PUB-04 cannot be satisfied until the repository visibility or plan changes.
 
 ### Step 5: Verify provenance after the first release
 
@@ -48,11 +48,17 @@ Once the first tag-triggered release runs, verify the exact published artifact a
 
 ### Step 6: Describe and sign what the release ships (R-PUB-05, R-PUB-06)
 
-Only for a release that attaches a built asset. A source archive the forge generates is not one, and a project that publishes to a registry and attaches nothing else is done at Step 5. Where there is a built asset, add two steps to the build job, before the artifact is handed on: generate a software bill of materials in SPDX or CycloneDX, whichever the ecosystem's tooling already produces, and attach it to the release beside the asset it describes; then either sign each asset or write a manifest of their hashes and sign that. Prefer the forge's own attestation where it covers the exact asset, since it needs no key for the maintainer to hold, publish, or lose. If it does not, say which key verifies the signature and where a downloader finds it, because a signature nobody can trace to a published key verifies nothing. Do not generate an SBOM for the repository's source tree and attach it to a binary release; it describes a different thing and reads as though the rule were met.
+Only for a release that attaches a built asset. A source archive the forge generates is not one, and a project that publishes to a registry and attaches nothing else goes straight to Step 7. Where there is a built asset, add two steps to the build job, before the artifact is handed on: generate a software bill of materials in SPDX or CycloneDX, whichever the ecosystem's tooling already produces, and attach it to the release beside the asset it describes; then either sign each asset or write a manifest of their hashes and sign that. Prefer the forge's own attestation where it covers the exact asset, since it needs no key for the maintainer to hold, publish, or lose. If it does not, say which key verifies the signature and where a downloader finds it, because a signature nobody can trace to a published key verifies nothing. Do not generate an SBOM for the repository's source tree and attach it to a binary release; it describes a different thing and reads as though the rule were met.
+
+### Step 7: Verify before reporting done
+
+Read each R-PUB rule's `Check:` line in `STANDARD.md` against the workflow, the registry configuration, and the released artifact as they now stand, and fix what fails. Start the list again after each fix, because moving a step between jobs changes which rule the credential split satisfies. Report done only when every cited rule passes, and report a rule the platform makes unreachable as unmet with the reason rather than as passed.
 
 ## Scope
 
-This skill owns publishing: trusted publishing, build provenance, the human approval gate on the release workflow, and what a release attaches alongside a built asset, the R-PUB rules below. It writes into the same workflow and pipeline files as two other skills, and the boundary between them is the rule area, not a description of files. `oss-ci` decides what runs on push and on every change request, including the test job this skill's publish job depends on; it does not decide how the publish job authenticates or who approves it. `oss-harden` owns the security posture of the same files: pinning third-party actions to a commit SHA, minimal workflow permissions, dependency updates, branch protection, and signed tags; it does not decide when a job runs or how a package is published. Do not pin an action to a SHA, add an unrelated `permissions:` scope, or configure branch protection from this skill; note that the project needs it and hand the work to `oss-harden`.
+The PUB rules belong here: R-PUB-01 tag-triggered CI, R-PUB-02 trusted publishing, R-PUB-03 build provenance, R-PUB-04 human approval, R-PUB-05 artifact inventory, and R-PUB-06 signed assets.
+
+This skill owns publishing: trusted publishing, build provenance, the human approval gate on the release workflow, and what a release attaches alongside a built asset. It writes into the same workflow and pipeline files as two other skills, and the boundary between them is the rule area, not a description of files. `oss-ci` decides what runs on push and on every change request, including the test job this skill's publish job depends on; it does not decide how the publish job authenticates or who approves it. `oss-harden` owns the security posture of the same files: pinning third-party actions to a commit SHA, minimal workflow permissions, dependency updates, branch protection, and signed tags; it does not decide when a job runs or how a package is published. Do not pin an action to a SHA, add an unrelated `permissions:` scope, or configure branch protection from this skill; note that the project needs it and hand the work to `oss-harden`.
 
 ## Routing table
 
@@ -62,17 +68,3 @@ This skill owns publishing: trusted publishing, build provenance, the human appr
 | RubyGems | `*.gemspec` | [references/rubygems.md](references/rubygems.md) |
 | PyPI | `pyproject.toml`, `setup.cfg`, or `setup.py` | [references/pypi.md](references/pypi.md) |
 | crates.io | `Cargo.toml` | [references/crates.md](references/crates.md) |
-
-## Rules this skill owns
-
-R-PUB-01: Publishing happens in CI, triggered by a tag, never from a developer machine
-
-R-PUB-02: The publish job authenticates to the registry with trusted publishing, not a stored token
-
-R-PUB-03: Published artifacts carry build provenance
-
-R-PUB-04: A human approves the run before anything reaches a public registry
-
-R-PUB-05: A built artifact ships with an inventory of what went into it
-
-R-PUB-06: Release assets are signed, or listed by hash in a signed manifest

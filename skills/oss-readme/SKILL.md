@@ -10,6 +10,8 @@ Apply the structure below when creating or improving a README. It follows Evil M
 
 This skill owns section order and what each section must contain. It does not own how a sentence reads. Once the sections below are in place, apply oss-writing to the prose inside them.
 
+The README rules belong here: R-DOC-01 opening sentence, R-DOC-02 install and example, R-DOC-03 required links, R-DOC-04 claim accuracy, R-DOC-06 scope statement, R-DOC-07 code block destinations, R-DOC-08 question channel, R-DOC-09 maintenance status, and R-DOC-10 differentiator evidence. R-DOC-05, how each sentence reads, belongs to `oss-writing`.
+
 Never invent facts. If the repository does not contain a piece of data you need, such as a benchmark, a file size, a real differentiator from alternatives, or a supported platform list, or you are not sure a number is accurate, ask for it instead of guessing. A README with a fabricated number is worse than one with no number at all.
 
 ## Section order
@@ -26,19 +28,23 @@ Say what the project does in plain terms, without jargon a newcomer would have t
 
 Keep it short. The standard-readme spec caps a description at 120 characters, which is a useful ceiling rather than a limit this skill enforces. A two-sentence opener earns its second sentence only when the second sentence carries a fact the first cannot.
 
-The same sentence appears in three places a reader may meet first: the README, the forge repository description, and the `description` field of any package manifest. Read all three and make them agree. A repository description that contradicts the README is a wrong answer served on every search result page, and nobody who reads it ever sees the correction.
+The same sentence appears in three places a reader may meet first: the README, the forge repository description, and the `description` field of any package manifest. Read all three and make them agree. A repository description that contradicts the README is a wrong answer served on every search result page, and nobody who reads it ever sees the correction. The forge description belongs to `oss-community`, which R-COM-07 names as its owner, so report a mismatch and hand the edit over rather than making it here.
 
 ### 3. Badges
 
-Optional, and at most three: version, CI, coverage, in that order. Own paragraph directly below the opening sentence, one badge per source line, so Markdown joins them into a single rendered row. Omit any of the three that does not apply and keep the rest in order; a repository where none apply gets no badge row. Exact URL templates per ecosystem are in [references/badges.md](references/badges.md); read that file before writing or editing a badge row.
+Optional, and capped at three. Read [references/badges.md](references/badges.md) before writing or editing a badge row: it carries the cap, the order, the placement, the live-fact test that decides what never gets a badge, and the URL template for each ecosystem.
 
-Many well-known projects put their badge row above the `#` heading, and the skill this one was forked from deletes badges altogether as a drag on readability. This skill diverges from both on purpose. R-DOC-01 exists so a reader's first five seconds buy them the sentence, and a row above the title spends them on shields; the three kept here survive because each shows a live fact that changes without anyone editing the README, which is the test [references/badges.md](references/badges.md) applies and the reason it cuts everything else. The divergence is safe only because of the cap of three; do not move the row up, and do not raise the cap.
+Do not move the row above the `#` heading, and do not raise the cap. R-DOC-01 exists so a reader's first five seconds buy them the sentence, and a row above the title spends them on shields.
 
 When improving an existing README, delete every badge beyond those three. If a deleted badge carried a real fact, such as a bundle size or a dependency count, state that fact as a bullet in the facts list instead, where it reads stronger than a badge.
 
+### Table of contents, only where the renderer generates no outline
+
+This is the one place a table of contents can go, which is why it sits here rather than in the numbered order. Add one only when the target renderer generates no outline and the README runs longer than about two screens. GitHub already generates an outline from headings, so do not duplicate it there unless the project publishes the README somewhere else that needs one.
+
 ### 4. Facts
 
-Three to five bullets directly under the tagline, or under the badge row when there is one. No heading introduces them. A `## Features` heading turns a pitch into a spec sheet and pushes the list below the fold, which is the one place it cannot do its job.
+Three to five bullets directly under the opening sentence, or under the badge row when there is one. No heading introduces them. A `## Features` heading turns a pitch into a spec sheet and pushes the list below the fold, which is the one place it cannot do its job.
 
 This list is where R-DOC-10 is satisfied: at least one bullet has to name a boundary, a measured number, or a competing project, and that name has to be checkable against the repository. A list of five adjectives passes no rule here.
 
@@ -136,7 +142,7 @@ Audited 49 applicable rules: 46 pass, 2 fail, 1 unknown, 7 not applicable.
 ```
 ````
 
-The example is this repository on purpose, and not a project you have heard of. Well-known projects put a logo, a row of translation links, or a pull quote between the title and the opening sentence, and many place the install command well below the first example. Each is a defensible choice for a project with that problem, and each fails R-DOC-01 or R-DOC-02, so quoting one would teach the departure along with the shape. An invented project would carry no such baggage but would name a package somebody can register later, pointing an install command at code nobody vetted.
+Do not copy the shape from a README you have heard of. Well-known projects put a logo, a row of translation links, or a pull quote between the title and the opening sentence, and many place the install command well below the first example, so each teaches a departure from R-DOC-01 or R-DOC-02 along with the shape.
 
 If the project has no install step, for example a script meant to be copied, say so instead of showing an empty or invented command.
 
@@ -161,11 +167,13 @@ Starting from an empty repository, there is nothing to score yet:
 3. `oss-ci` for tests on push and on every change request
 ```
 
-Unlike the rest of this file, this section rests on no external convention. The published README guidance does not address projects with several entry points at all. It is here because the question gets asked and nothing else in the structure answers it, so weigh it accordingly when it conflicts with something better grounded.
+This section rests on no external convention, because the published README guidance does not address projects with several entry points at all.
 
 ### 7. Getting started
 
-A step-by-step guide for adding the tool to an existing project, with explicit commands the reader can copy without thinking. Cover every step, including documented runtime and tool prerequisites. Validate the guide in an isolated temporary directory with the lowest supported runtime and only the prerequisites the guide names. Do not change global configuration or install packages globally to make the guide pass. Fix every gap you hit.
+A step-by-step guide for adding the tool to an existing project, with explicit commands the reader can copy without thinking. Cover every step, including documented runtime and tool prerequisites.
+
+Then run the guide instead of reading it. Make an empty directory outside the repository with `mktemp -d` and change into it. Install the lowest runtime version the project claims to support, plus the prerequisites the guide names and nothing else. Paste each command in the order the guide gives, and read what it prints. Do not change global configuration or install a package globally to make a step pass, because the reader will not. Fix every gap you hit, then say in the summary which runtime version the run used.
 
 ### 8. Help and status
 
@@ -178,10 +186,6 @@ Say whether the project is maintained, per R-DOC-09. One sentence about the supp
 ### 9. Links
 
 Link the license file, `CHANGELOG.md`, and `CONTRIBUTING.md`. Confirm each target exists in the repository before adding the link.
-
-### Table of contents
-
-If the target renderer does not generate an outline and the README runs longer than about two screens, add a table of contents after the badges and before the facts list. GitHub already generates an outline from headings, so do not duplicate it there unless the project also publishes the README somewhere that needs one.
 
 ## Formatting for skimmers
 
@@ -212,12 +216,6 @@ Install it:
 npx skills add svyatov/oss-kit
 ```
 
-Then ask your agent:
-
-```text
-Audit this repository against the oss-kit standard.
-```
-
 Add to `.eslintrc.json`:
 
 ```json
@@ -244,7 +242,7 @@ Before finishing, read every package manifest, the lockfile, the CI configuratio
 9. The usage example is self-explanatory and shows its result without invalid or misleading syntax.
 10. Every fenced block carries a language tag, and every block not destined for a shell has a sentence above it naming where it goes.
 11. A project with more than one entry point names exactly one to run first, and covers the empty-repository case when it differs.
-12. The getting-started guide works in an isolated directory with the lowest supported runtime and only its stated prerequisites.
+12. Every getting-started command was pasted, in order, into a fresh `mktemp -d` directory on the lowest supported runtime, and each one succeeded.
 13. A public, searchable channel is linked for questions and for defect reports.
 14. The maintenance status is stated, or an equivalent repository signal carries it.
 15. The license, changelog, and contributing links resolve to files that exist.
@@ -253,22 +251,4 @@ Before finishing, read every package manifest, the lockfile, the CI configuratio
 18. The draft has been through oss-writing.
 19. Every image has meaningful alt text, and repository images use relative paths.
 
-## Rules this skill owns
-
-R-DOC-01: The README opens with one sentence saying what the project does
-
-R-DOC-02: The README shows how to install the project and one runnable example, in that order, near the top
-
-R-DOC-03: The README links to the license, the changelog, and the contributing guide
-
-R-DOC-04: Every version, command, and support claim in the README matches the repository
-
-R-DOC-06: The README names what the project covers and where it runs
-
-R-DOC-07: Every fenced code block in the README says what consumes it
-
-R-DOC-08: The README links a public place to ask a question and report a problem
-
-R-DOC-09: The README says whether the project is maintained
-
-R-DOC-10: The README names one thing that sets the project apart, with evidence
+Fix what the checklist catches, then read each R-DOC rule's `Check:` line in `STANDARD.md` against the README as it now stands. Start the checklist again after each fix, since reordering a section moves what the next item is looking at. Do not report done while any item or any cited rule still fails.

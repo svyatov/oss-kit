@@ -1,6 +1,6 @@
 ---
 name: oss-writing
-description: "Write clear technical prose for anything that lives in a repository or on a forge: commit messages, PR titles and descriptions, PR and code review comments, issue text, READMEs, documentation, changelogs, ADRs. Use this whenever you are about to write or edit any of them, including short ones. A one-line commit message or a two-sentence review comment looks too small to need a skill, and that is exactly where the tells show up. Not for prose that needs a personal voice, such as blog posts, essays, or launch announcements."
+description: "Write clear technical prose for anything that lives in a repository or on a forge: commit messages, PR titles and descriptions, PR and code review comments, issue text, READMEs, documentation, CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, changelogs, ADRs. Use it when someone says commit this, open a PR, reply to a review comment, or file an issue. Use this whenever you are about to write or edit any of them, including short ones. A one-line commit message or a two-sentence review comment looks too small to need a skill, and that is exactly where the tells show up. Not for prose that needs a personal voice, such as blog posts, essays, or launch announcements."
 license: MIT
 ---
 
@@ -8,7 +8,7 @@ license: MIT
 
 Write with clarity and force for a reader whose first language is not English. Be terse.
 
-This skill owns how the sentence reads. The skill that owns the artifact owns what goes in it, and where a caller states an exception, the caller wins.
+This skill owns how the sentence reads, which is one rule: R-DOC-05 documentation prose. The skill that owns the artifact owns what goes in it, and where a caller states an exception, the caller wins.
 
 ## Read the local contract first
 
@@ -18,14 +18,6 @@ Verify every claim against the diff, the source, or command output. Prose that r
 
 ## Core rules (all artifacts)
 
-- Form the possessive singular by adding 's.
-- Enclose parenthetic expressions between commas.
-- Put a comma before the conjunction introducing a co-ordinate clause.
-- Do not join independent clauses by a comma.
-- Do not break sentences in two.
-- Make a participial phrase at the beginning refer to the grammatical subject.
-- Use active voice. Name who acts.
-- Use the imperative or present tense. Avoid complex tenses.
 - State things in positive form. Keep a negative where prohibition is the point.
 - Use specific, concrete, definite words: `fails on files over 2 MB`, not `fails on large inputs`.
 - Omit needless words. Never drop a word that carries a fact, condition, or scope.
@@ -38,7 +30,6 @@ Verify every claim against the diff, the source, or command output. Prose that r
 - Do not stack more than three nouns in a row.
 - Use parallel form for parallel ideas.
 - Put the most important word at the end of the sentence.
-- Use second person ("you") for the reader. Do not use "we" for the reader.
 - Use serial commas.
 - Put conditions before instructions: "to reset the cache, run `make clean`".
 - Use vertical lists for complex or sequential content.
@@ -78,6 +69,8 @@ Read the draft against this list and fix what it catches.
 - No boilerplate caveats. State a precondition, limitation, or risk when it changes what the reader should do. A caveat that changes nothing trains the reader to skip the one that matters.
 - No clause telling the reader how to weigh a fact just stated. Delete the clause and see what is lost. If no fact goes with it, it was defending the sentence rather than extending it. A rejected alternative, a constraint, or a consequence is a fact and stays.
 
+Fix what the list catches, then read the revision against the list again, because a rewritten sentence can break a rule the original passed. Return the draft only when a full pass catches nothing.
+
 If the draft still reads padded, generic, or promotional after that pass, the remaining fault is lexical. Check it against [references/tells.md](references/tells.md), which names each pattern and what to write instead.
 
 To enforce the mechanical half of this list in CI rather than in review, see [references/linting.md](references/linting.md). It maps each checkable rule onto a checker, and names the rules no checker can decide.
@@ -89,7 +82,3 @@ To enforce the mechanical half of this list in CI rather than in review, see [re
 - Identifier names, CLI flags, and file paths.
 - Required legal, license, and externally mandated security-advisory wording.
 - When editing prose a human wrote, fix only what is broken. Their voice is not a defect.
-
-## Rules this skill owns
-
-R-DOC-05: Documentation prose is plain, active, and free of marketing language.

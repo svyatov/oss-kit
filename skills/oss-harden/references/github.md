@@ -2,6 +2,33 @@
 
 Concrete commands and settings for the decisions `SKILL.md` makes, on GitHub Actions and repository settings. Every path below was checked against current GitHub documentation and, where noted, against a live API response.
 
+## Contents
+
+- [Read the current state (Step 2)](#read-the-current-state-step-2)
+- [Pin external actions and reusable workflows to a commit SHA (R-SEC-01)](#pin-external-actions-and-reusable-workflows-to-a-commit-sha-r-sec-01)
+- [Set least-privilege permissions (R-SEC-02)](#set-least-privilege-permissions-r-sec-02)
+- [Automated dependency updates (R-SEC-03)](#automated-dependency-updates-r-sec-03)
+- [Branch protection and rulesets (R-SEC-04, R-SEC-12)](#branch-protection-and-rulesets-r-sec-04-r-sec-12)
+  - [Deriving the required checks](#deriving-the-required-checks)
+  - [Updating an existing ruleset](#updating-an-existing-ruleset)
+  - [The bypass list](#the-bypass-list)
+  - [Who can merge is a permission, not a rule](#who-can-merge-is-a-permission-not-a-rule)
+  - [Verify](#verify)
+- [Signed tags (R-SEC-05)](#signed-tags-r-sec-05)
+  - [Resolve which account publishes the key](#resolve-which-account-publishes-the-key)
+  - [SSH](#ssh)
+  - [OpenPGP](#openpgp)
+  - [A configuration error is not a bad signature](#a-configuration-error-is-not-a-bad-signature)
+- [Untrusted input (R-SEC-07)](#untrusted-input-r-sec-07)
+- [Static analysis (R-SEC-09)](#static-analysis-r-sec-09)
+- [Detection controls (R-SEC-10, R-SEC-11)](#detection-controls-r-sec-10-r-sec-11)
+  - [The write is not the evidence](#the-write-is-not-the-evidence)
+  - [Absent is not disabled](#absent-is-not-disabled)
+  - [Controls with no API](#controls-with-no-api)
+  - [What the graph actually watches](#what-the-graph-actually-watches)
+  - [When push protection fires](#when-push-protection-fires)
+- [Read OpenSSF Scorecard results (Step 13)](#read-openssf-scorecard-results-step-13)
+
 ## Read the current state (Step 2)
 
 List every `uses:` line in both `.yml` and `.yaml` workflow files. A line matching an external `owner/repo@` or `owner/repo/path@` reference followed by a 40-character SHA is pinned; anything else, including `@main`, `@v4`, or a shorter SHA, is not. A local `uses: ./path` reference comes from the same repository commit and needs no external pin.

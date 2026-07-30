@@ -61,7 +61,11 @@ Decide what moves by asking what the reader needs on every run against what they
 
 Name each reference file from `SKILL.md` at the point the reader would need it, and say what makes it worth opening. A pointer at the top of the file listing every reference at once loads nothing usefully, because the reader has no way to tell which one this task needs.
 
-Keep references one level deep. A reference file that sends the reader to a third file costs two loads before the first useful sentence.
+Name each file for what it contains, such as `form-validation-rules.md` rather than `doc2.md`, and group a set of them into directories by domain. The filename is what a reader chooses from, so a name that describes nothing costs a read to find out.
+
+Open every reference file over 100 lines with a table of contents listing every section it has. A reader who takes the first 100 lines of a 300-line file otherwise sees no sign that two thirds of it exists.
+
+Keep references one level deep. A file reached through another referenced file is partially read rather than read, so nesting yields incomplete information rather than merely slow information.
 
 ## Step 4: Declare the license in every skill (R-SKL-04)
 
@@ -85,6 +89,12 @@ Start from real task evidence: upstream documentation, project artifacts, recurr
 
 Write the description for activation. State what outcome the skill produces and when to use it, using the language a user is likely to use. Include adjacent cases only when the skill truly handles them. Test near-miss prompts too, because a description that triggers on unrelated work wastes the whole body load.
 
+Write the description in the third person throughout. "I can help you write a README" and "You can use this to write a README" are the two openers that go wrong, and both spend the field's opening words on the reader rather than on the trigger terms a selector matches.
+
+Name the skill for what it does, preferring a gerund or a noun phrase, and keep one naming shape across a collection so the set reads as one product. Avoid `helper`, `utils`, `documents`, and `data`, which name nothing a user would search for.
+
+Write nothing time-sensitive into a skill. A version number, a release date, or a phrase such as "currently" expires without telling anybody, and a reader copying it has no way to know. Name the documentation to re-read instead. A dated verification record is a different thing and is fine: `references/hosts.md` stamps each claim with when it was checked, which tells a reader how old the evidence is rather than instructing them from it.
+
 Inside the body:
 
 1. Give a default path, not a menu of equal choices.
@@ -95,7 +105,7 @@ Inside the body:
 6. Bundle a tested script only when repeated runs otherwise recreate the same deterministic logic.
 7. End state-changing work with validation, correction, and re-validation.
 
-Evaluate behavior separately from format. Start with two or three realistic tasks, including an edge case, and define observable success before running them. Run each in a clean context with the skill and against a no-skill or previous-version baseline. Grade assertions with concrete evidence, review the execution trace for wasted steps, and record time and token cost. Keep a change only when it improves the target result enough to justify its cost. For trigger tuning, use varied positive prompts and near-miss negatives, repeat runs because activation is nondeterministic, and keep a held-out validation set.
+Evaluate behavior separately from format. Start with at least three realistic tasks, including an edge case, and define observable success before running them. Run each in a clean context with the skill and against a no-skill or previous-version baseline. Grade assertions with concrete evidence, review the execution trace for wasted steps, and record time and token cost. Keep a change only when it improves the target result enough to justify its cost. For trigger tuning, use varied positive prompts and near-miss negatives, repeat runs because activation is nondeterministic, and keep a held-out validation set.
 
 ## Step 7: Check the install path behind every claimed host
 
@@ -107,7 +117,9 @@ A skill's name is its identity everywhere downstream: in an installer command, i
 
 Treat it as one. Say so when proposing the rename, and hand the changelog entry and the version decision to `oss-changelog` rather than deciding the bump here.
 
-## Report what you changed
+## Verify, then report what you changed
+
+Re-run the validator after every fix, not once at the end, because one edit can introduce a fault another edit was meant to clear. Then read each SKL rule's `Check:` line in `STANDARD.md` against the repository as it now stands, fix what fails, and start the list again. Completion is gated on both: a clean validator exit and every cited rule passing.
 
 List every skill you touched, the rule each change satisfies, and every fault the validator reported that you did not fix, with the reason. Name the rename separately from the mechanical fixes, since it is the only one with downstream cost.
 

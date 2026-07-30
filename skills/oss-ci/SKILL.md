@@ -10,9 +10,11 @@ Decide what runs on push and on every change request, then write it in the synta
 
 ## Scope
 
+The CI rules belong here: R-CI-01 triggers, R-CI-02 project commands, R-CI-03 version matrix, R-CI-04 cache keying, R-CI-05 timeouts and cancellation, and R-CI-06 test suite.
+
 This skill owns what runs: which checks execute, on which triggers, across which versions, with what caching. It shares the workflow and pipeline files it writes with two other skills, and the boundary between them is the rule area, not a description of files.
 
-The CI rules below (R-CI-*) belong here. The SEC rules, security posture of the same files such as pinned action SHAs, minimal permissions, dependency updaters, branch protection, and pinned images, belong to oss-harden. The REL rules, publishing a built artifact to a registry with trusted publishing, provenance, and an approval gate, belong to oss-publish. Do not add a `permissions:` block, pin a SHA, configure branch protection, or write a publish job while working from this skill; note that the project needs it and hand the work to the owning skill. A GitHub Pages deploy is the single exception, and it covers only the two blocks [references/github-actions.md](references/github-actions.md) already emits: top-level `contents: read`, and `pages: write` plus `id-token: write` on the deploying job. Those grants are how the deployment authenticates, so a workflow written without them cannot run at all, and stripping them to honour the ban ships a green pipeline that deploys nothing. Every other permissions question still goes to `oss-harden`.
+The SEC rules, security posture of the same files such as pinned action SHAs, minimal permissions, dependency updaters, branch protection, and pinned images, belong to oss-harden. The REL rules, publishing a built artifact to a registry with trusted publishing, provenance, and an approval gate, belong to oss-publish. Do not add a `permissions:` block, pin a SHA, configure branch protection, or write a publish job while working from this skill; note that the project needs it and hand the work to the owning skill. A GitHub Pages deploy is the single exception, and it covers only the two blocks [references/github-actions.md](references/github-actions.md) already emits: top-level `contents: read`, and `pages: write` plus `id-token: write` on the deploying job. Those grants are how the deployment authenticates, so a workflow written without them cannot run at all, and stripping them to honour the ban ships a green pipeline that deploys nothing. Every other permissions question still goes to `oss-harden`.
 
 Deploying a built static site to the forge's own Pages hosting is also something that runs on a push, so it stays here rather than with oss-publish, which owns registry releases. No rule requires it: a project publishes a site because it has one, so it is written only where the repository builds a site and the user asks for the deployment.
 
@@ -54,30 +56,22 @@ Build the version matrix from the supported release lines identified in Step 2, 
 
 ### Step 5: Decide caching
 
-Cache only package-manager download data or another directory the tool's official documentation says is safe to reuse. Prefer the forge's official runtime setup action when it supports the detected package manager and hashes the lockfile. Otherwise key an explicit cache on the lockfile plus every compatibility boundary that changes its contents, such as the operating system, architecture, runtime, and package manager. A fallback key is optional and must not cross one of those boundaries. A project with no lockfile or no reusable download cache gets no cache step.
+Cache only package-manager download data or another directory the tool's official documentation says is safe to reuse. Where the forge ships a first-party mechanism that caches the detected package manager's data and keys on the lockfile, prefer it; the reference file for that forge names it. Otherwise key an explicit cache on the lockfile plus every compatibility boundary that changes its contents, such as the operating system, architecture, runtime, and package manager. A fallback key is optional and must not cross one of those boundaries. A project with no lockfile or no reusable download cache gets no cache step.
 
 ### Step 6: Write the configuration
 
-Open the reference file for the forge chosen in Step 1 and follow its syntax exactly. Both reference files cover triggering on push to the default branch and on every change request (R-CI-01), a timeout on every job with cancellation of superseded runs on the same branch (R-CI-05), and the cache decisions from Step 5 (R-CI-04). Both also carry a Pages deployment section, used only when Step 3 established that the project wants one. Neither reference file covers permissions, SHA pinning, or publishing; those stay out of the file you write here.
+Open the reference file for the forge chosen in Step 1 and follow its syntax exactly. Open only that one. The other forge's file has no syntax this run can use, and reading it costs the run its context for nothing.
+
+Each reference file covers triggering on push to the default branch and on every change request (R-CI-01), a timeout on every job with cancellation of superseded runs on the same branch (R-CI-05), and the cache decisions from Step 5 (R-CI-04). Each also carries a Pages deployment section, used only when Step 3 established that the project wants one. Neither file covers permissions, SHA pinning, or publishing; those stay out of the file you write here.
+
+Order jobs and steps so a fast check fails before a slow one starts: lint before test, test before build. This holds on either forge.
 
 ### Step 7: Validate before presenting
 
-Confirm the configuration is syntactically valid with the forge's own validator where one is available, and confirm that every command it calls exists and succeeds locally in the same order. For GitLab, use CI Lint with included configuration expanded. For GitHub, inspect the workflow in the Actions editor or push it on a branch when the user has authorized that external change; a generic YAML parser cannot validate GitHub expressions or workflow semantics. List any secrets the pipeline needs, with the command to add each one, without running that command. Confirm the matrix matches every supported release line and that every job carries a timeout and participates in cancellation of superseded runs when safe.
+Confirm the configuration is syntactically valid with the forge's own validator where one is available, and confirm that every command it calls exists and succeeds locally in the same order. For GitLab, use CI Lint with included configuration expanded. For GitHub, inspect the workflow in the Actions editor or push it on a branch when the user has authorized that external change; a generic YAML parser cannot validate GitHub expressions or workflow semantics. List any secrets the pipeline needs, with the command to add each one, without running that command. The forge's CLI need not be installed here, because the command is printed for the repository owner to run on their own machine. Confirm the matrix matches every supported release line and that every job carries a timeout and participates in cancellation of superseded runs when safe.
 
 ### Step 8: Present the result
 
-Show the generated file, a short summary of what was detected and decided, the list of secrets to configure, and anything left for the user to set at the repository or project level, such as branch protection or environment approvers, naming the skill that owns it rather than attempting it here.
+Before presenting, read each R-CI rule's `Check:` line in `STANDARD.md` against the configuration as it now stands, and fix what fails. Start the list again after each fix, and do not report done while any cited rule still fails. On GitHub there is no local validator, so this reference-plus-checklist pass is the validator, and the loop terminates when every cited rule passes rather than when the file looks finished.
 
-## Rules this skill owns
-
-R-CI-01: CI runs on every push to the default branch and on every change request
-
-R-CI-02: CI runs the same lint, test, and build commands the contributing guide gives to humans
-
-R-CI-03: The test matrix covers every runtime version the project claims to support
-
-R-CI-04: Dependency caches are keyed on the lockfile
-
-R-CI-05: Every job has a timeout, and superseded runs for the same branch are cancelled
-
-R-CI-06: The repository defines an automated test suite and the command that runs it
+Then show the generated file, a short summary of what was detected and decided, the list of secrets to configure, and anything left for the user to set at the repository or project level, such as branch protection or environment approvers, naming the skill that owns it rather than attempting it here.

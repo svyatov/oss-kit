@@ -1,8 +1,20 @@
 # npm
 
-Concrete flow for the decisions `SKILL.md` makes, for a package published to the public npm registry. npm accepts three trusted publishing providers: GitHub Actions, GitLab CI/CD on GitLab.com shared runners, and CircleCI Cloud. This file covers GitHub Actions and GitLab CI/CD because `oss-kit`'s forge scope is GitHub and GitLab. Self-hosted runners are not supported. Trusted publishing needs npm CLI 11.5.1 or newer and Node 22.14.0 or newer. Staged publishing needs npm CLI 11.15.0 or newer. Resolve an exact supported Node release from Node's official archive immediately before writing the workflow and verify the bundled npm version there. As of July 2026, Node 24.18.0 bundles npm 11.16.0. Do not install a floating npm range in the credentialed job.
+Concrete flow for the decisions `SKILL.md` makes, for a package published to the public npm registry. npm accepts three trusted publishing providers: GitHub Actions, GitLab CI/CD on GitLab.com shared runners, and CircleCI Cloud. This file covers GitHub Actions and GitLab CI/CD because `oss-kit`'s forge scope is GitHub and GitLab. Self-hosted runners are not supported. Trusted publishing needs npm CLI 11.5.1 or newer and Node 22.14.0 or newer. Staged publishing needs npm CLI 11.15.0 or newer. Resolve an exact supported Node release from Node's official archive immediately before writing the workflow, and read the npm version that release bundles from the same archive rather than assuming one. Do not install a floating npm range in the credentialed job.
 
 Source: [npm Docs, Trusted publishing for npm packages](https://docs.npmjs.com/trusted-publishers/), [npm Docs, Staged publishing](https://docs.npmjs.com/staged-publishing/), and [Node.js download archive, Node 24.18.0](https://nodejs.org/en/download/archive/v24.18.0).
+
+## Contents
+
+- [Gather facts (Step 1)](#gather-facts-step-1)
+- [Configure trusted publishing (Step 2)](#configure-trusted-publishing-step-2)
+  - [GitHub Actions](#github-actions)
+  - [GitLab CI/CD](#gitlab-cicd)
+- [Write the hardened release workflow (Step 3)](#write-the-hardened-release-workflow-step-3)
+- [Gate on manual approval (Step 4)](#gate-on-manual-approval-step-4)
+- [Verify provenance (Step 5)](#verify-provenance-step-5)
+- [Not yet published packages](#not-yet-published-packages)
+- [Monorepo packages](#monorepo-packages)
 
 ## Gather facts (Step 1)
 
@@ -138,7 +150,7 @@ Source: [npm Docs, Staged publishing for npm packages](https://docs.npmjs.com/st
 
 ## Verify provenance (Step 5)
 
-When publishing a public package from a public GitHub or GitLab repository through trusted publishing, npm generates a provenance attestation automatically; no `--provenance` flag is needed. npm does not generate provenance for a private repository, even when the package is public. After approval publishes the staged version, verify the exact installed version in a clean temporary project:
+When publishing a public package from a public GitHub or GitLab repository through trusted publishing, npm generates a provenance attestation automatically; no `--provenance` flag is needed. npm does not generate provenance for a private repository, even when the package is public. After approval publishes the staged version, verify the exact installed version in a clean temporary project. This runs on the maintainer's own machine and needs the npm CLI version named at the top of this file, not the one the workflow used:
 
 ```bash
 npm install <name>@<version> --ignore-scripts

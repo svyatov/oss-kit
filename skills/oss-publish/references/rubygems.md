@@ -4,6 +4,18 @@ Concrete flow for the decisions `SKILL.md` makes, for a gem published to rubygem
 
 Source: [RubyGems Guides, Trusted Publishing](https://github.com/rubygems/guides/blob/main/trusted-publishing.md).
 
+## Contents
+
+- [Gather facts (Step 1)](#gather-facts-step-1)
+- [Configure trusted publishing (Step 2)](#configure-trusted-publishing-step-2)
+  - [GitHub Actions](#github-actions)
+  - [GitLab CI/CD: no supported flow](#gitlab-cicd-no-supported-flow)
+- [Write the hardened release workflow (Step 3)](#write-the-hardened-release-workflow-step-3)
+- [Gate on manual approval (Step 4)](#gate-on-manual-approval-step-4)
+- [Verify provenance (Step 5)](#verify-provenance-step-5)
+- [Not yet published gems](#not-yet-published-gems)
+- [Multi-gem repositories](#multi-gem-repositories)
+
 ## Gather facts (Step 1)
 
 Read every `*.gemspec` in the repository; a repository with more than one needs one trusted publisher per gem. Get the owner and repository from the gemspec's `metadata["source_code_uri"]` or `homepage_uri`, falling back to `git remote get-url origin`. Check whether each gem is already published with `curl -s -o /dev/null -w '%{http_code}' https://rubygems.org/api/v1/gems/<name>.json`; a `404` means it is not, and [Not yet published gems](#not-yet-published-gems) below covers that case.
@@ -33,23 +45,21 @@ No `RUBYGEMS_API_KEY` or any other registry secret is needed once the trusted pu
 
 ### GitLab CI/CD: no supported flow
 
-RubyGems' own guide names GitHub Actions as the OIDC identity provider throughout and does not mention GitLab CI/CD anywhere. A GitLab-hosted gem has no trusted publishing path today. GitLab CI support has an open discussion and a draft, unmerged pull request; do not treat either as shipped, and re-check before relying on this section again.
+RubyGems' own guide names GitHub Actions as the OIDC identity provider throughout and does not mention GitLab CI/CD anywhere. Read that guide before writing this section, and treat GitLab CI/CD as unsupported unless it names GitLab as a provider. An open discussion or a draft pull request is not a shipped provider.
 
 Source: [rubygems/rubygems.org discussion #4845, "trusted publishing with gitlab CI"](https://github.com/rubygems/rubygems.org/discussions/4845).
 
-The strongest alternative that exists today, given GitLab CI/CD is not a supported provider:
+Where the guide names no GitLab provider, this is the strongest alternative:
 
 Create a scoped API key at `https://rubygems.org/profile/api_keys/new`, restricted to the `Push rubygem` scope for this one gem only. The expiry field is a free datetime picker with a minimum of five minutes from the current time, not a list of preset durations; set it to the shortest value that still fits the release cadence. rubygems.org does not let the expiry be edited after creation, so plan to rotate it on that schedule. Store it as a GitLab CI/CD variable that is both masked and protected, so it is redacted from job logs and only available to pipelines running on a protected branch or tag. Put the publish job behind a GitLab protected environment with required approvers, the same gate Step 4 uses elsewhere, so the key's mere presence in the pipeline is not enough to publish. Sign the built gem: `gem push --attestation` needs the same OIDC token trusted publishing supplies, which is unavailable here, so use the older certificate-based signing instead, with `gem cert --build <email>` to create a signing key and `spec.signing_key` and `spec.cert_chain` in the gemspec to sign every build.
 
-This is below the bar R-PUB-02 sets, because a scoped, expiring key is still a credential that can leak, unlike a trusted publishing flow where nothing is ever stored; take it only because GitLab CI/CD is not a supported provider today, and revisit it once discussion #4845 ships.
+This is below the bar R-PUB-02 sets, because a scoped, expiring key is still a credential that can leak, unlike a trusted publishing flow where nothing is ever stored; take it only while the guide names no GitLab provider, and re-read the guide before each release process is written.
 
 ## Write the hardened release workflow (Step 3)
 
 The publish job installs no Gemfile dependencies and uses no Bundler cache anywhere in the workflow, including the test job: a restored cache is a cache-poisoning vector in a tag-triggered publishing workflow, and releases are rare enough that the lost cache costs nothing.
 
-RubyGems officially recommends `rubygems/release-gem@v1`. It runs `bundle exec rake release`, signs with `sigstore-cli`, and pushes the release tag, so it needs `contents: write` and executes the project's full bundle in the credentialed job. Offer it as the low-effort upstream workflow, but explain that it has a larger credential exposure surface than the separated workflow below.
-
-Where job separation matters more than the smaller diff, build the gem in a separate job, pass the `.gem` file via artifact, and sign it explicitly in the publish job with the same tool `release-gem` calls under the hood:
+Write the separated workflow below by default. Build the gem in one job, pass the `.gem` file across as an artifact, and sign it explicitly in the publish job with the same tool `release-gem` calls under the hood:
 
 ```yaml
 name: Release
@@ -112,9 +122,11 @@ jobs:
 
 Replace the gemspec path and Ruby version from the repository. Adapt the version comparison to the actual tag format. Use one explicit gemspec per build and publish job; never let a glob choose among multiple gems.
 
-`oss-harden` pins every `uses:` line above to a commit SHA and sets this workflow's `permissions:`, including the `contents: read` this skill left off the test and build jobs above; do not pin them or add permissions here. `configure-rubygems-credentials` documents `@main` and recommends a commit SHA; resolve that SHA directly from its repository. `sigstore-cli` 0.2.3 is the current released version as of July 2026 and the version used by `release-gem`; verify it is still current in the Sigstore repository before generating a workflow.
+`oss-harden` pins every `uses:` line above to a commit SHA and sets this workflow's `permissions:`, including the `contents: read` this skill left off the test and build jobs above; do not pin them or add permissions here. `configure-rubygems-credentials` documents `@main` and recommends a commit SHA; resolve that SHA directly from its repository. Resolve the `sigstore-cli` version from the Sigstore repository and from what `release-gem` pins, and use that rather than the one written above.
 
 If an existing workflow uses `secrets.RUBYGEMS_API_KEY` or `GEM_HOST_API_KEY`, remove it from the YAML now and tell the user to delete the corresponding secret once the new flow is verified.
+
+RubyGems officially recommends `rubygems/release-gem@v1` instead, which is the escape hatch where the smaller diff matters more than job separation. It runs `bundle exec rake release`, signs with `sigstore-cli`, and pushes the release tag, so it needs `contents: write` and runs the project's full bundle in the credentialed job. Offer it only with that exposure named.
 
 ## Gate on manual approval (Step 4)
 

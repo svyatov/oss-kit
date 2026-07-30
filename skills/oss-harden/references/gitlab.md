@@ -2,6 +2,23 @@
 
 Concrete commands and settings for the decisions `SKILL.md` makes, on GitLab CI/CD and project settings. Every path below was checked against current GitLab documentation, and several against a live API response. Several of GitHub's controls have no GitLab equivalent, and the reverse is also true; do not translate a GitHub setting name or API path here by analogy.
 
+Eight `curl` invocations appear below. Six read: the protected branch, the approval rules, the project, the job-token scope, its allowlist, and the security settings. Two write: the job-token allowlist `POST` under R-SEC-06 and the security-settings `PUT` under R-SEC-10. `$TOKEN` in each is the environment variable holding the token `SKILL.md` Step 2 provisioned, which is `read_api` for a sweep that only reports and `api` only for a run that repairs.
+
+## Contents
+
+- [Read the current state (Step 2)](#read-the-current-state-step-2)
+- [No marketplace-action analogue; pin images and includes instead (R-SEC-06)](#no-marketplace-action-analogue-pin-images-and-includes-instead-r-sec-06)
+- [Inbound job token scope (R-SEC-06)](#inbound-job-token-scope-r-sec-06)
+- [Automated dependency updates (R-SEC-03)](#automated-dependency-updates-r-sec-03)
+- [Branch protection and required review (R-SEC-04, R-SEC-12)](#branch-protection-and-required-review-r-sec-04-r-sec-12)
+- [Signed tags (R-SEC-05)](#signed-tags-r-sec-05)
+- [Untrusted input and variables (R-SEC-07)](#untrusted-input-and-variables-r-sec-07)
+- [Static analysis (R-SEC-09)](#static-analysis-r-sec-09)
+- [Detection controls (R-SEC-10, R-SEC-11)](#detection-controls-r-sec-10-r-sec-11)
+  - [Secret detection (R-SEC-10)](#secret-detection-r-sec-10)
+  - [Dependency vulnerabilities (R-SEC-11)](#dependency-vulnerabilities-r-sec-11)
+- [Read OpenSSF Scorecard results (Step 13)](#read-openssf-scorecard-results-step-13)
+
 ## Read the current state (Step 2)
 
 List every `image:`, `services:`, and `include:` entry across `.gitlab-ci.yml` and any file it includes, and whether each already names a digest or a full commit SHA, with `grep -nE 'image:|services:|include:|ref:' .gitlab-ci.yml`.
@@ -11,7 +28,7 @@ Check for an existing updater the same way as on GitHub: a Renovate configuratio
 Read the live protected branch settings for the default branch:
 
 ```bash
-curl --header "PRIVATE-TOKEN: <token>" \
+curl --header "PRIVATE-TOKEN: $TOKEN" \
   "https://gitlab.example.com/api/v4/projects/:id/protected_branches/:name"
 ```
 
@@ -20,9 +37,9 @@ The response's `allow_force_push` boolean and its `push_access_levels` and `merg
 The protected-branch response does not report required approval rules or the "Pipelines must succeed" merge check. On Premium or Ultimate, read approval rules separately, and on every tier read the project setting:
 
 ```bash
-curl --header "PRIVATE-TOKEN: <token>" \
+curl --header "PRIVATE-TOKEN: $TOKEN" \
   "https://gitlab.example.com/api/v4/projects/:id/approval_rules"
-curl --header "PRIVATE-TOKEN: <token>" \
+curl --header "PRIVATE-TOKEN: $TOKEN" \
   "https://gitlab.example.com/api/v4/projects/:id"
 ```
 
@@ -31,9 +48,9 @@ Require at least one applicable rule with `approvals_required` of 1 or more on p
 Read the inbound job-token scope and allowlist separately, per R-SEC-06:
 
 ```bash
-curl --header "PRIVATE-TOKEN: <token>" \
+curl --header "PRIVATE-TOKEN: $TOKEN" \
   "https://gitlab.example.com/api/v4/projects/:id/job_token_scope"
-curl --header "PRIVATE-TOKEN: <token>" \
+curl --header "PRIVATE-TOKEN: $TOKEN" \
   "https://gitlab.example.com/api/v4/projects/:id/job_token_scope/allowlist"
 ```
 
@@ -80,7 +97,7 @@ In this API call, the project in the URL is the target being protected and `targ
 
 ```bash
 curl --request POST \
-  --header "PRIVATE-TOKEN: <token>" \
+  --header "PRIVATE-TOKEN: $TOKEN" \
   --header "Content-Type: application/json" \
   --data '{ "target_project_id": <id> }' \
   "https://gitlab.example.com/api/v4/projects/:id/job_token_scope/allowlist"

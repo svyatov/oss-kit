@@ -1,8 +1,19 @@
 # PyPI
 
-Concrete flow for the decisions `SKILL.md` makes, for a package published to pypi.org. PyPI accepts four trusted publishing providers: GitHub Actions, GitLab CI/CD, Google Cloud, and ActiveState. This file covers GitHub Actions and GitLab CI/CD, matching `oss-kit`'s forge scope. The self-service GitLab flow below covers gitlab.com projects. A self-managed GitLab instance can use trusted publishing too, but PyPI's own announcement scopes the beta to organizations running their own GitLab, not to an individual maintainer's self-hosted instance: the organization emails `support+orgs@pypi.org` with the instance URL and confirms its `/.well-known/openid-configuration` and `/oauth/discovery/keys` endpoints are reachable, and PyPI staff establish the trust relationship by hand. Tell the user about that path if `git remote get-url origin` points at a GitLab host other than gitlab.com and the repository belongs to an organization, rather than assuming the self-service flow below applies to it or that a solo maintainer's personal instance qualifies.
+Concrete flow for the decisions `SKILL.md` makes, for a package published to pypi.org. PyPI accepts four trusted publishing providers: GitHub Actions, GitLab CI/CD, Google Cloud, and ActiveState. This file covers GitHub Actions and GitLab CI/CD, matching `oss-kit`'s forge scope. The self-service GitLab flow below covers gitlab.com projects. A self-managed GitLab instance can use trusted publishing too, but PyPI's own announcement scopes that path to organizations running their own GitLab, not to an individual maintainer's self-hosted instance: the organization emails `support+orgs@pypi.org` with the instance URL and confirms its `/.well-known/openid-configuration` and `/oauth/discovery/keys` endpoints are reachable, and PyPI staff establish the trust relationship by hand. Tell the user about that path if `git remote get-url origin` points at a GitLab host other than gitlab.com and the repository belongs to an organization, rather than assuming the self-service flow below applies to it or that a solo maintainer's personal instance qualifies.
 
 Source: [PyPI Docs, Trusted publishers](https://docs.pypi.org/trusted-publishers/adding-a-publisher/), [PyPI Docs, Using a publisher](https://docs.pypi.org/trusted-publishers/using-a-publisher/), and [PyPI Blog, Trusted Publishing is popular, now for GitLab Self-Managed and Organizations](https://blog.pypi.org/posts/2025-11-10-trusted-publishers-coming-to-orgs/).
+
+## Contents
+
+- [Gather facts (Step 1)](#gather-facts-step-1)
+- [Configure trusted publishing (Step 2)](#configure-trusted-publishing-step-2)
+  - [GitHub Actions](#github-actions)
+  - [GitLab CI/CD](#gitlab-cicd)
+- [Write the hardened release workflow (Step 3)](#write-the-hardened-release-workflow-step-3)
+- [Gate on manual approval (Step 4)](#gate-on-manual-approval-step-4)
+- [Verify provenance (Step 5)](#verify-provenance-step-5)
+- [Not yet published projects](#not-yet-published-projects)
 
 ## Gather facts (Step 1)
 
@@ -132,7 +143,13 @@ Pin the publish job to `environment: pypi` as above (the name is conventional, n
 curl -s https://pypi.org/integrity/<name>/<version>/<filename>/provenance
 ```
 
-A provenance object confirms the file has attestations; a 404 means it does not. Then cryptographically verify the distribution against the expected repository using the current, upstream-verified `pypi-attestations` CLI:
+A provenance object confirms the file has attestations; a 404 means it does not. Then cryptographically verify the distribution against the expected repository with the `pypi-attestations` CLI. It is a separate tool this skill does not bundle, published by Trail of Bits, and its own README gives the install command:
+
+```bash
+python -m pip install pypi-attestations
+```
+
+Install it into a virtual environment rather than the system interpreter, then verify:
 
 ```bash
 pypi-attestations verify pypi --repository https://<forge>/<owner>/<repo> <distribution-url>

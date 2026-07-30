@@ -12,6 +12,8 @@ The concrete syntax for reading and fixing each control differs by forge, so it 
 
 ## Scope
 
+The SEC rules belong here: R-SEC-01 pinned references, R-SEC-02 least-privilege permissions, R-SEC-03 dependency updates, R-SEC-04 branch protection, R-SEC-05 signed tags, R-SEC-06 GitLab pipeline inputs, R-SEC-07 untrusted input, R-SEC-08 committed lockfiles, R-SEC-09 static analysis, R-SEC-10 secret detection, R-SEC-11 vulnerability watching, and R-SEC-12 required review.
+
 This skill owns the security posture of the workflow and pipeline files two other skills also write into, and the boundary is the rule area, not a description of files. `oss-ci` decides what runs and when. `oss-publish` writes the publish job. Treat every mutable external reference and every overly broad or implicit token permission in those files as work for this skill. `oss-community` writes CODEOWNERS but does not enforce it; enforcing code owner review is a branch or merge request protection setting, which belongs here. Do not decide what a job runs, add a product feature, or choose a registry authentication flow while working from this skill; note that the project needs it and hand the work to `oss-ci` or `oss-publish`.
 
 ## Principles
@@ -28,7 +30,19 @@ Look for `.github/workflows/` or `.gitlab-ci.yml`, check the git remote for a gi
 
 ### Step 2: Read the current state
 
-Before changing anything, read what already exists, using the commands the matching reference file names for each of the following:
+Settle the credential before the first call rather than discovering the gap on a failed one. Every read and write from here on goes through the forge's API.
+
+On GitHub, the commands assume `gh` is installed and authenticated; `gh auth status` prints the active account per host. The settings reads and writes need admin on the repository, which is also why `security_and_analysis` is absent rather than `disabled` for a caller without it.
+
+On GitLab, an audit-only run and a repair run need different tokens, and the difference is worth keeping. The read set clears with a token carrying the `read_api` scope, which GitLab documents as read access to the API. The write set needs `api`, which GitLab documents as complete read and write access. Provision the read-only token for a sweep that only reports, so a run auditing the settings cannot rewrite them.
+
+Scope is not the whole answer, because several project-settings reads carry a role floor of their own. GitLab documents the job-token scope reads as needing the Maintainer or Owner role, and the security-settings read as needing Security Manager, Developer, Maintainer, or Owner. Both writes, the job-token allowlist and the security settings, need Maintainer or Owner. So a read-only sweep still needs a Maintainer token; do not assume the reads clear at a lower role than the writes.
+
+Read a refusal carefully. GitLab documents 403 as a request that is not allowed and 404 as a resource that could not be accessed, which its own wording extends to a user who is not authorized to reach it. A read denied for role reasons can therefore answer 404, which reads like a control that is off and is not. Report it as unknown.
+
+Supply the token from an environment variable read from the operator's own secret store, and never inline it. A token pasted into a command lands in shell history and in whatever transcript the run produces, which turns one audit into a leaked credential.
+
+With that settled, read what already exists before changing anything, using the commands the matching reference file names for each of the following:
 
 Every workflow or pipeline file, so the `uses:` lines, `image:` and `include:` entries, and `permissions:` blocks that need fixing are known before any edit is proposed.
 
@@ -96,36 +110,16 @@ For R-SEC-11, switching the forge's alerting on does not finish the check. Compa
 
 ### Step 13: Read OpenSSF Scorecard results
 
-Use Scorecard as supplementary evidence after the direct checks above, never as a substitute for them. Query the public API for an existing result and report its date, Scorecard version, per-check reason, and details. The weekly public dataset currently derives its project list from GitHub only and omits some API-expensive checks, while repository-published results depend on a configured Scorecard GitHub Action. A missing or stale result is normal and must not change a directly verified rule status. Map `Pinned-Dependencies`, `Token-Permissions`, `Dependency-Update-Tool`, and `Branch-Protection` only where their evidence matches the rule, and never map `Signed-Releases` to signed git tags because that check examines release artifacts. Do not offer to install or run another scanner unless the user asks for that expansion.
+Use Scorecard as supplementary evidence after the direct checks above, never as a substitute for them. A missing or stale result is normal and must not change a directly verified rule status. Do not offer to install or run another scanner unless the user asks for that expansion.
+
+The Scorecard section of the reference file Step 1 chose carries the rest: `references/github.md` for what the API returns, which checks map to which rule, and how `Branch-Protection` scores a repository that R-SEC-12 does not reach; `references/gitlab.md` for what the public dataset covers on that forge.
 
 ### Step 14: Present the result
+
+Before presenting, read each R-SEC rule's `Check:` line in `STANDARD.md` against the repository and its settings as they now stand, and fix what fails. Start the list again after each fix, since one setting can move another rule's evidence, and do not report done while any cited rule still fails.
+
+Give every rule one of four statuses, and use no others: fixed, pending confirmation, outside the repository, or unknown. Fixed means the file is written or the setting is read back. Pending confirmation means the settings block is presented and the user has not confirmed it. Outside the repository means the rule's own precondition does not reach this repository, such as a forge it does not apply to or a tier the project does not have. Unknown means the read could not answer, which Step 2 says a 404 can produce, and it is neither a pass nor a fail.
 
 Show what Steps 2 through 13 found and fixed, grouped by rule ID: which files this skill edited directly, which settings still need the user's confirmation with the resolved URL for each, and the supply-chain observation from Step 3 if one applies. Where a Scorecard result was read in Step 13, include its dated findings as supplementary evidence alongside this skill's direct findings. Do not mark a rule fixed until the file is written or the setting is confirmed and verified; a settings block the user has not yet confirmed stays listed as pending.
 
 Then close with what the maintainer could still turn on that this skill could not reach itself. Give each item what it does, why the skill could not set it, and what enabling it would take. Three kinds belong here: a control the forge exposes no API for, which only a click reaches; a control the forge's tier withholds, named with the tier it needs; and a control that strengthens the repository beyond what any rule in `STANDARD.md` requires. Keep this list separate from the rule findings and label it as optional. A maintainer reading an unmet rule and an available extra in one list cannot tell which of the two the standard actually asks for, and the one that reads as less urgent is the one that gets skipped.
-
-## Rules this skill owns
-
-R-SEC-01: Pin every external action and reusable workflow to a full commit SHA
-
-R-SEC-02: Workflows declare least-privilege permissions
-
-R-SEC-03: Automated dependency updates cover both application dependencies and CI dependencies
-
-R-SEC-04: The default branch takes changes only through a change request that passed CI, and rejects force pushes
-
-R-SEC-05: Release tags are signed and verifiable
-
-R-SEC-06: A GitLab pipeline pins external execution inputs and restricts inbound job-token access
-
-R-SEC-07: Untrusted input never reaches a privileged context
-
-R-SEC-08: Registry dependencies resolve through a committed lockfile
-
-R-SEC-09: Static analysis runs on pull requests where the language supports it
-
-R-SEC-10: Committed secrets are detected before they reach the default branch
-
-R-SEC-11: Every dependency ecosystem the project ships is watched for known vulnerabilities
-
-R-SEC-12: Where more than one person can merge, the default branch requires an approving review

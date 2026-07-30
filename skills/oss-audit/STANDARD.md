@@ -6,6 +6,18 @@ Some rules name a fallback marked below the bar. That marker means the blessed o
 
 Rule IDs are `R-<AREA>-<NN>`. Areas are DOC, COM, CI, SEC, PUB, CHG, and SKL. IDs are permanent: a retired rule keeps its number and is marked retired rather than reused.
 
+The standard holds 56 rules:
+
+- Documentation: R-DOC-01 through R-DOC-10
+- Community: R-COM-01 through R-COM-09
+- Continuous integration: R-CI-01 through R-CI-06
+- Security posture: R-SEC-01 through R-SEC-12
+- Release and publishing: R-PUB-01 through R-PUB-06
+- Changelog and versioning: R-CHG-01 through R-CHG-06
+- Agent skills: R-SKL-01 through R-SKL-07
+
+Two areas are gated by a preamble before any of their rules apply: PUB, which reaches a repository shipping a built artifact, and SKL, which reaches a repository shipping agent skills.
+
 ## Documentation
 
 ### R-DOC-01: The README opens with one sentence saying what the project does

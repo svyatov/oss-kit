@@ -1,6 +1,22 @@
 # GitHub reference
 
-Concrete syntax and file locations for the decisions `SKILL.md` makes. Verified against the current GitHub documentation source at `github/docs` on the `main` branch. Where a field is gated behind a preview flag, that is noted; do not rely on a gated field being available on every plan.
+Concrete syntax and file locations for the decisions `SKILL.md` makes. Verified against the current GitHub documentation source at `github/docs` on the `main` branch. Confirm a field's availability on the repository's own plan before relying on it.
+
+## Contents
+
+- [Issue templates (R-COM-05)](#issue-templates-r-com-05)
+  - [Markdown templates](#markdown-templates)
+  - [Issue forms](#issue-forms)
+  - [Template chooser config (R-COM-09)](#template-chooser-config-r-com-09)
+- [Discussion category forms](#discussion-category-forms)
+- [Pull request template](#pull-request-template)
+- [CODEOWNERS (R-COM-06)](#codeowners-r-com-06)
+- [FUNDING.yml](#fundingyml)
+- [Repository settings (R-COM-07)](#repository-settings-r-com-07)
+  - [The About sidebar](#the-about-sidebar)
+  - [Social preview](#social-preview)
+  - [Feature tabs](#feature-tabs)
+  - [Community profile](#community-profile)
 
 ## Issue templates (R-COM-05)
 
@@ -31,7 +47,7 @@ Front matter keys: `name` and `about` are the ones the template chooser shows; `
 
 ### Issue forms
 
-A YAML file, extension `.yml`, using GitHub's form schema. The whole form schema is in public preview and subject to change, so verify a generated form in GitHub's template chooser before treating it as finished. Top-level keys:
+A YAML file, extension `.yml`, using GitHub's form schema. Verify a generated form in GitHub's template chooser before treating it as finished. Top-level keys:
 
 | Key | Required | Type |
 |---|---|---|
@@ -57,18 +73,93 @@ Each entry in `body` is one form element:
     required: true
 ```
 
-Every element needs `type` and `attributes`. `id` is optional on every element type; it sets the field's identifier for URL query-parameter prefills and does not apply to `markdown`, which is never submitted. `validations` is optional. Most elements accept `required`; `upload` also accepts `accept`. Required-field validation works only in public repositories.
-
-Element types and their required attributes:
-
-- `markdown`: no `id`. `attributes.value` required, nothing else.
-- `input`: single-line text. `attributes.label` required; `description`, `placeholder`, `value` optional.
-- `textarea`: multi-line text, supports file drag-and-drop into the box. `attributes.label` required; `description`, `placeholder`, `value` optional; `render` formats the answer as a code block in the given language.
-- `dropdown`: `attributes.label` and `attributes.options` required (`options` cannot be empty and every entry must be distinct); `description`, `default` (index into `options`), `multiple` optional.
-- `checkboxes`: `attributes.label` and `attributes.options` required; each entry in `options` is `{ label: ..., required: true|false }`, where that per-option `required` means the box must be checked, distinct from the element's own `validations.required`, which means at least one option must be selected.
-- `upload`: a file upload field. `attributes.label` required; `description` and, under `validations`, `accept` (a comma-separated extension list) optional. Confirm it renders before relying on it, and default to `textarea` with a note about drag-and-drop attachments if it does not.
+Anything the template can decide for the reporter belongs in those top-level keys rather than in a field. `labels`, `type`, `title`, `assignees`, and `projects` all prefill from the template, so a form asking the reporter to type a label is asking them for work it could have done itself.
 
 Issue forms are not available for pull requests.
+
+#### Which element carries which fact
+
+Every element needs `type` and `attributes`. `id` is optional on every element type; it sets the field's identifier for URL query-parameter prefills and does not apply to `markdown`, which is never submitted. `validations` is optional. Most elements accept `required`; `upload` also accepts `accept`. Required-field validation works only in public repositories.
+
+- `markdown`: standing text the reporter reads and never answers. No `id`. `attributes.value` required, nothing else.
+- `input`: single-line text. `attributes.label` required; `description`, `placeholder`, `value` optional. It carries a set that changes faster than the repository releases, such as the model names in circulation, with examples in the placeholder. A dropdown there is stale between releases, and a stale dropdown pushes reporters into an "other" option that collects nothing. It also carries a version, with the `description` naming the command that prints it, so the reporter pastes output instead of recalling a number.
+- `textarea`: multi-line text, supports file drag-and-drop into the box. `attributes.label` required; `description`, `placeholder`, `value` optional; `render` formats the answer as a code block in the given language. It carries logs, stack traces, transcripts, queries, and configuration. Setting `render` also turns off Markdown editing for the field, so nothing arrives mangled by accidental formatting.
+- `dropdown`: `attributes.label` and `attributes.options` required (`options` cannot be empty and every entry must be distinct); `description`, `default` (index into `options`), `multiple` optional. It carries a closed set the repository controls, such as the components it ships or the platforms it documents. That option list is a public claim about supported scope, so it has to match the documentation and change alongside it.
+- `checkboxes`: `attributes.label` and `attributes.options` required; each entry in `options` is `{ label: ..., required: true|false }`, where that per-option `required` means the box must be checked, distinct from the element's own `validations.required`, which means at least one option must be selected. It carries preconditions the reporter has to confirm, such as having searched existing issues. Keep the list to the one or two that change triage, because a wall of attestations reads as a toll on filing a report.
+- `upload`: a file upload field. `attributes.label` required; `description` and, under `validations`, `accept` (a comma-separated extension list) optional. It carries a screenshot or a minimal reproduction repository. Confirm it renders before relying on it, and default to `textarea` with a note about drag-and-drop attachments if it does not.
+
+#### What this looks like for a project that runs inside a host
+
+An issue form for a repository of agent skills, showing the boundary axis, the dropdown and input decision, and prefill in the top-level keys. It illustrates the derivation rather than offering a form to copy: a project that is not a repository of agent skills runs inside no host, so its boundary axis names something else entirely and its fields follow from that, not from this file.
+
+```yaml
+name: Bug report
+description: A skill did something other than what its SKILL.md says
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A skill's behavior depends on the harness that loaded it and the model that read it, as much as on the skill's own text. Those two answers decide whether this is a defect in the skill or a difference between hosts.
+  - type: dropdown
+    id: harness
+    attributes:
+      label: Harness
+      description: Where the skill was loaded. The install guide lists the hosts this project supports.
+      options:
+        - Claude Code
+        - Codex CLI
+        - Cursor
+        - opencode
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: harness-version
+    attributes:
+      label: Harness version
+      description: Name the host here as well if you chose Other above.
+      placeholder: claude 2.1.217
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Model
+      description: The exact name, with the revision if you have it. Free text rather than a list, because the set of models in circulation changes faster than this repository releases.
+      placeholder: claude-opus-4-6
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Project version
+      description: The version field in the plugin manifest, or the commit SHA if you installed from git.
+    validations:
+      required: true
+  - type: textarea
+    id: prompt
+    attributes:
+      label: What you asked for
+      description: The prompt that invoked the skill, verbatim.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should have happened
+      description: Quote the sentence in the skill that says so.
+    validations:
+      required: true
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened instead
+      render: text
+    validations:
+      required: true
+```
 
 ### Template chooser config (R-COM-09)
 
@@ -151,7 +242,9 @@ Accepted keys: `github` (one username, or up to four in a list), `community_brid
 
 ## Repository settings (R-COM-07)
 
-None of these live in a file, so they survive no clone and appear in no diff. Read the current values before proposing changes:
+None of these live in a file, so they survive no clone and appear in no diff. Read the current values before proposing changes.
+
+Both commands below need the `gh` CLI installed and authenticated; `gh auth status` prints the active account and the authentication state for each host. Reading the fields needs read access. On an organization repository, editing the description or the topics needs the Maintain or Admin role, so `gh repo edit` fails for a Write collaborator rather than reporting an unset field.
 
 ```bash
 gh repo view --json name,description,homepageUrl,repositoryTopics,hasIssuesEnabled,hasDiscussionsEnabled,hasWikiEnabled,hasProjectsEnabled,isArchived
@@ -171,7 +264,7 @@ gh repo edit --description "One sentence saying what this is." \
 
 Keep the description to one sentence and keep it saying the same thing as the README's opening line, since the two are the same claim shown in different places and a reader who sees both notices when they disagree.
 
-Topics: add no more than 20, use lowercase letters, numbers, and hyphens, and keep each to 50 characters or less. Topic names are always public, even on a private repository. Only repository admins can add them. Choose what someone searching would actually type: the ecosystem, the language, the problem domain, and the names of what the project integrates with.
+Topics: add no more than 20, use lowercase letters, numbers, and hyphens, and keep each to 50 characters or less. Topic names are always public, even on a private repository. Choose what someone searching would actually type: the ecosystem, the language, the problem domain, and the names of what the project integrates with.
 
 ### Social preview
 

@@ -12,7 +12,9 @@ A scaffolded file nobody maintains is worse than no file at all. A CODE_OF_CONDU
 
 ## Scope
 
-The COM rules below (R-COM-*) belong here: what CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, the issue and change-request templates, CODEOWNERS, and the license file must each contain, and the forge project's own description, topics, and homepage. The DOC rules split by concern: R-DOC-01 through R-DOC-04 and R-DOC-06 through R-DOC-10, README structure including the paragraph that links to the license, the changelog, and CONTRIBUTING.md, belong to `oss-readme`; R-DOC-05, the sentences in every file this skill creates, belongs to `oss-writing`. R-SEC-12, enforcing CODEOWNERS review as part of branch protection, belongs to `oss-harden`, as does every other protection, scanning, or token setting; R-COM-07's description, topics, homepage, and feature tabs are the only forge settings this skill touches. Do not reorder or rewrite README sections, decide how a file's sentences are phrased, or configure branch protection while working from this skill; note that the project needs it and hand the work to the owning skill.
+The COM rules belong here: R-COM-01 license file, R-COM-02 contributing guide, R-COM-03 code of conduct, R-COM-04 security policy, R-COM-05 report templates, R-COM-06 code owners, R-COM-07 project page, R-COM-08 governance statement, and R-COM-09 issue chooser.
+
+What each of those files must contain is this skill's, and so is the forge project's own description, topics, and homepage. The DOC rules split by concern: R-DOC-01 through R-DOC-04 and R-DOC-06 through R-DOC-10, README structure including the paragraph that links to the license, the changelog, and CONTRIBUTING.md, belong to `oss-readme`; R-DOC-05, the sentences in every file this skill creates, belongs to `oss-writing`. R-SEC-12, enforcing CODEOWNERS review as part of branch protection, belongs to `oss-harden`, as does every other protection, scanning, or token setting; R-COM-07's description, topics, homepage, and feature tabs are the only forge settings this skill touches. Do not reorder or rewrite README sections, decide how a file's sentences are phrased, or configure branch protection while working from this skill; note that the project needs it and hand the work to the owning skill.
 
 ## Ask rather than invent
 
@@ -54,17 +56,17 @@ A code of conduct already in the repository at an older version of the same docu
 
 State the private reporting channel gathered above and the response window the maintainer confirmed. Do not state a response window nobody committed to keeping; a generic "we aim to respond within 48 hours" that the maintainer never agreed to is exactly the kind of unmaintained promise this skill exists to avoid. The window they commit to is 14 days or less, because R-COM-04 accepts no longer one. Where the maintainer will not commit inside that ceiling, say so rather than writing a number they will miss. On GitHub, confirm the repository is public and private vulnerability reporting is enabled before naming its report form. On GitLab, prefer an enabled Service Desk address or a monitored security email. Name a confidential-issue URL only after verifying that a reporter with the documented audience's role can create the issue as confidential. A channel that requires undisclosed project membership is not a public security contact.
 
-### Step 6: Issue and pull or merge request templates (R-COM-05, R-COM-09)
+### Step 6: Issue and change-request templates (R-COM-05, R-COM-09)
 
-Open the reference file for the forge chosen in Step 1 before writing any template; the two forges differ enough here that guessing at the other's shape produces a template the forge will not render. At minimum, ship one issue template and one pull or merge request template.
+Open the reference file for the forge chosen in Step 1 before writing any template; the two forges differ enough here that guessing at the other's shape produces a template the forge will not render. At minimum, ship one issue template and one change-request template.
 
-The rule asks that reports arrive with the facts you need, and which facts those are is a property of this project, not of bug reports in general. They are the variables that decide whether a defect reproduces. A template asking for steps, expected, and actual collects a report that still cannot be triaged whenever the axis that actually differs between the reporter's run and the maintainer's is missing from it, which is the normal case. Derive the fields from evidence in the repository using [references/report-fields.md](references/report-fields.md), which carries the test for whether a field belongs, the five places that evidence lives, which schema element carries each kind of fact, and how many templates the project's own triage actually needs.
+Which facts a report has to carry is a property of this project, not of bug reports in general. Derive them from evidence in the repository using [references/report-fields.md](references/report-fields.md), which carries the test for whether a field belongs, the five places that evidence lives, and how many templates this project's triage needs. On GitHub, [references/github.md](references/github.md) names the schema element that carries each kind of fact.
 
-Present the derived fields, the template categories, and the change-request template's sections before writing any file. The maintainer pays the triage cost and the cost of every section on every change request, and owns the scope claim an option list makes, so the slate is theirs to cut, and naming the source of each field is what lets them cut it. Say which fields they did not ask for, and give the reason: the most valuable one is usually the variable their own setup holds fixed, such as the harness and model a skill runs under or the base image a container inherits, because a variable that never varies for the maintainer is invisible to the maintainer and still decides the outcome for everyone else.
+Present the derived fields, the template categories, and the change-request template's sections before writing any file. The maintainer pays the triage cost, so the slate is theirs to cut. Name the source of each field, which is what lets them cut it, and say which fields they did not ask for.
 
-A template made of Markdown headings cannot require any of those fields: a contributor can delete every heading and submit an empty issue. On a public GitHub repository, write issue forms instead, and mark the fields you cannot triage without as required, because that is the only shape either forge enforces and it works only in public repositories. Verify the form renders in the template chooser before treating it as finished, since the form schema is in public preview. Fall back to a Markdown template on a private repository, on GitLab, or when a form does not render, and say which one you shipped and what it does not enforce.
+A template made of Markdown headings cannot require any of those fields: a contributor can delete every heading and submit an empty issue. On a public GitHub repository, write issue forms instead, and mark the fields you cannot triage without as required, because that is the only shape either forge enforces and it works only in public repositories. Verify the form renders in the template chooser before treating it as finished. Fall back to a Markdown template on a private repository, on GitLab, or when a form does not render, and say which one you shipped and what it does not enforce.
 
-Write the chooser config as well on GitHub whenever the project has somewhere to send what is not a defect (R-COM-09). Routing questions and support requests to a discussion forum or chat channel with `contact_links` removes more noise than any field can, because a question is not a defect in any shape. Ask where that traffic already goes rather than assuming the tracker; a project with a forum nobody links to has the channel and not the door. Open the linked URL before shipping the file, since the rule checks that the destination exists and a link to a forum that was never opened costs a contributor the same round trip as no link at all. Leave the blank issue enabled unless the templates cover every kind of report the project accepts, and leave `blank_issues_enabled` alone otherwise: R-COM-09 scores the routing, not the tracker's front door.
+Write the chooser config as well on GitHub whenever the project has somewhere to send what is not a defect (R-COM-09). Ask where that traffic already goes rather than assuming the tracker. Open the linked URL before shipping the file, because the rule checks that the destination exists. Leave the blank issue enabled unless the templates cover every kind of report the project accepts, and leave `blank_issues_enabled` alone otherwise: R-COM-09 scores the routing, not the tracker's front door.
 
 Whether the project runs such a channel at all is the maintainer's decision and not this rule's business. Where they want one and the project is on GitHub, Discussions is the cheapest to open, and it is a repository setting rather than a file, so Step 9's rules about settings apply. A Discussions category can carry a form of its own in the same schema the issue forms use, which is worth proposing only for a category that already collects a recurring shape of report; [references/github.md](references/github.md) has the path, the naming rule, and the keys that differ from an issue form.
 
@@ -92,24 +94,6 @@ Write who decides and what happens if they stop. For a project with one maintain
 
 ### Step 11: Present the result
 
-List every file written or proposed, every setting changed or proposed, the rule each satisfies, and every fact that came from asking rather than reading, so the maintainer can see what they confirmed. Flag anything left unresolved, such as a CONTRIBUTING.md with no test command because the repository has no tests, rather than silently shipping a gap.
+Before presenting, read each R-COM rule's `Check:` line in `STANDARD.md` against the files and settings as they now stand, and fix what fails. One fix moves another rule, so start the list again after each one, and do not report done while any cited rule still fails.
 
-## Rules this skill owns
-
-R-COM-01: The repository ships a license file whose license matches the package manifest
-
-R-COM-02: CONTRIBUTING.md tells a newcomer how to set up, test, and submit a change
-
-R-COM-03: CODE_OF_CONDUCT.md exists and names a working reporting contact
-
-R-COM-04: SECURITY.md states a private reporting channel and a response window
-
-R-COM-05: Issue and change-request templates exist so reports arrive with the facts you need
-
-R-COM-06: A CODEOWNERS file assigns a reviewer to every path
-
-R-COM-07: The forge project page says what the project is and where it lives
-
-R-COM-08: A documented statement says who decides, and what happens if they stop
-
-R-COM-09: When questions and defects have different homes, the issue chooser says so
+Then list every file written or proposed, every setting changed or proposed, the rule each satisfies, and every fact that came from asking rather than reading, so the maintainer can see what they confirmed. Flag anything left unresolved, such as a CONTRIBUTING.md with no test command because the repository has no tests, rather than silently shipping a gap.

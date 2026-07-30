@@ -14,11 +14,7 @@ A body that exists says what is wrong now, then why this is better, then what wa
 
 Structure: Conventional Commits. Content: git SubmittingPatches.
 
-- Format the subject as `type(scope): description`.
-- Use these types: feat, fix, build, chore, ci, docs, style, refactor, perf, test, revert.
-- feat is a MINOR change. fix is a PATCH. A `!` before the colon or a `BREAKING CHANGE:` footer marks a MAJOR change.
-- Set scope to the code area. Scope is optional.
-- Write the description in the imperative mood. Do not end it with a period.
+- Follow the subject convention the repository declares. Where that is [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/), the specification carries the type list and the breaking-change marker; do not recite either from memory.
 - Keep the subject to 72 characters or fewer, counting any number the forge appends on squash.
 - Explain motivation in the body, not the subject.
 - The body explains WHY the change is needed and HOW it differs from the prior behavior. Do not restate the diff.
