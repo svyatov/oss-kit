@@ -111,9 +111,9 @@ Forges: both
 
 ### R-COM-02: CONTRIBUTING.md tells a newcomer how to set up, test, and submit a change
 
-A contributor who cannot run the tests sends a patch you have to fix yourself. The three commands that get them from clone to green cost you one paragraph and save every future contributor an hour.
+A contributor who cannot run the tests sends a patch you have to fix yourself. The three commands that get them from clone to green cost you one paragraph and save every future contributor an hour. A contributor also needs to know what an acceptable change looks like before writing it, and learning in review that a feature needed a test costs the round trip the guide exists to save.
 
-Check: `CONTRIBUTING.md` exists at the repository root, in `.github/`, or in `docs/` on GitHub, or at the repository root on GitLab, and states the setup command, the test command, and how to open a pull request or merge request.
+Check: `CONTRIBUTING.md` exists at the repository root, in `.github/`, or in `docs/` on GitHub, or at the repository root on GitLab, and states the setup command, the test command, how to open a pull request or merge request, that a change adding functionality arrives with a test, and which document states what an acceptable contribution must satisfy. That document exists at the path or URL the guide names.
 
 Fixed by: oss-community
 Forges: both
@@ -129,9 +129,9 @@ Forges: both
 
 ### R-COM-04: SECURITY.md states a private reporting channel and a response window
 
-Without a stated channel, a finder either opens a public issue that discloses the bug to everyone at once, or gives up. A stated response window tells them when to escalate.
+Without a stated channel, a finder either opens a public issue that discloses the bug to everyone at once, or gives up. A stated response window tells them when to escalate. A window with no ceiling promises nothing, because a policy answering within a year satisfies the words and defeats the point.
 
-Check: `SECURITY.md` exists at the repository root, in `.github/`, or in `docs/` on GitHub, or at the repository root on GitLab, and names a private channel that an unaffiliated reporter can use, together with the time you commit to responding in. Accept GitHub private vulnerability reporting only when the repository is public and the feature is enabled. Accept a GitLab confidential issue only when the intended reporter role can create it as confidential; GitLab Service Desk and a monitored security email are valid alternatives.
+Check: `SECURITY.md` exists at the repository root, in `.github/`, or in `docs/` on GitHub, or at the repository root on GitLab, and names a private channel that an unaffiliated reporter can use, together with the time you commit to responding in, which is no longer than 14 days. Accept GitHub private vulnerability reporting only when the repository is public and the feature is enabled. Accept a GitLab confidential issue only when the intended reporter role can create it as confidential; GitLab Service Desk and a monitored security email are valid alternatives.
 
 Fixed by: oss-community
 Forges: both
@@ -224,6 +224,15 @@ Forges: both
 A hung job holds a runner until the platform's default timeout expires, which is six hours on GitHub. Queued runs for commits nobody will merge burn the same minutes.
 
 Check: every job sets `timeout-minutes` (GitHub) or `timeout` (GitLab), and the configuration sets `concurrency` with `cancel-in-progress: true` for change-request runs (GitHub) or marks jobs `interruptible: true` with auto-cancel enabled (GitLab).
+
+Fixed by: oss-ci
+Forges: both
+
+### R-CI-06: The repository defines an automated test suite and the command that runs it
+
+The rules before this one govern where checks run, never whether the repository has any tests to run, so a repository with none passes the whole area while its CI verifies nothing. This rule asks only that a suite exist, because once it does R-CI-02 makes CI run it, and a gate clause here would restate that rule.
+
+Check: the repository contains automated tests and a defined command that runs them, whether that is a test script in the package manifest, a task-runner target, or the layout the ecosystem's standard test runner discovers. The command is not a placeholder whose whole body is an echo, a bare `true`, or an `exit 0`, which is what a scaffolded manifest ships before anybody replaces it. A repository shipping no executable code falls outside this rule rather than failing it.
 
 Fixed by: oss-ci
 Forges: both
@@ -441,6 +450,15 @@ Forges: both
 Removing an API without warning turns an upgrade into an outage. Users need a released version where the old path still works and the interface they use directs them to the replacement.
 
 Check: every public item under Removed appeared under Deprecated in an earlier release, stayed usable for the project's stated deprecation window, and produced an interface-appropriate notice naming the replacement or migration path and earliest removal version. For stable SemVer, deprecation ships in a MINOR release and removal waits for a later MAJOR release. A project that has removed no public item falls outside this rule rather than satisfying it with nothing to check.
+
+Fixed by: oss-changelog
+Forges: both
+
+### R-CHG-06: A release that fixes a publicly known run-time vulnerability names it in the changelog
+
+A reader deciding whether an upgrade is urgent is asking one question, and a fixed vulnerability they can look up is the fact that answers it. Scoping this to what reached users is what keeps the Security group worth reading: a vulnerability in a development-only dependency never reached one, and a Security heading that cries wolf over those is one readers stop opening. A build toolchain is on the other side of that line whenever the project ships what the toolchain produced.
+
+Check: the changelog entry for each release that resolved a publicly known vulnerability in the shipped code or in a run-time dependency names every such vulnerability under Security, each by an identifier from a published advisory. A development-only dependency is not a run-time vulnerability. Where the project ships a built artifact, its build toolchain is one, because a compromised bundler or code generator injects into the thing users install; where the project ships only source, a build-only dependency stays outside. On GitHub, `gh api repos/{owner}/{repo}/dependabot/alerts?state=fixed` reports which advisories were resolved and when, which is what locates them in a release; on GitLab, the project's vulnerability report carries the same and requires Ultimate, so a Free project resolves it from the advisory identifiers its scanner job recorded. A project that has fixed no publicly known run-time vulnerability falls outside this rule rather than satisfying it with nothing to check.
 
 Fixed by: oss-changelog
 Forges: both

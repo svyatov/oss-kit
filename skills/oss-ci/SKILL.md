@@ -34,7 +34,7 @@ Look for an existing `.github/workflows/` directory or `.gitlab-ci.yml` file, ch
 
 Identify the language and runtime from source files and the package manifest, and note the version range the project claims to support; the matrix in Step 4 has to cover all of it, including the oldest and newest supported version, per R-CI-03.
 
-Find every applicable lint, test, typecheck, and build command the project already defines, whether that is package manager scripts, a Makefile, a Rakefile, or a tool like tox or just, and read them closely enough to know their arguments and side effects. Do not invent a missing class of check: a documentation repository may have no build, and a small script may have no linter. If the repository has a CONTRIBUTING guide, its commands and the project automation must agree; resolve any conflict before copying either into CI.
+Find every applicable lint, test, typecheck, and build command the project already defines, whether that is package manager scripts, a Makefile, a Rakefile, or a tool like tox or just, and read them closely enough to know their arguments and side effects. Do not invent a missing class of check: a documentation repository may have no build, and a small script may have no linter. Where the repository ships executable code and defines no test suite at all, that is an R-CI-06 gap rather than a class of check this project does without, so raise it and ask whether to add a suite instead of writing CI that runs nothing. If the repository has a CONTRIBUTING guide, its commands and the project automation must agree; resolve any conflict before copying either into CI.
 
 Read any existing CI configuration before changing it, so you know whether to extend it or replace it.
 
@@ -79,3 +79,5 @@ R-CI-03: The test matrix covers every runtime version the project claims to supp
 R-CI-04: Dependency caches are keyed on the lockfile
 
 R-CI-05: Every job has a timeout, and superseded runs for the same branch are cancelled
+
+R-CI-06: The repository defines an automated test suite and the command that runs it

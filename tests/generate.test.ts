@@ -168,8 +168,12 @@ test("every rule in the real standard parses", () => {
   expect(currentRules.length).toBeGreaterThan(0)
   expect(new Set(currentRules.map((rule) => rule.id)).size).toBe(currentRules.length)
   expect(currentRules.some((rule) => rule.fixedBy === "oss-audit")).toBe(false)
-  // The CI area is two letters, unlike the three-letter areas; the parser must accept both.
-  expect(currentRules.filter((rule) => rule.area === "CI")).toHaveLength(5)
+  // The CI area is two letters, unlike the three-letter areas; the parser must
+  // accept both. A parser that only matched three would yield none of them, so
+  // this asserts they parse rather than how many there are: pinning the count
+  // made adding a CI rule an edit here and proved nothing the emptiness check
+  // does not.
+  expect(currentRules.filter((rule) => rule.area === "CI").length).toBeGreaterThan(0)
 })
 
 test("rewriteLinks replaces the targets the resolver claims", () => {

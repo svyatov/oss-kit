@@ -55,6 +55,7 @@ Fork the repository, create a branch, and open a pull request against `main`. Na
 
 Before you open the pull request:
 
+- If the change adds functionality, add a test for it.
 - Add an entry to `CHANGELOG.md` under Unreleased, unless the change is not notable.
 - If a skill's description changed, update the skills table in `README.md`.
 - If this adds or changes a rule, check that `AGENTS.md` still describes how this repository scores against it.

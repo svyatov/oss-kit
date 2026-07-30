@@ -29,6 +29,8 @@ Omit empty categories. Mark each incompatible change inside `Changed` or `Remove
 
 Curate notable user-facing changes instead of restating commit subjects. Fold one user-visible outcome spread across several commits into one entry. Leave out refactors, tests, CI, and dependency bumps with no user-visible effect. If a version contains no notable change, keep the required version entry and say that it contains internal maintenance only instead of inventing category bullets.
 
+One kind of dependency bump is the exception. A bump that resolves a publicly known vulnerability in the shipped code or in a run-time dependency reached users, so it belongs under Security, and the entry names an identifier from the published advisory. Where the project ships a built artifact, its build toolchain counts as run-time: a compromised bundler or code generator injects into what users install. A development-only bump stays out, as does a build-only bump in a project that ships only its source. R-CHG-06 is the check.
+
 Make every bracketed version heading a reference link. `[Unreleased]` compares the newest tag with `HEAD`, each later version compares its tag with the preceding release, and the oldest version links to its tag. Use the repository's actual forge and tag format. Keep issue and pull request links useful and portable, and collect them as reference links rather than filling entries with bare forge numbers.
 
 R-CHG-01 is the check for this structure.
@@ -76,3 +78,5 @@ R-CHG-03: Every release unit uses one version across its tag, manifests, and cha
 R-CHG-04: Forge release notes derive from the changelog without contradicting it
 
 R-CHG-05: A public API is deprecated in a release before it is removed
+
+R-CHG-06: A release that fixes a publicly known run-time vulnerability names it in the changelog
