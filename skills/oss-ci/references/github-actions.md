@@ -113,7 +113,19 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7  # oss-harden pins this to a commit SHA
+      - run: npm ci  # placeholder: the project's own install command
+      - run: npm run build  # placeholder: the project's own build command
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist  # placeholder: the directory the build writes
+
   deploy:
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -123,15 +135,13 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v7  # oss-harden pins this to a commit SHA
-      - run: npm ci
-      - run: npm run build
-      - uses: actions/upload-pages-artifact@v5
-        with:
-          path: dist
       - id: deployment
         uses: actions/deploy-pages@v5
 ```
+
+Everything not marked a placeholder is copied exactly: the `concurrency` group with `cancel-in-progress: false`, the `needs: build` edge, `upload-pages-artifact` in `build` and `deploy-pages` in `deploy` in that order across it, the deploy job's two `permissions`, and `environment: name: github-pages`. Those lines are what the deployment is; the three placeholders are the only project-specific values in the file.
+
+The two jobs exist so the privileged token never sits in the same job as the project's own build command. `upload-pages-artifact` hands the built directory across the job boundary, so the split costs the `needs: build` edge and a second `runs-on`, and it matches GitHub's own Node and Jekyll Pages starters. The reason is consistency rather than exposure: whoever controls `npm run build` already controls the artifact that gets deployed. What it buys is that `oss-ci` and `oss-publish` stop teaching opposite things about where `id-token: write` may sit.
 
 GitHub documents `pages: write` and `id-token: write` as the minimum for the deploying job. Declare them on the job and leave the top-level block at `contents: read`, which is what R-SEC-02 asks for and `oss-harden` owns. GitHub's own starter workflow at `actions/starter-workflows` grants all three at the top level, so a project that copies it verbatim inherits an R-SEC-02 finding along with the deploy. Its pins also lag: it selects `upload-pages-artifact@v3` and `configure-pages@v5` where the current majors are v5 and v6.
 
@@ -139,7 +149,7 @@ The `concurrency` block above is the one place R-CI-05's cancellation guidance i
 
 `environment: github-pages` is required rather than decorative. GitHub creates the environment automatically, and it is what applies deployment protection rules and reports the deployed URL back to the run.
 
-`actions/configure-pages` is optional. It exports the site's base path and origin for a build that needs them, which a project served from `owner.github.io/repo/` usually does. A site whose own config already states its full URL, as a custom domain implies, needs one less action pinned and updated.
+`actions/configure-pages` is optional, and where it is needed it goes in the `build` job, between `checkout` and the build command. It exports the site's base path and origin, which a project served from `owner.github.io/repo/` usually needs and a build reads only if it runs after the export. Placing it in `deploy`, or after `npm run build`, exports the values into a job or a step that has already finished with them, and the run stays green: the site deploys with every asset path resolving against the domain root, so the pages return 404s for their own CSS and JavaScript with nothing in the log to point at. A site whose own config already states its full URL, as a custom domain implies, skips the action and has one less thing to pin and update.
 
 Two things the workflow cannot do for itself, both the repository owner's to set, so present them in Step 8 with the resolved URL `https://github.com/<owner>/<repo>/settings/pages` rather than running them:
 

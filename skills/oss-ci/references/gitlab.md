@@ -160,13 +160,15 @@ pages:
   timeout: 10 minutes
   interruptible: false
   script:
-    - npm ci --cache .npm --prefer-offline
-    - npm run build
+    - npm ci --cache .npm --prefer-offline  # placeholder: the project's own install command
+    - npm run build  # placeholder: the project's own build command
   pages:
-    publish: dist
+    publish: dist  # placeholder: the directory the build writes
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 ```
+
+Everything not marked a placeholder is copied exactly: the `pages:` hash with its `publish` key, `interruptible: false`, and the `rules:` condition restricting the job to the default branch. The two `script` commands and the published directory are the only project-specific values here.
 
 `pages:` as a job keyword is what marks a job as a Pages deployment. Setting it to `true` is the short form; the hash form takes `publish` for the built directory and `path_prefix` for parallel deployments under one site. GitLab 17.6 and later accept any job name once the keyword is present, so the job above could be called `deploy-docs`; before that the job had to be named `pages`, which is why so many pipelines still are.
 
