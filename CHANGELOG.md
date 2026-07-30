@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-07-30
+
 Required review becomes its own rule, scoped to repositories that have somebody to do the reviewing. The standard then aligns with the OpenSSF Best Practices badge Passing criteria on four points: two new rules, and two rules that now fail a repository which passed them yesterday.
 
 ### Added
@@ -192,7 +194,8 @@ Five new rules, and `oss-audit` now reports the gaps alone rather than every rul
 - `oss-audit` scores a repository against `STANDARD.md`, reports each gap with the rule it fails, and names the skill that fixes it.
 - `oss-skill` fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` conformance to the Agent Skills specification, oversized bodies that belong in `references/`, and the license field an extracted skill carries with it.
 
-[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.5.2...HEAD
+[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/svyatov/oss-kit/compare/v0.5.2...v0.6.0
 [0.5.2]: https://github.com/svyatov/oss-kit/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/svyatov/oss-kit/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/svyatov/oss-kit/compare/v0.4.0...v0.5.0
