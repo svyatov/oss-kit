@@ -1,0 +1,138 @@
+{
+  "$comment": "The canonical copy of every machine-readable ecosystem fact. A skill's prose, routing table, or ecosystem file may restate a manifest signal, a lockfile name, or a Tidelift platform string, because a single-skill install does not carry this file. On any disagreement this file wins and the skill text is corrected to it. `lockfiles` records what the ecosystem's build tooling produces, which is what R-SEC-08's exemption keys on: an array of filenames means it is produced by default; `mode: opt-in` means the tool can produce one and does not unless asked; `mode: per-tool` means the answer differs by build tool, and only a tool whose `files` is empty takes the exemption; `libraryConvention` records where the ecosystem's own documentation tells a library package not to commit the file, which R-SEC-08's commit-convention clause reaches.",
+  "ecosystems": {
+    "npm": {
+      "title": "npm",
+      "registry": "npmjs.com",
+      "manifests": ["package.json"],
+      "lockfiles": ["package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "pnpm-lock.yaml", "bun.lock"],
+      "track": "registry-push",
+      "tidelift": "npm"
+    },
+    "pypi": {
+      "title": "PyPI",
+      "registry": "pypi.org",
+      "manifests": ["pyproject.toml", "setup.py", "setup.cfg"],
+      "lockfiles": ["uv.lock", "poetry.lock", "pdm.lock", "Pipfile.lock"],
+      "track": "registry-push",
+      "tidelift": "pypi"
+    },
+    "rubygems": {
+      "title": "RubyGems",
+      "registry": "rubygems.org",
+      "manifests": ["*.gemspec", "Gemfile"],
+      "lockfiles": ["Gemfile.lock"],
+      "track": "registry-push",
+      "tidelift": "rubygems"
+    },
+    "crates": {
+      "title": "crates.io",
+      "registry": "crates.io",
+      "manifests": ["Cargo.toml"],
+      "lockfiles": ["Cargo.lock"],
+      "track": "registry-push"
+    },
+    "go-modules": {
+      "title": "Go modules",
+      "registry": "proxy.golang.org",
+      "manifests": ["go.mod"],
+      "lockfiles": ["go.sum"],
+      "track": "tag-published"
+    },
+    "packagist": {
+      "title": "Packagist",
+      "registry": "packagist.org",
+      "manifests": ["composer.json"],
+      "lockfiles": ["composer.lock"],
+      "track": "tag-published",
+      "tidelift": "packagist"
+    },
+    "nuget": {
+      "title": "NuGet",
+      "registry": "nuget.org",
+      "manifests": ["*.csproj", "*.fsproj", "*.vbproj"],
+      "lockfiles": {
+        "mode": "opt-in",
+        "files": ["packages.lock.json"],
+        "enabledBy": "the MSBuild property RestorePackagesWithLockFile, or an existing packages.lock.json in the project root",
+        "frozen": "dotnet restore --locked-mode, or -p:RestoreLockedMode=true",
+        "libraryConvention": "NuGet documents that a library project other people depend on should not check the lock file in, and that an application at the start of the dependency chain should."
+      },
+      "track": "registry-push",
+      "tidelift": "nuget"
+    },
+    "maven-central": {
+      "title": "Maven Central",
+      "registry": "central.sonatype.com",
+      "manifests": ["pom.xml", "build.gradle", "build.gradle.kts"],
+      "lockfiles": {
+        "mode": "per-tool",
+        "byTool": {
+          "maven": {
+            "files": [],
+            "note": "Apache Maven publishes no lockfile format, opt-in or otherwise. It offers fixed versions, dependencyManagement, and enforcer rules such as banDynamicVersions instead. Maven Resolver's Trusted Checksums still record a committed coreutils-format hash file under .mvn/checksums/, verified at resolution with aether.artifactResolver.postProcessor.trustedChecksums.failIfMissing."
+          },
+          "gradle": {
+            "files": ["gradle.lockfile", "gradle/verification-metadata.xml"],
+            "note": "Opt-in per configuration through resolutionStrategy.activateDependencyLocking() or dependencyLocking { lockAllConfigurations() }, written with --write-locks. The generated file's own header says it is expected to be part of source control, and a version mismatch already fails the build without an extra flag. Dependency verification is a separate feature, enabled by the presence of gradle/verification-metadata.xml and strict by default."
+          }
+        }
+      },
+      "track": "registry-push",
+      "tidelift": "maven"
+    },
+    "hex": {
+      "title": "Hex",
+      "registry": "hex.pm",
+      "manifests": ["mix.exs"],
+      "lockfiles": ["mix.lock"],
+      "track": "registry-push"
+    },
+    "pubdev": {
+      "title": "pub.dev",
+      "registry": "pub.dev",
+      "manifests": ["pubspec.yaml"],
+      "lockfiles": {
+        "mode": "default",
+        "files": ["pubspec.lock"],
+        "frozen": "dart pub get --enforce-lockfile",
+        "libraryConvention": "Dart documents that an application package should check the lockfile into source control and a regular (library) package should not, because a library is expected to work with a range of dependency versions."
+      },
+      "track": "registry-push"
+    },
+    "containers": {
+      "title": "Container images",
+      "registry": "",
+      "manifests": [],
+      "lockfiles": [],
+      "track": "registry-push",
+      "note": "Detected by a registry push, never by a Dockerfile: a workflow pushing to a registry, or an existing image on the forge's registry. A Dockerfile more often builds a test harness than a shipped image."
+    }
+  },
+  "sections": {
+    "oss-audit": ["Detection signals", "Release track"],
+    "oss-readme": ["Version badge", "Install command"],
+    "oss-community": ["License declaration (R-COM-01)", "Funding platform name"],
+    "oss-ci": ["Toolchain and matrix (R-CI-03)", "Dependency caching (R-CI-04)", "Test command (R-CI-06)"],
+    "oss-harden": [
+      "Automated dependency updates (R-SEC-03)",
+      "Lockfile and frozen install (R-SEC-08)",
+      "Static analysis (R-SEC-09)",
+      "Vulnerability watch (R-SEC-11)"
+    ],
+    "oss-publish": [
+      "Gather facts (Step 1)",
+      "Configure trusted publishing (Step 2)",
+      "Write the hardened release workflow (Step 3)",
+      "Gate on manual approval (Step 4)",
+      "Verify provenance (Step 5)",
+      "Describe and sign what the release attaches (Step 6)"
+    ],
+    "oss-changelog": [
+      "Version sources (R-CHG-03)",
+      "Version syntax (R-CHG-02)",
+      "Major version in package identity (R-CHG-07)",
+      "Withdrawing a release (R-CHG-01)"
+    ]
+  }
+}

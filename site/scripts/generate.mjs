@@ -423,7 +423,7 @@ export function renderSkillPage(sourcePath, text, summary, rules = []) {
   )
 }
 
-const GENERATED = ["rules", "skills", "standard.md", "changelog.md"]
+const GENERATED = ["rules", "skills", "ecosystems", "standard.md", "changelog.md"]
 
 /** @param {string} text */
 function inlineCodeHtml(text) {
@@ -561,6 +561,16 @@ the job in front of you.
     for (const ref of safeReaddir(join(repoRoot, "skills", name, "references"))) {
       refTargets.set(`${name}/references/${ref}`, `/skills/${name}/${ref.replace(/\.md$/, "")}/`)
     }
+    // An ecosystem file has no page of its own; it is stitched into the
+    // ecosystem page beside the other six skills' answers. Two directories link
+    // it and the key is resolved relative to the linking file, so both forms
+    // are mapped: a `SKILL.md` writes `references/ecosystems/<name>.md`, and a
+    // pointer inside `references/github.md` writes the sibling `ecosystems/<name>.md`.
+    for (const eco of safeReaddir(join(repoRoot, "skills", name, "references", "ecosystems"))) {
+      const page = `/ecosystems/${eco.replace(/\.md$/, "")}/`
+      refTargets.set(`${name}/references/ecosystems/${eco}`, page)
+      refTargets.set(`${name}/ecosystems/${eco}`, page)
+    }
   }
   const resolve = (/** @type {string} */ owner) => (/** @type {string} */ target) => {
     const key = target.replace(/^\.\//, "")
@@ -601,6 +611,49 @@ the job in front of you.
     }
   }
 
+  // One page per ecosystem, stitching that ecosystem's answer out of every
+  // skill that has one. Seventy-seven per-file pages would have put seven
+  // entries labelled "npm" in the sidebar; this puts one, and it reads as the
+  // per-language answer a maintainer actually arrived looking for.
+  const rosterPath = "skills/oss-audit/ecosystems.json"
+  const roster = JSON.parse(readFileSync(join(repoRoot, rosterPath), "utf8"))
+  const ecosystems = Object.entries(roster.ecosystems ?? {})
+  const sectionSkills = Object.keys(roster.sections ?? {})
+  // Loud rather than zero iterations: a generator that writes no ecosystem page
+  // because the roster is empty looks exactly like one that had nothing to write.
+  if (ecosystems.length === 0) throw new Error(`${rosterPath} lists no ecosystems`)
+  if (sectionSkills.length === 0) throw new Error(`${rosterPath} declares no section sets`)
+  for (const [eco, meta] of ecosystems) {
+    const parts = sectionSkills.map((skill) => {
+      const refSource = `skills/${skill}/references/ecosystems/${eco}.md`
+      const heading = `## [${skill}](/skills/${skill}/)`
+      // The site shows the same hole the checker fails on, in the same
+      // direction, rather than rendering a page that looks complete.
+      if (!existsSync(join(repoRoot, refSource))) {
+        return `${heading}\n\nThis skill has no answer for ${meta.title} yet: \`${refSource}\` does not exist.`
+      }
+      const text = readFileSync(join(repoRoot, refSource), "utf8")
+      const body = text.replace(/^# .*\n/m, "").replace(/^(#{2,5}) /gm, "$1# ")
+      return `${heading}\n\n${rewriteLinks(body, resolve(skill)).trim()}`
+    })
+    written.push(
+      write(
+        outDir,
+        `ecosystems/${eco}.md`,
+        frontmatter(
+          {
+            title: meta.title,
+            description: `What every oss-kit skill knows about ${meta.title}, from detection to release.`,
+            // The page has seven sources and no single file to edit, so the
+            // link goes to the roster, which is what declares the page exists.
+            editUrl: `${EDIT}/${rosterPath}`,
+          },
+          parts.join("\n\n"),
+        ),
+      ),
+    )
+  }
+
   const changelog = readFileSync(join(repoRoot, "CHANGELOG.md"), "utf8")
   // A relative target in the changelog names a file in the repository, and this
   // is the one page with no sibling page to point at, so it goes to the source.
@@ -633,10 +686,16 @@ the job in front of you.
   return { written }
 }
 
-/** @param {string} path */
+/**
+ * Every caller reads a reference directory and hands each entry to
+ * `readFileSync`, so a subdirectory such as `references/ecosystems/` used to
+ * throw `EISDIR` and kill the build. Filtering here rather than at each call
+ * site is also what keeps a per-file page from being emitted for one.
+ * @param {string} path
+ */
 function safeReaddir(path) {
   try {
-    return readdirSync(path)
+    return readdirSync(path).filter((entry) => entry.endsWith(".md"))
   } catch {
     return []
   }

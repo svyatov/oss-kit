@@ -14,6 +14,12 @@ const rules = parseRules(readFileSync(new URL("../skills/oss-audit/STANDARD.md",
 const areas = [...new Set(rules.map((rule) => rule.section))]
 const areaCode = (section) => rules.find((rule) => rule.section === section)?.area.toLowerCase()
 
+// Same reason as the rules above: the roster is the order and the titles, so
+// adding an ecosystem needs no change here. Autogeneration would sort the
+// directory by filename, which puts crates beside containers and hex beside go.
+const roster = JSON.parse(readFileSync(new URL("../skills/oss-audit/ecosystems.json", import.meta.url), "utf8"))
+const ecosystems = Object.entries(roster.ecosystems)
+
 // A rule heading in the standard is a full sentence, so the default slug runs
 // to 100 characters. The product asks people to cite R-SEC-01, so that is the
 // anchor a reader guesses and the one a pull request comment carries.
@@ -121,6 +127,11 @@ export default defineConfig({
               ...rules.filter((rule) => rule.section === section).map((rule) => `rules/${rule.id.toLowerCase()}`),
             ],
           }))],
+        },
+        {
+          label: "Ecosystems",
+          collapsed: true,
+          items: ecosystems.map(([name, meta]) => ({ label: meta.title, link: `/ecosystems/${name}/` })),
         },
         { label: "Changelog", link: "/changelog/" },
       ],
