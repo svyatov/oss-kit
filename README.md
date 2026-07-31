@@ -63,12 +63,12 @@ this order instead:
 
 `oss-writing` and `oss-skill` are not steps in that sequence. Reach for
 `oss-writing` whenever you are about to write a commit, a pull request, or a
-paragraph of docs, and for `oss-skill` only if your repository ships agent
+paragraph of docs. Reach for `oss-skill` only if your repository ships agent
 skills of its own.
 
-You can also ask for a skill by name when you already know the job: use
-`oss-readme` for a README, `oss-community` for community files, `oss-ci` for
-continuous integration.
+You can also ask for a skill by name when you already know the job. Use
+`oss-readme` for a README, `oss-community` for community files, and `oss-ci`
+for continuous integration.
 
 ## Skills
 
@@ -85,8 +85,8 @@ continuous integration.
 | `oss-skill` | Fixes the structure and portability of the skills you ship. |
 
 Each skill page on the [documentation site](https://oss-kit.svyatov.com/skills/)
-carries the full description, including the validator `oss-skill` bundles, which
-runs on Node 22 or later, or Bun, with nothing installed.
+carries the full description, including the validator `oss-skill` bundles. That
+validator runs on Node 22 or later, or on Bun, with nothing installed.
 
 ## More install paths
 
@@ -160,17 +160,20 @@ four things:
   `skills/oss-skill/scripts/validate.mjs`
 - the manifest paths each supported host reads
 
-The wording of a skill body, the layout of a skill's `references/` directory,
-the documentation site, and the maintenance code under `scripts/` and `tests/`
-are outside it. They change in any release.
+Four things are outside it, and they change in any release:
+
+- the wording of a skill body
+- the layout of a skill's `references/` directory
+- the documentation site
+- the maintenance code under `scripts/` and `tests/`
 
 Renaming or removing a skill, renaming a rule ID, or tightening what a rule
-requires is an incompatible change: a repository that passed yesterday can fail
+requires is an incompatible change. A repository that passed yesterday can fail
 today. Adding a skill or a rule is not. While the version stays below 1.0.0, an
 incompatible change ships in a MINOR release.
 
 ## License
 
 MIT. See [LICENSE](LICENSE). A skill that derives from third-party work carries
-a `sources.json` naming what it came from, who holds copyright alongside the
-maintainer, and how this fork differs.
+a `sources.json`. It names what the skill came from, who holds copyright
+alongside the maintainer, and how this fork differs.
