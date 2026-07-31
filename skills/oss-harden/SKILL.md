@@ -78,6 +78,15 @@ Whether the newest release tag is signed, if a release has shipped yet; a reposi
 
 On GitHub, every external `uses:` line in every workflow should resolve to a full 40-character commit SHA, including GitHub-owned actions and reusable workflows outside the current repository. Preserve the selected version in a trailing comment so a human and the updater can still read it. On GitLab, there is no action-shaped `uses:` step; the same mutable-reference problem arrives through `image:`, `services:`, and external `include:` entries, so pin those instead, per R-SEC-06. Resolve the version the configuration already selects unless the user separately authorizes an upgrade. Check the newest compatible and newest major releases and report lag, but do not combine a security pin with a potentially breaking upgrade. The reference file for the detected forge gives the exact resolution process and the caveat that an annotated tag needs one extra step most naive lookups miss.
 
+`scripts/resolve-pin.mjs` does that resolution. Pipe the workflow through it, or pass the references directly:
+
+```sh
+node skills/oss-harden/scripts/resolve-pin.mjs actions/checkout@v5 ruby/setup-ruby@v1
+cat .github/workflows/ci.yml | node skills/oss-harden/scripts/resolve-pin.mjs -
+```
+
+It dereferences an annotated tag to the commit it points at, which is the extra step, and it says when a ref is a branch rather than a tag, which is a finding in its own right: `ruby/setup-ruby@v1` and `rubygems/release-gem@v1` are both branches, so a workflow naming either runs whatever was last pushed to it. Where the script is not installed, because a single skill was installed on its own, do the same work by hand, and dereference the annotated tag.
+
 A workflow or pipeline can also invoke a package installer or a tool installer directly, such as a `pip install` or a `uv tool install` of a package or a git source. R-SEC-01 and R-SEC-06 check only `uses:`, `image:`, `services:`, and `include:`; they do not extend to an installer command run inside a step, and no rule in `STANDARD.md` reaches it, so do not cite a rule ID for what this paragraph produces.
 
 Where such a command installs from a registry, R-SEC-08 already governs it through the lockfile, so read Step 10 rather than treating it here. Where it installs from a git URL or a piped script, check that the upstream project actually publishes what the command fetches: read the project's own repository or documentation and confirm the install path came from there, rather than working backward from a registry page, whose author, homepage, and repository fields are text the publisher typed. Report a command whose upstream cannot be established as a supply-chain observation in the summary, separate from the rule findings, and say plainly that it should not be installed until a maintainer decides. Do not resolve it by pinning it to a commit SHA. Pinning code whose origin is unestablished gives the same code at a known revision, and a maintainer reading a pinned line will reasonably assume someone already vouched for it.
@@ -93,6 +102,16 @@ Pinning freezes a reference until something unfreezes it; R-SEC-03 requires an u
 ### Step 6: Branch protection and required review
 
 R-SEC-04 requires the default branch to take changes only through a change request, require at least one CI status check to pass, and reject force pushes and deletion, on both forges. This is a forge setting, not a file, so give the user the resolved settings URL for the repository or project found in Step 1, wait for confirmation, then verify with the read command from Step 2. On GitHub, set this up as a repository ruleset; classic branch protection is the older form, still enforced where it already exists and worth reading, but not what to create today. Every control in this paragraph works without a second person, so set all of them whatever the repository's size.
+
+`scripts/ruleset.mjs` is what edits an existing ruleset without losing the rest of it:
+
+```sh
+node skills/oss-harden/scripts/ruleset.mjs get <owner>/<repo> main
+node skills/oss-harden/scripts/ruleset.mjs put <owner>/<repo> main patch.json
+node skills/oss-harden/scripts/ruleset.mjs actor <login>
+```
+
+`put` reads the ruleset, deep-merges the patch, strips the nulls, PUTs it, and prints what the API reports afterwards rather than what was sent. The null strip is the reason it exists: GitHub reads several rule parameters back as null and rejects those same nulls on write, so a hand-rolled fetch, edit, and PUT answers `422 Invalid property /rules/N: data matches no possible input`. `code_coverage` with `max_coverage_drop: null` is the case every measured run hit. `actor` prints the `{"actor_type": "User", "actor_id": N}` form a bypass entry takes; do not guess a `RepositoryRole` number, which is undocumented and was shipped wrong once and repaired with a second write. Where the script is not installed, do the same three things by hand: read the ruleset by id rather than from the list endpoint, which answers with a summary that omits rules, strip every null before writing, and read the result back rather than inferring it from a 200.
 
 R-SEC-12 adds the approving review, and reaches only a repository where two or more principals hold push, maintain, or admin access. Establish that first by reading the access list the rule's check names, and report the rule as outside the repository when one principal holds every merge path. Do not report a violation there, and do not set the requirement anyway and then add a bypass entry to undo it; that trades a control the repository had for a status that blocks nobody. Where the rule does reach, set the review requirement alongside the controls above, and where `oss-community` has already written a CODEOWNERS file, turn on the code-owner-approval setting too; a CODEOWNERS file with nothing enforcing it is a suggestion, not a control. Where the platform's free tier does not offer enforced review, as GitLab's does not, say so plainly and give the strongest control the tier actually has; take that fallback only because the tier leaves no other option, the same spirit `STANDARD.md` states for the fallbacks it marks below the bar, and do not claim a paid capability is active on a free plan.
 

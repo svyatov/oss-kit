@@ -190,6 +190,15 @@ Write the version decided in Step 5 into every file Step 1 found, and into the c
 
 Keep `CHANGELOG.md` canonical. A forge-generated pull request list is useful raw material, not a finished changelog. Start the release body from the corresponding changelog section without retyping it. It may add a brief announcement, installation or verification details, migration links, contributor credit, and attached-asset context, but it must not omit or contradict notable changes. R-CHG-04 checks that relationship.
 
+`scripts/release-notes.mjs` extracts the section, so nothing retypes it and no regex gets improvised at release time:
+
+```sh
+node skills/oss-changelog/scripts/release-notes.mjs v1.2.3
+node skills/oss-changelog/scripts/release-notes.mjs docs/CHANGELOG.md 1.2.3
+```
+
+It exits 2 when the version's section is absent or empty, which is what makes it usable inside a release job: the job fails rather than publishing a release with a blank body. Where `oss-publish` writes a release workflow that creates the forge release, it copies this file to `.github/scripts/release-notes.mjs` in the repository and calls it there, because the file has to exist on the runner. Run it against the tag about to be pushed before pushing it. Where the script is not installed, read the section out of the file directly; do not fall back to `--generate-notes`, which lists merged pull requests rather than what the project wrote.
+
 ### Step 9: Verify, then hand the tag over
 
 Read each R-CHG rule's `Check:` line in `STANDARD.md` against the changelog, the manifests, and the proposed tag as they now stand, and fix what fails. Start the list again after each fix, because setting a version in one place can leave another disagreeing, and do not report done while any cited rule still fails.

@@ -215,9 +215,7 @@ This reference names no SBOM generator for Ruby. The ones in common use are thir
       - uses: actions/attest@v4
         with:
           subject-checksums: SHA256SUMS
-      - run: |
-          awk -v v="${GITHUB_REF_NAME#v}" '$0 ~ "^## \\[" v "\\]" {f=1; next} f && /^## / {exit} f' CHANGELOG.md > notes.md
-          test -s notes.md
+      - run: node .github/scripts/release-notes.mjs "$GITHUB_REF_NAME" > notes.md
       - run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md
         env:
           GH_TOKEN: ${{ github.token }}
@@ -243,7 +241,11 @@ sha256sum -c SHA256SUMS
 
 Run the first command against each asset downloaded, never against `SHA256SUMS`, which is a subject of nothing. It proves that this workflow in this repository produced those exact bytes, and it prints the signing workflow it accepted; `--signer-workflow <owner>/<repo>/.github/workflows/release.yml` pins that, so an attestation from any other workflow in the repository fails. The second command is what a consumer without `gh` has. It proves the files match a list published beside them, and nothing about who produced either. These verify the forge release's copy; the gem installed from rubygems.org is verified through the registry record in Step 5.
 
-`gh release upload` fails when no release exists for the tag, which is why the job creates it. The notes come from `CHANGELOG.md` rather than from `--generate-notes`, because `oss-changelog` already mandates the Keep a Changelog structure the `awk` above reads, so the section for this version is guaranteed to exist and is what the project itself wrote about the release. `--generate-notes` would list merged pull requests instead, which is a different document and one the project did not write. `test -s notes.md` is the load-bearing half: it fails the job when the section is absent rather than publishing a release with an empty body, which nobody looks at twice. Adapt the `v` prefix strip and the heading pattern to the repository's own tag format and changelog if either differs.
+`gh release upload` fails when no release exists for the tag, which is why the job creates it. The notes come from `CHANGELOG.md` rather than from `--generate-notes`, because `oss-changelog` already mandates the Keep a Changelog structure, so the section for this version is guaranteed to exist and is what the project itself wrote about the release. `--generate-notes` would list merged pull requests instead, which is a different document and one the project did not write.
+
+`release-notes.mjs` is `oss-changelog`'s, at `skills/oss-changelog/scripts/release-notes.mjs`. Copy it to `.github/scripts/release-notes.mjs` in the repository, unchanged, and commit it with the workflow. It is one file, it imports Node built-ins only, and every GitHub runner has a Node old enough to run it, so it needs no install step and no `setup-node`. Where the release job cannot carry the copy, extract the section in the job with the project's own tooling instead; what must not happen is a regex improvised at release time, which is what this replaces.
+
+Its exit code is the load-bearing half. It exits 2 when the version's section is absent or empty, so the release job fails rather than publishing a release with a blank body, which nobody looks at twice. Check it against the tag about to be pushed before pushing it, with `node .github/scripts/release-notes.mjs vX.Y.Z`.
 
 A third job is what makes the grants above safe, so copy the job boundary along with them. The build job runs `gem build` against the project's own gemspec, so giving it release-asset writes and an attestation identity is exactly the credential split Step 3 exists to enforce, and it would write assets before the approval gate. The publish job holds the rubygems.org credential. Only a separate job satisfies both, and `needs: [publish]` is what keeps the assets behind the gate.
 
