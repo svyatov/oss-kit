@@ -2,7 +2,7 @@
 
 Curated agent skills for open source maintainers.
 
-[![version](https://img.shields.io/github/v/tag/svyatov/oss-kit?label=version)](https://github.com/svyatov/oss-kit/releases)
+[![version](https://img.shields.io/github/v/tag/svyatov/oss-kit?sort=semver&label=version)](https://github.com/svyatov/oss-kit/releases)
 [![CI](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13884/badge)](https://www.bestpractices.dev/projects/13884)
 
