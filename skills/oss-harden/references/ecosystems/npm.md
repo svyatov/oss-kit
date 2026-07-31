@@ -17,6 +17,16 @@ Every package manager here writes a lockfile without being asked: `package-lock.
 
 Yarn and pnpm both default that flag on in CI, and pnpm's default also requires a lockfile to be present. Write the flag anyway. A default that depends on the runner exporting `CI` is not evidence in a workflow file, and the same command run locally or on a runner that does not set it silently re-resolves.
 
+### What breaks the first time you commit the lockfile
+
+**Regenerate the lock with no `node_modules` present, or it records one platform.** A dependency gated by the `os` or `cpu` field is optional, and npm records the variant it resolved. Regenerating while a `node_modules` tree built on the maintainer's own machine is present has been reported to record that machine's variant alone, and `npm ci` on a Linux runner then skips the variant the runner needs rather than failing. Delete the lockfile and `node_modules` together, then reinstall. `npm install` takes `--os`, `--cpu`, and `--libc`, each documented as an override of the platform native modules are installed for, so one machine can confirm the lock covers the runner.
+
+**Pin the npm version, not only the Node version.** The lockfile format is versioned against the npm major rather than the runtime. `lockfileVersion` 2 is what npm 7 and 8 write, and 3 is what npm 9 and above write. A job whose bundled npm predates the one that wrote the file rewrites the format during install, which surfaces as a lockfile the job modified rather than as a version difference.
+
+**Every lockfile needs a directory the updater is configured to read.** Dependabot reaches the directories its configuration lists and no others, so a workspace or a nested package whose directory is unlisted keeps a lockfile nobody bumps. List each one, and give the project a single command that regenerates them all.
+
+Verified 2026-07-31 against [npm install](https://docs.npmjs.com/cli/v11/commands/npm-install), [package-lock.json](https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json), and [npm/cli issue 4828](https://github.com/npm/cli/issues/4828).
+
 ## Static analysis (R-SEC-09)
 
 CodeQL supports JavaScript and TypeScript, so CodeQL default setup covers this ecosystem on GitHub with no workflow to maintain. GitLab's SAST table lists JavaScript and TypeScript under its Semgrep-based analyzer with GitLab-managed rules, available in the tier that ships the open source analyzers.

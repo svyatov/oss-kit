@@ -114,13 +114,13 @@ R-SEC-08 requires the package manager's lockfile to be committed and CI to insta
 
 Committing the file is the easy half, and the failures land in CI afterward rather than on the machine that generated it. Before opening the change, ask three questions of each ecosystem and answer them from that ecosystem's reference file and its package manager's own documentation.
 
-Does the resolved set vary by runtime version? Where it does, generate the lock on the lowest runtime the matrix tests, or every job below that one fails at install rather than at test. The rubygems and crates files work this through for Bundler and Cargo; for another ecosystem, establish it before assuming either way.
+Does the resolved set vary by runtime version? Where it does, generate the lock on the lowest runtime the matrix tests, or every job below that one fails at install rather than at test.
 
-Does the repository hold locks the updater will not maintain? An updater finds lockfiles by exact filename, so a lock outside its ecosystem's canonical names is invisible to it and drifts from the manifest the updater does bump. Give the project one command that regenerates every lock, and name it where a contributor merging an update will read it.
+Does the repository hold locks the updater will not maintain? An updater finds lockfiles by exact filename inside the directories its configuration lists, so a lock outside either is invisible to it and drifts from the manifest the updater does bump. Give the project one command that regenerates every lock, and name it where a contributor merging an update will read it.
 
 Does the lock have to cover a platform nobody develops on? A lock recording only the maintainer's platform leaves a Linux runner with no resolution to install.
 
-Where an ecosystem's reference file does not yet answer one of these, say so in the report rather than assuming the answer is no.
+Every reference file answers all three, under a heading naming what breaks after the file is committed, and several answer no with the documentation that settles it. Read that heading rather than reasoning from another ecosystem, because the answers differ: a Go module and a Cargo workspace are immune to the platform question by design, while npm and Bundler fail on it routinely.
 
 ### Step 11: Static analysis on pull requests
 

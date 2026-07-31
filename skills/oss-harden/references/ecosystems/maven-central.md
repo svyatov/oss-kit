@@ -18,6 +18,18 @@ Gradle publishes both halves and stays inside the rule. Dependency locking write
 
 So a Gradle project publishing to Maven Central that commits no `gradle.lockfile` is a finding, and the same project built with Maven is not. Say which build tool the repository uses when reporting either.
 
+### What breaks the first time you commit the lockfile
+
+These reach a Gradle build. Maven writes no lockfile, so nothing below applies to one.
+
+**One build commits many lock files, and `--write-locks` writes only what it resolved.** Lock state is per project and per configuration: a `gradle.lockfile` sits "at the root of each project or subproject directory", and the build script's own classpath is locked separately in `buildscript-gradle.lockfile`. Gradle writes lock state only for configurations that the invoked tasks actually resolve, and it "won't write the lock state to disk if the build fails". So a `--write-locks` run over one task leaves the rest of a multi-project build stale, and `LockMode.STRICT` then fails any locked configuration with no lock state. Give the project one command that resolves every locked configuration, and run it before reviewing the diff.
+
+**Dependency verification is a second file, and Dependabot does not touch it.** Dependabot's Gradle file fetcher lists `gradle.lockfile` among the files it fetches and does not list `gradle/verification-metadata.xml`. Where both features are on, an updater bumps the version and the lock, the new artifact has no recorded checksum, and verification fails the build for a reason that reads like tampering. Regenerate the verification metadata in the same change, and say in the contributing guide that a dependency bump touches both files.
+
+**Toolchain and platform are not dimensions here.** Gradle documents no per-platform lock state and no regeneration keyed to the JDK. What varies instead is which configurations were resolved, which the first paragraph covers.
+
+Verified 2026-07-31 against [Gradle dependency locking](https://docs.gradle.org/current/userguide/dependency_locking.html) and [dependabot-core's Gradle file fetcher](https://github.com/dependabot/dependabot-core/blob/main/gradle/lib/dependabot/gradle/file_fetcher.rb).
+
 ## Static analysis (R-SEC-09)
 
 CodeQL supports Java and Kotlin, so CodeQL default setup covers this ecosystem on GitHub, and the dependency graph's Maven row names Scala alongside Java. GitLab's SAST table lists Java, Kotlin, Groovy, and Scala under its analyzers.

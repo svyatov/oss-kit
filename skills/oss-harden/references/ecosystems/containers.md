@@ -20,6 +20,18 @@ The strongest available substitute is both techniques together: every `FROM` pin
 
 That substitute sits below R-SEC-08, whose subject is the lockfile a package manager writes. A container build tool publishing a committed, hash-bearing resolution file is what would retire this gap. Until then, report the digest pins as the control this ecosystem actually has, and score the repository's package manager ecosystems, which are the ones the image is built from, against R-SEC-08 on their own files.
 
+### What breaks the first time you pin a digest
+
+The digest pin is what stands in for the lockfile here, so the three questions apply to it.
+
+**Pin the index digest, not the one your own machine resolved.** A multi-platform image has two kinds of digest, and Docker separates them: "The manifest list digest identifies the overall multi-platform image", while "Each platform-specific image has its own digest". A maintainer who copies the digest their local pull reported takes the second, which is bound to one architecture, and a build for any other platform then has no image to start from. Read the digest with a command that names the reference rather than the local platform, and confirm the pin still builds for every platform the project publishes.
+
+**Runtime version is not a dimension.** There is no resolver and no runtime whose version changes what a digest points at. A digest is the content address of the thing it names.
+
+**An updater finds digests by filename, and not every digest lives in one.** Dependabot's Docker file fetcher matches on `dockerfile` or `containerfile` in the name, case insensitively, plus YAML files. A digest written into a shell script, a Makefile, or a `Justfile` matches none of those and is never bumped, so it silently ages into an unpatched base image. Keep every base image digest in a file the updater matches, and list each directory holding one in the configuration.
+
+Verified 2026-07-31 against [Docker image digests](https://docs.docker.com/dhi/core-concepts/digests/) and [dependabot-core's Docker file fetcher](https://github.com/dependabot/dependabot-core/blob/main/docker/lib/dependabot/docker/file_fetcher.rb).
+
 ## Static analysis (R-SEC-09)
 
 A container image contributes no source language, so this ecosystem never decides R-SEC-09 either way. What decides it is the source the repository holds, and the analyzer for that language is in the sibling file for its ecosystem. An image built from a repository whose only source is Dart is the Dart answer; an image built from a Go repository is the Go answer. Do not report a separate finding for the image.

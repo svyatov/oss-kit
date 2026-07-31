@@ -8,7 +8,19 @@ On GitLab the Renovate manager is `mix`.
 
 ## Lockfile and frozen install (R-SEC-08)
 
-Mix writes `mix.lock` without being asked, and the frozen install is `mix deps.get --check-locked`, documented as raising if there are pending changes to the lockfile.
+Mix writes `mix.lock` without being asked, and the frozen install is `mix deps.get --check-locked`, documented as raising if there are pending changes to the lockfile. Hex's own guidance is to always commit `mix.lock`, and it describes `mix deps.get` as locking the version of a dependency so every developer gets the same one.
+
+### What breaks the first time you commit the lockfile
+
+This is the quietest of the eleven, and two of the three usual failures do not reach it.
+
+**Runtime version is not a documented dimension.** Neither Hex nor Mix documents the resolved set as varying with the Elixir or OTP version, so there is no lowest-runtime rule to follow here and no reason to regenerate per matrix leg. What does vary by runtime is the compiled `_build` tree, so a CI cache keyed on `mix.lock` alone serves artifacts compiled by another OTP release. Key that cache on the OTP and Elixir versions as well as the lock.
+
+**Platform is not a dimension either.** `mix.lock` records a resolved version and a checksum per dependency, with no per-platform entry, so a lock generated on macOS installs on a Linux runner unchanged.
+
+**An umbrella has one lock, and a child that misconfigures its paths gets a second.** Mix defaults `:lockfile` to `mix.lock`, `:deps_path` to `deps`, and the build path alongside them, and an umbrella child overrides all three to point at the parent, conventionally `lockfile: "../../mix.lock"`. A child whose `mix.exs` omits that override resolves its own dependencies into its own lock, which no updater bumps and no root `--check-locked` reads. Read each child's `mix.exs` for the four shared paths before reporting the umbrella locked.
+
+Verified 2026-07-31 against [mix deps.get](https://mix.hexdocs.pm/Mix.Tasks.Deps.Get.html), [Mix.Project](https://mix.hexdocs.pm/Mix.Project.html), and [Hex mix usage](https://hex.pm/docs/usage).
 
 ## Static analysis (R-SEC-09)
 

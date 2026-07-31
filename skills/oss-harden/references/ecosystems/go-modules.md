@@ -14,6 +14,16 @@ The freeze is the default rather than a flag. Since Go 1.16 the `go` command act
 
 `go mod verify` is the integrity half. It hashes each downloaded module zip and extracted directory in the module cache, compares them against the hash recorded when the module was first downloaded, prints "all modules verified" on success, and exits non-zero naming what changed. Every module-aware command already checks the cache against `go.sum`, so `go mod verify` in CI is a deliberate re-check rather than the only one.
 
+### What breaks the first time you commit go.mod and go.sum
+
+**The matrix floor is the `go` directive, and a dependency update can raise it.** Before Go 1.21 the directive was advisory; it is now a requirement, and "Go toolchains refuse to use modules declaring newer Go versions". Worse for an updater pull request, the `go` command "writes its own toolchain name in a `toolchain` line any time it is updating the `go` version in the `go.mod` file (usually during `go get`)". So a routine bump can raise the floor in the same commit that raises the dependency, and every job below the new floor stops before compiling. Read the diff for a changed `go` or `toolchain` line before merging one.
+
+**`go.sum` is pruned against the previous release, and `-compat` moves that.** `go mod tidy` records "checksums needed by the Go version one below the version specified in its `go` directive", and `-compat` overrides which version that is. A matrix reaching two releases below the directive therefore needs `-compat` set to its oldest leg, or that leg fails on a missing checksum rather than on a missing module.
+
+**Platform is not a dimension here.** Build constraints other than `ignore` "are not considered" by `go mod tidy` and the other module commands, so a module imported only under one `GOOS` stays in `go.mod` and `go.sum` whatever machine ran tidy. There is no per-platform regeneration to arrange and no equivalent of adding a platform to the lock.
+
+Verified 2026-07-31 against [Go modules reference](https://go.dev/ref/mod) and [go mod tidy](https://pkg.go.dev/cmd/go#hdr-Add_missing_and_remove_unused_modules).
+
 ## Static analysis (R-SEC-09)
 
 CodeQL supports Go, so CodeQL default setup covers this ecosystem on GitHub. GitLab's SAST table lists Go under its Semgrep-based analyzer with GitLab-managed rules.
