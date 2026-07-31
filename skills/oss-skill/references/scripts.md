@@ -42,4 +42,4 @@ Read that list off the script rather than from memory. The whole point of the pr
 
 Print forward slashes on every platform. A path built with `node:path` comes back with backslashes on Windows, and a reader who pastes one into a shell or a URL gets a failure that has nothing to do with what the script found.
 
-`validate.mjs` builds its paths with `relative()` and normalizes them once, at the line that prints a finding, rather than at each place a path is assembled. One normalization covers every finding whatever built it, including the two that carry a literal separator.
+`validate.mjs` builds its paths with `relative()` and normalizes them once, at the line that prints a finding. One normalization covers every finding whatever built it, including the two that carry a literal separator.

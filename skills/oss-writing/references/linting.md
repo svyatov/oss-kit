@@ -35,6 +35,7 @@ Do not try to lint these. A rule that fires on correct prose gets the whole lint
 - Whether a noun stack is three words or a compound term that happens to be three words.
 - Whether a bolded bullet is a label or a claim.
 - Whether a caveat changes what the reader should do.
+- Whether the alternative in a `rather than` clause exists or was invented for the sentence.
 
 ## Banned words and phrases
 

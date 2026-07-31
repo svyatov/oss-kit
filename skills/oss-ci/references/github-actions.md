@@ -153,7 +153,7 @@ GitHub documents `pages: write` and `id-token: write` as the minimum for the dep
 
 The `concurrency` block above is the one place R-CI-05's cancellation guidance inverts. Cancelling a superseded test run costs a contributor nothing, and `cancel-in-progress` stays scoped to pull requests in the CI workflow. A deploy cancelled mid-publish can leave the previous build live, so the deploy workflow keeps its own group and never cancels.
 
-`environment: github-pages` is required rather than decorative. GitHub creates the environment automatically, and it is what applies deployment protection rules and reports the deployed URL back to the run.
+`environment: github-pages` is required. GitHub creates the environment automatically, and it is what applies deployment protection rules and reports the deployed URL back to the run.
 
 `actions/configure-pages` is optional, and where it is needed it goes in the `build` job, between `checkout` and the build command. It exports the site's base path and origin, which a project served from `owner.github.io/repo/` usually needs and a build reads only if it runs after the export. Placing it in `deploy`, or after `npm run build`, exports the values into a job or a step that has already finished with them, and the run stays green: the site deploys with every asset path resolving against the domain root, so the pages return 404s for their own CSS and JavaScript with nothing in the log to point at. A site whose own config already states its full URL, as a custom domain implies, skips the action and has one less thing to pin and update.
 
