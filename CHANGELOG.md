@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-07-31
+
 ### Added
 
 - `oss-readme`'s badge reference gains an Elixir row, `img.shields.io/hexpm/v/NAME` linking to the Hex package page. The endpoint returns the label `hex` on its own, so it needs no `?label=` override the way Go's tag badge does.
@@ -248,7 +250,8 @@ Five new rules, and `oss-audit` now reports the gaps alone rather than every rul
 - `oss-audit` scores a repository against `STANDARD.md`, reports each gap with the rule it fails, and names the skill that fixes it.
 - `oss-skill` fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` conformance to the Agent Skills specification, oversized bodies that belong in `references/`, and the license field an extracted skill carries with it.
 
-[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/svyatov/oss-kit/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/svyatov/oss-kit/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/svyatov/oss-kit/compare/v0.5.2...v0.6.0
 [0.5.2]: https://github.com/svyatov/oss-kit/compare/v0.5.1...v0.5.2
