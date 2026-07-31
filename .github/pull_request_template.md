@@ -2,6 +2,13 @@
 Delete any heading below that this change has nothing to put under.
 Keep `Closes` and any `BREAKING CHANGE:` footer last, so they still parse
 when this description becomes the squash commit body.
+
+Write each paragraph and each bullet on one line. Do not hard wrap.
+GitHub renders a description with the line-break extension on. Every newline
+you type becomes a `<br>`, so a wrapped paragraph renders ragged, and the
+reader's own window wraps it again on top of that.
+The comment blocks below are hard wrapped because they never render. They keep
+the raw file readable and are not the pattern to copy.
 -->
 
 ## What changed
