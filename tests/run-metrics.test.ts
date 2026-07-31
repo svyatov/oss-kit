@@ -65,3 +65,65 @@ test("reports cost per rule when told how many closed", () => {
   const out = run([assistant(0, 4_000_000, 0, 1)], ["--rules", "2"])
   expect(out).toContain("per rule closed (2): 2.0M context")
 })
+
+const toolCall = (id: string, name: string, input: unknown) =>
+  assistant(1, 1000, 0, 1, [{ type: "tool_use", id, name, input }])
+
+const toolResult = (id: string, content: string, isError = false) =>
+  JSON.stringify({
+    type: "user",
+    message: { content: [{ type: "tool_result", tool_use_id: id, content, ...(isError ? { is_error: true } : {}) }] },
+  })
+
+// A failed call costs the same context as a successful one. The split by cause
+// is what says whether the fix is a script, a prompt, or a permission.
+test("counts failed tool calls and splits them by cause", () => {
+  const out = run([
+    toolCall("a", "Bash", { command: "mix hex.user key generate --key-name x" }),
+    toolResult("a", "--key-name : Unknown option", true),
+    toolCall("b", "WebFetch", { url: "https://example.com/main/action.yml" }),
+    toolResult("b", "404 Not Found", true),
+    toolCall("c", "Bash", { command: "ls" }),
+    toolResult("c", "ok"),
+  ])
+  expect(out).toContain("rework 2 of 3 calls failed (66.7%)")
+  expect(out).toMatch(/flag or field\s+1/)
+  expect(out).toMatch(/not found\s+1/)
+})
+
+// Reading the same file twice is billed twice and buys nothing. Keying on the
+// target rather than on the tool is what makes the repeat visible.
+test("counts a re-read of the same target as redundancy", () => {
+  const out = run([
+    toolCall("a", "Read", { file_path: "/repo/README.md" }),
+    toolResult("a", "y".repeat(1000)),
+    toolCall("b", "Read", { file_path: "/repo/README.md" }),
+    toolResult("b", "y".repeat(1000)),
+    toolCall("c", "Read", { file_path: "/repo/OTHER.md" }),
+    toolResult("c", "z".repeat(10)),
+  ])
+  expect(out).toContain("redundancy 1 repeat reads")
+  expect(out).toContain("/repo/README.md")
+  expect(out).not.toContain("/repo/OTHER.md")
+})
+
+// The only metric here that measures the kit's correctness rather than its
+// cost: a verdict that went pass to fail is a finding the run itself created.
+test("diffs two audit reports and separates fixes from findings the run caused", () => {
+  const dir = mkdtempSync(join(tmpdir(), "reports-"))
+  const before = join(dir, "before.md")
+  const after = join(dir, "after.md")
+  writeFileSync(
+    before,
+    ["- R-COM-01 fail no LICENSE file", "- R-SEC-08 pass Gemfile.lock committed, bundle install frozen", "- R-DOC-01 pass README.md:3"].join("\n"),
+  )
+  writeFileSync(
+    after,
+    ["- R-COM-01 pass LICENSE added", "- R-SEC-08 fail .github/workflows/release.yml:30 runs bundle install unfrozen", "- R-DOC-01 pass README.md:3"].join("\n"),
+  )
+  const out = execFileSync("bun", [SCRIPT, "--reports", before, after], { encoding: "utf8" })
+  expect(out).toContain("3 verdicts in the second report, 2 moved")
+  expect(out).toContain("fixed  1: R-COM-01")
+  expect(out).toContain("caused 1: R-SEC-08")
+  expect(out).toContain("R-SEC-08 pass to fail, .github/workflows/release.yml:30")
+})
