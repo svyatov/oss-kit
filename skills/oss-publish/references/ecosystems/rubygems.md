@@ -81,6 +81,7 @@ jobs:
         with:
           ruby-version: .ruby-version
           bundler-cache: false
+      - run: bundle config set --local frozen true
       - run: bundle install
       - run: bundle exec rake test  # oss-ci decides the actual command from CONTRIBUTING.md (R-CI-02)
 
@@ -125,7 +126,13 @@ jobs:
 
 Replace the gemspec path and Ruby version from the repository. Adapt the version comparison to the actual tag format. Use one explicit gemspec per build and publish job; never let a glob choose among multiple gems.
 
-`oss-harden` pins every `uses:` line above to a commit SHA and sets this workflow's `permissions:`, including the `contents: read` this skill left off the test and build jobs above; do not pin them or add permissions here. `configure-rubygems-credentials` documents `@main` and recommends a commit SHA; resolve that SHA directly from its repository. Resolve the `sigstore-cli` version from the Sigstore repository and from what `release-gem` pins, and use that rather than the one written above.
+`bundle config set --local frozen true` is what keeps the test job inside R-SEC-08, whose `Check:` asks that every CI install use the package manager's current frozen mode. A bare `bundle install` in a workflow this skill writes fails a rule the kit owns, and an audit run after this skill will score it. It needs a committed `Gemfile.lock`, which R-SEC-08 already requires and `oss-harden` already produces; where `oss-harden` has not run yet and the repository commits no lockfile, generate it before adding the line rather than dropping the line. Neither the build nor the publish job installs Gemfile dependencies at all, so neither carries this.
+
+`oss-harden` pins every `uses:` line above to a commit SHA and sets this workflow's `permissions:`, including the `contents: read` this skill left off the test and build jobs above; do not pin them or add permissions here. `configure-rubygems-credentials` documents `@main` and recommends a commit SHA; resolve that SHA directly from its repository. `release-gem` pins no `sigstore-cli` version, so do not look for one there; its default branch is `v1`, so a raw fetch of `main/action.yml` returns 404, and its only signing-related input is `attestations`, which its own description marks experimental. Resolve the current version from the registry instead:
+
+```bash
+curl -s https://rubygems.org/api/v1/gems/sigstore-cli.json | jq -r .version
+```
 
 If an existing workflow uses `secrets.RUBYGEMS_API_KEY` or `GEM_HOST_API_KEY`, remove it from the YAML now and tell the user to delete the corresponding secret once the new flow is verified.
 
@@ -168,11 +175,21 @@ curl -s https://rubygems.org/api/v1/attestations/<name>-<version>.json
 
 A non-empty JSON array confirms RubyGems.org serves an attestation for that exact name and version. An empty array is a failed provenance check.
 
+Wait for the index before verifying by installing. `gem push` returns success as soon as the gem is accepted, and the compact index a client resolves against is written afterwards, so `gem install <name> -v <version>` immediately after a release fails with `Could not find a valid gem '<name>' (= <version>)`. That is propagation, not a failed publish, and a retry loop around `gem install` will burn several minutes reporting it. Poll the API instead, which reflects the release first:
+
+```bash
+until curl -sf "https://rubygems.org/api/v1/versions/<name>.json" | jq -e --arg v "<version>" 'any(.[]; .number == $v)' >/dev/null; do sleep 10; done
+```
+
+Then install once. Report a failure after the API already lists the version as a real failure. `release-gem` carries an `await-release` input that does the same waiting, defaulting to true, which is the upstream confirmation that this delay is a property of the registry rather than of one release.
+
 ## Describe and sign what the release attaches (Step 6)
 
 Only for a release that attaches a built asset to the forge release. The gem this workflow pushes is signed with `sigstore-cli` and pushed with `--attestation` in Step 3, and rubygems.org serves that attestation back, so the gem itself is covered. The source archives GitHub generates for a tag are not built assets. A release that attaches nothing beside the gem goes to Step 7 instead.
 
-This reference names no SBOM generator for Ruby. The ones in common use are third-party tools rather than part of the packaging toolchain, and a tool that reads the dependency tree inside the release workflow is one the maintainer vets before it goes there. Until one is vetted, publish the hashes of what the release attaches and sign those, which needs nothing the runner does not already ship:
+Two rules apply here and they ask for different things. R-PUB-05 wants an inventory of what went into the asset, in SPDX or CycloneDX. R-PUB-06 wants the assets signed, or listed by hash in a signed manifest. A manifest of hashes answers the second and nothing about the first, so do not report R-PUB-05 as met by publishing one.
+
+This reference names no SBOM generator for Ruby. The ones in common use are third-party tools rather than part of the packaging toolchain, and a tool that reads the dependency tree inside the release workflow is one the maintainer vets before it goes there. What answers R-PUB-05 without one, on GitHub, is the forge's own export of the repository's dependency graph, which is already SPDX and needs nothing installed:
 
 ```yaml
   release:
@@ -184,18 +201,34 @@ This reference names no SBOM generator for Ruby. The ones in common use are thir
       attestations: write
       artifact-metadata: write
     steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/download-artifact@v8
         with:
           name: built-gem
           path: pkg/
+      - run: gh api repos/${{ github.repository }}/dependency-graph/sbom --jq .sbom > pkg/sbom.spdx.json
+        env:
+          GH_TOKEN: ${{ github.token }}
       - run: (cd pkg && sha256sum *) > SHA256SUMS
       - uses: actions/attest@v4
         with:
           subject-checksums: SHA256SUMS
+      - run: |
+          awk -v v="${GITHUB_REF_NAME#v}" '$0 ~ "^## \\[" v "\\]" {f=1; next} f && /^## / {exit} f' CHANGELOG.md > notes.md
+          test -s notes.md
+      - run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md
+        env:
+          GH_TOKEN: ${{ github.token }}
       - run: gh release upload "$GITHUB_REF_NAME" pkg/* SHA256SUMS
         env:
           GH_TOKEN: ${{ github.token }}
 ```
+
+Writing the SBOM into `pkg/` before the manifest step is what puts it under both rules at once: it ships as a release asset for R-PUB-05, and it is listed and attested alongside the gem for R-PUB-06.
+
+State both of the export's limits to the maintainer rather than leaving them to be discovered. It is GitHub only, so a GitLab project keeps this gap and R-PUB-05 stays unmet there with the reason named. And it covers the repository's declared dependency graph rather than what is linked into the asset, which is exact for a gem, because a gem carries no bundled dependencies and installs them from the same declarations. The graph resolves past the direct dependencies only where a lockfile is committed, which R-SEC-08 already requires. Read the output back once with `gh api repos/<owner>/<repo>/dependency-graph/sbom --jq '.sbom.packages | length'` before reporting the rule met: a graph the forge does not parse for this ecosystem returns a near-empty package list rather than an error.
 
 `sha256sum` runs from inside `pkg/` so the names it writes are the names the assets carry on the release. A manifest listing `pkg/package.gem` cannot be checked against a downloaded `package.gem`.
 
@@ -210,7 +243,7 @@ sha256sum -c SHA256SUMS
 
 Run the first command against each asset downloaded, never against `SHA256SUMS`, which is a subject of nothing. It proves that this workflow in this repository produced those exact bytes, and it prints the signing workflow it accepted; `--signer-workflow <owner>/<repo>/.github/workflows/release.yml` pins that, so an attestation from any other workflow in the repository fails. The second command is what a consumer without `gh` has. It proves the files match a list published beside them, and nothing about who produced either. These verify the forge release's copy; the gem installed from rubygems.org is verified through the registry record in Step 5.
 
-`gh release upload` fails when no release exists for the tag. Either create it in this job with `gh release create "$GITHUB_REF_NAME" --generate-notes` before the upload, or have the maintainer publish the release from the tag first. This reference does not choose between them, because release notes are the project's own.
+`gh release upload` fails when no release exists for the tag, which is why the job creates it. The notes come from `CHANGELOG.md` rather than from `--generate-notes`, because `oss-changelog` already mandates the Keep a Changelog structure the `awk` above reads, so the section for this version is guaranteed to exist and is what the project itself wrote about the release. `--generate-notes` would list merged pull requests instead, which is a different document and one the project did not write. `test -s notes.md` is the load-bearing half: it fails the job when the section is absent rather than publishing a release with an empty body, which nobody looks at twice. Adapt the `v` prefix strip and the heading pattern to the repository's own tag format and changelog if either differs.
 
 A third job is what makes the grants above safe, so copy the job boundary along with them. The build job runs `gem build` against the project's own gemspec, so giving it release-asset writes and an attestation identity is exactly the credential split Step 3 exists to enforce, and it would write assets before the approval gate. The publish job holds the rubygems.org credential. Only a separate job satisfies both, and `needs: [publish]` is what keeps the assets behind the gate.
 
@@ -226,4 +259,4 @@ Every gem needs its own trusted publisher entry pointing at the same repository 
 
 Step 7 is in `SKILL.md`: read each R-PUB rule's `Check:` line against what this file produced, and fix what fails before reporting done.
 
-Verified 2026-07-31 against [RubyGems Guides, Trusted Publishing](https://github.com/rubygems/guides/blob/main/trusted-publishing.md), which still names GitHub Actions as the only OIDC provider and does not mention GitLab.
+Verified 2026-07-31 against [RubyGems Guides, Trusted Publishing](https://github.com/rubygems/guides/blob/main/trusted-publishing.md), which still names GitHub Actions as the only OIDC provider and does not mention GitLab; against [rubygems/release-gem](https://github.com/rubygems/release-gem/blob/v1/action.yml), whose default branch is `v1` and whose inputs are `token`, `await-release`, `setup-trusted-publisher`, `attestations`, and `working-directory`, with no `sigstore-cli` version among them; and against `https://rubygems.org/api/v1/gems/sigstore-cli.json`, which reports `0.2.3`.

@@ -47,6 +47,50 @@ jobs:
   expect(facts.summary.jobsWithTimeout).toBe(1)
 })
 
+// A branches: filter under pull_request keys on the base branch, so one naming
+// the default branch runs nothing for a stacked change request. R-CI-01 cannot
+// be scored from the event name alone.
+test("reports each trigger's branch filter, so a filtered pull_request is visible", () => {
+  const filtered = repo({
+    ".github/workflows/ci.yml": `on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: ["main"]
+jobs:
+  a:
+    steps:
+      - run: true
+`,
+  })
+  expect(filtered.workflows[0].triggers).toEqual(["push", "pull_request"])
+  expect(filtered.workflows[0].triggerFilters.pull_request).toBeDefined()
+
+  const unfiltered = repo({
+    ".github/workflows/ci.yml": `on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  a:
+    steps:
+      - run: true
+`,
+  })
+  expect(unfiltered.workflows[0].triggerFilters.pull_request).toBeUndefined()
+})
+
+// on: takes three shapes and only one of them is a map, so Object.keys over the
+// other two reports array indices or nothing where the events should be.
+test("lists the events for every shape on: takes", () => {
+  const list = repo({ ".github/workflows/a.yml": "on: [push, pull_request]\njobs:\n  a:\n    steps:\n      - run: true\n" })
+  expect(list.workflows[0].triggers).toEqual(["push", "pull_request"])
+  expect(list.workflows[0].triggerFilters).toEqual({})
+
+  const scalar = repo({ ".github/workflows/a.yml": "on: push\njobs:\n  a:\n    steps:\n      - run: true\n" })
+  expect(scalar.workflows[0].triggers).toEqual(["push"])
+})
+
 test("reports a uses: as pinned only for a 40 character sha", () => {
   const facts = repo({
     ".github/workflows/ci.yml": `on: [push]

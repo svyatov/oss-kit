@@ -183,7 +183,9 @@ Source: [PyPI Docs, Producing attestations](https://docs.pypi.org/attestations/p
 
 Only for a release that attaches a built asset to the forge release. The distributions this workflow uploads to PyPI carry the PEP 740 attestations Step 5 verifies, and the source archives GitHub generates for a tag are not built assets, so a project that attaches nothing beside them goes to Step 7 instead.
 
-This reference names no SBOM generator for Python. The ones in common use are third-party tools rather than part of the packaging toolchain, and a tool that reads the dependency tree inside the release workflow is one the maintainer vets before it goes there. Until one is vetted, publish the hashes of what the release attaches and sign those, which needs nothing the runner does not already ship:
+Two rules apply here and they ask for different things. R-PUB-05 wants an inventory of what went into the asset, in SPDX or CycloneDX. R-PUB-06 wants the assets signed, or listed by hash in a signed manifest. A manifest of hashes answers the second and nothing about the first, so do not report R-PUB-05 as met by publishing one.
+
+This reference names no SBOM generator for Python. The ones in common use are third-party tools rather than part of the packaging toolchain, and a tool that reads the dependency tree inside the release workflow is one the maintainer vets before it goes there. What answers R-PUB-05 without one, on GitHub, is the forge's own export of the repository's dependency graph, which is already SPDX and needs nothing installed. The `gh api` step below writes it into `dist/`, so it ships as a release asset for R-PUB-05 and is listed in `SHA256SUMS` and attested alongside the distributions for R-PUB-06:
 
 ```yaml
   release:
@@ -199,6 +201,9 @@ This reference names no SBOM generator for Python. The ones in common use are th
         with:
           name: dist
           path: dist/
+      - run: gh api repos/${{ github.repository }}/dependency-graph/sbom --jq .sbom > dist/sbom.spdx.json
+        env:
+          GH_TOKEN: ${{ github.token }}
       - run: (cd dist && sha256sum *) > SHA256SUMS
       - uses: actions/attest@v4
         with:
@@ -207,6 +212,8 @@ This reference names no SBOM generator for Python. The ones in common use are th
         env:
           GH_TOKEN: ${{ github.token }}
 ```
+
+State both of the export's limits to the maintainer rather than leaving them to be discovered. It is GitHub only, so a GitLab project keeps this gap and R-PUB-05 stays unmet there with the reason named. And it covers the repository's declared dependency graph rather than what is inside the asset, which is exact for a pure Python wheel, because a wheel declares its dependencies rather than bundling them, and an approximation for a wheel carrying compiled extensions, whose linked libraries the graph does not see. The graph resolves past the direct dependencies only where a lockfile or a fully hashed requirements file is committed, which R-SEC-08 already requires. Read the output back once with `gh api repos/<owner>/<repo>/dependency-graph/sbom --jq '.sbom.packages | length'` before reporting the rule met: a graph the forge does not parse for this ecosystem returns a near-empty package list rather than an error.
 
 `sha256sum` runs from inside `dist/` so the names it writes are the names the assets carry on the release. A manifest listing `dist/foo.whl` cannot be checked against a downloaded `foo.whl`.
 

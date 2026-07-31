@@ -92,7 +92,7 @@ Sourcing it also leaves `set -eu` active for the rest of the job's `script:` blo
 
 ## Write the hardened release workflow (Step 3)
 
-Cargo does not accept a prebuilt `.crate` path for publishing. Run `cargo publish --dry-run` in an uncredentialed job so dependency resolution, build scripts, packaging, and verification finish before approval. The publish job then authenticates and runs `cargo publish --no-verify`, which repackages and uploads without building dependencies:
+Cargo does not accept a prebuilt `.crate` path for publishing. Run `cargo publish --locked --dry-run` in an uncredentialed job so dependency resolution, build scripts, packaging, and verification finish before approval. The publish job then authenticates and runs `cargo publish --locked --no-verify`, which repackages and uploads without building dependencies:
 
 ```yaml
 name: Release
@@ -107,9 +107,9 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - run: cargo test --all-features  # oss-ci decides the actual command from CONTRIBUTING.md (R-CI-02)
+      - run: cargo test --locked --all-features  # oss-ci decides the actual command from CONTRIBUTING.md (R-CI-02)
       - run: test "${GITHUB_REF_NAME#v}" = "$(cargo metadata --format-version 1 --no-deps | jq -er --arg n "<crate name>" '.packages[] | select(.name == $n) | .version')"
-      - run: cargo publish --dry-run
+      - run: cargo publish --locked --dry-run
 
   publish:
     runs-on: ubuntu-latest
@@ -126,7 +126,7 @@ jobs:
           persist-credentials: false
       - uses: rust-lang/crates-io-auth-action@v1
         id: auth
-      - run: cargo publish --no-verify
+      - run: cargo publish --locked --no-verify
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
       - uses: actions/attest@v4
@@ -136,7 +136,9 @@ jobs:
 
 The version check above names the crate in `<crate name>` and strips one leading `v` from the tag; derive both from what the repository actually does, since a workspace publishes more than one name and a project tagging `1.2.3` has no prefix to strip. `jq -e` is what makes an unmatched name fail the step rather than compare the tag against an empty string. `jq` is preinstalled on GitHub-hosted Ubuntu runners, and on GitLab it comes from the release image the token exchange already requires. Use the package selector and version source discovered in Step 1 for workspaces. The publish command creates the exact `.crate` it uploads under `target/package/`; the following attestation therefore covers the uploaded bytes. `--no-verify` is safe only because the required dry run already succeeded for the same tag commit and toolchain.
 
-`oss-harden` pins every `uses:` line above to a commit SHA and sets the test job's minimal permissions; this skill includes the publish permissions required for authentication and provenance. On GitLab CI/CD, give the publish job the `id_tokens` block above, source `exchange-token.sh`, then run `cargo publish --no-verify`, restricted to version tags with `rules:`. The preceding uncredentialed job must run the same version check and `cargo publish --dry-run`.
+`--locked` on every Cargo invocation above is R-SEC-08, whose `Check:` asks that every CI install use the package manager's current frozen mode. It asserts the same dependencies and versions as when `Cargo.lock` was generated and exits non-zero rather than updating the lockfile, so a workflow this skill writes without it fails a rule the kit owns and an audit run afterwards will score it. Use `--locked` rather than `--frozen`, which Cargo documents as `--locked` plus `--offline`, unless the job deliberately runs with no network.
+
+`oss-harden` pins every `uses:` line above to a commit SHA and sets the test job's minimal permissions; this skill includes the publish permissions required for authentication and provenance. On GitLab CI/CD, give the publish job the `id_tokens` block above, source `exchange-token.sh`, then run `cargo publish --locked --no-verify`, restricted to version tags with `rules:`. The preceding uncredentialed job must run the same version check and `cargo publish --locked --dry-run`.
 
 If an existing workflow reads a `CARGO_REGISTRY_TOKEN` from repository secrets, remove that now and tell the user to delete the secret and revoke the token on crates.io once the new flow is verified.
 
@@ -183,7 +185,9 @@ Only for a release that attaches a built asset to the forge release. The `.crate
 
 Build those binaries in an uncredentialed job that carries no registry token, alongside the test job, and hand them on as a workflow artifact. Do not build them in the publish job: everything running there could publish the crate, which is why Step 3 keeps that job down to the token exchange and `cargo publish`.
 
-This reference names no SBOM generator for Rust. The ones in common use are third-party tools rather than part of the toolchain, and a tool that reads the dependency tree inside the release workflow is one the maintainer vets before it goes there. Until one is vetted, publish the hashes of what the release attaches and sign those, which needs nothing the runner does not already ship:
+Two rules apply here and they ask for different things. R-PUB-05 wants an inventory of what went into the asset, in SPDX or CycloneDX. R-PUB-06 wants the assets signed, or listed by hash in a signed manifest. A manifest of hashes answers the second and nothing about the first, so do not report R-PUB-05 as met by publishing one.
+
+This reference names no SBOM generator for Rust. The ones in common use are third-party tools rather than part of the toolchain, and a tool that reads the dependency tree inside the release workflow is one the maintainer vets before it goes there. What answers R-PUB-05 without one, on GitHub, is the forge's own export of the repository's dependency graph, which is already SPDX and needs nothing installed. The `gh api` step below writes it into `dist/`, so it ships as a release asset for R-PUB-05 and is listed in `SHA256SUMS` and attested alongside the binaries for R-PUB-06:
 
 ```yaml
   release:
@@ -199,6 +203,9 @@ This reference names no SBOM generator for Rust. The ones in common use are thir
         with:
           name: binaries
           path: dist/
+      - run: gh api repos/${{ github.repository }}/dependency-graph/sbom --jq .sbom > dist/sbom.spdx.json
+        env:
+          GH_TOKEN: ${{ github.token }}
       - run: (cd dist && sha256sum *) > SHA256SUMS
       - uses: actions/attest@v4
         with:
@@ -207,6 +214,8 @@ This reference names no SBOM generator for Rust. The ones in common use are thir
         env:
           GH_TOKEN: ${{ github.token }}
 ```
+
+State both of the export's limits to the maintainer rather than leaving them to be discovered. It is GitHub only, so a GitLab project keeps this gap and R-PUB-05 stays unmet there with the reason named. And it covers the repository's declared dependency graph rather than what is linked into the asset, which is close for a Rust binary, because the crates linked into it come from that same graph, and silent about the system libraries it links against. The graph resolves past the direct dependencies only where a lockfile is committed, which R-SEC-08 already requires. Read the output back once with `gh api repos/<owner>/<repo>/dependency-graph/sbom --jq '.sbom.packages | length'` before reporting the rule met: a graph the forge does not parse for this ecosystem returns a near-empty package list rather than an error.
 
 `sha256sum` runs from inside `dist/` so the names it writes are the names the assets carry on the release. A manifest listing `dist/tool-x86_64-linux` cannot be checked against a downloaded `tool-x86_64-linux`.
 

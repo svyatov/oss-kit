@@ -50,6 +50,13 @@ function parseYaml(text) {
   const unquote = (s) => {
     const t = s.trim()
     if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith("'") && t.endsWith("'"))) return t.slice(1, -1)
+    // A flow sequence is a sequence, and `on: [push, pull_request]` is as legal
+    // as the block form. Left as a scalar it reads as one event named
+    // "[push, pull_request]", which is no event at all.
+    if (t.startsWith("[") && t.endsWith("]")) {
+      const inner = t.slice(1, -1).trim()
+      return inner === "" ? [] : inner.split(",").map(unquote)
+    }
     return t
   }
 
@@ -92,6 +99,24 @@ function parseYaml(text) {
 }
 
 // ------------------------------------------------------------------ workflows
+const FILTER_KEYS = ["branches", "branches-ignore", "tags", "tags-ignore", "paths", "paths-ignore"]
+
+// R-CI-01 turns on the branches: filter under pull_request, which keys on the
+// base branch rather than the head: one naming the default branch runs nothing
+// for a change request stacked onto another branch. The event name alone cannot
+// say that, so report each event's filters beside it.
+function triggerFilters(on) {
+  const out = {}
+  if (!on || typeof on !== "object" || Array.isArray(on)) return out
+  for (const [event, config] of Object.entries(on)) {
+    if (!config || typeof config !== "object" || Array.isArray(config)) continue
+    const filters = {}
+    for (const key of FILTER_KEYS) if (config[key] !== undefined && config[key] !== null) filters[key] = config[key]
+    if (Object.keys(filters).length) out[event] = filters
+  }
+  return out
+}
+
 function collectWorkflows() {
   const dir = join(root, ".github/workflows")
   const out = []
@@ -103,10 +128,15 @@ function collectWorkflows() {
     let doc = {}
     try { doc = parseYaml(text) } catch { doc = {} }
     const jobs = doc.jobs && typeof doc.jobs === "object" && !Array.isArray(doc.jobs) ? doc.jobs : {}
+    // `on` is YAML 1.1's boolean true, so a reader may see either key.
+    const on = doc.on ?? doc.true ?? doc.On ?? {}
     out.push({
       file: rel(path),
-      // `on` is YAML 1.1's boolean true, so a reader may see either key.
-      triggers: Object.keys(doc.on ?? doc.true ?? doc.On ?? {}),
+      // `on: [push, pull_request]` and `on: push` are both legal, and neither
+      // has keys to list, so an Object.keys over them reports array indices or
+      // nothing at all rather than the events.
+      triggers: Array.isArray(on) ? on.map(String) : typeof on === "string" ? [on] : Object.keys(on),
+      triggerFilters: triggerFilters(on),
       topLevelPermissions: doc.permissions ?? null,
       concurrency: doc.concurrency ?? null,
       jobs: Object.entries(jobs).map(([jobName, job]) => ({
