@@ -27,6 +27,7 @@ jobs:
       - run: bun test
       - run: ./tests/test-check-drift.sh
       - run: ./scripts/check-drift.sh
+      - run: node scripts/check-ecosystems.mjs
 
   site:
     name: build the docs site

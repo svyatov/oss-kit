@@ -37,11 +37,22 @@ bun test
 bun run validate
 bash tests/test-check-drift.sh
 bash scripts/check-drift.sh
+node scripts/check-ecosystems.mjs
 skillspector scan ./skills/ --no-llm --format json
 cd site && bun run build
 ```
 
-`bun run typecheck` checks the repository's own TypeScript. `bun test` runs the validator's own test suite. `bun run validate` runs `skills/oss-skill/scripts/validate.mjs`, which checks every skill against R-SKL-01 through R-SKL-05: layout, frontmatter conformance, body size, the license field, and what a skill may ship as a script. `tests/test-check-drift.sh` is the test suite for `scripts/check-drift.sh`, which fails when a skill cites a rule ID that `skills/oss-audit/STANDARD.md` does not define, or when a rule names a skill that does not claim it. `skillspector scan` checks the skills for prompt injection and other agent-facing risks.
+`bun run typecheck` checks the repository's own TypeScript. `bun test` runs the validator's own test suite. `bun run validate` runs `skills/oss-skill/scripts/validate.mjs`, which checks every skill against R-SKL-01 through R-SKL-05: layout, frontmatter conformance, body size, the license field, and what a skill may ship as a script. `tests/test-check-drift.sh` is the test suite for `scripts/check-drift.sh`, which fails when a skill cites a rule ID that `skills/oss-audit/STANDARD.md` does not define, or when a rule names a skill that does not claim it. `scripts/check-ecosystems.mjs` reads `skills/oss-audit/ecosystems.json` and fails when a skill is missing a file for a roster ecosystem, when a file is missing a heading its skill declares, when a declared heading has nothing under it, or when a file does not end with a well-formed `Verified` line. `skillspector scan` checks the skills for prompt injection and other agent-facing risks.
+
+`node scripts/ecosystem-freshness.mjs` reports how recently each ecosystem file was checked against its sources, oldest first. It never gates, so it is not in the list above. `node scripts/rule-freshness.mjs` does the same for rule sources.
+
+Adding an ecosystem is one roster entry plus one file per skill, and the checker names those files. Five surfaces it deliberately does not check have to move in the same change, because comparing routing prose to the roster is review work:
+
+- the routing table in each of the seven ecosystem-bearing skills
+- the track assignment in the release preamble of `skills/oss-audit/STANDARD.md`
+- the frontmatter `description` of `skills/oss-publish/SKILL.md`
+- that skill's row in the `README.md` skills table
+- any per-ecosystem list inside a forge reference
 
 `bun run build` in `site/` is a required check, so run it before you open a pull request. The site is generated from `STANDARD.md` and the skills, which means a rule you renamed or a reference link you moved fails this build and nothing else.
 
