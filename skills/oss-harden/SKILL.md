@@ -112,6 +112,16 @@ R-SEC-07 applies to both forges through different mechanisms, so read the matchi
 
 R-SEC-08 requires the package manager's lockfile to be committed and CI to install from it in a mode that fails rather than re-resolves. Working from the manifests Step 2 read, confirm each lockfile is committed rather than gitignored, and verify the current frozen-install command in that package manager's official documentation before changing CI. Examples include `npm ci`, `uv sync --locked`, `cargo build --locked`, `mix deps.get --check-locked`, Bundler with local `deployment` and `frozen` configuration, and `pip install --require-hashes` only when every requirement, including transitive dependencies, carries a hash. Where the project pins versions in a manifest but commits no lockfile, say that a version pin still trusts the registry to serve the same bytes while a recorded hash does not. A repository with no registry dependencies has nothing to lock; report that rather than a gap.
 
+Committing the file is the easy half, and the failures land in CI afterward rather than on the machine that generated it. Before opening the change, ask three questions of each ecosystem and answer them from that ecosystem's reference file and its package manager's own documentation.
+
+Does the resolved set vary by runtime version? Where it does, generate the lock on the lowest runtime the matrix tests, or every job below that one fails at install rather than at test. The rubygems and crates files work this through for Bundler and Cargo; for another ecosystem, establish it before assuming either way.
+
+Does the repository hold locks the updater will not maintain? An updater finds lockfiles by exact filename, so a lock outside its ecosystem's canonical names is invisible to it and drifts from the manifest the updater does bump. Give the project one command that regenerates every lock, and name it where a contributor merging an update will read it.
+
+Does the lock have to cover a platform nobody develops on? A lock recording only the maintainer's platform leaves a Linux runner with no resolution to install.
+
+Where an ecosystem's reference file does not yet answer one of these, say so in the report rather than assuming the answer is no.
+
 ### Step 11: Static analysis on pull requests
 
 R-SEC-09 applies only where the repository holds source in a language a static analyzer supports, so establish that first and say plainly that the rule does not reach the repository when it does not, rather than reporting a violation. Where it does apply, check that an analysis workflow runs on pull requests to the default branch and that its result is a required check, since an analyzer whose failure does not block merge is advisory. On GitHub, prefer CodeQL default setup, which is a repository setting rather than a workflow file the project has to maintain, and give the resolved settings URL the same way Step 6 does; the reference file names the endpoint that reports whether it is already enabled. Where Step 6 set up a ruleset, add its code scanning rule too, which blocks a merge on what the analysis found rather than only on whether it reported, and so also catches the case where the analysis configuration is deleted and the required check simply stops appearing.
