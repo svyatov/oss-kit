@@ -13,7 +13,7 @@ Own paragraph directly below the opening sentence, one badge per source line:
 
 One-sentence description of what it does and why it is different.
 
-[![gem](https://img.shields.io/gem/v/project-name)](https://rubygems.org/gems/project-name)
+[![version](https://img.shields.io/github/v/tag/owner/project-name?sort=semver&label=version)](https://github.com/owner/project-name/tags)
 [![CI](https://github.com/owner/project-name/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/owner/project-name/actions/workflows/main.yml)
 [![coverage](https://codecov.io/gh/owner/project-name/branch/main/graph/badge.svg)](https://app.codecov.io/gh/owner/project-name)
 ```
@@ -24,17 +24,11 @@ Never put badges inside the `#` heading: they leak into the generated anchor slu
 
 ## 1. Version
 
-Keep the registry's own label (`gem`, `npm`, `pypi`, `hex`), since it tells the reader where the package lives, for free. Go is the one exception: `tag` names a git artifact rather than a published version, so relabel it.
+Keep the registry's own label, since it tells the reader where the package lives for free. Relabel only where the default names a git artifact rather than a published version, which is the tag badge on both forges: it labels itself `tag`, and `label=version` is what a reader needs.
 
-| Ecosystem | Badge | Link |
-|---|---|---|
-| Ruby | `https://img.shields.io/gem/v/NAME` | `https://rubygems.org/gems/NAME` |
-| Node | `https://img.shields.io/npm/v/NAME` | `https://www.npmjs.com/package/NAME` |
-| Python | `https://img.shields.io/pypi/v/NAME` | `https://pypi.org/project/NAME` |
-| Elixir | `https://img.shields.io/hexpm/v/NAME` | `https://hex.pm/packages/NAME` |
-| Go | `https://img.shields.io/github/v/tag/OWNER/REPO?label=version` | `https://pkg.go.dev/github.com/OWNER/REPO` |
+A repository published to no registry falls back to that tag badge, and so does an ecosystem whose registry serves no version endpoint. It is `https://img.shields.io/github/v/tag/OWNER/REPO?sort=semver&label=version`, or `https://img.shields.io/gitlab/v/tag/NAMESPACE/PROJECT?sort=semver&label=version` on GitLab, linked to the repository's tag list. Both sort by tag date without `sort=semver`, which reports whichever tag was pushed last rather than the highest version.
 
-Go uses the git tag because that is what the module proxy resolves; it has no concept of a GitHub Release. The same `github/v/tag` form is the fallback for any repo not published to a registry.
+The endpoint, the label, the link target, and the install command for each ecosystem live in one file per ecosystem: [npm](ecosystems/npm.md), [PyPI](ecosystems/pypi.md), [RubyGems](ecosystems/rubygems.md), [crates.io](ecosystems/crates.md), [Go modules](ecosystems/go-modules.md), [Packagist](ecosystems/packagist.md), [NuGet](ecosystems/nuget.md), [Maven Central](ecosystems/maven-central.md), [Hex](ecosystems/hex.md), [pub.dev](ecosystems/pubdev.md), and [container images](ecosystems/containers.md). Read the one the project publishes to.
 
 ## 2. CI
 
