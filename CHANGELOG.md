@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+### Added
+
+- Eleven distribution ecosystems are answered in depth by all seven skills that can act on one. `oss-audit`, `oss-readme`, `oss-community`, `oss-ci`, `oss-harden`, `oss-publish`, and `oss-changelog` each carry one file per ecosystem under `references/ecosystems/`, 77 in total, covering npm, PyPI, RubyGems, crates.io, Go modules, Packagist, NuGet, Maven Central, Hex, pub.dev, and container images. Every file is written from that ecosystem's own documentation and ends with the date it was read.
+- `skills/oss-audit/ecosystems.json` is the roster those files answer to. It records each ecosystem's manifest, lockfiles, and registry facts, and declares the headings each skill's files must carry.
+- R-SEC-13 requires a released tag that cannot be moved or deleted, and restricts who may create one. On the tag-published track, creating the tag is the publish, so this is what stands in for R-PUB-04's approval gate.
+- R-PUB-07 requires a tag-published registry entry to update through the forge rather than through a token a CI job holds.
+- R-CHG-07 requires the released major version to match the package identity where an ecosystem encodes it there, such as a Go module path ending `/v2`.
+- `scripts/check-ecosystems.mjs` fails CI on a hole in that matrix: a missing file, a file the roster does not list, a declared heading that is absent or empty, or a malformed `Verified` date. `scripts/ecosystem-freshness.mjs` reports how stale each date is and never gates.
+- The documentation site publishes one page per ecosystem, stitched from all seven skills' files for it.
+
+### Changed
+
+- The release area now runs on two tracks. On the registry-push track every PUB rule applies. On the tag-published track, where the registry reads the forge and no publishing credential exists, R-PUB-01 through R-PUB-04 are not applicable as a whole and R-PUB-05 through R-PUB-07 still apply. Go modules and Packagist are on that second track.
+- R-SEC-08 no longer asks for a committed lockfile where the project's build tool publishes no lockfile format, which reaches Apache Maven and not Gradle, or where the ecosystem's own documentation directs a library package not to commit one.
+- R-PUB-02 now accepts an account-scoped publishing credential with compensating controls where the registry offers no narrower scope, which is the case on Maven Central.
+- `oss-readme`'s badge reference no longer carries a per-ecosystem table, and `oss-community`'s GitHub reference no longer enumerates the Tidelift platform names. Both now link the ecosystem file that owns the answer, so no fact lives in two files.
+
 ## [0.8.0] - 2026-07-31
 
 ### Added
