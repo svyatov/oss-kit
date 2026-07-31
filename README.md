@@ -13,10 +13,10 @@ Curated agent skills for open source maintainers.
   ships.
 - **Both forges.** 55 of the 59 rules score GitHub and GitLab alike. Three are
   GitHub-only, one is GitLab-only, and every rule says which.
-- **Eleven ecosystems, on two tracks.** Nine get a full release flow, credential
-  and all: npm, PyPI, RubyGems, crates.io, NuGet, Maven Central, Hex, pub.dev,
-  and container images. Go modules and Packagist get the tag-published flow
-  instead, which has no publish credential at all.
+- **Eleven ecosystems, answered seven ways.** npm, PyPI, RubyGems, crates.io,
+  Go modules, Packagist, NuGet, Maven Central, Hex, pub.dev, and container
+  images. Each one gets its own detection, badge, license field, CI commands,
+  lockfile, release flow, and version syntax.
 
 Install the kit:
 
@@ -58,7 +58,8 @@ this order instead:
 4. `oss-harden` for pinned action SHAs, workflow permissions, and branch
    protection
 5. `oss-changelog` for CHANGELOG.md and the first tagged release
-6. `oss-publish` for registry publishing, if you ship a package
+6. `oss-publish` if you ship a package, whether you push it to a registry or
+   publish it by pushing a tag
 
 `oss-writing` and `oss-skill` are not steps in that sequence. Reach for
 `oss-writing` whenever you are about to write a commit, a pull request, or a
@@ -77,7 +78,7 @@ continuous integration.
 | `oss-community` | Writes every community file, from the license to issue forms. |
 | `oss-readme` | Orders the README and checks its claims against the source. |
 | `oss-ci` | Writes the test, lint, and build jobs for either forge. |
-| `oss-harden` | Pins action SHAs, trims permissions, and guards the branch. |
+| `oss-harden` | Pins action SHAs, trims permissions, and guards branches and tags. |
 | `oss-publish` | Publishes to eleven ecosystems, gates the run, and signs it. |
 | `oss-changelog` | Keeps CHANGELOG.md, picks the bump, writes release notes. |
 | `oss-writing` | Fixes the sentences in commits, reviews, docs, and issues. |
@@ -114,6 +115,12 @@ Every current rule is written down in
 [oss-kit.svyatov.com/standard](https://oss-kit.svyatov.com/standard/). Each
 rule states what to do, why, what to check for, and which skill fixes it. Read
 it and disagree with it before you install anything.
+
+Each of the eleven ecosystems has a page of its own, stitched from what all
+seven skills that answer per ecosystem know about it. One page carries the
+detection, the badge, the license field, the CI commands, the lockfile, the
+release flow, and the version syntax. Start at
+[npm](https://oss-kit.svyatov.com/ecosystems/npm/).
 
 oss-kit is scored against its own standard, and [AGENTS.md](AGENTS.md) records
 the reason for every rule that does not reach a skills repository.
