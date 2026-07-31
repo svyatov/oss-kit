@@ -4,25 +4,6 @@ oss-kit is a curated set of agent skills for open source maintainers. It current
 
 ## Layout
 
-```
-skills/                  canonical location of all skill directories
-skills/oss-audit/STANDARD.md   every opinion, as R-<AREA>-<NN> rules
-.agents/skills           symlink to ../skills
-.claude/skills           symlink to ../skills
-.claude-plugin/          plugin.json and marketplace.json
-.codex-plugin/           plugin.json for Codex
-.cursor-plugin/          plugin.json for Cursor
-.agents/plugins/         marketplace.json for Codex's own marketplace format
-.opencode/skills         symlink to ../skills
-docs/                    agent-facing project documentation
-site/                    public docs site, content, and own dependency tree
-site/src/content/docs/   tracked public prose and generated site pages
-scripts/                 maintenance scripts, including the drift check
-tests/                   the validator and drift check test suites
-AGENTS.md                this file
-CLAUDE.md                symlink to AGENTS.md
-```
-
 `skills/` is canonical because it is the only path that both the `skills` CLI installer and the Claude Code plugin loader read directly. Claude Code does not scan `.agents/skills`, and most other agents do not scan `.claude/skills`, so both are committed symlinks pointing at the one real directory. Edit files under `skills/`. Never edit through a symlink path, and never replace a symlink with a copy.
 
 `site/src/content/docs/` holds the public prose the site renders. Handwritten pages stay tracked there. The generator writes rule, skill, standard, and changelog pages into the same tree; those outputs stay gitignored.
