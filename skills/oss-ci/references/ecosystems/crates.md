@@ -9,7 +9,7 @@ strategy:
   matrix:
     toolchain: [stable, beta, nightly]
 steps:
-  - uses: actions/checkout@v7
+  - uses: actions/checkout@v7  # oss-harden pins this to a commit SHA
   - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
   - run: cargo test --verbose
 ```

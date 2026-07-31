@@ -23,8 +23,8 @@ What is cached here is BuildKit layers, not a package manager's downloads, and n
 Docker documents four backends for a GitHub Actions build. The GitHub Actions cache backend is the one written for this environment:
 
 ```yaml
-- uses: docker/setup-buildx-action@v4
-- uses: docker/build-push-action@v7
+- uses: docker/setup-buildx-action@v4  # oss-harden pins this to a commit SHA
+- uses: docker/build-push-action@v7  # oss-harden pins this to a commit SHA
   with:
     cache-from: type=gha
     cache-to: type=gha,mode=max

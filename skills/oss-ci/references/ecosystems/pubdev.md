@@ -10,7 +10,7 @@ strategy:
     os: [ubuntu-latest, macos-latest, windows-latest]
     sdk: ['3.1', stable, beta]
 steps:
-  - uses: dart-lang/setup-dart@v1
+  - uses: dart-lang/setup-dart@v1  # oss-harden pins this to a commit SHA
     with:
       sdk: ${{ matrix.sdk }}
 ```

@@ -9,7 +9,7 @@ strategy:
   matrix:
     node-version: ['20', '22', '24']
 steps:
-  - uses: actions/setup-node@v7
+  - uses: actions/setup-node@v7  # oss-harden pins this to a commit SHA
     with:
       node-version: ${{ matrix.node-version }}
 ```
@@ -25,7 +25,7 @@ Sources: [actions/setup-node](https://github.com/actions/setup-node), [package.j
 `actions/setup-node` caches the package manager's global download data rather than `node_modules`. Since v5 it enables caching by default when no `cache` input is given; v6 narrowed the automatic case to projects that name npm in `devEngines.packageManager` or in the top-level `packageManager` field, and left yarn and pnpm to an explicit `cache: yarn` or `cache: pnpm`. `cache-dependency-path` names the file whose hash goes into the primary key.
 
 ```yaml
-- uses: actions/setup-node@v7
+- uses: actions/setup-node@v7  # oss-harden pins this to a commit SHA
   with:
     node-version: ${{ matrix.node-version }}
     cache: npm

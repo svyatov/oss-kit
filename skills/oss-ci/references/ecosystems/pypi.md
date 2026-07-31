@@ -9,7 +9,7 @@ strategy:
   matrix:
     python-version: ['3.11', '3.12', '3.13']
 steps:
-  - uses: actions/setup-python@v7
+  - uses: actions/setup-python@v7  # oss-harden pins this to a commit SHA
     with:
       python-version: ${{ matrix.python-version }}
 ```

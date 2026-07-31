@@ -9,7 +9,7 @@ strategy:
   matrix:
     go-version: ['1.24', '1.25']
 steps:
-  - uses: actions/setup-go@v7
+  - uses: actions/setup-go@v7  # oss-harden pins this to a commit SHA
     with:
       go-version: ${{ matrix.go-version }}
 ```
@@ -29,7 +29,7 @@ Sources: [actions/setup-go](https://github.com/actions/setup-go), [Go modules re
 Read the key before trusting it. From v6 the action's default cache key hashes `go.mod`, not `go.sum`, and the README says to set `cache-dependency-path: go.sum` to key on the sum file instead. `go.mod` records the module requirements while `go.sum` records the resolved content hashes, so the default key survives a dependency change that only `go.sum` records.
 
 ```yaml
-- uses: actions/setup-go@v7
+- uses: actions/setup-go@v7  # oss-harden pins this to a commit SHA
   with:
     go-version: ${{ matrix.go-version }}
     cache-dependency-path: go.sum

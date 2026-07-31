@@ -14,7 +14,7 @@ strategy:
       - elixir: '1.18'
         otp: '27'
 steps:
-  - uses: erlef/setup-beam@v1
+  - uses: erlef/setup-beam@v1  # oss-harden pins this to a commit SHA
     with:
       otp-version: ${{ matrix.otp }}
       elixir-version: ${{ matrix.elixir }}
@@ -37,7 +37,7 @@ Source: [erlef/setup-beam](https://github.com/erlef/setup-beam), [Hex FAQ](https
 The strongest documented fallback is an explicit cache over the two directories Mix does document, keyed on the lockfile Mix names: `:deps_path` defaults to `deps`, `:build_path` defaults to `_build`, and `:lockfile` defaults to `mix.lock`. Both are inside the project directory, so this shape works unchanged on GitLab.
 
 ```yaml
-- uses: actions/cache@v4
+- uses: actions/cache@v4  # oss-harden pins this to a commit SHA
   with:
     path: |
       deps

@@ -10,7 +10,7 @@ strategy:
   matrix:
     ruby: ['3.3', '3.4', '4.0', jruby, truffleruby]
 steps:
-  - uses: ruby/setup-ruby@v1
+  - uses: ruby/setup-ruby@v1  # oss-harden pins this to a commit SHA
     with:
       ruby-version: ${{ matrix.ruby }}
       bundler-cache: true

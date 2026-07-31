@@ -9,7 +9,7 @@ strategy:
   matrix:
     dotnet: ['8.0.x', '9.0.x', '10.0.x']
 steps:
-  - uses: actions/setup-dotnet@v6
+  - uses: actions/setup-dotnet@v6  # oss-harden pins this to a commit SHA
     with:
       dotnet-version: ${{ matrix.dotnet }}
 ```
@@ -27,7 +27,7 @@ Sources: [actions/setup-dotnet](https://github.com/actions/setup-dotnet), [Targe
 The precondition is the thing to check first. NuGet lock files are opt-in: the roster records `mode: opt-in`, enabled by the MSBuild property `RestorePackagesWithLockFile` or by an existing `packages.lock.json`. The action does not degrade gracefully without one; its README says that if the lock file does not exist, the action throws an error. So a project with no lock file either turns lock files on or runs without `cache: true`, and turning them on is a change to the project, not to CI.
 
 ```yaml
-- uses: actions/setup-dotnet@v6
+- uses: actions/setup-dotnet@v6  # oss-harden pins this to a commit SHA
   with:
     dotnet-version: ${{ matrix.dotnet }}
     cache: true

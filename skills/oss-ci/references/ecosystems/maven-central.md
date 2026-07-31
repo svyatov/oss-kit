@@ -9,7 +9,7 @@ strategy:
   matrix:
     java: ['17', '21', '25']
 steps:
-  - uses: actions/setup-java@v6
+  - uses: actions/setup-java@v6  # oss-harden pins this to a commit SHA
     with:
       distribution: temurin
       java-version: ${{ matrix.java }}
