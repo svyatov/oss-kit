@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+### Added
+
+- `oss-readme`'s badge reference gains an Elixir row, `img.shields.io/hexpm/v/NAME` linking to the Hex package page. The endpoint returns the label `hex` on its own, so it needs no `?label=` override the way Go's tag badge does.
+- `oss-harden` Step 10 names `mix deps.get --check-locked` beside `npm ci` and `cargo build --locked`. That is what makes CI fail on a stale `mix.lock` rather than quietly re-resolving it.
+
+### Changed
+
+- R-PUB-02's fallback now separates a registry that offers no OIDC flow at all from one whose flow nobody here has read. Both scored the same before, so a repository that could have used trusted publishing passed on a scoped token instead. Hex is the case that exposed it and the one the `Check:` now names: its publish page documents exactly one CI path, a long-lived `HEX_API_KEY` in an environment variable, and the `hex` client changelog through v2.5.2-dev names no OIDC, trusted publishing, or attestation. The fallback is reachable there rather than theoretical, because `hexpm` authorizes publishing on a `package` domain, so a key scoped to one package publishes that package and nothing else. What the rule requires is unchanged, and no repository that passed yesterday fails today.
+- R-SEC-11's `Check:` reaches the residual that comparing the dependency graph against the lockfile cannot find: an ecosystem the forge's updater bumps on a schedule and never patches on an advisory. GitHub's ecosystem table marks both `bun` and `mix` that way. This repository has been the `bun` case since it adopted Bun, which is why the generalization rests on two instances rather than on one.
+- `oss-harden` names that second residual where it already teaches the SBOM comparison, and shows it rather than asserting it. `elixir-ecto/ecto` and `phoenixframework/phoenix` both report zero `pkg:hex` packages, and Phoenix reports 635 `pkg:npm` beside that zero from its JavaScript assets, so the dependency graph is running and Elixir is simply not in it. An Elixir project has no watcher at all until a scanner reads `mix.lock`.
+
 ## [0.7.0] - 2026-07-30
 
 Nine skills were reviewed against Anthropic's current skill-authoring baseline. This release carries the defects those reviews found, the structural sweep that followed them, and the additions that close what a description promised and a body did not have. The defects were a skill telling a reader to do one thing in one place and the opposite in another, a command that could not run where the reader was told to run it, and a step whose output another step already needed. The sweep took out what a skill stated twice, what it restated from `STANDARD.md`, and what carried a date that expires without telling anybody. No rule statement, `Check:` line, `Fixed by:` line, or `Forges:` line changed, and no repository's score moves.
