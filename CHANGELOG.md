@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-07-31
+
 ### Added
 
 - Eleven distribution ecosystems are answered in depth by all seven skills that can act on one. `oss-audit`, `oss-readme`, `oss-community`, `oss-ci`, `oss-harden`, `oss-publish`, and `oss-changelog` each carry one file per ecosystem under `references/ecosystems/`, 77 in total, covering npm, PyPI, RubyGems, crates.io, Go modules, Packagist, NuGet, Maven Central, Hex, pub.dev, and container images. Every file is written from that ecosystem's own documentation and ends with the date it was read.
@@ -267,7 +269,8 @@ Five new rules, and `oss-audit` now reports the gaps alone rather than every rul
 - `oss-audit` scores a repository against `STANDARD.md`, reports each gap with the rule it fails, and names the skill that fixes it.
 - `oss-skill` fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` conformance to the Agent Skills specification, oversized bodies that belong in `references/`, and the license field an extracted skill carries with it.
 
-[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/svyatov/oss-kit/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/svyatov/oss-kit/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/svyatov/oss-kit/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/svyatov/oss-kit/compare/v0.5.2...v0.6.0
