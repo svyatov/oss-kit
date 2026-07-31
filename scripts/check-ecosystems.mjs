@@ -77,14 +77,6 @@ function hasBody(lines, start) {
   return false
 }
 
-/** @param {string[]} lines */
-function lastNonEmpty(lines) {
-  for (let i = lines.length - 1; i >= 0; i--) {
-    if ((lines[i] ?? "").trim() !== "") return lines[i] ?? ""
-  }
-  return ""
-}
-
 const VERIFIED = /^Verified (\d{4})-(\d{2})-(\d{2})\b/
 
 /** @param {string} path @param {string[]} declared */
@@ -106,8 +98,7 @@ function checkFile(path, declared) {
     }
   }
 
-  const last = lastNonEmpty(lines)
-  const verified = VERIFIED.exec(last)
+  const verified = VERIFIED.exec(lines.findLast((line) => line.trim() !== "") ?? "")
   if (!verified) {
     report(
       `${path} does not end with a Verified line`,
@@ -119,6 +110,9 @@ function checkFile(path, declared) {
   // verification that has not happened yet.
   const [, year, month, day] = verified
   const stamp = `${year}-${month}-${day}`
+  // The local calendar day, not the UTC one that rule-freshness.mjs compares
+  // against: a maintainer ahead of UTC stamps the day they read the pages, and
+  // a UTC comparison would call that today's date tomorrow's for a few hours.
   const today = new Date().toLocaleDateString("en-CA")
   if (Number.isNaN(Date.parse(stamp))) {
     report(`${path} has an unparseable Verified date '${stamp}'`, "use a real calendar date")

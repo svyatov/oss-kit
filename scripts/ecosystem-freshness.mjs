@@ -23,7 +23,7 @@ for (const skill of skills) {
     const path = `skills/${skill}/references/ecosystems/${name}.md`
     if (!existsSync(path)) continue
     const lines = readFileSync(path, "utf8").split("\n")
-    const last = [...lines].reverse().find((line) => line.trim() !== "") ?? ""
+    const last = lines.findLast((line) => line.trim() !== "") ?? ""
     rows.push({ path, verified: /^Verified (\d{4}-\d{2}-\d{2})\b/.exec(last)?.[1] ?? null })
   }
 }
