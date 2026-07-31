@@ -15,6 +15,8 @@ Most of what this skill fixes is mechanical, and the validator this skill ships 
 
 The SKL rules belong here: R-SKL-01 layout, R-SKL-02 specification conformance, R-SKL-03 body size, R-SKL-04 licensing, R-SKL-05 portable scripts, R-SKL-06 install paths, and R-SKL-07 focused procedures with progressive disclosure.
 
+When `oss-audit-report.md` exists at the repository root, read the group addressed to this skill and work from that. Each failing rule there carries the audit's evidence and that rule's `Check:` text verbatim, so reading `STANDARD.md` as well adds nothing. Where the file is absent, work from the request as usual.
+
 Neighbouring work belongs elsewhere. Wiring the validator into CI is R-CI-02, owned by `oss-ci`, because the rule already requires CI to run the same linter the contributing guide gives to humans, and for a skills repository that linter is the validator. Keeping every host manifest on one version is R-CHG-03, owned by `oss-changelog`. The README's install command and runnable example are R-DOC-02, and its links to the license, changelog, and contributing guide are R-DOC-03, both owned by `oss-readme`. The sentences inside any file are R-DOC-05, owned by `oss-writing`. Note what a repository needs and hand it to the owning skill rather than doing that work from here.
 
 Use `oss-writing` for sentence-level prose and `oss-readme` for repository documentation. This skill owns whether the skill itself has a focused trigger, an efficient procedure, conditional references, and a verification loop.

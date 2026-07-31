@@ -12,6 +12,8 @@ This skill owns section order and what each section must contain. It does not ow
 
 The README rules belong here: R-DOC-01 opening sentence, R-DOC-02 install and example, R-DOC-03 required links, R-DOC-04 claim accuracy, R-DOC-06 scope statement, R-DOC-07 code block destinations, R-DOC-08 question channel, R-DOC-09 maintenance status, and R-DOC-10 differentiator evidence. R-DOC-05, how each sentence reads, belongs to `oss-writing`.
 
+When `oss-audit-report.md` exists at the repository root, read the group addressed to this skill and work from that. Each failing rule there carries the audit's evidence and that rule's `Check:` text verbatim, so reading `STANDARD.md` as well adds nothing. Where the file is absent, work from the request as usual.
+
 ## Three ways in
 
 The request decides which one runs. Read it before reading the structure below.

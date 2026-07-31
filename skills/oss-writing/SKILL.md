@@ -10,6 +10,8 @@ Write with clarity and force for a reader whose first language is not English. B
 
 This skill owns how the sentence reads, which is one rule: R-DOC-05 documentation prose. The skill that owns the artifact owns what goes in it, and where a caller states an exception, the caller wins.
 
+When `oss-audit-report.md` exists at the repository root, read the group addressed to this skill and work from that. Each failing rule there carries the audit's evidence and that rule's `Check:` text verbatim, so reading `STANDARD.md` as well adds nothing. Where the file is absent, work from the request as usual.
+
 ## Read the local contract first
 
 Before drafting, read the repository's instructions, contribution guide, templates, and the most recent accepted examples of the same artifact. They decide the commit convention, the required sections, the terminology, and the audience. Follow the convention the repository declares rather than inventing one, and keep required template sections and legally mandated wording.

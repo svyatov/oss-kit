@@ -14,6 +14,8 @@ A scaffolded file nobody maintains is worse than no file at all. A CODE_OF_CONDU
 
 The COM rules belong here: R-COM-01 license file, R-COM-02 contributing guide, R-COM-03 code of conduct, R-COM-04 security policy, R-COM-05 report templates, R-COM-06 code owners, R-COM-07 project page, R-COM-08 governance statement, and R-COM-09 issue chooser.
 
+When `oss-audit-report.md` exists at the repository root, read the group addressed to this skill and work from that. Each failing rule there carries the audit's evidence and that rule's `Check:` text verbatim, so reading `STANDARD.md` as well adds nothing. Where the file is absent, work from the request as usual.
+
 What each of those files must contain is this skill's, and so is the forge project's own description, topics, and homepage. The DOC rules split by concern: R-DOC-01 through R-DOC-04 and R-DOC-06 through R-DOC-10, README structure including the paragraph that links to the license, the changelog, and CONTRIBUTING.md, belong to `oss-readme`; R-DOC-05, the sentences in every file this skill creates, belongs to `oss-writing`. R-SEC-12, enforcing CODEOWNERS review as part of branch protection, belongs to `oss-harden`, as does every other protection, scanning, or token setting; R-COM-07's description, topics, homepage, and feature tabs are the only forge settings this skill touches. Do not reorder or rewrite README sections, decide how a file's sentences are phrased, or configure branch protection while working from this skill; note that the project needs it and hand the work to the owning skill.
 
 ## Ask rather than invent
