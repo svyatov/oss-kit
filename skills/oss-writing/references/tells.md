@@ -12,7 +12,7 @@ The lexicon that marks prose as machine-written. Each row names a pattern and wh
 | Copula avoidance: vague `serves as`, `acts as`, `boasts`, or `features` | `is`, `has`, or a precise verb |
 | AI vocabulary, and any rare word where a common one is exact: `leverage`, `utilize`, `delve`, `streamline`, `facilitate`, `holistic`, `obviate`, `predicated on`, `additionally`, `furthermore`, `make use of`, `functionality` | `use`, `and`, or nothing. Name the feature rather than calling it `functionality`. Reserve a rare word for where it is more precise, never for where it is more impressive |
 | Intensifiers and minimizers: `very`, `simply`, `just`, `easily`, `of course` | Delete. `simply` and `just` tell a stuck reader the thing they cannot do is easy, and `very` is a number the writer did not look up |
-| Empty contrast: `not just X, but Y`. Tailing negation: `no guessing`, `no wasted motion` | State the positive claim unless the contrast changes the meaning |
+| Empty contrast: `not just X, but Y`; `X rather than Y` where Y was invented for the sentence (`instead of returning a deck nobody asked for`). Tailing negation: `no guessing`, `no wasted motion` | State the positive claim and stop. Keep a contrast only when the alternative is real: a prior behavior, a live endpoint, a default the reader would hit |
 | Manufactured list length | List what actually exists |
 | Elegant variation: calling one thing `the handler`, then `the callback`, then `the routine` | One name per concept, every time, across the whole document. Match the identifier in the code and the string in the UI |
 | False ranges: `from linting to deployment` | Name the two things |
