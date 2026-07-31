@@ -28,6 +28,24 @@ A release unit is one product versioned as a whole, together with every file tha
 
 Do not bump unrelated packages merely because they share a repository. A single product spread across several manifests must update all manifests that describe that product; independently versioned packages need separate release units and changelog sections or files.
 
+Then read the ecosystem file for what this release unit ships. Where the version is stated, how the version syntax deviates from SemVer, whether the major version lives in the package name, and what withdrawing a release means all differ by ecosystem, and each file answers those four for one of them. Route on what the unit publishes, not on every manifest present: a Go module with a documentation `package.json` is a Go release unit, and npm has nothing to say about its version.
+
+| What the release unit ships | Read |
+|---|---|
+| an npm package | [references/ecosystems/npm.md](references/ecosystems/npm.md) |
+| a Python distribution on PyPI | [references/ecosystems/pypi.md](references/ecosystems/pypi.md) |
+| a gem on RubyGems | [references/ecosystems/rubygems.md](references/ecosystems/rubygems.md) |
+| a crate on crates.io | [references/ecosystems/crates.md](references/ecosystems/crates.md) |
+| a Go module | [references/ecosystems/go-modules.md](references/ecosystems/go-modules.md) |
+| a PHP package on Packagist | [references/ecosystems/packagist.md](references/ecosystems/packagist.md) |
+| a package on nuget.org | [references/ecosystems/nuget.md](references/ecosystems/nuget.md) |
+| an artifact on Maven Central | [references/ecosystems/maven-central.md](references/ecosystems/maven-central.md) |
+| a package on Hex | [references/ecosystems/hex.md](references/ecosystems/hex.md) |
+| a package on pub.dev | [references/ecosystems/pubdev.md](references/ecosystems/pubdev.md) |
+| a container image pushed to a registry | [references/ecosystems/containers.md](references/ecosystems/containers.md) |
+
+A release unit that ships to two of these, such as a module and an image, reads both files and satisfies both. A repository that publishes nothing still has a tag and a changelog, so Step 5 through Step 9 apply unchanged and no file above is needed.
+
 ### Step 2: Read the changelog that already exists
 
 Find `CHANGELOG.md` and read its preamble before writing anything. A changelog that already exists is a file the project's users read, and it lands in one of three states.
