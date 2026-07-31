@@ -344,14 +344,33 @@ test("writeAll stitches one page per roster ecosystem, not one page per file", (
 })
 
 test("a skill with no file for an ecosystem renders a hole naming the path it needs", () => {
+  // Against a fixture rather than the repository. The repository is meant to
+  // have no holes left, so an assertion that one is observable there passes
+  // only while the matrix is incomplete and inverts the moment it is filled.
+  //
+  // A twelfth roster entry rather than a deleted file: deleting one also
+  // deletes its refTargets mapping, so the routing link in that skill's
+  // SKILL.md stops resolving and the build dies before it can render a hole.
+  const root = fixtureRepo()
+  const out = mkdtempSync(join(tmpdir(), "oss-kit-site-"))
+  const rosterPath = join(root, "skills/oss-audit/ecosystems.json")
+  const fixtureRoster = JSON.parse(read(rosterPath, "utf8"))
+  fixtureRoster.ecosystems.brandnew = { title: "Brand new", registry: "", manifests: [], lockfiles: [] }
+  writeFileSync(rosterPath, JSON.stringify(fixtureRoster))
+
+  writeAll(root, out)
+  const page = read(join(out, "ecosystems/brandnew.md"), "utf8")
+  for (const skill of sectionSkills) {
+    expect(page).toContain(`\`skills/${skill}/references/ecosystems/brandnew.md\` does not exist`)
+  }
+  rmSync(root, { recursive: true, force: true })
+  rmSync(out, { recursive: true, force: true })
+})
+
+test("a stitched page carries the whole of a skill's declared section set", () => {
   const out = mkdtempSync(join(tmpdir(), "oss-kit-site-"))
   writeAll(".", out)
   const npm = read(join(out, "ecosystems/npm.md"), "utf8")
-  // oss-audit has no ecosystem files yet, so the hole is still observable in
-  // the repository rather than only in a fixture.
-  expect(npm).toContain("`skills/oss-audit/references/ecosystems/npm.md` does not exist")
-  // oss-publish does, so its section carries the six publish steps instead.
-  expect(npm).not.toContain("`skills/oss-publish/references/ecosystems/npm.md` does not exist")
   for (const step of [
     "Gather facts (Step 1)",
     "Configure trusted publishing (Step 2)",

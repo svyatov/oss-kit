@@ -305,15 +305,20 @@ and exits 1. That is the same exit status a bad signature gives, so a run that o
 
 A tag ruleset is the same object as the branch ruleset above with two fields changed: `target` is `tag` instead of `branch`, and the condition matches the release tag pattern instead of the default branch. It is a separate ruleset, so a repository whose default branch is fully guarded can still have every tag unprotected.
 
+Three rule types carry this rule, and each is documented as a restriction to whoever can bypass: `creation` as "Only users with bypass permissions can create branches or tags whose name matches the pattern you specify", `update` as the same for pushing to a matching ref, and `deletion` as the same for deleting one. `update` is what stops a released tag moving, since repointing a tag is a ref update rather than a force push, so do not reach for `non_fast_forward` to cover it.
+
+Those three do not belong in one ruleset, and the reason is the bypass list. A bypass list is granted for a whole ruleset rather than per rule, so a single ruleset holding all three has one list that exempts its actors from all of them. That list cannot be empty, because `creation` with no bypass actor means nobody can cut a release at all. Filling it hands those actors `update` and `deletion` too, which is exactly the power this rule exists to remove. The two halves want opposite bypass lists, so they want two rulesets. Rulesets aggregate: GitHub documents that "if multiple rulesets target the same branch or tag in a repository, the rules in each of these rulesets are aggregated", and that "if the same rule is defined in different ways across the aggregated rulesets, the most restrictive version of the rule applies".
+
+The first ruleset makes a released tag immutable, and nothing is exempt from it:
+
 ```bash
 gh api -X POST repos/{owner}/{repo}/rulesets --input - <<'JSON'
 {
-  "name": "tags",
+  "name": "tags-immutable",
   "target": "tag",
   "enforcement": "active",
   "conditions": { "ref_name": { "include": ["refs/tags/v*"], "exclude": [] } },
   "rules": [
-    { "type": "creation" },
     { "type": "update" },
     { "type": "deletion" }
   ],
@@ -322,9 +327,24 @@ gh api -X POST repos/{owner}/{repo}/rulesets --input - <<'JSON'
 JSON
 ```
 
-Three rule types carry this rule, and each is documented as a restriction to whoever can bypass: `creation` as "Only users with bypass permissions can create branches or tags whose name matches the pattern you specify", `update` as the same for pushing to a matching ref, and `deletion` as the same for deleting one. `update` is what stops a released tag moving, since repointing a tag is a ref update rather than a force push, so do not reach for `non_fast_forward` to cover it.
+The second restricts who may cut a release, and its bypass list is the point rather than a hole in it:
 
-The bypass list here works the opposite way to the branch ruleset's. There, an empty list is the goal, because nothing should be exempt from requiring a pull request. Here, `creation` with an empty bypass list means nobody can cut a release at all, which is not what the rule asks for: it asks that only trusted principals may create one. So `bypass_actors` is where those principals go, and the entry is what makes the ruleset usable rather than what undoes it. Name the release principals explicitly, with the same `actor_type` values the earlier section lists, and keep the list as short as the release process allows.
+```bash
+gh api -X POST repos/{owner}/{repo}/rulesets --input - <<'JSON'
+{
+  "name": "tags-creation",
+  "target": "tag",
+  "enforcement": "active",
+  "conditions": { "ref_name": { "include": ["refs/tags/v*"], "exclude": [] } },
+  "rules": [{ "type": "creation" }],
+  "bypass_actors": [
+    { "actor_type": "RepositoryRole", "actor_id": 5, "bypass_mode": "always" }
+  ]
+}
+JSON
+```
+
+Name the release principals explicitly there, with the same `actor_type` values the earlier section lists, and keep the list as short as the release process allows. Repository admin is the widest defensible entry and a named team or app is usually narrower.
 
 Match `refs/tags/*` only where the project tags nothing else. Where releases are `v`-prefixed and other tags are not, `refs/tags/v*` protects the releases without freezing every scratch tag someone pushes.
 

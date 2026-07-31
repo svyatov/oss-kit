@@ -1,5 +1,6 @@
 .compound-engineering/
 .claude/settings.local.json
+.claude/worktrees/
 docs/
 STRATEGY.md
 CONCEPTS.md
