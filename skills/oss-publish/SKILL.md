@@ -1,12 +1,14 @@
 ---
 name: oss-publish
-description: "Set up a secure release process for an open source package so no long-lived publishing token exists to steal. Covers trusted publishing with OIDC, build provenance, and approval-gated release workflows for npm, RubyGems, PyPI, and crates.io on both GitHub Actions and GitLab CI/CD. Use for any request to publish a package, secure or harden a release process, set up trusted publishing or provenance, generate an SBOM, sign release binaries, publish checksums for release assets, or create a release workflow."
+description: "Set up a secure release process for an open source package so no long-lived publishing token exists to steal. Covers trusted publishing with OIDC, build provenance, and approval-gated release workflows for npm, PyPI, RubyGems, crates.io, NuGet, Maven Central, Hex, pub.dev, and container images, plus the tag-published flow for Go modules and Packagist, on both GitHub Actions and GitLab CI/CD. Use for any request to publish a package or a container image, secure or harden a release process, set up trusted publishing or provenance, generate an SBOM, sign release binaries, publish checksums for release assets, or create a release workflow."
 license: MIT
 ---
 
 # Secure package publishing
 
-Set up a release process where no registry token exists to steal, releases can come only from one CI workflow triggered by a tag, and a human still approves each one before it reaches the public registry. The decisions below are the same regardless of registry: gather the facts, configure trusted publishing, write a hardened workflow, gate it on approval, verify provenance. The exact fields a registry's trusted publisher form asks for, and the exact YAML a workflow needs, differ by registry and by forge, so that detail lives in one reference file per registry: [references/npm.md](references/npm.md), [references/rubygems.md](references/rubygems.md), [references/pypi.md](references/pypi.md), and [references/crates.md](references/crates.md). Each reference file covers both GitHub Actions and GitLab CI/CD. Read the matching file before writing any configuration or giving any settings instruction; do not carry a flow, a field name, or a workflow snippet from one registry or forge to another by analogy.
+Set up a release process where no registry token exists to steal, releases can come only from one CI workflow triggered by a tag, and a human still approves each one before it reaches the public registry. The decisions below are the same regardless of ecosystem: gather the facts, configure trusted publishing, write a hardened workflow, gate it on approval, verify provenance. The exact fields a registry's trusted publisher form asks for, and the exact YAML a workflow needs, differ by ecosystem and by forge, so that detail lives in one reference file per ecosystem, under `references/ecosystems/`: [npm](references/ecosystems/npm.md), [pypi](references/ecosystems/pypi.md), [rubygems](references/ecosystems/rubygems.md), [crates](references/ecosystems/crates.md), [go-modules](references/ecosystems/go-modules.md), [packagist](references/ecosystems/packagist.md), [nuget](references/ecosystems/nuget.md), [maven-central](references/ecosystems/maven-central.md), [hex](references/ecosystems/hex.md), [pubdev](references/ecosystems/pubdev.md), and [containers](references/ecosystems/containers.md). Each file covers both GitHub Actions and GitLab CI/CD, and each carries the same six steps, with a gap section wherever a step has no answer in that ecosystem. Read the matching file before writing any configuration or giving any settings instruction; do not carry a flow, a field name, or a workflow snippet from one ecosystem or forge to another by analogy.
+
+Two of the eleven run on the tag-published track, where the registry reads the forge instead of taking an upload: Go modules and Packagist. There is no publish credential on that track at all, so R-PUB-01 through R-PUB-04 do not reach it and R-PUB-07 does. `STANDARD.md`'s release preamble is what assigns the track, and each of those two files states it at the top.
 
 ## How to run this skill
 
@@ -22,13 +24,15 @@ Present policy choices instead of guessing at them, even when the repository alr
 
 ### Step 1: Gather repo facts
 
-Detect the ecosystem from the manifest the repository ships: `package.json` for npm, a `*.gemspec` for RubyGems, `pyproject.toml` or `setup.cfg` or `setup.py` for PyPI, `Cargo.toml` for crates.io. A repository can ship more than one package; enumerate every publishable one, since trusted publisher entries and approval environments are configured per package, not per repository.
+Detect the ecosystem from what the repository ships, using the signals in the routing table at the end of this file. A repository can ship more than one publishable thing; enumerate every one, since trusted publisher entries and approval environments are configured per package, not per repository. Container images stack rather than replace: a Go module or an npm package can also ship an image, so `containers` runs alongside the manifest-detected ecosystem rather than instead of it.
+
+Detect what the repository ships, not what it merely contains. A manifest present only for a documentation site or a development dependency is not a published package, and a Dockerfile that builds a test harness is not a published image, so neither pulls this skill in. The signal for a container image is a workflow step pushing to a registry, or an image that already exists on the forge's registry.
 
 Collect, from the manifest and the repository, before changing anything: the package, gem, or crate name and version; the owner and repository, from the manifest's own repository or source metadata first, falling back to the git remote; repository visibility and forge plan, since approval protection is not available on every plan; whether the owner is an organization or a personal account; whether the package is already published, since an unpublished package may need a different first-release path; the existing tag format from `git tag --sort=-creatordate | head`, keeping whatever format is already in use; and any existing release workflow or pipeline, especially one referencing a stored registry token, which this skill's changes should remove.
 
 Detect the forge the same way `oss-ci` does: look for `.github/workflows/` or `.gitlab-ci.yml`, check the git remote host, or ask directly if neither signal is present. If the user states the forge explicitly, trust that over any signal found in the repository.
 
-Route to the matching reference file now, using the table at the end of this file. If the detected manifest does not match npm, RubyGems, PyPI, or crates.io, say so plainly: name the ecosystem found and state that this skill has no reference file for it, rather than improvising a publishing flow for an unsupported registry.
+Route to the matching reference file now, using the table at the end of this file. If what the repository ships matches none of the eleven rows there, say so plainly: name the ecosystem found and state that this skill has no reference file for it, rather than improvising a publishing flow for a registry nobody has read the documentation of.
 
 ### Step 2: Configure trusted publishing
 
@@ -36,7 +40,7 @@ Open the matched reference file and read the section for the detected forge. Eve
 
 ### Step 3: Write a hardened release workflow
 
-Trigger the workflow on a version tag, matching the format found in Step 1. Before building, compare the tag's version with the manifest version and fail on any mismatch. Isolate the publish job: it installs no dependencies beyond a publishing client that the project has already provenance-checked and version-locked, uses no dependency cache, and calls no third-party action beyond what the reference file names, because anything running in a job that can authenticate to the registry can publish the package. Build and verify the exact publishable artifact in a separate job, then hand it to the publish job as a workflow artifact when the registry client accepts a prebuilt artifact. crates.io is the documented exception because `cargo publish` accepts a manifest, not a `.crate` path; its reference runs the full dry run before credentials exist, then uses `--no-verify` in the publish job. Ask before overwriting an existing release workflow, and carry over any extras the project relies on, such as changelog generation or forge release notes, into a job that has neither the publish credential nor `id-token: write`.
+Trigger the workflow on a version tag, matching the format found in Step 1. Before building, compare the tag's version with the manifest version and fail on any mismatch. Isolate the publish job: it installs no dependencies beyond a publishing client that the project has already provenance-checked and version-locked, uses no dependency cache, and calls no third-party action beyond what the reference file names, because anything running in a job that can authenticate to the registry can publish the package. Build and verify the exact publishable artifact in a separate job, then hand it to the publish job as a workflow artifact when the registry client accepts a prebuilt artifact. Three ecosystems cannot be split that way and each reference says why: `cargo publish` accepts a manifest rather than a `.crate` path, `mix hex.publish` builds the tarball it uploads, and a container image has no digest to attest until the push completes. Where the split is impossible, the reference names what bounds the collapse instead of pretending it away. Ask before overwriting an existing release workflow, and carry over any extras the project relies on, such as changelog generation or forge release notes, into a job that has neither the publish credential nor `id-token: write`.
 
 ### Step 4: Gate on manual approval with two-factor authentication
 
@@ -62,9 +66,18 @@ This skill owns publishing: trusted publishing, build provenance, the human appr
 
 ## Routing table
 
-| Ecosystem | Manifest signal | Reference file |
-| --- | --- | --- |
-| npm | `package.json` | [references/npm.md](references/npm.md) |
-| RubyGems | `*.gemspec` | [references/rubygems.md](references/rubygems.md) |
-| PyPI | `pyproject.toml`, `setup.cfg`, or `setup.py` | [references/pypi.md](references/pypi.md) |
-| crates.io | `Cargo.toml` | [references/crates.md](references/crates.md) |
+The signals below come from `skills/oss-audit/ecosystems.json`, which is the canonical copy. Where this table and that file disagree, the roster wins.
+
+| Ecosystem | Signal | Track | Reference file |
+| --- | --- | --- | --- |
+| npm | `package.json` | registry push | [references/ecosystems/npm.md](references/ecosystems/npm.md) |
+| PyPI | `pyproject.toml`, `setup.py`, or `setup.cfg` | registry push | [references/ecosystems/pypi.md](references/ecosystems/pypi.md) |
+| RubyGems | `*.gemspec` or `Gemfile` | registry push | [references/ecosystems/rubygems.md](references/ecosystems/rubygems.md) |
+| crates.io | `Cargo.toml` | registry push | [references/ecosystems/crates.md](references/ecosystems/crates.md) |
+| Go modules | `go.mod` | tag published | [references/ecosystems/go-modules.md](references/ecosystems/go-modules.md) |
+| Packagist | `composer.json` | tag published | [references/ecosystems/packagist.md](references/ecosystems/packagist.md) |
+| NuGet | `*.csproj`, `*.fsproj`, or `*.vbproj` | registry push | [references/ecosystems/nuget.md](references/ecosystems/nuget.md) |
+| Maven Central | `pom.xml`, `build.gradle`, or `build.gradle.kts` | registry push | [references/ecosystems/maven-central.md](references/ecosystems/maven-central.md) |
+| Hex | `mix.exs` | registry push | [references/ecosystems/hex.md](references/ecosystems/hex.md) |
+| pub.dev | `pubspec.yaml` | registry push | [references/ecosystems/pubdev.md](references/ecosystems/pubdev.md) |
+| Container images | a workflow pushing to a registry, or an existing image on the forge's registry | registry push | [references/ecosystems/containers.md](references/ecosystems/containers.md) |
