@@ -22,6 +22,8 @@ Read `pyproject.toml` (the `project.name` and `project.urls` tables), or `setup.
 
 ## Configure trusted publishing (Step 2)
 
+PyPI supports both forges, so read the section for the forge detected in Step 1 and take the settings from there.
+
 ### GitHub Actions
 
 For an already-published project, open `https://pypi.org/manage/project/<name>/settings/publishing/` and enter:
@@ -211,3 +213,5 @@ The four grants above are copied exactly, on this job only. The workflow's top-l
 A trusted publisher can be created before the first release: open `https://pypi.org/manage/account/publishing/` and enter the project name plus the same owner, repository, workflow filename, and environment as above. The first successful publish from that workflow claims the name.
 
 Step 7 is in `SKILL.md`: read each R-PUB rule's `Check:` line against what this file produced, and fix what fails before reporting done.
+
+Verified 2026-07-31 against [PyPI Docs, Adding a trusted publisher](https://docs.pypi.org/trusted-publishers/adding-a-publisher/), [PyPI Docs, Using a trusted publisher](https://docs.pypi.org/trusted-publishers/using-a-publisher/), and [PyPI Docs, Digital attestations](https://docs.pypi.org/attestations/).

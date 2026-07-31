@@ -12,7 +12,7 @@ The concrete syntax for reading and fixing each control differs by forge, so it 
 
 ## Scope
 
-The SEC rules belong here: R-SEC-01 pinned references, R-SEC-02 least-privilege permissions, R-SEC-03 dependency updates, R-SEC-04 branch protection, R-SEC-05 signed tags, R-SEC-06 GitLab pipeline inputs, R-SEC-07 untrusted input, R-SEC-08 committed lockfiles, R-SEC-09 static analysis, R-SEC-10 secret detection, R-SEC-11 vulnerability watching, and R-SEC-12 required review.
+The SEC rules belong here: R-SEC-01 pinned references, R-SEC-02 least-privilege permissions, R-SEC-03 dependency updates, R-SEC-04 branch protection, R-SEC-05 signed tags, R-SEC-06 GitLab pipeline inputs, R-SEC-07 untrusted input, R-SEC-08 committed lockfiles, R-SEC-09 static analysis, R-SEC-10 secret detection, R-SEC-11 vulnerability watching, R-SEC-12 required review, and R-SEC-13 immutable release tags.
 
 This skill owns the security posture of the workflow and pipeline files two other skills also write into, and the boundary is the rule area, not a description of files. `oss-ci` decides what runs and when. `oss-publish` writes the publish job. Treat every mutable external reference and every overly broad or implicit token permission in those files as work for this skill. `oss-community` writes CODEOWNERS but does not enforce it; enforcing code owner review is a branch or merge request protection setting, which belongs here. Do not decide what a job runs, add a product feature, or choose a registry authentication flow while working from this skill; note that the project needs it and hand the work to `oss-ci` or `oss-publish`.
 
@@ -46,7 +46,23 @@ With that settled, read what already exists before changing anything, using the 
 
 Every workflow or pipeline file, so the `uses:` lines, `image:` and `include:` entries, and `permissions:` blocks that need fixing are known before any edit is proposed.
 
-Every package manifest and lockfile the repository commits, which is what tells you the ecosystems this project ships. Steps 5 and 12 both consume that list, and Step 10 works the lockfiles themselves; establishing it once here is what stops each of them deriving its own. A repository with no registry dependencies has an empty list, which is an answer rather than a gap.
+Every package manifest and lockfile the repository holds, including the ones under a documentation, example, or tooling directory and the ones nothing published depends on. The axis here is what is present, not what the project ships: a vulnerability arrives through any dependency the repository resolves, whether or not that dependency reaches a released artifact, and a repository that publishes nothing at all still resolves its own. Steps 5, 10, 11, and 12 all consume this list; establishing it once here is what stops each of them deriving its own. A repository with no registry dependencies has an empty list, which is an answer rather than a gap.
+
+Read the file for each ecosystem on that list before configuring anything for it. Each one carries the updater's ecosystem key and whether security updates exist for it, the lockfile and the command that installs from it frozen, the analyzer the language has, and what watches it for known vulnerabilities:
+
+- [references/ecosystems/npm.md](references/ecosystems/npm.md)
+- [references/ecosystems/pypi.md](references/ecosystems/pypi.md)
+- [references/ecosystems/rubygems.md](references/ecosystems/rubygems.md)
+- [references/ecosystems/crates.md](references/ecosystems/crates.md)
+- [references/ecosystems/go-modules.md](references/ecosystems/go-modules.md)
+- [references/ecosystems/packagist.md](references/ecosystems/packagist.md)
+- [references/ecosystems/nuget.md](references/ecosystems/nuget.md)
+- [references/ecosystems/maven-central.md](references/ecosystems/maven-central.md)
+- [references/ecosystems/hex.md](references/ecosystems/hex.md)
+- [references/ecosystems/pubdev.md](references/ecosystems/pubdev.md)
+- [references/ecosystems/containers.md](references/ecosystems/containers.md)
+
+Container images are on that list because a pushed image carries dependencies of its own, and they are detected by a workflow pushing to a registry or an image already on the forge's registry, never by the presence of a Dockerfile. An ecosystem the repository holds with no file here is one this skill has not researched; say so rather than generalizing from a neighbouring ecosystem, because the four answers above differ per ecosystem in ways that do not follow from the language.
 
 The existing dependency update configuration, if any: `.github/dependabot.yml` or a Renovate configuration on GitHub, a Renovate configuration on GitLab. Note which ecosystems it already covers and which it does not, rather than assuming none exists.
 
@@ -80,9 +96,11 @@ R-SEC-12 adds the approving review, and reaches only a repository where two or m
 
 R-SEC-06 also covers which other projects' job tokens may access this GitLab project. The allowlist is an inbound control on the target project, not a list of projects this pipeline's token may call. Read the current inbound scope and allowlist with the commands in `references/gitlab.md`; where the scope is open, enable it and retain only source projects that need access. Where fine-grained job-token permissions are enabled, grant each allowlisted source only the endpoints it needs.
 
-### Step 8: Signed tags
+### Step 8: Signed and protected tags
 
 R-SEC-05 applies the same way on both forges, because the evidence comes from git itself, not from a forge API. Fetch the tags, then establish what the tag is before reaching for any key: `git cat-file -t <tag>` must print `tag`, and one `git for-each-ref` read returns the tagger's address and the signature format together. Only then resolve which account publishes the key and fetch it; the repository owner is that account only when the owner is a user, and neither the release publisher nor the tagged commit's author is a substitute, because either can differ from the tagger. Support OpenPGP, SSH, and X.509 signatures instead of assuming every maintainer uses GPG. Fetching a key by account proves publication and not control, so neither that fetch nor either forge's UI verification badge replaces confirming the maintainer through a channel they control. Distinguish a failed verification from an unconfigured verifier: with SSH signatures and no allowed-signers file, git exits nonzero with a configuration error, which is the check failing to run and scores unknown rather than failed. The per-forge command sequences are in `references/github.md` and `references/gitlab.md`. A repository with no release tag yet has nothing to check; say that rather than reporting a gap, and revisit at the first release.
+
+R-SEC-13 is the other half of the same surface, and unlike R-SEC-05 it is a forge setting rather than evidence git can produce: a signature says who cut the tag, and nothing in git stops the same person or anyone else with push access repointing it afterwards. Both forges express it as a separate object from the branch protection Step 6 set, so read it separately and do not report a guarded default branch as covering tags. On GitHub it is a ruleset targeting tags; on GitLab it is protected tags. Take the settings-block pattern from the Principles section for whichever is missing, and read the result back with the command in the matching reference file. Where releases are cut by a workflow rather than a person, the principal permitted to create a tag is that workflow's identity, so establish who or what publishes before naming anyone. A repository with no release tag yet still takes this control, because setting it before the first release is what makes the first release immutable.
 
 ### Step 9: Keep untrusted input out of privileged contexts
 

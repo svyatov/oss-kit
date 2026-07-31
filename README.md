@@ -2,19 +2,21 @@
 
 Curated agent skills for open source maintainers.
 
-[![version](https://img.shields.io/github/v/tag/svyatov/oss-kit?label=version)](https://github.com/svyatov/oss-kit/releases)
+[![version](https://img.shields.io/github/v/tag/svyatov/oss-kit?sort=semver&label=version)](https://github.com/svyatov/oss-kit/releases)
 [![CI](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13884/badge)](https://www.bestpractices.dev/projects/13884)
 
-- **56 rules.** Each states the check it is scored by and the one skill that
+- **59 rules.** Each states the check it is scored by and the one skill that
   fixes it.
 - **Seven areas.** Documentation, community files, CI, security posture,
   release publishing, changelog discipline, and the agent skills a repository
   ships.
-- **Both forges.** 52 of the 56 rules score GitHub and GitLab alike. Three are
+- **Both forges.** 55 of the 59 rules score GitHub and GitLab alike. Three are
   GitHub-only, one is GitLab-only, and every rule says which.
-- **Four registries.** Release publishing for npm, RubyGems, PyPI, and
-  crates.io.
+- **Eleven ecosystems, answered seven ways.** npm, PyPI, RubyGems, crates.io,
+  Go modules, Packagist, NuGet, Maven Central, Hex, pub.dev, and container
+  images. Each one gets its own detection, badge, license field, CI commands,
+  lockfile, release flow, and version syntax.
 
 Install the kit:
 
@@ -32,8 +34,9 @@ It answers with the gaps and nothing else, each keyed to the rule it missed and
 routed to the skill that fixes it. Rules that already pass do not appear:
 
 ```text
-Audited 49 applicable rules: 46 pass, 2 fail, 1 unknown, 7 not applicable
-(6 PUB, the project publishes no package; 1 GitLab-only).
+Audited 50 applicable rules: 47 pass, 2 fail, 1 unknown, 9 not applicable
+(7 PUB, the project publishes no package; 1 GitLab-only; 1 where the
+ecosystem does not encode the major version in package identity).
 
 1. R-COM-04 fail, no SECURITY.md, run oss-community
 2. R-SEC-01 fail, two uses: lines in .github/workflows/validate.yml pin a tag rather than a SHA, run oss-harden
@@ -55,16 +58,17 @@ this order instead:
 4. `oss-harden` for pinned action SHAs, workflow permissions, and branch
    protection
 5. `oss-changelog` for CHANGELOG.md and the first tagged release
-6. `oss-publish` for registry publishing, if you ship a package
+6. `oss-publish` if you ship a package, whether you push it to a registry or
+   publish it by pushing a tag
 
 `oss-writing` and `oss-skill` are not steps in that sequence. Reach for
 `oss-writing` whenever you are about to write a commit, a pull request, or a
-paragraph of docs, and for `oss-skill` only if your repository ships agent
+paragraph of docs. Reach for `oss-skill` only if your repository ships agent
 skills of its own.
 
-You can also ask for a skill by name when you already know the job: use
-`oss-readme` for a README, `oss-community` for community files, `oss-ci` for
-continuous integration.
+You can also ask for a skill by name when you already know the job. Use
+`oss-readme` for a README, `oss-community` for community files, and `oss-ci`
+for continuous integration.
 
 ## Skills
 
@@ -74,15 +78,15 @@ continuous integration.
 | `oss-community` | Writes every community file, from the license to issue forms. |
 | `oss-readme` | Orders the README and checks its claims against the source. |
 | `oss-ci` | Writes the test, lint, and build jobs for either forge. |
-| `oss-harden` | Pins action SHAs, trims permissions, and guards the branch. |
-| `oss-publish` | Publishes to npm, RubyGems, PyPI, and crates.io, and signs it. |
+| `oss-harden` | Pins action SHAs, trims permissions, and guards branches and tags. |
+| `oss-publish` | Publishes to eleven ecosystems, gates the run, and signs it. |
 | `oss-changelog` | Keeps CHANGELOG.md, picks the bump, writes release notes. |
 | `oss-writing` | Fixes the sentences in commits, reviews, docs, and issues. |
 | `oss-skill` | Fixes the structure and portability of the skills you ship. |
 
 Each skill page on the [documentation site](https://oss-kit.svyatov.com/skills/)
-carries the full description, including the validator `oss-skill` bundles, which
-runs on Node 22 or later, or Bun, with nothing installed.
+carries the full description, including the validator `oss-skill` bundles. That
+validator runs on Node 22 or later, or on Bun, with nothing installed.
 
 ## More install paths
 
@@ -111,6 +115,12 @@ Every current rule is written down in
 [oss-kit.svyatov.com/standard](https://oss-kit.svyatov.com/standard/). Each
 rule states what to do, why, what to check for, and which skill fixes it. Read
 it and disagree with it before you install anything.
+
+Each of the eleven ecosystems has a page of its own, stitched from what all
+seven skills that answer per ecosystem know about it. One page carries the
+detection, the badge, the license field, the CI commands, the lockfile, the
+release flow, and the version syntax. Start at
+[npm](https://oss-kit.svyatov.com/ecosystems/npm/).
 
 oss-kit is scored against its own standard, and [AGENTS.md](AGENTS.md) records
 the reason for every rule that does not reach a skills repository.
@@ -150,17 +160,20 @@ four things:
   `skills/oss-skill/scripts/validate.mjs`
 - the manifest paths each supported host reads
 
-The wording of a skill body, the layout of a skill's `references/` directory,
-the documentation site, and the maintenance code under `scripts/` and `tests/`
-are outside it. They change in any release.
+Four things are outside it, and they change in any release:
+
+- the wording of a skill body
+- the layout of a skill's `references/` directory
+- the documentation site
+- the maintenance code under `scripts/` and `tests/`
 
 Renaming or removing a skill, renaming a rule ID, or tightening what a rule
-requires is an incompatible change: a repository that passed yesterday can fail
+requires is an incompatible change. A repository that passed yesterday can fail
 today. Adding a skill or a rule is not. While the version stays below 1.0.0, an
 incompatible change ships in a MINOR release.
 
 ## License
 
 MIT. See [LICENSE](LICENSE). A skill that derives from third-party work carries
-a `sources.json` naming what it came from, who holds copyright alongside the
-maintainer, and how this fork differs.
+a `sources.json`. It names what the skill came from, who holds copyright
+alongside the maintainer, and how this fork differs.

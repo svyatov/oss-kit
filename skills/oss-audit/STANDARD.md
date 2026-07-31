@@ -6,17 +6,17 @@ Some rules name a fallback marked below the bar. That marker means the blessed o
 
 Rule IDs are `R-<AREA>-<NN>`. Areas are DOC, COM, CI, SEC, PUB, CHG, and SKL. IDs are permanent: a retired rule keeps its number and is marked retired rather than reused.
 
-The standard holds 56 rules:
+The standard holds 59 rules:
 
 - Documentation: R-DOC-01 through R-DOC-10
 - Community: R-COM-01 through R-COM-09
 - Continuous integration: R-CI-01 through R-CI-06
-- Security posture: R-SEC-01 through R-SEC-12
-- Release and publishing: R-PUB-01 through R-PUB-06
-- Changelog and versioning: R-CHG-01 through R-CHG-06
+- Security posture: R-SEC-01 through R-SEC-13
+- Release and publishing: R-PUB-01 through R-PUB-07
+- Changelog and versioning: R-CHG-01 through R-CHG-07
 - Agent skills: R-SKL-01 through R-SKL-07
 
-Two areas are gated by a preamble before any of their rules apply: PUB, which reaches a repository shipping a built artifact, and SKL, which reaches a repository shipping agent skills.
+Two areas are gated by a preamble before any of their rules apply: PUB, which reaches a repository shipping a built artifact, and SKL, which reaches a repository shipping agent skills. PUB's preamble also splits it into two tracks, so a repository resolves which of its rules apply in one step rather than rule by rule.
 
 ## Documentation
 
@@ -318,7 +318,7 @@ Forges: both
 
 A version range re-resolves on every build, so what CI installs today is not what it installed yesterday. A lockfile records the exact artifact and its hash, which turns a silent substitution into a failed build. It costs a maintainer nothing, because the package manager writes it.
 
-Check: the lockfile or fully hashed requirements file the project's package manager produces is committed, records integrity for registry dependencies, and every CI install uses the package manager's current frozen mode so it fails on stale or missing resolution data rather than updating it.
+Check: the lockfile or fully hashed requirements file the project's package manager produces is committed, records integrity for registry dependencies, and every CI install uses the package manager's current frozen mode so it fails on stale or missing resolution data rather than updating it. Two clauses narrow it, and both key on what the tooling documents rather than on what the repository happens to contain, so an absent lockfile is never mistaken for an impossible one. Where the project's build tool publishes no lockfile format at all, the version-lock half falls outside this rule rather than failing it; among the ecosystems this standard covers that is Apache Maven, which offers fixed versions, `dependencyManagement`, and enforcer rules such as `banDynamicVersions` in place of one, and it is the build tool rather than the Maven Central registry that earns this, because a Gradle project publishing to the same registry writes `gradle.lockfile` and stays inside the rule. Where the ecosystem's own documentation directs a library package not to commit its lockfile, which both NuGet and Dart do, the rule reaches that ecosystem's application packages and the library case falls outside it rather than failing it.
 
 Fixed by: oss-harden
 Forges: both
@@ -361,9 +361,22 @@ Check: where two or more principals hold push, maintain, or admin access, the de
 Fixed by: oss-harden
 Forges: both
 
+### R-SEC-13: A released tag cannot be moved or deleted, and only trusted principals may create one
+
+A tag is the name a consumer installs by, and git lets anyone with push access repoint one at a different commit. Moving a released tag changes what every later fetch resolves to while the version number stays put, which is the one change a version number exists to make visible. Restricting who may create a tag matters for the same reason from the other end: where the registry reads the forge rather than taking an upload, creating the tag is the publish, so tag creation is the last gate before a version becomes public and the only thing standing where an approval gate would stand on the registry-push track.
+
+Check: on GitHub, a repository ruleset targeting `refs/tags/*` blocks tag update and tag deletion and restricts tag creation to named principals, read back with `gh api repos/{owner}/{repo}/rulesets` rather than inferred from the write; on GitLab, protected tags cover the release tag pattern with a create access level set and no role permitted to force-update it, read back with `GET /projects/:id/protected_tags`. This rule covers a git tag only. A container registry tag is mutable by design, lives outside the forge, and is reachable by no forge control, so the immutable identity of a published image is its digest rather than its tag.
+
+Fixed by: oss-harden
+Forges: both
+
 ## Release and publishing
 
-This area applies to a repository that ships a built artifact to people who did not build it, in either of two forms: a package published to a registry, evidenced by a manifest declaring a public package, a release workflow naming a publish command, or an existing registry page; or a built asset attached to a forge release, evidenced by a release carrying a file the repository does not contain. Where neither exists, the area is not applicable as a whole and its rules are not checked one at a time. A repository that ships only its source, through git tags or an installer that reads the source tree, publishes nothing to secure here.
+This area applies to a repository that ships a built artifact to people who did not build it, in either of two forms: a package published to a registry, evidenced by a manifest declaring a public package, a release workflow naming a publish command, or an existing registry page; or a built asset attached to a forge release, evidenced by a release carrying a file the repository does not contain. Where neither exists, the area is not applicable as a whole and its rules are not checked one at a time.
+
+The area runs on two tracks, and which track a repository takes decides how many of its rules reach it. On the registry-push track a release uploads a built artifact to a registry, and every rule below applies: npm, PyPI, RubyGems, crates.io, NuGet, Maven Central, Hex, pub.dev, and container images. On the tag-published track nothing is uploaded and there is no publishing credential at all, because the registry reads the forge instead: a Go module is published by pushing a git tag that `proxy.golang.org` fetches on demand, and a Packagist package is registered once and thereafter updated by a forge integration or a weekly crawl. R-PUB-01 through R-PUB-04 have nothing to attach to there, so on the tag-published track those four are not applicable as a whole and are not checked one at a time; R-PUB-05, R-PUB-06, and R-PUB-07 still apply. What stands in for R-PUB-04's approval gate on that track is R-SEC-13, which restricts who may create a tag, because creating the tag is the publish.
+
+A repository that ships only its source, with no package identity any registry resolves, publishes nothing to secure here and falls outside this area on either track. Shipping through git tags is not by itself what places a repository outside it, because that is exactly how a Go module publishes; the absence of a resolvable package identity is.
 
 ### R-PUB-01: Publishing happens in CI, triggered by a tag, never from a developer machine
 
@@ -378,7 +391,7 @@ Forges: both
 
 A long-lived registry token in CI secrets is the single credential that turns any workflow compromise into a supply-chain compromise. Trusted publishing exchanges a short-lived OIDC token per run, so there is nothing to steal between releases.
 
-Check: the publish job requests `id-token: write` and publishes through the registry's OIDC flow (npm trusted publishing, PyPI trusted publishers, RubyGems OIDC, crates.io trusted publishing). Where the registry's own publishing documentation names no OIDC flow at all, which is the case for Hex, a token scoped to the single package being published is below the bar and permitted, and the registry limitation is reported beside it. That is not the same as a registry documenting a flow this standard has not enumerated, which is unverified rather than absent: read the registry's documentation and report the rule unknown until the flow is checked, because the scoped-token fallback would otherwise pass a repository that could have used OIDC. A repository that publishes to no registry, shipping only built assets on a forge release, falls outside this rule rather than failing it.
+Check: the publish job requests `id-token: write` and publishes through the registry's OIDC flow (npm trusted publishing, PyPI trusted publishers, RubyGems OIDC, crates.io trusted publishing). Where the registry's own publishing documentation names no OIDC flow at all, which is the case for Hex, a token scoped to the single package being published is below the bar and permitted, and the registry limitation is reported beside it. That is not the same as a registry documenting a flow this standard has not enumerated, which is unverified rather than absent: read the registry's documentation and report the rule unknown until the flow is checked, because the scoped-token fallback would otherwise pass a repository that could have used OIDC. Where the registry documents no credential narrower than the publishing account, which is the case for Maven Central, an account-scoped token is below the bar and permitted, reported beside the compensating controls that keep it below the bar rather than at it: an expiry set when the token is generated, revocation and replacement on compromise, namespace ownership verified against the account, and a publishing type that holds a validated deployment until a person releases it. Sonatype has announced namespace-scoped and artifact-scoped tokens without shipping them, so re-read the registry's token documentation before accepting this fallback rather than treating it as settled. A repository that publishes to no registry, shipping only built assets on a forge release, falls outside this rule rather than failing it.
 
 Fixed by: oss-publish
 Forges: both
@@ -415,6 +428,15 @@ Forges: both
 A signed tag covers the commit, not the files attached to the release, and those files are uploaded by whatever held the token. A downloader who cannot verify an asset cannot tell a legitimate release from one replaced after the fact, and reads the tag signature as though it covered both.
 
 Check: each built asset on the newest release either carries a detached signature or appears with its cryptographic hash in a manifest that is itself signed, and the verifying key or attestation identity is discoverable from the repository rather than only from the release itself. A forge attestation covering the exact asset satisfies this. A release carrying only the source archives the forge generates falls outside this rule rather than failing it.
+
+Fixed by: oss-publish
+Forges: both
+
+### R-PUB-07: A tag-published registry entry updates through the forge, not through a token a CI job holds
+
+The tag-published track has no publish step to secure, but the registry still has to learn that a new version exists. Where that link is a registry API token sitting in CI secrets, the track has reintroduced the exact credential it otherwise avoids: any workflow compromise can then push a package version, without the project ever running a publish command.
+
+Check: the registry entry is updated by a forge-side integration the registry itself configures, and no registry API token appears in CI secrets or in any workflow file. On GitHub, Packagist's documented path is authorizing the Packagist application and letting it install the hook, so no token is stored anywhere; the package page shows an auto-update warning when no hook is set, which is the observable evidence. Where the registry offers no such path, which is the case for Packagist on GitLab, the credential belongs in the forge's project integration settings, where no job can read it, and never in a CI variable. An ecosystem that exposes no registry entry to update falls outside this rule rather than failing it, which is the case for Go modules: `proxy.golang.org` fetches a tag on demand and offers no account, no registration, and no credential.
 
 Fixed by: oss-publish
 Forges: both
@@ -471,6 +493,15 @@ Forges: both
 A reader deciding whether an upgrade is urgent is asking one question, and a fixed vulnerability they can look up is the fact that answers it. Scoping this to what reached users is what keeps the Security group worth reading: a vulnerability in a development-only dependency never reached one, and a Security heading that cries wolf over those is one readers stop opening. A build toolchain is on the other side of that line whenever the project ships what the toolchain produced.
 
 Check: the changelog entry for each release that resolved a publicly known vulnerability in the shipped code or in a run-time dependency names every such vulnerability under Security, each by an identifier from a published advisory. A development-only dependency is not a run-time vulnerability. Where the project ships a built artifact, its build toolchain is one, because a compromised bundler or code generator injects into the thing users install; where the project ships only source, a build-only dependency stays outside. On GitHub, `gh api repos/{owner}/{repo}/dependabot/alerts?state=fixed` reports which advisories were resolved and when, which is what locates them in a release; on GitLab, the project's vulnerability report carries the same and requires Ultimate, so a Free project resolves it from the advisory identifiers its scanner job recorded. A project that has fixed no publicly known run-time vulnerability falls outside this rule rather than satisfying it with nothing to check.
+
+Fixed by: oss-changelog
+Forges: both
+
+### R-CHG-07: Where an ecosystem encodes the major version in package identity, the released major matches it
+
+A version that disagrees with the package name is not a documentation defect, because the two resolve to different packages. Go states the requirement outright: a module released at v2 or higher must carry a matching suffix on its module path and therefore on the import path of every package inside it, so a repository tagged `v2.0.0` whose `go.mod` still names the v1 path has published a v1 that no consumer of v2 can import. R-CHG-03 asks the tag, the manifests, and the changelog to agree on one version, and it does not reach the package name.
+
+Check: where the ecosystem encodes the major version in package identity, that identity matches the released major. For a Go module at v2 or higher, the `module` line in `go.mod` ends in the matching `/vN` suffix and the newest release tag's major matches it; a `gopkg.in` path carries the suffix at every major, including v0 and v1, and separates it with a dot rather than a slash. An ecosystem that does not encode the major version in package identity falls outside this rule rather than satisfying it with nothing to check.
 
 Fixed by: oss-changelog
 Forges: both

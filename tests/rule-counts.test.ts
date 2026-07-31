@@ -26,8 +26,16 @@ const phrases = (text: string) => [...text.matchAll(/\b\d+ (?:of (?:the )?\d+ )?
 // catches the drift a phrase list cannot see: "41 applicable rules ... 5 not
 // applicable" names no total, so it survived the standard growing to 50.
 const AUDIT =
-  /Audited (\d+) applicable rules: (\d+) pass, (\d+) fail, (\d+) unknown, (\d+) not applicable\.?\s*(?:\((\d+) PUB)?/g
-const audits = (text: string) => [...text.matchAll(AUDIT)].map((m) => m.slice(1).map((n) => (n ? Number(n) : null)))
+  /Audited (\d+) applicable rules: (\d+) pass, (\d+) fail, (\d+) unknown, (\d+) not applicable\.?\s*(\([^)]*\))?/g
+const audits = (text: string) =>
+  [...text.matchAll(AUDIT)].map((m) => ({
+    numbers: m.slice(1, 6).map(Number),
+    // The parenthetical enumerates why each skipped rule was skipped. Summing
+    // it is what catches a breakdown that no longer adds up, which a check on
+    // the PUB count alone cannot see now that more than one thing skips a rule.
+    breakdown: m[6] ? [...m[6].matchAll(/(\d+)\s+(PUB|GitLab-only|where)/g)].map((b) => Number(b[1])) : null,
+    pubSkipped: m[6] ? Number(/(\d+) PUB/.exec(m[6])?.[1] ?? Number.NaN) : null,
+  }))
 
 // The audit check rides along with the totals check rather than reaching
 // further. Both files below already have to change when a rule is added, so
@@ -104,15 +112,22 @@ describe("rule counts quoted in prose", () => {
     test(`${path} shows an audit whose numbers add up`, () => {
       const found = audits(readFileSync(path, "utf8"))
       expect(found.length).toBeGreaterThan(0)
-      for (const [applicable, pass, fail, unknown, skipped, pubSkipped] of found) {
+      for (const { numbers, breakdown, pubSkipped } of found) {
+        const [applicable, pass, fail, unknown, skipped] = numbers as [number, number, number, number, number]
         // Every rule is either applicable to the audited repository or not.
-        expect(applicable! + skipped!).toBe(total)
+        expect(applicable + skipped).toBe(total)
         // Every applicable rule got one of the three verdicts.
-        expect(pass! + fail! + unknown!).toBe(applicable!)
-        // The examples all depict a GitHub repository publishing no package,
-        // so what it skips is the whole PUB area plus the GitLab-only rules.
-        expect(skipped).toBe(pub + gitlabOnly)
+        expect(pass + fail + unknown).toBe(applicable)
+        // The examples all depict a GitHub repository publishing no package, so
+        // it skips at least the whole PUB area and the GitLab-only rules. It is
+        // a floor rather than an equality because a rule can also place this
+        // repository outside itself on its own terms, which R-CHG-07 does: an
+        // ecosystem that does not encode the major version in package identity
+        // falls outside it, and most do not.
+        expect(skipped).toBeGreaterThanOrEqual(pub + gitlabOnly)
         if (pubSkipped !== null) expect(pubSkipped).toBe(pub)
+        // Whatever the extra skips are, the example has to enumerate them.
+        if (breakdown !== null) expect(breakdown.reduce((a, b) => a + b, 0)).toBe(skipped)
       }
     })
   }

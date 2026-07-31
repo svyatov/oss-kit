@@ -15,7 +15,16 @@ import {
   stripUnreleased,
   writeAll,
 } from "../site/scripts/generate.mjs"
-import { existsSync, mkdtempSync, readFileSync as read, rmSync, symlinkSync, writeFileSync } from "node:fs"
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync as read,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 
@@ -280,7 +289,7 @@ test("writeAll produces every page the site needs", () => {
   expect(existsSync(join(out, "changelog.md"))).toBe(true)
   expect(existsSync(join(out, "skills/index.mdx"))).toBe(true)
   expect(existsSync(join(out, "skills/oss-audit.md"))).toBe(true)
-  expect(existsSync(join(out, "skills/oss-publish/npm.md"))).toBe(true)
+  expect(existsSync(join(out, "skills/oss-harden/github.md"))).toBe(true)
   expect(existsSync(join(out, "guides/install.md"))).toBe(false)
 
   const secOne = read(join(out, "rules/r-sec-01.md"), "utf8")
@@ -300,6 +309,141 @@ test("writeAll produces every page the site needs", () => {
   expect(area).toContain("../../../../components/Rack.astro")
   expect(area).toContain("tableOfContents: false")
   expect(area).not.toContain("- [R-SEC-01")
+  rmSync(out, { recursive: true, force: true })
+})
+
+const roster = JSON.parse(read("skills/oss-audit/ecosystems.json", "utf8"))
+const ecosystemNames: string[] = Object.keys(roster.ecosystems)
+const sectionSkills: string[] = Object.keys(roster.sections)
+
+/**
+ * A copy rather than a symlink, because every ecosystem test varies the skills
+ * tree and a symlink would vary the repository instead.
+ */
+function fixtureRepo() {
+  const root = mkdtempSync(join(tmpdir(), "oss-kit-repo-"))
+  cpSync(resolve("skills"), join(root, "skills"), { recursive: true })
+  symlinkSync(resolve("README.md"), join(root, "README.md"))
+  symlinkSync(resolve("CHANGELOG.md"), join(root, "CHANGELOG.md"))
+  return root
+}
+
+test("writeAll stitches one page per roster ecosystem, not one page per file", () => {
+  const out = mkdtempSync(join(tmpdir(), "oss-kit-site-"))
+  const { written } = writeAll(".", out)
+
+  const pages = written.filter((path) => /^ecosystems\/[a-z-]+\.md$/.test(path))
+  expect(pages).toHaveLength(ecosystemNames.length)
+  for (const name of ecosystemNames) expect(pages).toContain(`ecosystems/${name}.md`)
+
+  // Every skill in the roster gets a section on every page, present or absent,
+  // so a reader can tell an unresearched gap from a skill with nothing to say.
+  const npm = read(join(out, "ecosystems/npm.md"), "utf8")
+  for (const skill of sectionSkills) expect(npm).toContain(`## [${skill}](/skills/${skill}/)`)
+  rmSync(out, { recursive: true, force: true })
+})
+
+test("a skill with no file for an ecosystem renders a hole naming the path it needs", () => {
+  // Against a fixture rather than the repository. The repository is meant to
+  // have no holes left, so an assertion that one is observable there passes
+  // only while the matrix is incomplete and inverts the moment it is filled.
+  //
+  // A twelfth roster entry rather than a deleted file: deleting one also
+  // deletes its refTargets mapping, so the routing link in that skill's
+  // SKILL.md stops resolving and the build dies before it can render a hole.
+  const root = fixtureRepo()
+  const out = mkdtempSync(join(tmpdir(), "oss-kit-site-"))
+  const rosterPath = join(root, "skills/oss-audit/ecosystems.json")
+  const fixtureRoster = JSON.parse(read(rosterPath, "utf8"))
+  fixtureRoster.ecosystems.brandnew = { title: "Brand new", registry: "", manifests: [], lockfiles: [] }
+  writeFileSync(rosterPath, JSON.stringify(fixtureRoster))
+
+  writeAll(root, out)
+  const page = read(join(out, "ecosystems/brandnew.md"), "utf8")
+  for (const skill of sectionSkills) {
+    expect(page).toContain(`\`skills/${skill}/references/ecosystems/brandnew.md\` does not exist`)
+  }
+  rmSync(root, { recursive: true, force: true })
+  rmSync(out, { recursive: true, force: true })
+})
+
+test("a stitched page carries the whole of a skill's declared section set", () => {
+  const out = mkdtempSync(join(tmpdir(), "oss-kit-site-"))
+  writeAll(".", out)
+  const npm = read(join(out, "ecosystems/npm.md"), "utf8")
+  for (const step of [
+    "Gather facts (Step 1)",
+    "Configure trusted publishing (Step 2)",
+    "Write the hardened release workflow (Step 3)",
+    "Gate on manual approval (Step 4)",
+    "Verify provenance (Step 5)",
+    "Describe and sign what the release attaches (Step 6)",
+  ]) {
+    expect(npm).toContain(`### ${step}`)
+  }
+  rmSync(out, { recursive: true, force: true })
+})
+
+test("an ecosystem file is stitched in and gets no per-file page of its own", () => {
+  const root = fixtureRepo()
+  const out = mkdtempSync(join(tmpdir(), "oss-kit-site-"))
+  mkdirSync(join(root, "skills/oss-publish/references/ecosystems"), { recursive: true })
+  writeFileSync(
+    join(root, "skills/oss-publish/references/ecosystems/npm.md"),
+    "# npm\n\n## Gather facts (Step 1)\n\nRead the manifest.\n",
+  )
+
+  const { written } = writeAll(root, out)
+  // A subdirectory used to reach readFileSync and throw EISDIR; now it neither
+  // throws nor emits the seventy-seven pages a per-file rule would have.
+  expect(written).not.toContain("skills/oss-publish/ecosystems/npm.md")
+  expect(written).not.toContain("skills/oss-publish/references/ecosystems/npm.md")
+
+  const page = read(join(out, "ecosystems/npm.md"), "utf8")
+  // Demoted one level, so the skill heading above it stays the section heading.
+  expect(page).toContain("### Gather facts (Step 1)")
+  expect(page).not.toContain("skills/oss-publish/references/ecosystems/npm.md` does not exist")
+  rmSync(root, { recursive: true, force: true })
+  rmSync(out, { recursive: true, force: true })
+})
+
+test("both link forms for an ecosystem file resolve to the one stitched page", () => {
+  const root = fixtureRepo()
+  const out = mkdtempSync(join(tmpdir(), "oss-kit-site-"))
+  mkdirSync(join(root, "skills/oss-harden/references/ecosystems"), { recursive: true })
+  writeFileSync(join(root, "skills/oss-harden/references/ecosystems/hex.md"), "# Hex\n\nMix.\n")
+
+  const skill = join(root, "skills/oss-harden/SKILL.md")
+  writeFileSync(skill, `${read(skill, "utf8")}\n\nSee [Hex](references/ecosystems/hex.md).\n`)
+  // The sibling form, which is what a migrated paragraph in a forge reference
+  // leaves behind. rewriteLinks throws on an unmapped `.md` target, so missing
+  // this key kills the build rather than producing a broken link.
+  const github = join(root, "skills/oss-harden/references/github.md")
+  writeFileSync(github, `${read(github, "utf8")}\n\nSee [Hex](ecosystems/hex.md).\n`)
+
+  writeAll(root, out)
+  expect(read(join(out, "skills/oss-harden.md"), "utf8")).toContain("[Hex](/ecosystems/hex/)")
+  expect(read(join(out, "skills/oss-harden/github.md"), "utf8")).toContain("[Hex](/ecosystems/hex/)")
+  rmSync(root, { recursive: true, force: true })
+  rmSync(out, { recursive: true, force: true })
+})
+
+test("an empty or unparseable roster fails the build loudly rather than writing no pages", () => {
+  const out = mkdtempSync(join(tmpdir(), "oss-kit-site-"))
+  const withRoster = (contents: string) => {
+    const root = fixtureRepo()
+    writeFileSync(join(root, "skills/oss-audit/ecosystems.json"), contents)
+    return root
+  }
+
+  const empty = withRoster("{}")
+  expect(() => writeAll(empty, out)).toThrow(/skills\/oss-audit\/ecosystems\.json lists no ecosystems/)
+
+  const noSections = withRoster('{"ecosystems":{"npm":{"title":"npm"}}}')
+  expect(() => writeAll(noSections, out)).toThrow(/skills\/oss-audit\/ecosystems\.json declares no section sets/)
+
+  rmSync(empty, { recursive: true, force: true })
+  rmSync(noSections, { recursive: true, force: true })
   rmSync(out, { recursive: true, force: true })
 })
 

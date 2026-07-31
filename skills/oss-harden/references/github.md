@@ -19,6 +19,7 @@ Concrete commands and settings for the decisions `SKILL.md` makes, on GitHub Act
   - [SSH](#ssh)
   - [OpenPGP](#openpgp)
   - [A configuration error is not a bad signature](#a-configuration-error-is-not-a-bad-signature)
+- [Tag rulesets (R-SEC-13)](#tag-rulesets-r-sec-13)
 - [Untrusted input (R-SEC-07)](#untrusted-input-r-sec-07)
 - [Static analysis (R-SEC-09)](#static-analysis-r-sec-09)
 - [Detection controls (R-SEC-10, R-SEC-11)](#detection-controls-r-sec-10-r-sec-11)
@@ -300,6 +301,64 @@ error: gpg.ssh.allowedSignersFile needs to be configured and exist for ssh signa
 
 and exits 1. That is the same exit status a bad signature gives, so a run that only checks the status reports an unsigned or forged tag when the tag is fine and the verifier is not configured. Read the message before scoring: this text means the check did not run, and R-SEC-05 is unknown rather than failed. Passing the file inline with `-c`, as above, is what keeps this from depending on the machine's git configuration at all.
 
+## Tag rulesets (R-SEC-13)
+
+A tag ruleset is the same object as the branch ruleset above with two fields changed: `target` is `tag` instead of `branch`, and the condition matches the release tag pattern instead of the default branch. It is a separate ruleset, so a repository whose default branch is fully guarded can still have every tag unprotected.
+
+Three rule types carry this rule, and each is documented as a restriction to whoever can bypass: `creation` as "Only users with bypass permissions can create branches or tags whose name matches the pattern you specify", `update` as the same for pushing to a matching ref, and `deletion` as the same for deleting one. `update` is what stops a released tag moving, since repointing a tag is a ref update rather than a force push, so do not reach for `non_fast_forward` to cover it.
+
+Those three do not belong in one ruleset, and the reason is the bypass list. A bypass list is granted for a whole ruleset rather than per rule, so a single ruleset holding all three has one list that exempts its actors from all of them. That list cannot be empty, because `creation` with no bypass actor means nobody can cut a release at all. Filling it hands those actors `update` and `deletion` too, which is exactly the power this rule exists to remove. The two halves want opposite bypass lists, so they want two rulesets. Rulesets aggregate: GitHub documents that "if multiple rulesets target the same branch or tag in a repository, the rules in each of these rulesets are aggregated", and that "if the same rule is defined in different ways across the aggregated rulesets, the most restrictive version of the rule applies".
+
+The first ruleset makes a released tag immutable, and nothing is exempt from it:
+
+```bash
+gh api -X POST repos/{owner}/{repo}/rulesets --input - <<'JSON'
+{
+  "name": "tags-immutable",
+  "target": "tag",
+  "enforcement": "active",
+  "conditions": { "ref_name": { "include": ["refs/tags/v*"], "exclude": [] } },
+  "rules": [
+    { "type": "update" },
+    { "type": "deletion" }
+  ],
+  "bypass_actors": []
+}
+JSON
+```
+
+The second restricts who may cut a release, and its bypass list is the point rather than a hole in it:
+
+```bash
+gh api -X POST repos/{owner}/{repo}/rulesets --input - <<'JSON'
+{
+  "name": "tags-creation",
+  "target": "tag",
+  "enforcement": "active",
+  "conditions": { "ref_name": { "include": ["refs/tags/v*"], "exclude": [] } },
+  "rules": [{ "type": "creation" }],
+  "bypass_actors": [
+    { "actor_type": "RepositoryRole", "actor_id": 5, "bypass_mode": "always" }
+  ]
+}
+JSON
+```
+
+Name the release principals explicitly there, with the same `actor_type` values the earlier section lists, and keep the list as short as the release process allows. Repository admin is the widest defensible entry and a named team or app is usually narrower.
+
+Match `refs/tags/*` only where the project tags nothing else. Where releases are `v`-prefixed and other tags are not, `refs/tags/v*` protects the releases without freezing every scratch tag someone pushes.
+
+Read it back rather than trusting the write, the same two calls the branch case needs:
+
+```bash
+gh api repos/{owner}/{repo}/rulesets --jq '.[] | select(.target == "tag")'
+gh api repos/{owner}/{repo}/rulesets/{ruleset_id}
+```
+
+The list call reports id, name, target, and enforcement only; the three rule types come from the per-ruleset call. Confirm `enforcement` is `active`, that all three types are present, and that `bypass_actors` holds only the principals the project means to let publish.
+
+This sits beside R-SEC-05 rather than replacing it. A signature says who cut the tag; the ruleset keeps the tag on the commit they cut.
+
 ## Untrusted input (R-SEC-07)
 
 GitHub evaluates expressions before handing a `run:` block to the shell. Keep user-controlled event fields out of generated shell text:
@@ -385,7 +444,7 @@ gh api repos/{owner}/{repo}/dependency-graph/sbom \
 
 This groups the SBOM by purl ecosystem. Read the project's own resolved count out of its lockfile and compare. On this repository the SBOM reports 10 `pkg:npm` packages against 492 resolved in `site/bun.lock`, because `bun.lock` is not a file the graph parses; the 482 residual is the finding, and the fix is a scanner that reads the lockfile rather than a switch. `pkg:githubactions` entries come from the workflow files and cover R-SEC-01's pins.
 
-Parsing is only one of the two ways coverage goes missing, and it is the one that comparison catches. The other is the updater's own ecosystem table, which lists `bun` and `mix` as supported for version updates and unsupported for security updates: a repository on either gets scheduled dependency bumps and no advisory-driven ones. For `mix` the gap is total, and the SBOM shows it rather than implying it. Run the command above against `elixir-ecto/ecto` and `phoenixframework/phoenix` and neither reports a single `pkg:hex` package; Phoenix reports 635 `pkg:npm` packages beside that zero, from its JavaScript assets, so the absence is Elixir's and not a repository that never turned the graph on. An Elixir project therefore has no watcher until a scanner reads `mix.lock`, and the remedy is the one the unparsed-lockfile case already takes, applied to the whole dependency set rather than to a residual of it.
+Parsing is only one of the two ways coverage goes missing, and it is the one that comparison catches. The other is the updater's own ecosystem table, where an ecosystem listed for version updates and not for security updates leaves its whole advisory feed as the residual rather than the transitive tail of a manifest. Which ecosystems those are, and the SBOM evidence behind each, live in the per-ecosystem files, starting with [ecosystems/hex.md](ecosystems/hex.md) and [ecosystems/npm.md](ecosystems/npm.md).
 
 ### When push protection fires
 

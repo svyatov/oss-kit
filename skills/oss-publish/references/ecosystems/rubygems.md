@@ -23,6 +23,8 @@ Read every `*.gemspec` in the repository; a repository with more than one needs 
 
 ## Configure trusted publishing (Step 2)
 
+Only one of the two sections below is a flow. RubyGems supports GitHub Actions and names no GitLab provider, so a GitLab project takes the fallback rather than a shorter version of the same setup.
+
 ### GitHub Actions
 
 On rubygems.org, open `https://rubygems.org/gems/<name>/trusted_publishers/new` for each gem, logged in as an owner, and enter:
@@ -204,3 +206,5 @@ Unlike npm, RubyGems does not require a manual first release. Create a pending t
 Every gem needs its own trusted publisher entry pointing at the same repository and the same workflow filename; a gem left out of that list stays unprotected. One workflow can release every gem if versions move together; if gems version independently, tag them separately and match the trigger and the build job to the tag's gem name. `spec.metadata["rubygems_mfa_required"]` goes in every gemspec, not just the first one.
 
 Step 7 is in `SKILL.md`: read each R-PUB rule's `Check:` line against what this file produced, and fix what fails before reporting done.
+
+Verified 2026-07-31 against [RubyGems Guides, Trusted Publishing](https://github.com/rubygems/guides/blob/main/trusted-publishing.md), which still names GitHub Actions as the only OIDC provider and does not mention GitLab.

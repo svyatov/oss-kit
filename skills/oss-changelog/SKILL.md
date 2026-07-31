@@ -16,7 +16,7 @@ A changelog section is one version's entry inside `CHANGELOG.md`. A forge releas
 
 ## Scope
 
-The CHG rules belong here: R-CHG-01 changelog format, R-CHG-02 semantic bumps, R-CHG-03 one version, R-CHG-04 release body, R-CHG-05 deprecation window, and R-CHG-06 vulnerability entries.
+The CHG rules belong here: R-CHG-01 changelog format, R-CHG-02 semantic bumps, R-CHG-03 one version, R-CHG-04 release body, R-CHG-05 deprecation window, R-CHG-06 vulnerability entries, and R-CHG-07 major version in package identity.
 
 This skill owns the changelog and versioning rules above. It does not own the sentences: once an entry's content is decided, phrasing it in plain, active prose free of marketing language is `oss-writing`'s rule, R-DOC-05. It does not own publishing: building the tagged artifact, authenticating to a registry, and gating the release behind approval are `oss-publish`'s R-PUB rules. Do not draft commit or pull request prose, or write a publish workflow, from this skill; note that the project needs it and hand the work to the owning skill.
 
@@ -27,6 +27,24 @@ This skill owns the changelog and versioning rules above. It does not own the se
 A release unit is one product versioned as a whole, together with every file that states its version. Find them all before deciding anything, because Step 7 has to set the same number in each. Identify the unit's declared public API as well: library symbols, CLI behavior, configuration, network protocols, file formats, or another documented contract. That declaration is what Step 5 measures a change against.
 
 Do not bump unrelated packages merely because they share a repository. A single product spread across several manifests must update all manifests that describe that product; independently versioned packages need separate release units and changelog sections or files.
+
+Then read the ecosystem file for what this release unit ships. Where the version is stated, how the version syntax deviates from SemVer, whether the major version lives in the package name, and what withdrawing a release means all differ by ecosystem, and each file answers those four for one of them. Route on what the unit publishes, not on every manifest present: a Go module with a documentation `package.json` is a Go release unit, and npm has nothing to say about its version.
+
+| What the release unit ships | Read |
+|---|---|
+| an npm package | [references/ecosystems/npm.md](references/ecosystems/npm.md) |
+| a Python distribution on PyPI | [references/ecosystems/pypi.md](references/ecosystems/pypi.md) |
+| a gem on RubyGems | [references/ecosystems/rubygems.md](references/ecosystems/rubygems.md) |
+| a crate on crates.io | [references/ecosystems/crates.md](references/ecosystems/crates.md) |
+| a Go module | [references/ecosystems/go-modules.md](references/ecosystems/go-modules.md) |
+| a PHP package on Packagist | [references/ecosystems/packagist.md](references/ecosystems/packagist.md) |
+| a package on nuget.org | [references/ecosystems/nuget.md](references/ecosystems/nuget.md) |
+| an artifact on Maven Central | [references/ecosystems/maven-central.md](references/ecosystems/maven-central.md) |
+| a package on Hex | [references/ecosystems/hex.md](references/ecosystems/hex.md) |
+| a package on pub.dev | [references/ecosystems/pubdev.md](references/ecosystems/pubdev.md) |
+| a container image pushed to a registry | [references/ecosystems/containers.md](references/ecosystems/containers.md) |
+
+A release unit that ships to two of these, such as a module and an image, reads both files and satisfies both. A repository that publishes nothing still has a tag and a changelog, so Step 5 through Step 9 apply unchanged and no file above is needed.
 
 ### Step 2: Read the changelog that already exists
 
