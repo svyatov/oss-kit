@@ -42,7 +42,9 @@ The same sentence appears in three places a reader may meet first: the README, t
 
 ### 3. Badges
 
-Optional, and capped at three. Read [references/badges.md](references/badges.md) before writing or editing a badge row: it carries the cap, the order, the placement, the live-fact test that decides what never gets a badge, and the URL template for each ecosystem.
+Optional, and capped at three. Read [references/badges.md](references/badges.md) before writing or editing a badge row: it carries the cap, the order, the placement, the live-fact test that decides what never gets a badge, and the fallback badge for a repository no registry serves.
+
+The version badge itself is per ecosystem. `references/ecosystems/<name>.md` carries the endpoint, how its label behaves, and what to link it to, one file per ecosystem, and `references/badges.md` links all eleven. That file also carries the ecosystem's install command, which section 5 needs.
 
 Do not move the row above the `#` heading, and do not raise the cap. R-DOC-01 exists so a reader's first five seconds buy them the sentence, and a row above the title spends them on shields.
 
@@ -153,6 +155,8 @@ Audited 50 applicable rules: 47 pass, 2 fail, 1 unknown, 9 not applicable.
 ````
 
 Do not copy the shape from a README you have heard of. Well-known projects put a logo, a row of translation links, or a pull quote between the title and the opening sentence, and many place the install command well below the first example, so each teaches a departure from R-DOC-01 or R-DOC-02 along with the shape.
+
+The install command belongs to the ecosystem the project publishes to, and `references/ecosystems/<name>.md` carries it, along with which form to show when the ecosystem has more than one.
 
 If the project has no install step, for example a script meant to be copied, say so instead of showing an empty or invented command.
 
