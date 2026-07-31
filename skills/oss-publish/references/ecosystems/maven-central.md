@@ -140,6 +140,25 @@ Two gates apply together here, and Maven Central is unusual in having a real reg
 
 The workflow gate is `environment: release` on the publish job above, with required reviewers configured at `https://github.com/<owner>/<repo>/settings/environments/new`, or a GitLab protected environment with approval rules. Required reviewers work for public repositories on current GitHub plans; private or internal repositories need GitHub Enterprise Cloud.
 
+Create it with the API rather than the form. Reviewers and the tag policy are both settable, so nothing here needs a browser.
+
+```sh
+ENV=release
+GHUID=$(gh api user --jq .id)
+gh api -X PUT "repos/{owner}/{repo}/environments/$ENV" \
+  -F wait_timer=0 \
+  -F prevent_self_review=false \
+  -f 'reviewers[][type]=User' -F "reviewers[][id]=$GHUID" \
+  -F 'deployment_branch_policy[protected_branches]=false' \
+  -F 'deployment_branch_policy[custom_branch_policies]=true'
+gh api -X POST "repos/{owner}/{repo}/environments/$ENV/deployment-branch-policies" \
+  -f 'name=v*' -f type=tag
+```
+
+Three details decide whether that runs. `gh api` substitutes `{owner}` and `{repo}` from the checkout it runs in. Use `-F` for the booleans and the reviewer id, because `-f` sends every value as a string and the endpoint rejects a quoted boolean. Do not name the shell variable `UID`: zsh marks it read only, so the assignment fails before `gh` runs.
+
+`reviewers[][id]` takes a numeric user or team id rather than a login. A team needs `type=Team` and that team's id.
+
 The registry gate is the `USER_MANAGED` publishing type. A deployment uploaded that way runs through validation, stops at the `VALIDATED` state, and waits for a person to publish it from the Portal interface or through a second authenticated call to `/api/v1/publisher/deployment/<deploymentId>`. That is a genuine proof-of-presence gate in the sense R-PUB-04 asks for, and it survives a compromised workflow, because the workflow cannot approve itself without the token being used a second time by whoever is watching the Portal.
 
 Keep both. Where the forge plan provides no native gate, the Portal gate alone can satisfy R-PUB-04, which puts Maven Central in a better position than most of this directory. Say so plainly rather than reporting the rule unmet. What a maintainer must not do is set `autoPublish` to `true` to make the pipeline finish green, because that removes the only gate a compromised release workflow cannot walk through.

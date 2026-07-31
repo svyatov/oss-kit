@@ -112,6 +112,25 @@ Two settings have to agree, and both are needed.
 
 On the forge, create the environment at `https://github.com/<owner>/<repo>/settings/environments/new`, named `pub.dev` to match, with required reviewers naming at least one person other than an automation account. Required reviewers work for public repositories on current GitHub plans; private or internal repositories need GitHub Enterprise Cloud. Pass the name through the reusable workflow's `environment` input, as above.
 
+Create it with the API rather than the form. Reviewers and the tag policy are both settable, so nothing here needs a browser.
+
+```sh
+ENV=pub.dev
+GHUID=$(gh api user --jq .id)
+gh api -X PUT "repos/{owner}/{repo}/environments/$ENV" \
+  -F wait_timer=0 \
+  -F prevent_self_review=false \
+  -f 'reviewers[][type]=User' -F "reviewers[][id]=$GHUID" \
+  -F 'deployment_branch_policy[protected_branches]=false' \
+  -F 'deployment_branch_policy[custom_branch_policies]=true'
+gh api -X POST "repos/{owner}/{repo}/environments/$ENV/deployment-branch-policies" \
+  -f 'name=v*' -f type=tag
+```
+
+Three details decide whether that runs. `gh api` substitutes `{owner}` and `{repo}` from the checkout it runs in. Use `-F` for the booleans and the reviewer id, because `-f` sends every value as a string and the endpoint rejects a quoted boolean. Do not name the shell variable `UID`: zsh marks it read only, so the assignment fails before `gh` runs.
+
+`reviewers[][id]` takes a numeric user or team id rather than a login. A team needs `type=Team` and that team's id.
+
 On pub.dev, enable "Require GitHub Actions environment" with the same name. Without that half, the environment gates the run but pub.dev will still mint a token for a run that skipped it, so the gate is a forge convention rather than part of the registry's identity check.
 
 pub.dev has no registry-side approval gate of its own. Report R-PUB-04 as unmet when the forge plan provides no native gate, rather than substituting an unverified approval action.
