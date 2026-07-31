@@ -46,6 +46,18 @@ Some areas carry a preamble under their own `##` heading that gates the area rat
 
 `STANDARD.md`'s areas, DOC, COM, CI, SEC, PUB, CHG, and SKL, are independent and share no state, so they can be checked in any order. An area gated on a precondition states that precondition in its own preamble, and Step 2 resolved it. More than one skill can own rules within one area, so read each rule's own `Fixed by:` line rather than assuming every rule in an area routes to the same place.
 
+Run `scripts/collect.mjs` from this skill's own directory first, against the repository under audit. It prints as JSON the facts the `Check:` lines reference that a machine can read without judgement: which license, community, and template files exist and at which of their accepted paths, every workflow's triggers and permissions, every job with its `timeout-minutes`, every `uses:` with whether it resolves to a 40-character SHA, and the README's and changelog's headings, fenced blocks, links, and link definitions. One run replaces the twenty to thirty shell commands an audit otherwise spends deriving the same things.
+
+```sh
+node <this skill's directory>/scripts/collect.mjs <repository root>
+```
+
+It parses the workflow rather than matching lines in it, and that is the point. A regex over job-shaped lines counts a top-level `env:` block's keys as jobs, which is how one audit reported every job as missing a timeout when none was. It also reads every `action.yml` the repository ships, because a composite action's steps take `uses:` and an unpinned action there is invisible to any scan of `.github/workflows` alone.
+
+The script decides no rule. Whether the sentence before a code block names that block's destination, or whether a differentiator carries evidence, is judgement and stays below. Prose findings are `oss-writing`'s, through the `scripts/prose.mjs` that skill ships, so nothing here duplicates its banned-word table.
+
+Where the script is absent or errors, gather the same facts by reading files and say in the report that you did. Nothing in the audit depends on it existing.
+
 For every applicable rule, turn its `Check:` line into an observation against the repository: open the file or configuration it names, and record what is actually there. A `Check:` line asking whether the README's first paragraph is a single sentence before any heading is answered by reading `README.md`. A `Check:` line asking whether every `uses:` line resolves to a 40-character SHA is answered by reading every workflow file. Mark the rule pass when the evidence matches what the `Check:` line asks for and fail when it does not. Hold both to the same standard of evidence, whether or not the rule reaches the report: a fail with no evidence is a guess rather than a finding, and a pass with no evidence is the score that discredits every other one.
 
 A rule met by a fallback the standard marks below the bar is a pass, and counts as one. Give that rule a report line naming which fallback carried it, which is the one place a pass earns a line of its own. `STANDARD.md`'s preamble tells the reader to revisit a below-the-bar fallback when the platform catches up, and an unqualified pass leaves them nothing to revisit: a maintainer publishing on a long-lived scoped token reads that pass and never learns they are on the degraded variant.
