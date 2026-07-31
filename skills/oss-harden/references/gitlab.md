@@ -2,7 +2,7 @@
 
 Concrete commands and settings for the decisions `SKILL.md` makes, on GitLab CI/CD and project settings. Every path below was checked against current GitLab documentation, and several against a live API response. Several of GitHub's controls have no GitLab equivalent, and the reverse is also true; do not translate a GitHub setting name or API path here by analogy.
 
-Eight `curl` invocations appear below. Six read: the protected branch, the approval rules, the project, the job-token scope, its allowlist, and the security settings. Two write: the job-token allowlist `POST` under R-SEC-06 and the security-settings `PUT` under R-SEC-10. `$TOKEN` in each is the environment variable holding the token `SKILL.md` Step 2 provisioned, which is `read_api` for a sweep that only reports and `api` only for a run that repairs.
+Ten `curl` invocations appear below. Seven read: the protected branch, the approval rules, the project, the job-token scope, its allowlist, the security settings, and the protected tags. Three write: the job-token allowlist `POST` under R-SEC-06, the security-settings `PUT` under R-SEC-10, and the protected-tags `POST` under R-SEC-13. `$TOKEN` in each is the environment variable holding the token `SKILL.md` Step 2 provisioned, which is `read_api` for a sweep that only reports and `api` only for a run that repairs.
 
 ## Contents
 
@@ -12,6 +12,7 @@ Eight `curl` invocations appear below. Six read: the protected branch, the appro
 - [Automated dependency updates (R-SEC-03)](#automated-dependency-updates-r-sec-03)
 - [Branch protection and required review (R-SEC-04, R-SEC-12)](#branch-protection-and-required-review-r-sec-04-r-sec-12)
 - [Signed tags (R-SEC-05)](#signed-tags-r-sec-05)
+- [Protected tags (R-SEC-13)](#protected-tags-r-sec-13)
 - [Untrusted input and variables (R-SEC-07)](#untrusted-input-and-variables-r-sec-07)
 - [Static analysis (R-SEC-09)](#static-analysis-r-sec-09)
 - [Detection controls (R-SEC-10, R-SEC-11)](#detection-controls-r-sec-10-r-sec-11)
@@ -142,6 +143,36 @@ git -c gpg.ssh.allowedSignersFile=allowed_signers tag -v {tag}
 ```
 
 With that option unset, git prints `error: gpg.ssh.allowedSignersFile needs to be configured and exist for ssh signature verification` and exits 1, the same status a bad signature gives. Read the message rather than the status: this one means the check did not run, so R-SEC-05 is unknown and not failed. X.509 uses `gpg.format=x509` and a configured certificate trust chain.
+
+## Protected tags (R-SEC-13)
+
+Protected tags are a separate object from protected branches, set in the same Settings > Repository panel and read through their own endpoint, so a project with a well-guarded default branch can still have every tag unprotected. GitLab documents them as allowing control over who has permission to create tags, and preventing accidental update or deletion once created.
+
+Read what is protected now:
+
+```bash
+curl --header "PRIVATE-TOKEN: $TOKEN" \
+  "https://gitlab.example.com/api/v4/projects/:id/protected_tags"
+```
+
+Each entry carries `name` and `create_access_levels`, whose entries hold `access_level` and `access_level_description`, plus `user_id`, `group_id`, or `deploy_key_id` where one was named. The documented `create_access_level` values are `0` for no one, `30` for Developer, and `40` for Maintainer. An empty array is the answer to read carefully: it means no tag is protected at all, which is the state a project reaches by never visiting the panel, not a state anyone chose.
+
+Protect the release pattern with the `api` scope token:
+
+```bash
+curl --request POST --header "PRIVATE-TOKEN: $TOKEN" \
+  --header "Content-Type: application/json" \
+  --url "https://gitlab.example.com/api/v4/projects/:id/protected_tags" \
+  --data '{"name": "v*", "create_access_level": 40}'
+```
+
+Match the pattern to what the project actually tags. GitLab's wildcards work on the tag name, so `v*` matches `v1.0.0` and `version-9.1`, and a bare `*` matches everything including `accidental-tag`. Where two entries both match a tag, their settings combine: if any matching entry allows a principal to create, that principal can create. A broad `*` entry therefore weakens a narrow `v*` one rather than being overridden by it, so read every entry rather than the most specific one.
+
+Naming groups or individual users under "Allowed to create" needs Premium or Ultimate. Selecting a role is available on Free, so a Free project reaches this rule with `create_access_level` set to Maintainer and does not need a fallback.
+
+The update and deletion half needs no setting, and is worth stating precisely rather than claiming as configuration. GitLab documents no force-update or overwrite toggle for a protected tag, the way a protected branch carries `allow_force_push`; blocking update and deletion is what protecting the tag does. So the whole of the evidence here is the one read above: an entry whose `name` covers the release pattern, with a `create_access_levels` set naming the principals the project means.
+
+This sits beside R-SEC-05 rather than replacing it. A signature says who cut the tag; protection keeps the tag on the commit they cut.
 
 ## Untrusted input and variables (R-SEC-07)
 
