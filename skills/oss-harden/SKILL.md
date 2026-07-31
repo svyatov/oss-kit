@@ -14,6 +14,8 @@ The concrete syntax for reading and fixing each control differs by forge, so it 
 
 The SEC rules belong here: R-SEC-01 pinned references, R-SEC-02 least-privilege permissions, R-SEC-03 dependency updates, R-SEC-04 branch protection, R-SEC-05 signed tags, R-SEC-06 GitLab pipeline inputs, R-SEC-07 untrusted input, R-SEC-08 committed lockfiles, R-SEC-09 static analysis, R-SEC-10 secret detection, R-SEC-11 vulnerability watching, R-SEC-12 required review, and R-SEC-13 immutable release tags.
 
+When `oss-audit-report.md` exists at the repository root, read the group addressed to this skill and work from that. Each failing rule there carries the audit's evidence and that rule's `Check:` text verbatim, so reading `STANDARD.md` as well adds nothing. Where the file is absent, work from the request as usual.
+
 This skill owns the security posture of the workflow and pipeline files two other skills also write into, and the boundary is the rule area, not a description of files. `oss-ci` decides what runs and when. `oss-publish` writes the publish job. Treat every mutable external reference and every overly broad or implicit token permission in those files as work for this skill. `oss-community` writes CODEOWNERS but does not enforce it; enforcing code owner review is a branch or merge request protection setting, which belongs here. Do not decide what a job runs, add a product feature, or choose a registry authentication flow while working from this skill; note that the project needs it and hand the work to `oss-ci` or `oss-publish`.
 
 ## Principles
@@ -109,6 +111,16 @@ R-SEC-07 applies to both forges through different mechanisms, so read the matchi
 ### Step 10: Lockfile and frozen installs
 
 R-SEC-08 requires the package manager's lockfile to be committed and CI to install from it in a mode that fails rather than re-resolves. Working from the manifests Step 2 read, confirm each lockfile is committed rather than gitignored, and verify the current frozen-install command in that package manager's official documentation before changing CI. Examples include `npm ci`, `uv sync --locked`, `cargo build --locked`, `mix deps.get --check-locked`, Bundler with local `deployment` and `frozen` configuration, and `pip install --require-hashes` only when every requirement, including transitive dependencies, carries a hash. Where the project pins versions in a manifest but commits no lockfile, say that a version pin still trusts the registry to serve the same bytes while a recorded hash does not. A repository with no registry dependencies has nothing to lock; report that rather than a gap.
+
+Committing the file is the easy half, and the failures land in CI afterward rather than on the machine that generated it. Before opening the change, ask three questions of each ecosystem and answer them from that ecosystem's reference file and its package manager's own documentation.
+
+Does the resolved set vary by runtime version? Where it does, generate the lock on the lowest runtime the matrix tests, or every job below that one fails at install rather than at test.
+
+Does the repository hold locks the updater will not maintain? An updater finds lockfiles by exact filename inside the directories its configuration lists, so a lock outside either is invisible to it and drifts from the manifest the updater does bump. Give the project one command that regenerates every lock, and name it where a contributor merging an update will read it.
+
+Does the lock have to cover a platform nobody develops on? A lock recording only the maintainer's platform leaves a Linux runner with no resolution to install.
+
+Every reference file answers all three, under a heading naming what breaks after the file is committed, and several answer no with the documentation that settles it. Read that heading rather than reasoning from another ecosystem, because the answers differ: a Go module and a Cargo workspace are immune to the platform question by design, while npm and Bundler fail on it routinely.
 
 ### Step 11: Static analysis on pull requests
 

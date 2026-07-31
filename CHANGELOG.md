@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+### Added
+
+- `oss-audit` writes `oss-audit-report.md` at the root of the repository it scores, untracked by default. It carries the repository facts the audit established, the prerequisites no API can perform, one verdict line per scored rule, and an execution order that groups fails by owning skill with one pull request each. A fail's line quotes that rule's `Check:` text verbatim, so a fix session works from the report alone. The eight rule-fixing skills read their group from it where it exists.
+- `oss-audit` Step 8 audits again once the fix groups are done and diffs the two reports. Recording passes is what makes that diff possible: a verdict never written down cannot be compared.
+- `skills/oss-audit/scripts/collect.mjs` prints the mechanically observable facts the `Check:` lines reference as JSON, replacing the twenty to thirty shell commands an audit spends deriving them. It parses workflow YAML with an indentation reader rather than matching lines, because a regex over job-shaped lines counts a top-level `env:` block's keys as jobs.
+- `skills/oss-writing/scripts/prose.mjs` reports the regex-decidable half of that skill: dashes, emoji, Title Case headings, and banned words, with a file and a line for each. The default tier reports what R-DOC-05 names and nothing else; `--house` and `--length` add the noisier rules.
+- `scripts/run-metrics.mjs` reports what a run cost from its session transcript: billed context split by phase, turns, mean and peak context, compaction boundaries, tool calls ranked by result bytes, and context per rule closed.
+- All nine `oss-publish` ecosystem references that need a GitHub deployment environment now give the `gh api` calls beside the settings URL. Reviewers and the tag policy are both API-settable, and one measured run spent 35 browser interactions clicking through the form the references pointed it at.
+- All eleven `oss-harden` ecosystem references say what breaks after a lockfile is committed, which is where a measured run spent more turns than on any other fix. Each answers the same three questions from that package manager's own documentation: whether the resolved set varies by runtime version, whether the repository holds locks the updater will not maintain, and whether the lock has to cover a platform nobody develops on. Several answer no, with the sentence that settles it, because the answers differ sharply. Cargo resolves platform-specific dependencies as if every platform were enabled and `go mod tidy` ignores build constraints, so both are immune to the platform question, while npm has been reported to record one platform's variant of an optional dependency and Composer resolves against whichever PHP wrote the lock.
+
+### Changed
+
+- **Breaking:** R-SEC-01 covers every `action.yml` and `action.yaml` the repository ships, where it covered `.github/workflows/` alone. A composite action's steps take `uses:` exactly as a workflow job's steps do, so an unpinned third-party action inside one was invisible to the rule. A repository whose composite action pins a tag fails from now on.
+- R-COM-01 accepts any license filename the forge's own detector resolves: a basename of `LICENSE`, `LICENCE`, `UNLICENSE`, or `COPYING`, bare or with a `.md`, `.markdown`, `.txt`, or `.html` extension. It accepted `LICENSE` and `LICENSE.md` alone, which failed a repository over `LICENSE.txt` and made it rename a working file.
+- R-COM-05 accepts a pull request template at any of the three paths GitHub reads, and the `PULL_REQUEST_TEMPLATE/` directory form in any of them. It named `.github/pull_request_template.md` alone. The issue-template path stays exact, because GitHub reads issue forms from `.github/ISSUE_TEMPLATE/` and nowhere else.
+- R-DOC-03 and R-DOC-05 delegate each file's location to the rule that owns that file, rather than naming literal root paths. Both contradicted R-COM-02, R-COM-03, and R-COM-04, which accept a contributing guide, code of conduct, and security policy in `.github/` or `docs/`. A repository keeping them there had those links unresolvable and that prose scored against nothing.
+
 ## [0.9.0] - 2026-07-31
 
 ### Added

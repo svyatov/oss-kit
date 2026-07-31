@@ -17,6 +17,16 @@ Which file the project has depends on the tool, and each tool has its own way to
 
 A project with no lockfile at all reaches the same place through a fully hashed requirements file and `pip install --require-hashes`, but only in full: pip's hash-checking mode requires hashes for every requirement including transitive ones, and every requirement pinned with `==`, a URL, or a path. A partially hashed file is an error rather than partial protection.
 
+### What breaks the first time you commit the lockfile
+
+**Whether one lock covers the whole matrix depends on the tool, and the split is sharp.** uv's lockfile "is created with a universal resolution and is portable across platforms", and uv states the cost of that: "all required packages must be compatible with the entire range of `requires-python` declared in the `pyproject.toml`". Poetry describes the same design, saying its universal locking guarantees the project is installable on all supported Python versions. So under either tool one committed lock covers every job, and a dependency that drops the project's own floor breaks resolution rather than one matrix leg.
+
+**Under pip-tools it does not, and the documentation says so.** pip-tools records that "the dependencies of a package can change depending on the Python environment in which it is installed", and instructs that users "must execute `pip-compile` on each Python environment separately to generate a `requirements.txt` valid for each said environment". It adds that a later update can make a previously portable file environment-dependent, so the advice holds even where one file appears to work today. A project compiling on the newest Python and installing on the oldest is the failure this predicts. Commit one file per target environment, name each after its environment, and give the project one command that regenerates the set.
+
+**Those per-environment files are what an updater is least likely to maintain.** Dependabot reaches the directories its configuration lists, so confirm the entry covers every compiled file rather than the one at the root. A file it does not bump drifts from the manifest it does.
+
+Verified 2026-07-31 against [uv resolution](https://docs.astral.sh/uv/concepts/resolution/), [Poetry basic usage](https://python-poetry.org/docs/basic-usage/), and [pip-tools](https://pip-tools.readthedocs.io/en/latest/).
+
 ## Static analysis (R-SEC-09)
 
 CodeQL supports Python, so CodeQL default setup covers this ecosystem on GitHub. GitLab's SAST table lists Python under its Semgrep-based analyzer with GitLab-managed rules.

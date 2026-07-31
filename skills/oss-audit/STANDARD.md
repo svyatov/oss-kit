@@ -42,7 +42,7 @@ Forges: both
 
 These three files answer whether a reader may use the project, what changed since they last looked, and how to send a fix. A link that resolves to nothing is worse than no link, because it costs a click to learn the file is missing.
 
-Check: `README.md` contains links whose targets are the license file, `CHANGELOG.md`, and `CONTRIBUTING.md`, and each target exists in the repository.
+Check: `README.md` contains links whose targets are the license file, the changelog, and the contributing guide, and each target exists in the repository at a path its own rule accepts: the license file as R-COM-01 reads it, the changelog as R-CHG-01 reads it, and the contributing guide as R-COM-02 reads it.
 
 Fixed by: oss-readme
 Forges: both
@@ -60,7 +60,7 @@ Forges: both
 
 Documentation is read by someone who is already stuck. Promotional adjectives and hedging add reading time without adding information, and they make the honest parts harder to trust. Write sentences in the active voice and name the actor, so a reader learns who has to do the thing. The check below names only evidence a tool can count, because an auditor that scores the same files differently on two runs makes every other score in the report unreliable.
 
-Check: `README.md`, files under `docs/`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, and the entry text under `CHANGELOG.md` release headings contain no em dash (U+2014), en dash (U+2013), or emoji character; every heading is sentence case except a heading preserved from an attributed third-party code of conduct; and none of the words robust, powerful, seamless, comprehensive, blazing, or effortless describes the project.
+Check: `README.md`, files under `docs/`, the contributing guide, security policy, and code of conduct at whichever path R-COM-02, R-COM-04, and R-COM-03 accept, and the entry text under the changelog's release headings, contain no em dash (U+2014), en dash (U+2013), or emoji character; every heading is sentence case except a heading preserved from an attributed third-party code of conduct; and none of the words robust, powerful, seamless, comprehensive, blazing, or effortless describes the project.
 
 Fixed by: oss-writing
 Forges: both
@@ -116,7 +116,7 @@ Forges: both
 
 Without a license file the default is exclusive copyright, so nobody may legally use the code. A manifest field saying MIT while the file says Apache-2.0 forces every downstream legal review to stop and ask.
 
-Check: `LICENSE` or `LICENSE.md` exists at the repository root, and every package manifest that declares a license names the license that file contains.
+Check: a license file exists at the repository root under a name the forge's own detector reads, which on GitHub means a basename of `LICENSE`, `LICENCE`, `UNLICENSE`, or `COPYING`, bare or carrying a `.md`, `.markdown`, `.txt`, or `.html` extension, and every package manifest that declares a license names the license that file contains. Do not fail a repository for the spelling of a filename the forge already resolves.
 
 Fixed by: oss-community
 Forges: both
@@ -152,7 +152,7 @@ Forges: both
 
 Every free-form bug report costs a round trip to ask for the version and the reproduction. A template collects both before the issue is filed.
 
-Check: the repository has `.github/ISSUE_TEMPLATE/` with at least one template plus `.github/pull_request_template.md`, or `.gitlab/issue_templates/` with at least one template plus `.gitlab/merge_request_templates/`.
+Check: on GitHub, `.github/ISSUE_TEMPLATE/` holds at least one template, and a pull request template sits at any path GitHub reads: `pull_request_template.md` at the repository root, in `docs/`, or in `.github/`, or a `PULL_REQUEST_TEMPLATE/` directory holding at least one template in any of those three. On GitLab, `.gitlab/issue_templates/` holds at least one template and `.gitlab/merge_request_templates/` exists. Issue forms are read from `.github/ISSUE_TEMPLATE/` alone, so that path is exact where the pull request template's is not.
 
 Fixed by: oss-community
 Forges: both
@@ -255,7 +255,7 @@ Forges: both
 
 Tag and branch refs are mutable, so a compromised upstream tag changes what runs in your workflow without a diff in your repo.
 
-Check: every external `uses:` line in `.github/workflows/`, including GitHub-owned actions and reusable workflows outside the current repository, resolves to a 40-character commit SHA.
+Check: every external `uses:` line in `.github/workflows/`, and in every `action.yml` or `action.yaml` the repository ships, including GitHub-owned actions and reusable workflows outside the current repository, resolves to a 40-character commit SHA. A composite action's steps take `uses:` exactly as a workflow job's steps do, so an action the repository defines is inside this rule and not only the workflows that call it.
 
 Fixed by: oss-harden
 Forges: github

@@ -146,6 +146,25 @@ A project whose only published image is a mutable rolling tag has no release to 
 
 Where there is a versioned push, pin its job to `environment: release` as above, and create that environment at `https://github.com/<owner>/<repo>/settings/environments/new` with required reviewers naming at least one person other than an automation account. Required reviewers work for public repositories on current GitHub plans; private or internal repositories need GitHub Enterprise Cloud. On GitLab Premium or Ultimate, use a protected environment with approval rules. No container registry offers a proof-of-presence gate of its own, so report R-PUB-04 as unmet when the forge plan provides no native gate.
 
+Create it with the API rather than the form. Reviewers and the tag policy are both settable, so nothing here needs a browser.
+
+```sh
+ENV=release
+GHUID=$(gh api user --jq .id)
+gh api -X PUT "repos/{owner}/{repo}/environments/$ENV" \
+  -F wait_timer=0 \
+  -F prevent_self_review=false \
+  -f 'reviewers[][type]=User' -F "reviewers[][id]=$GHUID" \
+  -F 'deployment_branch_policy[protected_branches]=false' \
+  -F 'deployment_branch_policy[custom_branch_policies]=true'
+gh api -X POST "repos/{owner}/{repo}/environments/$ENV/deployment-branch-policies" \
+  -f 'name=v*' -f type=tag
+```
+
+Three details decide whether that runs. `gh api` substitutes `{owner}` and `{repo}` from the checkout it runs in. Use `-F` for the booleans and the reviewer id, because `-f` sends every value as a string and the endpoint rejects a quoted boolean. Do not name the shell variable `UID`: zsh marks it read only, so the assignment fails before `gh` runs.
+
+`reviewers[][id]` takes a numeric user or team id rather than a login. A team needs `type=Team` and that team's id.
+
 ## Verify provenance (Step 5)
 
 This is the one section in this directory where the registry-served answer exists and works. Both attestations from Step 3 are readable from the image itself.

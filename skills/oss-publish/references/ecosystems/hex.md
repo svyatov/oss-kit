@@ -124,6 +124,25 @@ If an existing workflow reads an account-wide `HEX_API_KEY` from repository secr
 
 Pin the publish job to `environment: release` as above, and create that environment at `https://github.com/<owner>/<repo>/settings/environments/new` with required reviewers naming at least one person other than an automation account, and with `HEX_API_KEY` as an environment secret rather than a repository secret. Required reviewers work for public repositories on current GitHub plans; private or internal repositories need GitHub Enterprise Cloud. On GitLab Premium or Ultimate, use a protected environment with approval rules.
 
+Create it with the API rather than the form. Reviewers and the tag policy are both settable, so nothing here needs a browser.
+
+```sh
+ENV=release
+GHUID=$(gh api user --jq .id)
+gh api -X PUT "repos/{owner}/{repo}/environments/$ENV" \
+  -F wait_timer=0 \
+  -F prevent_self_review=false \
+  -f 'reviewers[][type]=User' -F "reviewers[][id]=$GHUID" \
+  -F 'deployment_branch_policy[protected_branches]=false' \
+  -F 'deployment_branch_policy[custom_branch_policies]=true'
+gh api -X POST "repos/{owner}/{repo}/environments/$ENV/deployment-branch-policies" \
+  -f 'name=v*' -f type=tag
+```
+
+Three details decide whether that runs. `gh api` substitutes `{owner}` and `{repo}` from the checkout it runs in. Use `-F` for the booleans and the reviewer id, because `-f` sends every value as a string and the endpoint rejects a quoted boolean. Do not name the shell variable `UID`: zsh marks it read only, so the assignment fails before `gh` runs.
+
+`reviewers[][id]` takes a numeric user or team id rather than a login. A team needs `type=Team` and that team's id.
+
 Hex has no registry-side approval gate. The one-hour replacement window below is not one: it runs after the version is already public and installable, so it shortens the damage rather than preventing it. Report R-PUB-04 as unmet when the forge plan provides no native gate, rather than presenting the window as a substitute.
 
 The gate carries more weight here than in most of this directory, because it is also what keeps the long-lived key out of unapproved runs. An environment secret behind required reviewers is the difference between a key any workflow run can read and one only an approved release job can.

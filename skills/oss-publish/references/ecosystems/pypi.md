@@ -138,6 +138,25 @@ If an existing workflow uses `secrets.PYPI_API_TOKEN`, remove it from the YAML n
 
 Pin the publish job to `environment: pypi` as above (the name is conventional, not required; keep whatever the trusted publisher's Environment name field says), and create that environment at `https://github.com/<owner>/<repo>/settings/environments/new` with required reviewers, or, on GitLab Premium or Ultimate, as a protected environment with approval rules. GitHub required reviewers work for public repositories on current plans; private or internal repositories need GitHub Enterprise Cloud. If the repository's visibility or plan provides no native approval gate, report R-PUB-04 as unmet. PyPI has no registry-side approval fallback.
 
+Create it with the API rather than the form. Reviewers and the tag policy are both settable, so nothing here needs a browser.
+
+```sh
+ENV=pypi
+GHUID=$(gh api user --jq .id)
+gh api -X PUT "repos/{owner}/{repo}/environments/$ENV" \
+  -F wait_timer=0 \
+  -F prevent_self_review=false \
+  -f 'reviewers[][type]=User' -F "reviewers[][id]=$GHUID" \
+  -F 'deployment_branch_policy[protected_branches]=false' \
+  -F 'deployment_branch_policy[custom_branch_policies]=true'
+gh api -X POST "repos/{owner}/{repo}/environments/$ENV/deployment-branch-policies" \
+  -f 'name=v*' -f type=tag
+```
+
+Three details decide whether that runs. `gh api` substitutes `{owner}` and `{repo}` from the checkout it runs in. Use `-F` for the booleans and the reviewer id, because `-f` sends every value as a string and the endpoint rejects a quoted boolean. Do not name the shell variable `UID`: zsh marks it read only, so the assignment fails before `gh` runs.
+
+`reviewers[][id]` takes a numeric user or team id rather than a login. A team needs `type=Team` and that team's id.
+
 ## Verify provenance (Step 5)
 
 `pypa/gh-action-pypi-publish` generates and uploads a PEP 740 attestation by default when publishing through trusted publishing. The GitLab flow must generate and upload adjacent attestations explicitly as described above. After the first release, first confirm that PyPI serves provenance:

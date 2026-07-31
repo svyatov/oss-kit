@@ -6,6 +6,8 @@ Read this when setting up prose linting for a repository, not while drafting.
 
 Two tools carry everything below. [Vale](https://vale.sh) ([errata-ai/vale](https://github.com/errata-ai/vale)) checks the prose, and [commitlint](https://commitlint.js.org) ([conventional-changelog/commitlint](https://github.com/conventional-changelog/commitlint)) checks the commit message. Install each from the command its own documentation publishes.
 
+This skill also ships `scripts/prose.mjs`, which needs nothing installed and covers the regex rows of the table below plus the sentence-case and sentence-length rows. Reach for it while drafting, or in a repository that will not take a new tool. Prefer Vale where the repository already runs it: Vale carries a proper-noun vocabulary, per-scope rules, and an editor integration that a single script does not.
+
 ## What a checker can decide
 
 | Rule | Checker |

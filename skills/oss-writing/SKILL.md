@@ -10,6 +10,8 @@ Write with clarity and force for a reader whose first language is not English. B
 
 This skill owns how the sentence reads, which is one rule: R-DOC-05 documentation prose. The skill that owns the artifact owns what goes in it, and where a caller states an exception, the caller wins.
 
+When `oss-audit-report.md` exists at the repository root, read the group addressed to this skill and work from that. Each failing rule there carries the audit's evidence and that rule's `Check:` text verbatim, so reading `STANDARD.md` as well adds nothing. Where the file is absent, work from the request as usual.
+
 ## Read the local contract first
 
 Before drafting, read the repository's instructions, contribution guide, templates, and the most recent accepted examples of the same artifact. They decide the commit convention, the required sections, the terminology, and the audience. Follow the convention the repository declares rather than inventing one, and keep required template sections and legally mandated wording.
@@ -74,7 +76,19 @@ Fix what the list catches, then read the revision against the list again, becaus
 
 If the draft still reads padded, generic, or promotional after that pass, the remaining fault is lexical. Check it against [references/tells.md](references/tells.md), which names each pattern and what to write instead.
 
-To enforce the mechanical half of this list in CI rather than in review, see [references/linting.md](references/linting.md). It maps each checkable rule onto a checker, and names the rules no checker can decide.
+Run `scripts/prose.mjs` in this skill's own directory over the files you touched, before returning them. It reports the part of the list above that a regex can decide, with a file and a line for each hit, and it needs nothing installed:
+
+```sh
+node <this skill's directory>/scripts/prose.mjs README.md docs/
+```
+
+By default it reports what R-DOC-05 names: em and en dashes, ` -- `, emoji, Title Case headings, and the six promotional words that rule lists. `--house` adds the rest of the house style, where every hit needs your judgement rather than a fix. `--length` adds sentences over 25 words and is noisy on purpose. It exits 1 when it reports anything.
+
+The script skips fenced blocks and inline code, so a quoted dash in sample output is not a finding, and a rule may name inside backticks the pattern it forbids. It cannot tell a heading's proper noun from an ordinary capitalized word, so a wrongly flagged heading means passing `--proper` with a file of terms rather than rewriting the heading.
+
+An install that brings in this skill alone still has the script, because it sits inside this directory. Anything calling it from another skill checks that it is there and reads the files itself when it is not.
+
+To enforce the same rules in CI rather than at the end of a draft, see [references/linting.md](references/linting.md). It maps each checkable rule onto a checker, and names the rules no checker can decide.
 
 ## Do not touch
 

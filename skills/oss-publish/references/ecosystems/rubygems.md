@@ -139,6 +139,25 @@ Pin the publish job to `environment: release` as above, and create that environm
 spec.metadata["rubygems_mfa_required"] = "true"
 ```
 
+Create it with the API rather than the form. Reviewers and the tag policy are both settable, so nothing here needs a browser.
+
+```sh
+ENV=release
+GHUID=$(gh api user --jq .id)
+gh api -X PUT "repos/{owner}/{repo}/environments/$ENV" \
+  -F wait_timer=0 \
+  -F prevent_self_review=false \
+  -f 'reviewers[][type]=User' -F "reviewers[][id]=$GHUID" \
+  -F 'deployment_branch_policy[protected_branches]=false' \
+  -F 'deployment_branch_policy[custom_branch_policies]=true'
+gh api -X POST "repos/{owner}/{repo}/environments/$ENV/deployment-branch-policies" \
+  -f 'name=v*' -f type=tag
+```
+
+Three details decide whether that runs. `gh api` substitutes `{owner}` and `{repo}` from the checkout it runs in. Use `-F` for the booleans and the reviewer id, because `-f` sends every value as a string and the endpoint rejects a quoted boolean. Do not name the shell variable `UID`: zsh marks it read only, so the assignment fails before `gh` runs.
+
+`reviewers[][id]` takes a numeric user or team id rather than a login. A team needs `type=Team` and that team's id.
+
 ## Verify provenance (Step 5)
 
 The explicit `sigstore-cli` step signs the exact `.gem` downloaded from the build job using the workflow's ambient OIDC identity. `gem push --attestation` uploads that bundle with the same file. Do not rely on implicit signing behavior that varies by RubyGems client version. After the first release, verify the registry record:

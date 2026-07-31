@@ -12,6 +12,16 @@ Composer writes `composer.lock` without being asked, and `composer install` "wil
 
 What Composer does not do is fail when that lockfile has drifted from `composer.json`, and its documentation describes no install option that makes it fail. The gate is a separate step: `composer validate --strict`, whose `--check-lock` option checks that the lockfile is up to date and whose `--no-check-lock` option is documented as the way to "Do not emit an error if `composer.lock` exists and is not up to date". A pipeline running `composer install` alone installs a stale resolution happily, so read for the validate step before reporting this ecosystem satisfied.
 
+### What breaks the first time you commit the lockfile
+
+**Resolution reads the PHP you run, and Composer publishes the fix.** A lock generated on the newest PHP can name a package release the oldest matrix job cannot install. The `config.platform` setting exists for this, letting a project "fake platform packages (PHP and extensions) so that you can emulate a production env or define your target platform". Set `config.platform.php` to the lowest PHP the matrix tests before generating the lock, and Composer then makes sure "no package requiring more than" that version "can be installed regardless of the actual PHP version you run locally".
+
+**That setting makes the check inexact, so add the one Composer names.** Its own documentation warns that with a faked platform "the dependencies are not checked correctly anymore", and directs a project to run `composer check-platform-reqs` during deployment. Run it in each matrix job, so a real extension or version gap surfaces on the job that has it rather than on the machine that wrote the lock. `platform-check` is the related autoloader control, defaulting to `php-only` and taking `true` to also check that extensions are present.
+
+**Platform in the operating-system sense is not a dimension.** Composer's platform packages are the PHP runtime and its extensions, and the lockfile records no per-architecture entry, so a lock written on macOS installs on a Linux runner unchanged.
+
+Verified 2026-07-31 against [the Composer config reference](https://getcomposer.org/doc/06-config.md).
+
 ## Static analysis (R-SEC-09)
 
 CodeQL does not support PHP; it appears nowhere in the supported languages list, so CodeQL default setup is not the answer here and adding an empty CodeQL configuration would be worse than none.

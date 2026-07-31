@@ -14,6 +14,16 @@ On GitLab the Renovate manager is `pub`.
 
 What keeps the file out of some repositories is convention rather than tooling. Dart's own documentation says application packages should check the lockfile into source control, and that regular packages, which is Dart's word for a library, should not, since they are expected to work with a range of dependency versions. So this ecosystem is inside R-SEC-08 rather than outside it, and only the library case is what the rule's commit-convention clause exempts. Establish which kind of package the repository holds before scoring the missing file, the same way NuGet's library and application split is read.
 
+### What breaks the first time you commit the lockfile
+
+**Generate the lock on the lowest SDK the matrix tests.** Pub resolves against the installed toolchain: it "tries to find the latest version of a package whose SDK constraint works with the version of the Dart SDK that you have installed". A lock written on the newest SDK can therefore name a dependency release whose own `environment` section excludes the oldest job, and that job fails at `pub get` rather than at test. Declaring the project's own SDK constraint does not prevent it, because the constraint bounds the project and the resolver reads the running SDK.
+
+**Give the matrix a lowest-versions job as well.** `dart pub downgrade` gets the lowest versions of every dependency, ignoring any existing lockfile and resolving the minimum that satisfies each constraint. That is the other end of the same range, and it is what catches a constraint whose declared floor the code no longer builds against. Run it in a job that does not commit its result.
+
+**Platform is not a dimension here.** Dart documents the lockfile as the concrete versions of every immediate and transitive dependency, with no per-platform entry, so a lock written on macOS installs on a Linux runner unchanged.
+
+Verified 2026-07-31 against [the pubspec file](https://dart.dev/tools/pub/pubspec), [dart pub downgrade](https://dart.dev/tools/pub/cmd/pub-downgrade), and [the pub glossary](https://dart.dev/tools/pub/glossary).
+
 ## Static analysis (R-SEC-09)
 
 No static analyzer documented for Dart detects vulnerability classes.
