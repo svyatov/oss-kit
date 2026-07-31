@@ -41,6 +41,14 @@ Redis was rejected. A deploy clears the in-process cache, which is acceptable at
 
 </example>
 
+## Branch names
+
+A branch is `<type>/<kebab-topic>`, where the type is the same one the commits on it use. `feat/forge-detection-controls`, `fix/site-omit-unreleased`, `docs/readme-structure`. A release branch is `chore/release-X.Y.Z`.
+
+- The type has to match the commits, and the change request title has to match both. A `ci:` title on a `chore/` branch is three names for one change and a reader has to open the diff to learn which is right.
+- One branch, one type. A branch whose commits span types is two changes, so split it rather than picking whichever type the first commit happened to use.
+- Follow the convention the repository declares where it declares one. This is the default where it does not, because it is the same vocabulary the commits already carry, so there is nothing extra to learn.
+
 ## Change request descriptions
 
 A change request is a GitHub pull request or a GitLab merge request.

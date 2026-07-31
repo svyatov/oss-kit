@@ -18,6 +18,8 @@ When `oss-audit-report.md` exists at the repository root, read the group address
 
 This skill owns the security posture of the workflow and pipeline files two other skills also write into, and the boundary is the rule area, not a description of files. `oss-ci` decides what runs and when. `oss-publish` writes the publish job. Treat every mutable external reference and every overly broad or implicit token permission in those files as work for this skill. `oss-community` writes CODEOWNERS but does not enforce it; enforcing code owner review is a branch or merge request protection setting, which belongs here. Do not decide what a job runs, add a product feature, or choose a registry authentication flow while working from this skill; note that the project needs it and hand the work to `oss-ci` or `oss-publish`.
 
+`oss-writing` is not one of those hand-offs. It owns no rule area and takes no work over, so nothing here is handed to it. Read it before writing a branch name, a commit message, a change request title or description, or an issue, which is all of what this skill leaves behind on the forge.
+
 ## Principles
 
 Verify every command, API path, and setting name against the current documentation for the platform in question before writing it down or telling the user to click it; a wrong path either does nothing or breaks the workflow. Where a control depends on the forge's plan tier, such as required merge request approvals on GitLab, say which tier it needs rather than assuming the free tier has it, and give the strongest control the project's actual tier supports.

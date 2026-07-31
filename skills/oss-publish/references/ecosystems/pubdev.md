@@ -45,7 +45,9 @@ On pub.dev, open the package's Admin tab and find the Automated publishing secti
 
 The tag pattern is the whole of the binding. A tag matching `v{{version}}` allows a GitHub Actions run triggered by `git tag v1.2.3` to publish version 1.2.3, and only if `pubspec.yaml` declares that same version. There is no workflow filename field here, so unlike npm, PyPI, RubyGems, crates.io, and NuGet, the identity pub.dev checks does not name which workflow ran.
 
-That makes the optional field the important one. Enable "Require GitHub Actions environment" and set the environment name, conventionally `pub.dev`. Without it, any workflow in the repository that can produce a matching tag and request an OIDC token can publish. With it, only a run in that environment can, which is what makes the approval gate in Step 4 load-bearing rather than decorative.
+That makes the optional field the important one. Enable "Require GitHub Actions environment" and set the environment name to `release`. Without it, any workflow in the repository that can produce a matching tag and request an OIDC token can publish. With it, only a run in that environment can, which is what makes the approval gate in Step 4 load-bearing rather than decorative.
+
+pub.dev requires no particular name here and its own examples use `pub.dev`. This skill writes `release` for every ecosystem, so the same word means the same thing in every repository it touches. What matters is that this field and the reusable workflow's `environment` input are the same string; where a repository already has a working entry naming something else, keep it rather than renaming both to match this file.
 
 In the workflow, the publish job needs `permissions: id-token: write`, which is what lets it request the OIDC token pub.dev validates.
 
@@ -76,7 +78,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v*'
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -95,12 +97,12 @@ jobs:
       id-token: write
     uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
     with:
-      environment: pub.dev
+      environment: release
 ```
 
 `dart pub get --enforce-lockfile` in the test job is R-SEC-08's frozen mode, so a workflow this skill writes with a bare `dart pub get` fails a rule the kit owns. It needs a committed `pubspec.lock`. Dart's own guidance tells a library package not to commit one, and R-SEC-08's second clause places that case outside the rule rather than failing it, so drop the flag for a library and keep it for an application. Do not add the flag and leave the lockfile uncommitted: the job then fails on every run with nothing to fix.
 
-The tag trigger has to match the tag pattern configured in Step 2, since the pattern is what pub.dev checks. There is no separate version comparison step here: `dart pub publish` refuses to publish a version that does not match `pubspec.yaml`, and the tag pattern is what ties the tag to that version, so the comparison happens on the registry's side rather than in a `run:` step.
+The trigger is `v*` rather than an exact three-part pattern, which is what every other reference in this directory uses and what pub.dev's `v{{version}}` already covers. A narrower workflow trigger adds no safety here, because pub.dev checks the tag against its own pattern and refuses anything that does not match; what it does instead is silently skip a prerelease tag such as `v1.2.3-beta`, which is a valid pub version. The tag trigger still has to be no narrower than the pattern configured in Step 2, since the pattern is what pub.dev checks. There is no separate version comparison step here: `dart pub publish` refuses to publish a version that does not match `pubspec.yaml`, and the tag pattern is what ties the tag to that version, so the comparison happens on the registry's side rather than in a `run:` step.
 
 Two things about that reusable workflow are worth telling the maintainer rather than leaving them to discover. It runs `dart pub get` and `dart pub publish` in the same job that holds the publish identity, so build and publish are not separated the way this skill separates them elsewhere; the bound on that is that Dart's package resolution runs no package-supplied code, so resolving the tree does not execute a dependency. And it installs a Flutter SDK as well as a Dart one, so that a Flutter package and a pure Dart package go through the same path; a pure Dart project is therefore pulling in a toolchain it does not use.
 
@@ -112,7 +114,7 @@ If an existing workflow reads a pub.dev token from repository secrets, remove it
 
 Two settings have to agree, and both are needed.
 
-On the forge, create the environment at `https://github.com/<owner>/<repo>/settings/environments/new`, named `pub.dev` to match, with required reviewers naming at least one person other than an automation account. Required reviewers work for public repositories on current GitHub plans; private or internal repositories need GitHub Enterprise Cloud. Pass the name through the reusable workflow's `environment` input, as above.
+On the forge, create the environment at `https://github.com/<owner>/<repo>/settings/environments/new`, named `release` to match Step 2, with required reviewers naming at least one person other than an automation account. Required reviewers work for public repositories on current GitHub plans; private or internal repositories need GitHub Enterprise Cloud. Pass the name through the reusable workflow's `environment` input, as above.
 
 Create it with the API rather than the form. Reviewers and the tag policy are both settable, so nothing here needs a browser.
 
@@ -167,7 +169,7 @@ Two rules apply here and they ask for different things. R-PUB-05 wants that inve
 What answers R-PUB-05 without a generator, on GitHub, is the forge's own export of the repository's dependency graph, which is already SPDX and needs nothing installed. The `gh api` step below writes it into `dist/`, so it ships as a release asset for R-PUB-05 and is listed in `SHA256SUMS` and attested alongside the binaries for R-PUB-06, in a job separate from the one that built them:
 
 ```yaml
-  release:
+  github-release:
     runs-on: ubuntu-latest
     needs: [publish]
     permissions:

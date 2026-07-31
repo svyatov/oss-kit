@@ -48,7 +48,7 @@ Verify every claim against the diff, the source, or command output. Prose that r
 
 ## Triggers (read the reference before writing)
 
-- Before writing a commit message or change request description, read [references/commits-and-change-requests.md](references/commits-and-change-requests.md).
+- Before naming a branch, or writing a commit message or change request description, read [references/commits-and-change-requests.md](references/commits-and-change-requests.md).
 - Before writing or replying to a review comment, read [references/code-review.md](references/code-review.md).
 - Before writing a README or documentation, read [references/docs-and-readme.md](references/docs-and-readme.md).
 - Before writing agent-facing text (AGENTS.md, skills, prompts), hold every sentence to 20 words and keep one meaning per word.

@@ -40,7 +40,9 @@ The one thing that behaves like a publishing credential here is push access to a
 
 ## Write the hardened release workflow (Step 3)
 
-There is no publish job, so the workflow's job is to make the tag safe to create rather than to upload anything. Run these checks on every change, not only at release time, because once the tag is pushed the version is fixed for good:
+There is no publish job, so the workflow's job is to make the tag safe to create rather than to upload anything. Run these checks on every change, not only at release time, because once the tag is pushed the version is fixed for good.
+
+This is the one departure from the workflow shape `SKILL.md` states, and it is the tag-published track's, not this ecosystem's. The jobs below stay in `.github/workflows/ci.yml` under `name: CI`, with no `Release` workflow and no `release` environment, because pushing the tag is the publish and there is nothing left for a separate workflow to do. `test` and `build` keep their names, and the asset job is still `github-release`.
 
 ```yaml
 name: CI
@@ -122,7 +124,7 @@ Go ships its own bill of materials, so no third-party tool enters the release wo
 Attach and attest in a separate job, which is the same job boundary the other ecosystems use, for the same reason: a job that can write release assets should not be the job that builds them.
 
 ```yaml
-  release:
+  github-release:
     runs-on: ubuntu-latest
     needs: [build]
     permissions:

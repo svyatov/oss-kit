@@ -134,6 +134,8 @@ The `actions/attest` step is a second, different thing: a GitHub-signed attestat
 
 `subject-digest` comes from the push step's `digest` output, which is why the push and the attestation cannot be split across jobs the way a package tarball can: the digest does not exist until the push completes. The whole job therefore holds `packages: write` and the attestation identity together, and the approval gate in Step 4 is what bounds that.
 
+This is the one file in this directory whose release workflow carries no `test` job, and that is deliberate rather than an omission. Every other reference here writes one because it publishes a package the repository builds, and the tests are the project's own. An image is stacked on top of that: it is a packaging of something the repository already publishes or already tests, so a `test` job here would rerun what `oss-ci` runs on every change with nothing new to catch. Where the image is the only thing the repository ships, put the tests in the CI workflow `oss-ci` owns and add `needs: [test]` here only if a smoke test against the built image is worth the extra minutes at release time. Say which of the two is the case rather than leaving a reader to notice the missing job.
+
 `oss-harden` pins every `uses:` line above to a commit SHA. Three of the four actions here are third-party, from Docker rather than from the forge; vet them against their own repositories before adding them, and pin them harder than the first-party ones. On GitLab CI/CD, the login and push from Step 2 replace the first three steps, and the attestation step has no equivalent; Step 5 covers what that leaves.
 
 ## Gate on manual approval (Step 4)

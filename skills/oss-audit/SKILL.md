@@ -156,6 +156,21 @@ Quoting `Check:` verbatim is what makes a fix session self-sufficient. Without i
 
 Say in this section that each group is a fresh session that reads this file and works from it. A group finishing with a merged pull request is a checkpoint, so the next group starts from a small context rather than carrying every earlier group's in it. Carrying them all is what takes a run to a 300k window that every later turn then pays for.
 
+Then close your reply with that same execution order, as the literal next invocations. The advice above is in a file nobody opens at the moment the decision gets made, so a run that reads it there goes on in the same session and pays for it in every later turn. Put it where the decision is:
+
+```text
+Fix in four sessions, one pull request each. Start each in a fresh session
+in this repository; each reads oss-audit-report.md and needs no handover.
+
+  1. oss-community   4 rules   branch docs/community-files
+  2. oss-readme      6 rules   branch docs/readme-structure
+  3. oss-harden      7 rules   branch ci/harden
+  4. oss-publish     4 rules   branch build/release-workflow
+     last: cuts the release, closes R-PUB-03 and R-SEC-05
+```
+
+One line per group, in the order this section computed, with the rule count and the branch name from `oss-writing`'s branch rule. Name the skill as the host invokes it: a slash command where this kit is installed as a plugin, the bare skill name otherwise. Where a group closes rules that can only close after a release, say so on its line rather than leaving the maintainer to read it as unfinished work.
+
 ## Step 8: Audit again, and diff
 
 When the fix groups are done, run this skill again and diff the new report against the one the first run wrote. Keep both. The diff is the only evidence that a rule the first audit passed is still passing, and that a rule it failed is actually closed rather than reported closed.

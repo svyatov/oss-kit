@@ -190,7 +190,7 @@ Two rules apply here and they ask for different things. R-PUB-05 wants an invent
 This reference names no SBOM generator for Java. The ones in common use are plugins rather than part of Maven or Gradle, and a plugin that reads the dependency tree inside a job holding a signing key is one the maintainer vets before it goes there. What answers R-PUB-05 without one, on GitHub, is the forge's own export of the repository's dependency graph, which is already SPDX and needs nothing installed and, in particular, nothing inside the credentialed job. The `gh api` step below writes it into `dist/`, so it ships as a release asset for R-PUB-05 and is listed in `SHA256SUMS` and attested alongside the jars for R-PUB-06:
 
 ```yaml
-  release:
+  github-release:
     runs-on: ubuntu-latest
     needs: [publish]
     permissions:

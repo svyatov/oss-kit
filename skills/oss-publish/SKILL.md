@@ -24,6 +24,28 @@ When a registry's documentation and its client disagree, that is a defect in the
 
 Present policy choices instead of guessing at them, even when the repository already contains a release workflow or a stored token. Which cooldown to use, whether to keep an existing publish step, and how much of an existing workflow to carry over are decisions the user makes.
 
+## The shape of a release workflow
+
+One vocabulary, across all eleven ecosystems and both forges. A maintainer who reads two of these repositories should not have to work out that `pack` and `build` are the same job, and a form field that is always the same string is one nobody has to discover. This is a convention, not a rule: no `STANDARD.md` rule scores a job name, and none should, because failing a repository over a word is a cost with no security or correctness argument behind it. Follow it in what you write; do not rename a working job in a repository that already has one unless the user asks.
+
+| | value |
+| --- | --- |
+| File | `.github/workflows/release.yml`, or the release section of `.gitlab-ci.yml` |
+| Workflow name | `Release` |
+| Trigger | push of tags matching `v*` |
+| Environment | `release` |
+
+Job names come from a fixed set, and a job appears only where the ecosystem needs one:
+
+| Job | When it appears |
+| --- | --- |
+| `test` | always |
+| `build` | where the artifact can be built separately from the push |
+| `publish` | always |
+| `github-release` | where the release attaches assets to a forge release |
+
+`release` names the file, the trigger, and the environment, so it does not also name a job. Where an ecosystem departs from any of this, its reference file says so in one line and gives the reason, so a difference reads as a decision rather than as drift. Two departures are structural and both are recorded where they apply: the tag-published track keeps its release job inside the `CI` workflow, because pushing the tag is the publish; and Hex has no `build` job, because `mix hex.publish` builds the tarball it uploads and accepts no prebuilt path.
+
 ## Process
 
 ### Step 1: Gather repo facts
@@ -75,6 +97,8 @@ When `oss-audit-report.md` exists at the repository root, read the group address
 This skill owns publishing: trusted publishing, build provenance, the human approval gate on the release workflow, and what a release attaches alongside a built asset. It writes into the same workflow and pipeline files as two other skills, and the boundary between them is the rule area, not a description of files. `oss-ci` decides what runs on push and on every change request, including the test job this skill's publish job depends on; it does not decide how the publish job authenticates or who approves it. `oss-harden` owns the security posture of the same files: pinning third-party actions to a commit SHA, minimal workflow permissions, dependency updates, branch protection, and signed tags; it does not decide when a job runs or how a package is published. Do not pin an action to a SHA, add an unrelated `permissions:` scope, or configure branch protection from this skill; note that the project needs it and hand the work to `oss-harden`.
 
 That hand-off assumes `oss-harden` still has a turn coming. Check whether it does. Where it has already run on this repository, handing off means the pins never happen, and this skill has just added unpinned `uses:` lines to the one workflow that authenticates to a registry. In that case pin what this skill added, to the same standard `oss-harden` uses, and say in the report that you did and why. The boundary exists so two skills do not fight over one line, not so a line ends up unpinned.
+
+`oss-writing` is not one of those hand-offs. It owns no rule area and takes no work over, so nothing here is handed to it. Read it before writing a branch name, a commit message, a change request title or description, or an issue, which is all of what this skill leaves behind on the forge.
 
 ## Routing table
 

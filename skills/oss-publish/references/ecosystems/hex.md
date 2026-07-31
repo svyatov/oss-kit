@@ -58,6 +58,8 @@ This sits below R-PUB-02's bar, because a scoped, long-lived key is still a cred
 
 `mix hex.publish` builds the tarball as part of publishing. There is no equivalent of `npm pack` handing a finished artifact to a credentialed job that does nothing else, so build, package, and publish collapse into the one job that holds the key. That collapse is the security problem this section has to answer, and it cannot be removed, only bounded.
 
+That is also why this is the one file in this directory with no `build` job. `SKILL.md`'s workflow shape gives every other ecosystem one, and here it would have nothing to hand on: `mix hex.publish` accepts no prebuilt tarball path. `mix hex.build` in the test job is the closest thing, and it exists to fail the release before the credentialed job runs rather than to produce an artifact for it.
+
 The exposure is specific to Elixir rather than generic. `mix` runs dependency code at compile time through macros, so a job that holds a long-lived Hex key while compiling the dependency tree hands that key's reach to every transitive dependency in it. Hex has no OIDC to shorten the key's life, so a dependency that reads the environment during compilation reads a credential that is valid until somebody revokes it. Treat that as a known residual and say so to the maintainer, rather than presenting the workflow below as a solved problem.
 
 Four controls bound it, and all four are already in this skill's vocabulary:
@@ -180,7 +182,7 @@ Two rules apply here and they ask for different things. R-PUB-05 wants that inve
 What answers R-PUB-05 without a generator, on GitHub, is the forge's own export of the repository's dependency graph, which is already SPDX and needs nothing installed and, in particular, nothing added to the credentialed job. The `gh api` step below writes it into `dist/`, so it ships as a release asset for R-PUB-05 and is listed in `SHA256SUMS` and attested alongside the assets for R-PUB-06, in a job after the publish so everything stays behind the approval gate:
 
 ```yaml
-  release:
+  github-release:
     runs-on: ubuntu-latest
     needs: [publish]
     permissions:
