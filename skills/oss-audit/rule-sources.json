@@ -17,7 +17,7 @@
   },
   "R-DOC-03": {
     "sources": [],
-    "note": "That the three files exist is required elsewhere here and counted by a forge's community profile; that the README link them is this step. Observed: a repository can hold all three and still leave a reader guessing, because a forge renders the README and buries the file list, and on a narrow screen the list is a tap away rather than in view. Retire this rule if forges begin surfacing the license, changelog, and contributing guide as reliably as they surface the README."
+    "note": "That the three files exist is required elsewhere here and counted by a forge's community profile; that the README link them is this step. Observed: a repository can hold all three and still leave a reader guessing, because a forge renders the README and buries the file list, and on a narrow screen the list is a tap away rather than in view. Retire this rule if forges begin surfacing the license, changelog, and contributing guide as reliably as they surface the README. The Check named the literal filenames CHANGELOG.md and CONTRIBUTING.md until 2026-07-31, which contradicted R-COM-02 accepting a contributing guide in .github/ or docs/ and R-CHG-01 naming no changelog filename at all. It now delegates each target's path to the rule that owns it, so one rule's location list cannot drift from another's."
   },
   "R-DOC-04": {
     "sources": [
@@ -32,7 +32,7 @@
       "https://evilmartians.com/chronicles/how-to-make-your-open-source-popular"
     ],
     "verified": "2026-07-28",
-    "note": "Same provenance and same caveat as R-DOC-01. Upstream carries the plain-language half twice, as 'No jargon' in the skill and as 'Don't use tech speak, write like you'd speak with your colleagues in real life' in the essay. The active-voice requirement and the ban on marketing language are this standard's own. skills/oss-writing separately cites https://www.asd-ste100.org/, a controlled-language specification that would be the stronger source. Public secondary material on it was read on 2026-07-28, which confirmed the sentence, paragraph, and noun-stack figures that skill carries; the specification itself is paywalled and has never been read for this rule. ASD-STE100 also governs technical maintenance documentation rather than a README, so it would not carry this rule alone."
+    "note": "Same provenance and same caveat as R-DOC-01. Upstream carries the plain-language half twice, as 'No jargon' in the skill and as 'Don't use tech speak, write like you'd speak with your colleagues in real life' in the essay. The active-voice requirement and the ban on marketing language are this standard's own. skills/oss-writing separately cites https://www.asd-ste100.org/, a controlled-language specification that would be the stronger source. Public secondary material on it was read on 2026-07-28, which confirmed the sentence, paragraph, and noun-stack figures that skill carries; the specification itself is paywalled and has never been read for this rule. ASD-STE100 also governs technical maintenance documentation rather than a README, so it would not carry this rule alone. Separately, the scored file list named CONTRIBUTING.md, SECURITY.md, and CODE_OF_CONDUCT.md at the root until 2026-07-31, so a repository keeping them in .github/, which R-COM-02, R-COM-03, and R-COM-04 all accept, had that prose scored against nothing. The list now delegates each path to the rule that owns the file."
   },
   "R-DOC-06": {
     "sources": [],
@@ -64,10 +64,11 @@
   },
   "R-COM-01": {
     "sources": [
-      "https://baseline.openssf.org/versions/2026-02-19"
+      "https://baseline.openssf.org/versions/2026-02-19",
+      "https://github.com/licensee/licensee/blob/main/lib/licensee/project_files/license_file.rb"
     ],
-    "verified": "2026-07-28",
-    "note": "OSPS-LE-03.01, Maturity 1-3: 'While active, the license for the source code MUST be maintained in the corresponding repository's LICENSE file, COPYING file, or LICENSE/ directory.' Note the divergence: the Baseline treats COPYING and LICENSE/ as equals and does not say root, so it sources a three-location check rather than this rule's root-only one."
+    "verified": "2026-07-31",
+    "note": "OSPS-LE-03.01, Maturity 1-3: 'While active, the license for the source code MUST be maintained in the corresponding repository's LICENSE file, COPYING file, or LICENSE/ directory.' The Check named only LICENSE and LICENSE.md until 2026-07-31, which failed a repository shipping LICENSE.txt and made it rename a working file. licensee, the detector GitHub itself runs, matches basenames on /(un)?licen[sc]e/i and /copying/i and accepts the extensions md, markdown, txt, and html, so the forge resolved a file this standard rejected. The Check now names what licensee reads. Two divergences from the Baseline remain deliberate: this rule still says root, and it does not accept a LICENSE/ directory, because a manifest comparison needs one file to read."
   },
   "R-COM-02": {
     "sources": [
@@ -97,8 +98,8 @@
       "https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository",
       "https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/creating-a-pull-request-template-for-your-repository"
     ],
-    "verified": "2026-07-28",
-    "note": "Confirms .github/ISSUE_TEMPLATE/ and issue forms as YAML. The PR template page resolves the other half: pull_request_template.md is valid in the repository root, docs/, or .github/, and multiple templates live in an uppercase PULL_REQUEST_TEMPLATE/ subdirectory selected by the template query parameter rather than applied automatically. A check that globs only for pull_request_template.md reports a false negative on that documented multi-template layout. The GitLab paths have no source named."
+    "verified": "2026-07-31",
+    "note": "Confirms .github/ISSUE_TEMPLATE/ and issue forms as YAML, and that this path is exact: the issue-template page names no root or docs/ alternative. The PR template page resolves the other half: pull_request_template.md is valid in the repository root, docs/, or .github/, and multiple templates live in an uppercase PULL_REQUEST_TEMPLATE/ subdirectory selected by the template query parameter rather than applied automatically. This note recorded that false negative on 2026-07-28 and the Check kept it until 2026-07-31, which is the wrong use of this field: a divergence written down here and left in place is a defect with a paper trail rather than a fixed one. The Check now accepts all four documented layouts. The GitLab paths have no source named."
   },
   "R-COM-06": {
     "sources": [
@@ -173,10 +174,11 @@
   "R-SEC-01": {
     "sources": [
       "https://docs.github.com/en/actions/reference/secure-use-reference",
-      "https://github.com/ossf/scorecard/blob/main/docs/checks.md"
+      "https://github.com/ossf/scorecard/blob/main/docs/checks.md",
+      "https://docs.github.com/en/actions/reference/workflows-and-actions/metadata-syntax"
     ],
-    "verified": "2026-07-28",
-    "note": "GitHub: 'Pinning an action to a full-length commit SHA is currently the only way to use an action as an immutable release.' Scorecard Pinned-Dependencies agrees."
+    "verified": "2026-07-31",
+    "note": "GitHub: 'Pinning an action to a full-length commit SHA is currently the only way to use an action as an immutable release.' Scorecard Pinned-Dependencies agrees. The Check scoped itself to .github/workflows/ until 2026-07-31. The metadata syntax reference documents runs.steps[*].uses for a composite action, so an action.yml the repository ships can call an unpinned third-party action that no scan of the workflows directory would ever read. The Check now covers both."
   },
   "R-SEC-02": {
     "sources": [
