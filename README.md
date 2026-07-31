@@ -6,12 +6,12 @@ Curated agent skills for open source maintainers.
 [![CI](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13884/badge)](https://www.bestpractices.dev/projects/13884)
 
-- **56 rules.** Each states the check it is scored by and the one skill that
+- **59 rules.** Each states the check it is scored by and the one skill that
   fixes it.
 - **Seven areas.** Documentation, community files, CI, security posture,
   release publishing, changelog discipline, and the agent skills a repository
   ships.
-- **Both forges.** 52 of the 56 rules score GitHub and GitLab alike. Three are
+- **Both forges.** 55 of the 59 rules score GitHub and GitLab alike. Three are
   GitHub-only, one is GitLab-only, and every rule says which.
 - **Four registries.** Release publishing for npm, RubyGems, PyPI, and
   crates.io.
@@ -32,8 +32,9 @@ It answers with the gaps and nothing else, each keyed to the rule it missed and
 routed to the skill that fixes it. Rules that already pass do not appear:
 
 ```text
-Audited 49 applicable rules: 46 pass, 2 fail, 1 unknown, 7 not applicable
-(6 PUB, the project publishes no package; 1 GitLab-only).
+Audited 50 applicable rules: 47 pass, 2 fail, 1 unknown, 9 not applicable
+(7 PUB, the project publishes no package; 1 GitLab-only; 1 where the
+ecosystem does not encode the major version in package identity).
 
 1. R-COM-04 fail, no SECURITY.md, run oss-community
 2. R-SEC-01 fail, two uses: lines in .github/workflows/validate.yml pin a tag rather than a SHA, run oss-harden

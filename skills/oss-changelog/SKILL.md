@@ -16,7 +16,7 @@ A changelog section is one version's entry inside `CHANGELOG.md`. A forge releas
 
 ## Scope
 
-The CHG rules belong here: R-CHG-01 changelog format, R-CHG-02 semantic bumps, R-CHG-03 one version, R-CHG-04 release body, R-CHG-05 deprecation window, and R-CHG-06 vulnerability entries.
+The CHG rules belong here: R-CHG-01 changelog format, R-CHG-02 semantic bumps, R-CHG-03 one version, R-CHG-04 release body, R-CHG-05 deprecation window, R-CHG-06 vulnerability entries, and R-CHG-07 major version in package identity.
 
 This skill owns the changelog and versioning rules above. It does not own the sentences: once an entry's content is decided, phrasing it in plain, active prose free of marketing language is `oss-writing`'s rule, R-DOC-05. It does not own publishing: building the tagged artifact, authenticating to a registry, and gating the release behind approval are `oss-publish`'s R-PUB rules. Do not draft commit or pull request prose, or write a publish workflow, from this skill; note that the project needs it and hand the work to the owning skill.
 

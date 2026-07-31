@@ -56,7 +56,7 @@ Read each R-PUB rule's `Check:` line in `STANDARD.md` against the workflow, the 
 
 ## Scope
 
-The PUB rules belong here: R-PUB-01 tag-triggered CI, R-PUB-02 trusted publishing, R-PUB-03 build provenance, R-PUB-04 human approval, R-PUB-05 artifact inventory, and R-PUB-06 signed assets.
+The PUB rules belong here: R-PUB-01 tag-triggered CI, R-PUB-02 trusted publishing, R-PUB-03 build provenance, R-PUB-04 human approval, R-PUB-05 artifact inventory, R-PUB-06 signed assets, and R-PUB-07 tag-published registry updates.
 
 This skill owns publishing: trusted publishing, build provenance, the human approval gate on the release workflow, and what a release attaches alongside a built asset. It writes into the same workflow and pipeline files as two other skills, and the boundary between them is the rule area, not a description of files. `oss-ci` decides what runs on push and on every change request, including the test job this skill's publish job depends on; it does not decide how the publish job authenticates or who approves it. `oss-harden` owns the security posture of the same files: pinning third-party actions to a commit SHA, minimal workflow permissions, dependency updates, branch protection, and signed tags; it does not decide when a job runs or how a package is published. Do not pin an action to a SHA, add an unrelated `permissions:` scope, or configure branch protection from this skill; note that the project needs it and hand the work to `oss-harden`.
 

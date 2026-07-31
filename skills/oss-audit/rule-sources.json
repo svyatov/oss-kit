@@ -20,7 +20,9 @@
     "note": "That the three files exist is required elsewhere here and counted by a forge's community profile; that the README link them is this step. Observed: a repository can hold all three and still leave a reader guessing, because a forge renders the README and buries the file list, and on a narrow screen the list is a tap away rather than in view. Retire this rule if forges begin surfacing the license, changelog, and contributing guide as reliably as they surface the README."
   },
   "R-DOC-04": {
-    "sources": ["https://github.com/evilmartians/agent-skills/blob/main/skills/good-readme/SKILL.md"],
+    "sources": [
+      "https://github.com/evilmartians/agent-skills/blob/main/skills/good-readme/SKILL.md"
+    ],
     "verified": "2026-07-28",
     "note": "Same provenance and same caveat as R-DOC-01. Upstream states it as 'Never invent facts' and 'A README with fabricated numbers is worse than one without numbers', and tells the author to ask for a benchmark rather than estimate one. That covers the claim half of this rule. Upstream is arguing against fabrication where this rule checks agreement with the repository, so the version and command halves, which are about drift rather than invention, are this standard's own."
   },
@@ -61,7 +63,9 @@
     "note": "Same provenance and same caveat as R-DOC-01: a skill and an essay rather than a specification, weaker than the primary sources elsewhere in this file. This rule restores the third clause of upstream's opening block, what makes it different from alternatives, which R-DOC-01 dropped when it capped the opener at one sentence. It differs from upstream in two ways. Upstream puts the differentiator in the first paragraph; this rule accepts it anywhere above the first heading, which is where the facts list already lives. Upstream states it as a writing instruction; the evidence half, that the claim name a boundary, a number, or an alternative by name, is this standard's own, because a differentiator with no checkable noun in it is an adjective."
   },
   "R-COM-01": {
-    "sources": ["https://baseline.openssf.org/versions/2026-02-19"],
+    "sources": [
+      "https://baseline.openssf.org/versions/2026-02-19"
+    ],
     "verified": "2026-07-28",
     "note": "OSPS-LE-03.01, Maturity 1-3: 'While active, the license for the source code MUST be maintained in the corresponding repository's LICENSE file, COPYING file, or LICENSE/ directory.' Note the divergence: the Baseline treats COPYING and LICENSE/ as equals and does not say root, so it sources a three-location check rather than this rule's root-only one."
   },
@@ -74,7 +78,9 @@
     "note": "OSPS-GV-03.01, Maturity 1-3: 'While active, the project documentation MUST include an explanation of the contribution process.' The Baseline says project documentation rather than a CONTRIBUTING file; naming the file is this standard's tightening. The two later clauses come from the OpenSSF Best Practices badge Passing criteria. 'test_policy', MUST: 'The project MUST have a general policy (formal or not) that as major new functionality is added to the software produced by the project, tests of that functionality should be added to an automated test suite.' Its sibling 'tests_are_added', MUST, asks for evidence the policy was followed in the most recent major changes. This rule checks the stated policy only, because the contributing guide is the artifact it reads; no rule in this standard checks the evidence half, and adding one would mean scoring a project's merge history. 'contribution_requirements', SHOULD at Passing and MUST at Silver, with met_url_required true: 'The information on how to contribute SHOULD include the requirements for acceptable contributions (e.g., a reference to any required coding standard).' That met_url_required flag is why this rule checks for a named document that resolves rather than for prose about requirements: a URL is observable and a paragraph asserting requirements exist is not. The badge accepts an informal policy stated by word of mouth, which nothing outside the project can read, so requiring the sentence in the file is this standard's tightening."
   },
   "R-COM-03": {
-    "sources": ["https://www.contributor-covenant.org/version/3/0/code_of_conduct/"],
+    "sources": [
+      "https://www.contributor-covenant.org/version/3/0/code_of_conduct/"
+    ],
     "verified": "2026-07-28",
     "note": "Current version is 3.0. Ships the placeholder '[NOTE: describe your means of reporting here.]', which is the placeholder this rule fails on."
   },
@@ -122,12 +128,16 @@
     "note": "The first page documents contact_links in .github/ISSUE_TEMPLATE/config.yml as the mechanism that adds a destination to the chooser, and blank_issues_enabled as the separate switch this rule deliberately leaves alone. The second is GitHub's own case for keeping open-ended conversation out of the tracker, which is why the rule fires only where a second channel already exists: whether to run one is the project's decision, and this rule scores only whether the chooser admits it. The check reads the linked URL because a contact_links entry pointing at a forum nobody opened is the failure the rule exists to catch, and nothing in the file distinguishes it from a working one."
   },
   "R-CI-01": {
-    "sources": ["https://github.com/ossf/scorecard/blob/main/docs/checks.md"],
+    "sources": [
+      "https://github.com/ossf/scorecard/blob/main/docs/checks.md"
+    ],
     "verified": "2026-07-28",
     "note": "Scorecard CI-Tests: tests must run before pull requests are merged."
   },
   "R-CI-02": {
-    "sources": ["https://baseline.openssf.org/versions/2026-02-19"],
+    "sources": [
+      "https://baseline.openssf.org/versions/2026-02-19"
+    ],
     "verified": "2026-07-28",
     "note": "OSPS-QA-06.01, Maturity 2-3: 'Prior to a commit being accepted, the project's CI/CD pipelines MUST run at least one automated test suite to ensure the changes meet expectations.' OSPS-QA-03.01 adds that automated status checks MUST pass or be manually bypassed. Neither mentions a version matrix, so this rule's matrix half has no upstream and is this standard's own position."
   },
@@ -185,7 +195,9 @@
     "note": "Confirms the github-actions ecosystem covering .github/workflows, and that bun is a supported ecosystem. Scorecard Dependency-Update-Tool accepts Dependabot or Renovate."
   },
   "R-SEC-04": {
-    "sources": ["https://github.com/ossf/scorecard/blob/main/docs/checks.md"],
+    "sources": [
+      "https://github.com/ossf/scorecard/blob/main/docs/checks.md"
+    ],
     "verified": "2026-07-28",
     "note": "Scorecard Branch-Protection covers force-push prevention and status checks, and names repository rules alongside classic protection. Its review requirement is R-SEC-12 rather than this rule. The GitHub and GitLab API endpoints the check reads have no source named."
   },
@@ -208,17 +220,31 @@
     "note": "ci_job_token confirms the inbound allowlist is a target-project control defaulting to the project itself, which is the distinction the rule's statement makes. include:integrity is real and documented in the YAML reference, not in includes/: added in GitLab 17.9, 'Use integrity with include:remote to specify a SHA256 hash of the included remote file', value a base64 SHA256 with a sha256- prefix. Scope limit that matters: it covers include:remote only. include:component, the CI/CD Catalog mechanism most GitLab projects actually use for third-party CI content, has no integrity keyword and is pinned by @<version> instead. pipeline_security covers the image digest half."
   },
   "R-SEC-07": {
-    "sources": ["https://docs.github.com/en/actions/reference/secure-use-reference"],
+    "sources": [
+      "https://docs.github.com/en/actions/reference/secure-use-reference"
+    ],
     "verified": "2026-07-28",
     "note": "Section 'Good practices for mitigating script injection attacks' gives the intermediate env: variable this rule requires, and the page also warns on pull_request_target with untrusted code. The GitLab half remains unsourced, and this is a checked negative rather than an unchecked gap: https://docs.gitlab.com/ci/pipeline_security/ covers secrets, variable masking, and image pinning, and says nothing about untrusted input reaching a job script."
   },
   "R-SEC-08": {
-    "sources": ["https://github.com/ossf/scorecard/blob/main/docs/checks.md"],
-    "verified": "2026-07-28",
-    "note": "Scorecard Pinned-Dependencies covers pinning to a hash rather than a range. No source named yet for the frozen-install half (npm ci, bundle install --deployment, uv sync --frozen)."
+    "sources": [
+      "https://github.com/ossf/scorecard/blob/main/docs/checks.md",
+      "https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html",
+      "https://maven.apache.org/enforcer/enforcer-rules/index.html",
+      "https://maven.apache.org/resolver/expected-checksums.html",
+      "https://docs.gradle.org/current/userguide/dependency_locking.html",
+      "https://docs.gradle.org/current/userguide/dependency_verification.html",
+      "https://learn.microsoft.com/en-us/nuget/consume-packages/package-references-in-project-files",
+      "https://dart.dev/tools/pub/cmd/pub-get",
+      "https://dart.dev/tools/pub/package-layout"
+    ],
+    "verified": "2026-07-31",
+    "note": "Scorecard Pinned-Dependencies covers pinning to a hash rather than a range. No source named yet for the frozen-install half (npm ci, bundle install --deployment, uv sync --frozen). The two narrowing clauses were added on 2026-07-31 after reading the build tools themselves, and the reading corrected the assumption they were written on. The exemption keys on the build tool rather than the registry: Apache Maven publishes no lockfile format at all, opt-in or otherwise, and offers dependencyManagement plus enforcer rules such as banDynamicVersions in its place, while Gradle writes gradle.lockfile whose own generated header says it is expected to be part of source control and already fails a build on a version mismatch without an extra flag. Keying the exemption to Maven Central would therefore have handed it to every Gradle project publishing to the same registry. Even for Maven the exemption covers the version-lock half only, because Maven Resolver's Trusted Checksums record a committed coreutils-format hash file verified at resolution with failIfMissing, which is the hashed-file half this rule already accepts. The commit-convention clause is the second correction: NuGet and Dart both document that a library package should not commit its lockfile while an application should, so without the clause two ecosystems failed this rule for following their own upstream guidance. Retire either clause the day its tooling ships what it currently lacks."
   },
   "R-SEC-09": {
-    "sources": ["https://github.com/ossf/scorecard/blob/main/docs/checks.md"],
+    "sources": [
+      "https://github.com/ossf/scorecard/blob/main/docs/checks.md"
+    ],
     "verified": "2026-07-28",
     "note": "Scorecard SAST requires static analysis on pull requests and names CodeQL."
   },
@@ -243,7 +269,9 @@
     "note": "Alert coverage follows dependency graph support rather than the updater's ecosystem list, which is why the rule compares what the forge reports watching against the resolved set instead of treating alerting as on or off. The GitLab source establishes the Ultimate tier; the Free-tier scanner path it leaves open is this project's own position, taken because a rule no Free project could ever satisfy would exclude most of the population the standard is written for. The version-updates-without-security-updates case in the Check comes from GitHub's own ecosystem table, read 2026-07-31, which marks both bun and mix supported for version updates and unsupported for security updates. That is a different residual from an unparsed lockfile: the forge is not missing part of the dependency set, it is watching none of it for advisories, so a scanner reading the lockfile is the project's only watcher rather than a supplement to the forge's. This repository is its own worked example on the bun half."
   },
   "R-SEC-12": {
-    "sources": ["https://github.com/ossf/scorecard/blob/main/docs/checks.md"],
+    "sources": [
+      "https://github.com/ossf/scorecard/blob/main/docs/checks.md"
+    ],
     "verified": "2026-07-30",
     "note": "Scorecard Branch-Protection is where the scope condition comes from, in its own voice: 'Although requiring code review can greatly reduce the chance that unintentional or malicious code enters the \"main\" branch, it is not feasible for all projects, such as those that don't have many active participants.' The same check tiers what R-SEC-04 used to bundle, and gates each tier on the one below it: 'a tier must be fully satisfied before you can earn points from the next tier.' Tier 1 is force push and deletion at 3 of 10, tier 2 is one reviewer at 6, tier 3 is one status check at 8. That gating is what puts the 3 of 10 figure in the rule. Reading the access list to decide whether the rule applies is this project's own position; Scorecard names no participant count and offers no threshold, so the standard picked the smallest one that makes review mean anything, which is a second principal who can merge."
   },
@@ -263,10 +291,14 @@
       "https://crates.io/docs/trusted-publishing",
       "https://hex.pm/docs/publish",
       "https://github.com/hexpm/hex/blob/main/CHANGELOG.md",
-      "https://github.com/hexpm/hexpm/blob/main/lib/hexpm_web/controllers/api/release_controller.ex"
+      "https://github.com/hexpm/hexpm/blob/main/lib/hexpm_web/controllers/api/release_controller.ex",
+      "https://central.sonatype.org/publish/generate-portal-token/",
+      "https://central.sonatype.org/publish/publish-portal-api/",
+      "https://central.sonatype.org/register/namespace/",
+      "https://central.sonatype.org/news/20250326_ossrh_sunset/"
     ],
     "verified": "2026-07-28",
-    "note": "All four registries confirm id-token: write and short-lived tokens replacing long-lived ones; the RubyGems guide is explicit that the permission belongs at job level, workflow level discouraged. crates.io is client-rendered and returns only a shell to a fetcher, so it has to be read in a browser, not by fetching; read that way it is complete and shipped. It documents both GitHub and GitLab, GitLab still in public beta, tokens expiring after 30 minutes, and an initial publish that still requires an API token because the crate must already exist. The GitHub path is the rust-lang/crates-io-auth-action@v1 action; the GitLab path is a hand-rolled curl exchange against /api/v1/trusted_publishing/tokens with an id_tokens block, which is worth knowing before a check assumes an action exists on both. Hex is the checked negative, and it is why the Check now separates a registry that offers no flow from one this project has not verified. Its publish page names exactly one CI path, a long-lived HEX_API_KEY in an environment variable, and the hex client changelog through v2.5.2-dev mentions no OIDC, trusted publishing, or attestation, though it does add an OAuth device flow in v2.4.0. The scoped-token fallback is reachable there rather than theoretical: the hexpm release controller authorizes :publish on domains [{\"api\", \"write\"}, \"package\"] gated by package_owner, so a key scoped package:<name> publishes that one package and nothing else, which is what the fallback asks for. The three Hex sources were read on 2026-07-31; the four registry sources above were last read on the verified date."
+    "note": "All four registries confirm id-token: write and short-lived tokens replacing long-lived ones; the RubyGems guide is explicit that the permission belongs at job level, workflow level discouraged. crates.io is client-rendered and returns only a shell to a fetcher, so it has to be read in a browser, not by fetching; read that way it is complete and shipped. It documents both GitHub and GitLab, GitLab still in public beta, tokens expiring after 30 minutes, and an initial publish that still requires an API token because the crate must already exist. The GitHub path is the rust-lang/crates-io-auth-action@v1 action; the GitLab path is a hand-rolled curl exchange against /api/v1/trusted_publishing/tokens with an id_tokens block, which is worth knowing before a check assumes an action exists on both. Hex is the checked negative, and it is why the Check now separates a registry that offers no flow from one this project has not verified. Its publish page names exactly one CI path, a long-lived HEX_API_KEY in an environment variable, and the hex client changelog through v2.5.2-dev mentions no OIDC, trusted publishing, or attestation, though it does add an OAuth device flow in v2.4.0. The scoped-token fallback is reachable there rather than theoretical: the hexpm release controller authorizes :publish on domains [{\"api\", \"write\"}, \"package\"] gated by package_owner, so a key scoped package:<name> publishes that one package and nothing else, which is what the fallback asks for. The three Hex sources were read on 2026-07-31; the four registry sources above were last read on the verified date. The account-scoped clause was added on 2026-07-31 for Maven Central, which is the second checked negative and a different one from Hex: Hex documents no OIDC flow but does scope a key to one package, while Sonatype documents neither. Its Central Portal authenticates with a user token carrying a display name and an expiry and nothing else, and the token-generation, API, namespace, and credential-management pages are all silent on scope, which is what makes the absence a reading rather than an inference. The compensating controls the clause names are Sonatype's own: an expiry set at generation, revocation and replacement documented as the compromise path, namespace ownership verified by DNS record or a forge-hosted repository, and USER_MANAGED as the default publishingType, which holds a validated deployment until a person releases it. The clause is written to expire: the OSSRH sunset roadmap of 2025-03-26 lists tokens 'scoped to specific namespaces, groupIds, or groupId and artifactId combinations' as planned, and two of that entry's three bullets have since shipped while the scope bullet has not. Re-read the token page before accepting the fallback, because a web search will report scoped tokens as available by restating that roadmap in the present tense."
   },
   "R-PUB-03": {
     "sources": [
@@ -305,12 +337,17 @@
     "note": "OSPS-BR-06.01, Maturity 2-3: 'When an official release is created, that release MUST be signed or accounted for in a signed manifest including each asset's cryptographic hashes.' That sentence is where this rule's two accepted forms come from. Distinct from R-SEC-05, which verifies the tag object with git tag -v and covers the commit, not the files attached to the release. GitHub artifact attestations are the keyless path."
   },
   "R-CHG-01": {
-    "sources": ["https://keepachangelog.com/en/2.0.0/"],
+    "sources": [
+      "https://keepachangelog.com/en/2.0.0/"
+    ],
     "verified": "2026-07-28",
     "note": "2.0.0, published 2026-06-07. Confirms the six group names, the Unreleased section, newest-first ordering, and the '**Breaking:**' marker this rule requires."
   },
   "R-CHG-02": {
-    "sources": ["https://semver.org/spec/v2.0.0.html", "https://github.com/npm/node-semver"],
+    "sources": [
+      "https://semver.org/spec/v2.0.0.html",
+      "https://github.com/npm/node-semver"
+    ],
     "verified": "2026-07-28",
     "note": "SemVer confirms the MUST-declare-a-public-API clause, the increment rules, and that v1.2.3 is a tag name rather than a semantic version. Its clause 4 leaves 0.y.z undefined, so the MINOR-for-incompatible reading is not the spec's; node-semver is what makes it the ecosystem's, expanding ^0.2.3 to >=0.2.3 <0.3.0-0, which puts the break at MINOR below 1.0.0."
   },
@@ -323,7 +360,9 @@
     "note": "Neither Keep a Changelog nor either forge's release documentation says what a release body should contain, and GitHub's auto-generated notes list merged pull requests, which is the behaviour this rule argues against. Observed: a project that keeps both ends up maintaining two descriptions of one release, and the reader arriving from a release feed finds the weaker one first. Retire this rule if a forge learns to render a tag's changelog section itself."
   },
   "R-CHG-05": {
-    "sources": ["https://semver.org/spec/v2.0.0.html"],
+    "sources": [
+      "https://semver.org/spec/v2.0.0.html"
+    ],
     "verified": "2026-07-28",
     "note": "Clause 7, read verbatim: 'Minor version Y (x.Y.z | x > 0) MUST be incremented if new, backward compatible functionality is introduced to the public API. It MUST be incremented if any public API functionality is marked as deprecated.' That is the whole upstream basis for deprecating before removing. SemVer says nothing about how long a deprecation must stand or how it must be announced, so the notice period this rule requires is this standard's own position."
   },
@@ -336,27 +375,37 @@
     "note": "OpenSSF Best Practices badge Passing, criterion 'release_notes_vulns', MUST with N/A allowed and a justification required: 'The release notes MUST identify every publicly known run-time vulnerability fixed in this release that already had a CVE assignment or similar when the release was created. This criterion may be marked as not applicable (N/A) if users typically cannot practically update the software themselves (e.g., as is often true for kernel updates). This criterion applies only to the project results, not to its dependencies. If there are no release notes or there have been no publicly known vulnerabilities, choose N/A.' Keep a Changelog 2.0.0 names the group the entry lives in, Security, 'in case of vulnerabilities'. Two parts of this rule go past the badge and are this project's own position. The badge scopes to project results and excludes dependencies; this rule covers a run-time dependency too, because a user deciding whether to upgrade is asking one question and cannot tell whose code the vulnerability was in. The badge also says run-time and stops there, so counting a build toolchain as run-time where the project ships a built artifact is this project's carve-back; it keys on whether a release carries a built asset, the applicability shape R-PUB-05 already uses, and retires if build output stops reaching users. On identifiers the divergence is smaller than it looks: the badge says 'a CVE assignment or similar' while its checker hint examines the release notes for CVE identifiers, and this rule makes 'or similar' explicit by accepting an identifier from any published advisory, because enumerating CVE and GHSA would write GitLab advisory and ecosystem-database identifiers out of a rule scoped to both forges."
   },
   "R-SKL-01": {
-    "sources": ["https://agentskills.io/specification"],
+    "sources": [
+      "https://agentskills.io/specification"
+    ],
     "verified": "2026-07-28",
     "note": "The spec defines a skill as a directory holding SKILL.md. The top-level skills/ directory is the skills CLI's discovery layout, not the spec's, and that half has no source named."
   },
   "R-SKL-02": {
-    "sources": ["https://agentskills.io/specification"],
+    "sources": [
+      "https://agentskills.io/specification"
+    ],
     "verified": "2026-07-28",
     "note": "Confirms the frontmatter contract this repository's validator enforces: name 1-64 chars, lowercase alphanumeric and hyphens, no leading, trailing, or consecutive hyphen, matching the parent directory; description 1-1024 chars."
   },
   "R-SKL-03": {
-    "sources": ["https://agentskills.io/specification"],
+    "sources": [
+      "https://agentskills.io/specification"
+    ],
     "verified": "2026-07-28",
     "note": "'Keep your main SKILL.md under 500 lines' and the under-5000-token recommendation, both in the progressive disclosure section."
   },
   "R-SKL-04": {
-    "sources": ["https://agentskills.io/specification"],
+    "sources": [
+      "https://agentskills.io/specification"
+    ],
     "verified": "2026-07-28",
     "note": "The spec makes license optional. This rule requires it, deliberately: installers extract one directory at a time. The divergence is oss-kit's own and is not upstream."
   },
   "R-SKL-05": {
-    "sources": ["https://agentskills.io/specification"],
+    "sources": [
+      "https://agentskills.io/specification"
+    ],
     "verified": "2026-07-28",
     "note": "The spec permits scripts/ and names Python, Bash, and JavaScript as common options, saying supported languages depend on the implementation. This rule is deliberately stricter; the reason is oss-kit's own."
   },
@@ -365,8 +414,40 @@
     "note": "The Agent Skills specification defines one skill layout and says nothing about installing a repository of skills into any particular host. Observed: hosts read different manifests from different paths, so naming a host in a README proves only that somebody typed the name, and a reader following it reaches a command that fails. Retire this rule if one manifest format is ever read by every host."
   },
   "R-SKL-07": {
-    "sources": ["https://agentskills.io/specification"],
+    "sources": [
+      "https://agentskills.io/specification"
+    ],
     "verified": "2026-07-28",
     "note": "Progressive disclosure section plus the description guidance that it should state what the skill does and when to use it. The verification-loop and no-harness-specific-tools parts are oss-kit's own."
+  },
+  "R-SEC-13": {
+    "sources": [
+      "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets",
+      "https://docs.gitlab.com/user/project/protected_tags/",
+      "https://go.dev/doc/modules/publishing",
+      "https://go.dev/ref/mod",
+      "https://proxy.golang.org/"
+    ],
+    "verified": "2026-07-31",
+    "note": "The forge mechanics are documented; the rule that a released tag must be immutable is this project's own position, and Go is where the consequence is written down by somebody else. Go's publishing guide states it directly: 'Don't change a tagged version of a module after publishing it... If the two differ, Go tools will return a security error.' The module reference explains why the author cannot undo it either, because the checksum database 'ensures that the bits associated with a specific version do not change from one day to the next, even if the module's author subsequently alters the tags in their repository', and the proxy adds that a bad release may stay cached even after the repository is deleted. Every other ecosystem has the same exposure without a checksum database to make it loud. The tag-creation half is the narrower claim and the newer one: it exists because the PUB preamble's tag-published track drops R-PUB-04, so without it anyone with push access can publish an immutable version with no gate at all. Retire the creation half if a forge ever offers an approval gate on tag creation itself, which would be the better control; retire the immutability half never, because nothing replaces it."
+  },
+  "R-PUB-07": {
+    "sources": [
+      "https://packagist.org/about",
+      "https://getcomposer.org/doc/02-libraries.md",
+      "https://gitlab.com/gitlab-org/gitlab/-/raw/master/app/models/integrations/packagist.rb",
+      "https://go.dev/doc/modules/publishing",
+      "https://proxy.golang.org/"
+    ],
+    "verified": "2026-07-31",
+    "note": "Packagist's own page carries both halves of the Check. On GitHub the documented path stores no token anywhere: 'Make sure you log in via GitHub' and grant 'the Packagist application' access, after which Packagist installs the hook itself, and the observable failure is the auto-update warning it tells you to look for on the package page. The manual GitHub fallback and every other forge put the API token in the forge instead, and GitLab has no tokenless option at all: GitLab's own integration model requires a username and a token typed as a password. That asymmetry is why the rule asks where the credential lives rather than whether one exists, which is the distinction that matters, because a token in a project integration setting is not readable by a CI job and a token in a CI variable is. The Go clause is a reading of an absence and the sources are what makes it one: neither the publishing guide nor the proxy page offers an account, a registration, or a credential, and the proxy is explicitly demand-fetched. Retire the GitLab half the day Packagist ships an application authorization there, and retire the rule outright if the tag-published track ever gains a publish step."
+  },
+  "R-CHG-07": {
+    "sources": [
+      "https://go.dev/ref/mod",
+      "https://go.dev/doc/modules/major-version"
+    ],
+    "verified": "2026-07-31",
+    "note": "Go is the only ecosystem on the current roster that encodes the major version in package identity, and it states the requirement rather than leaving it to convention: 'If the module is released at major version 2 or higher, the module path must end with a major version suffix like /v2', with the matching prohibition that 'Major version suffixes are not allowed at major versions v0 or v1', and the gopkg.in exception carrying the suffix at every major with a dot rather than a slash. The rule is worded for the general case rather than for Go alone because the failure is structural: the suffix reaches the import path of every package in the module, so the mismatch is not a stale number but a package nobody can import. Everything else on the roster falls outside the rule by its own Check, which is why this is a one-ecosystem rule that is worth having at all. Retire it if Go drops the suffix requirement, and widen it if another roster ecosystem adopts one."
   }
 }
