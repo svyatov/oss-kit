@@ -204,7 +204,9 @@ This sits below R-PUB-03, which asks for provenance tied to the exact published 
 
 Only for a release that attaches a built asset to the forge release. Pushing to nuget.org attaches nothing to the forge, and the source archives GitHub generates for a tag are not built assets, so a project that only publishes goes to Step 7 instead.
 
-This reference names no SBOM generator for .NET. The ones in common use are separate tools rather than part of the SDK, and a tool that reads the dependency tree inside the release workflow is one the maintainer vets before it goes there. Until one is vetted, publish the hashes of what the release attaches and sign those, which needs nothing the runner does not already ship:
+Two rules apply here and they ask for different things. R-PUB-05 wants an inventory of what went into the asset, in SPDX or CycloneDX. R-PUB-06 wants the assets signed, or listed by hash in a signed manifest. A manifest of hashes answers the second and nothing about the first, so do not report R-PUB-05 as met by publishing one.
+
+This reference names no SBOM generator for .NET. The ones in common use are separate tools rather than part of the SDK, and a tool that reads the dependency tree inside the release workflow is one the maintainer vets before it goes there. What answers R-PUB-05 without one, on GitHub, is the forge's own export of the repository's dependency graph, which is already SPDX and needs nothing installed. The `gh api` step below writes it into `dist/`, so it ships as a release asset for R-PUB-05 and is listed in `SHA256SUMS` and attested alongside the packages for R-PUB-06:
 
 ```yaml
   release:
@@ -220,6 +222,9 @@ This reference names no SBOM generator for .NET. The ones in common use are sepa
         with:
           name: nupkg
           path: dist/
+      - run: gh api repos/${{ github.repository }}/dependency-graph/sbom --jq .sbom > dist/sbom.spdx.json
+        env:
+          GH_TOKEN: ${{ github.token }}
       - run: (cd dist && sha256sum *) > SHA256SUMS
       - uses: actions/attest@v4
         with:
@@ -228,6 +233,8 @@ This reference names no SBOM generator for .NET. The ones in common use are sepa
         env:
           GH_TOKEN: ${{ github.token }}
 ```
+
+State both of the export's limits to the maintainer rather than leaving them to be discovered. It is GitHub only, so a GitLab project keeps this gap and R-PUB-05 stays unmet there with the reason named. And it covers the repository's declared dependency graph rather than what is inside the asset, which is exact for a `.nupkg` that declares its dependencies rather than bundling them, and an approximation where the build embeds them. The graph resolves past the direct dependencies only where `packages.lock.json` is committed; R-SEC-08 places a library package, which NuGet's own guidance tells not to commit one, outside that requirement, so a library's export lists its direct dependencies alone and the report should say which of the two it is. Read the output back once with `gh api repos/<owner>/<repo>/dependency-graph/sbom --jq '.sbom.packages | length'` before reporting the rule met: a graph the forge does not parse for this ecosystem returns a near-empty package list rather than an error.
 
 `sha256sum` runs from inside `dist/` so the names it writes are the names the assets carry on the release. `subject-checksums` makes every file in the manifest a subject of the attestation in its own right, by name and digest; attesting `SHA256SUMS` itself with `subject-path` would leave a consumer able to verify the manifest and nothing about the assets it lists.
 

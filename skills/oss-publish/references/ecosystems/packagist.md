@@ -97,7 +97,9 @@ Only for a release that attaches a built asset to the forge release. A library i
 
 This reference names no SBOM generator for PHP. The ones in common use are third-party tools rather than part of Composer, and a tool that reads the dependency tree inside a release workflow is one the maintainer vets before it goes there. `composer.lock` is the closest thing the project already has, and it is neither SPDX nor CycloneDX, so publishing it does not satisfy R-PUB-05's format requirement; say that rather than presenting the lockfile as a bill of materials.
 
-Until a generator is vetted, publish the hashes of what the release attaches and sign those, which needs nothing the runner does not already ship:
+Two rules apply here and they ask for different things. R-PUB-05 wants that inventory. R-PUB-06 wants the assets signed, or listed by hash in a signed manifest. A manifest of hashes answers the second and nothing about the first, so do not report R-PUB-05 as met by publishing one.
+
+What answers R-PUB-05 without a generator, on GitHub, is the forge's own export of the repository's dependency graph, which is already SPDX and needs nothing installed. The `gh api` step below writes it into `dist/`, so it ships as a release asset for R-PUB-05 and is listed in `SHA256SUMS` and attested alongside the assets for R-PUB-06:
 
 ```yaml
   release:
@@ -112,6 +114,9 @@ Until a generator is vetted, publish the hashes of what the release attaches and
         with:
           name: build
           path: dist/
+      - run: gh api repos/${{ github.repository }}/dependency-graph/sbom --jq .sbom > dist/sbom.spdx.json
+        env:
+          GH_TOKEN: ${{ github.token }}
       - run: (cd dist && sha256sum *) > SHA256SUMS
       - uses: actions/attest@v4
         with:
@@ -120,6 +125,8 @@ Until a generator is vetted, publish the hashes of what the release attaches and
         env:
           GH_TOKEN: ${{ github.token }}
 ```
+
+State both of the export's limits to the maintainer rather than leaving them to be discovered. It is GitHub only, so a GitLab project keeps this gap and R-PUB-05 stays unmet there with the reason named. And it covers the repository's declared dependency graph rather than what is inside the asset, which is exact for a PHP package, because it bundles no dependencies and a consumer resolves them from those same declarations. The graph resolves past the direct dependencies only where `composer.lock` is committed, which R-SEC-08 already requires. Read the output back once with `gh api repos/<owner>/<repo>/dependency-graph/sbom --jq '.sbom.packages | length'` before reporting the rule met: a graph the forge does not parse for this ecosystem returns a near-empty package list rather than an error.
 
 `sha256sum` runs from inside `dist/` so the names it writes are the names the assets carry on the release. `subject-checksums` makes every file in the manifest a subject of the attestation in its own right, by name and digest; attesting `SHA256SUMS` itself with `subject-path` would leave a consumer able to verify the manifest and nothing about the assets it lists.
 

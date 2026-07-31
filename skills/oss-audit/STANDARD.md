@@ -199,7 +199,7 @@ Forges: github
 
 A pipeline that only runs on tags tells you the build broke after you shipped it. Running on the default branch and on every pull or merge request catches breakage while the author still has the context.
 
-Check: the CI configuration triggers on `push` to the default branch and on `pull_request` (GitHub), or defines rules for `$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH` and `merge_request_event` (GitLab).
+Check: the CI configuration triggers on `push` to the default branch and on `pull_request` carrying no `branches:` filter (GitHub), or defines rules for `$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH` and `merge_request_event` (GitLab). The `branches:` filter keys on the pull request's base branch rather than its head, so `branches: [main]` runs nothing at all for a pull request stacked onto another branch, and a configuration carrying one fails this rule rather than passing it.
 
 Fixed by: oss-ci
 Forges: both

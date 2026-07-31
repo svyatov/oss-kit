@@ -185,7 +185,9 @@ This sits below R-PUB-03, which asks for provenance tied to the exact published 
 
 Only for a release that attaches a built asset to the forge release. Deploying to Maven Central attaches nothing to the forge, and the source archives GitHub generates for a tag are not built assets, so a library that only deploys goes to Step 7 instead. The jars themselves are already signed, by the GPG requirement in Step 3, and that signature is what R-PUB-06 asks for on the registry side.
 
-This reference names no SBOM generator for Java. The ones in common use are plugins rather than part of Maven or Gradle, and a plugin that reads the dependency tree inside a job holding a signing key is one the maintainer vets before it goes there. Until one is vetted, publish the hashes of what the release attaches and sign those:
+Two rules apply here and they ask for different things. R-PUB-05 wants an inventory of what went into the asset, in SPDX or CycloneDX. R-PUB-06 wants the assets signed, or listed by hash in a signed manifest. A manifest of hashes answers the second and nothing about the first, so do not report R-PUB-05 as met by publishing one.
+
+This reference names no SBOM generator for Java. The ones in common use are plugins rather than part of Maven or Gradle, and a plugin that reads the dependency tree inside a job holding a signing key is one the maintainer vets before it goes there. What answers R-PUB-05 without one, on GitHub, is the forge's own export of the repository's dependency graph, which is already SPDX and needs nothing installed and, in particular, nothing inside the credentialed job. The `gh api` step below writes it into `dist/`, so it ships as a release asset for R-PUB-05 and is listed in `SHA256SUMS` and attested alongside the jars for R-PUB-06:
 
 ```yaml
   release:
@@ -201,6 +203,9 @@ This reference names no SBOM generator for Java. The ones in common use are plug
         with:
           name: jars
           path: dist/
+      - run: gh api repos/${{ github.repository }}/dependency-graph/sbom --jq .sbom > dist/sbom.spdx.json
+        env:
+          GH_TOKEN: ${{ github.token }}
       - run: (cd dist && sha256sum *) > SHA256SUMS
       - uses: actions/attest@v4
         with:
@@ -209,6 +214,8 @@ This reference names no SBOM generator for Java. The ones in common use are plug
         env:
           GH_TOKEN: ${{ github.token }}
 ```
+
+State both of the export's limits to the maintainer rather than leaving them to be discovered. It is GitHub only, so a GitLab project keeps this gap and R-PUB-05 stays unmet there with the reason named. And it covers the repository's declared dependency graph rather than what is inside the asset, which is close for a plain jar, because a consumer resolves its dependencies from those same declarations, and an approximation for a shaded or fat jar, whose contents are decided at build time and can differ from what the graph lists. The graph reads `pom.xml`, `build.gradle`, and `gradle.lockfile`; a Maven project publishes no lockfile at all, which R-SEC-08 places outside its version-lock half, so an export from one lists what the POM declares and resolves no further. Read the output back once with `gh api repos/<owner>/<repo>/dependency-graph/sbom --jq '.sbom.packages | length'` before reporting the rule met: a graph the forge does not parse for this ecosystem returns a near-empty package list rather than an error.
 
 `sha256sum` runs from inside `dist/` so the names it writes are the names the assets carry on the release. `subject-checksums` makes every file in the manifest a subject of the attestation in its own right, by name and digest; attesting `SHA256SUMS` itself with `subject-path` would leave a consumer able to verify the manifest and nothing about the assets it lists.
 

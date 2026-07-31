@@ -18,6 +18,10 @@ Half of this setup is repository files, which this skill writes directly. The ot
 
 Verify every registry and forge claim against the current documentation before writing it into a repository. A wrong trusted publishing flow is worse than a missing one: it either fails at publish time or, if papered over with a long-lived token, defeats the entire point of this skill. Where a registry and forge combination has no supported trusted publishing flow, say so plainly and give the documented fallback; do not invent a flow to fill the gap.
 
+A registry's documentation is not proof that a command still exists. Before handing a maintainer a command to run, confirm its flags parse against the client that will run it: `<tool> help <subcommand>` where the toolchain is installed, or that subcommand's source in the client's own repository where it is not. Where neither is available, say the command is unverified rather than presenting it as checked, and do not install a language toolchain to settle it without asking. This is not hypothetical. This skill shipped a hex.pm key-generation command that the Hex client had removed a release earlier, and every re-verification passed, because hex.pm's own guide still documented it: reading the vendor's documentation confirmed the vendor's error. `references/ecosystems/hex.md` carries the case.
+
+When a registry's documentation and its client disagree, that is a defect in the registry, not a puzzle to work around. Name which two sources disagree and what you ran to establish it. Do not improvise a substitute credential path, do not extract an undocumented on-disk token, and do not pin around the version where it last worked. Offer to report it upstream, and write the issue with `oss-writing`.
+
 Present policy choices instead of guessing at them, even when the repository already contains a release workflow or a stored token. Which cooldown to use, whether to keep an existing publish step, and how much of an existing workflow to carry over are decisions the user makes.
 
 ## Process
@@ -36,7 +40,11 @@ Route to the matching reference file now, using the table at the end of this fil
 
 ### Step 2: Configure trusted publishing
 
-Open the matched reference file and read the section for the detected forge. Every reference file states, for each forge it covers, either the exact fields the registry's trusted publisher form asks for and the exact permission or `id_tokens` block the workflow needs, or, where the combination has no supported flow, a gap section naming that plainly and giving the strongest documented fallback. Give the user the resolved settings URL and the exact field values from the gathered facts; do not proceed to Step 3 until the user confirms the trusted publisher, or the fallback credential, is in place.
+Open the matched reference file and read the section for the detected forge. Every reference file states, for each forge it covers, either the exact fields the registry's trusted publisher form asks for and the exact permission or `id_tokens` block the workflow needs, or, where the combination has no supported flow, a gap section naming that plainly and giving the strongest documented fallback.
+
+Most of those forms ask for a workflow filename and an environment name, which are what Steps 3 and 4 produce. Do not wait for them and do not go looking for them: the reference file states both, so every field is resolvable now. Give the user the settings URL with all of them filled in, as this step's own message rather than as an item in a later summary, and carry on to Step 3 without waiting.
+
+What blocks is the tag, not the workflow. Nothing this skill writes can publish until a version tag is pushed, so that is where the confirmation belongs: do not push the first tag, and do not report the setup done, until the user confirms the trusted publisher, or the fallback credential, is in place. Say so in the same message as the form, so the user knows what is being waited on and when. A "done" answered to a three-item wrap-up is not that confirmation.
 
 ### Step 3: Write a hardened release workflow
 
@@ -65,6 +73,8 @@ The PUB rules belong here: R-PUB-01 tag-triggered CI, R-PUB-02 trusted publishin
 When `oss-audit-report.md` exists at the repository root, read the group addressed to this skill and work from that. Each failing rule there carries the audit's evidence and that rule's `Check:` text verbatim, so reading `STANDARD.md` as well adds nothing. Where the file is absent, work from the request as usual.
 
 This skill owns publishing: trusted publishing, build provenance, the human approval gate on the release workflow, and what a release attaches alongside a built asset. It writes into the same workflow and pipeline files as two other skills, and the boundary between them is the rule area, not a description of files. `oss-ci` decides what runs on push and on every change request, including the test job this skill's publish job depends on; it does not decide how the publish job authenticates or who approves it. `oss-harden` owns the security posture of the same files: pinning third-party actions to a commit SHA, minimal workflow permissions, dependency updates, branch protection, and signed tags; it does not decide when a job runs or how a package is published. Do not pin an action to a SHA, add an unrelated `permissions:` scope, or configure branch protection from this skill; note that the project needs it and hand the work to `oss-harden`.
+
+That hand-off assumes `oss-harden` still has a turn coming. Check whether it does. Where it has already run on this repository, handing off means the pins never happen, and this skill has just added unpinned `uses:` lines to the one workflow that authenticates to a registry. In that case pin what this skill added, to the same standard `oss-harden` uses, and say in the report that you did and why. The boundary exists so two skills do not fight over one line, not so a line ends up unpinned.
 
 ## Routing table
 

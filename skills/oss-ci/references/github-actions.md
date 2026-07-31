@@ -27,6 +27,8 @@ on:
 
 Name the actual default branch; it is not always `main`. A workflow that triggers only on `push` misses regressions introduced by a pull request before it merges.
 
+Leave `pull_request` unfiltered, and remove a `branches:` filter from an existing one. That filter keys on the pull request's base branch rather than its head, so `pull_request: branches: [main]` runs nothing at all for a pull request stacked onto another branch. A stack of three is then checked once, at the bottom, and every change above it merges into the default branch having run no CI. R-CI-01 fails such a filter for that reason. Mirroring the `push` filter here looks symmetrical and is the whole bug.
+
 ## Call project automation, not inline logic (R-CI-02)
 
 `SKILL.md` states this policy under Principles. This is its shape in a workflow step:
