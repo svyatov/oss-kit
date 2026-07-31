@@ -238,7 +238,11 @@ tidelift: npm/my-package
 custom: ["https://www.paypal.me/octocat"]
 ```
 
-Accepted keys: `github` (one username, or up to four in a list), `community_bridge` (LFX Mentorship project name), `issuehunt`, `ko_fi`, `liberapay`, `open_collective`, `patreon`, `polar`, `buy_me_a_coffee`, `thanks_dev` (format `u/gh/USERNAME`), `tidelift` (format `PLATFORM-NAME/PACKAGE-NAME`, where the platform name is `npm`, `pypi`, `rubygems`, `maven`, `packagist`, or `nuget`), and `custom` (up to four URLs). Quote a custom URL if it contains a `:` beyond the scheme separator. List only a platform the project is actually registered on; a `patreon` key pointing at an account that does not accept the project's donations is a dead link like any other.
+Accepted keys: `github` (one username, or up to four in a list), `community_bridge` (LFX Mentorship project name), `issuehunt`, `ko_fi`, `liberapay`, `open_collective`, `patreon`, `polar`, `buy_me_a_coffee`, `thanks_dev` (format `u/gh/USERNAME`), `tidelift` (format `PLATFORM-NAME/PACKAGE-NAME`), and `custom` (up to four URLs).
+
+Quote a custom URL if it contains a `:` beyond the scheme separator. List only a platform the project is actually registered on; a `patreon` key pointing at an account that does not accept the project's donations is a dead link like any other.
+
+The `tidelift` platform name is per ecosystem and is not enumerated here. Six of the eleven ecosystems have one and five have none, and each ecosystem file carries its own answer under Funding platform name, starting with [ecosystems/npm.md](ecosystems/npm.md). The canonical copy is the `tidelift` key in `skills/oss-audit/ecosystems.json`, so on any disagreement that file is right.
 
 ## Repository settings (R-COM-07)
 
