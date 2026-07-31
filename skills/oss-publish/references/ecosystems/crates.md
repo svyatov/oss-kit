@@ -21,6 +21,8 @@ Read `Cargo.toml`'s `package.repository` field for the owner and repository, fal
 
 ## Configure trusted publishing (Step 2)
 
+Both forges are supported and both are configured from the same crate settings page, so read the section for the forge detected in Step 1 and take the field names from there.
+
 ### GitHub Actions
 
 Open `https://crates.io/crates/<name>/settings/new-trusted-publisher`, choose GitHub, and enter:
@@ -207,3 +209,5 @@ The four grants above are copied exactly, on this job only, and `needs: [publish
 On GitLab CI/CD none of this applies: the forge attestation above is GitHub's. A GitLab release can carry the same `SHA256SUMS`, generated the same way, but nothing signs it, so say that rather than presenting the file as provenance.
 
 Step 7 is in `SKILL.md`: read each R-PUB rule's `Check:` line against what this file produced, and fix what fails before reporting done.
+
+Verified 2026-07-31 against the source of the crates.io trusted publishing docs page, [rust-lang/crates.io, svelte/src/routes/docs/trusted-publishing](https://github.com/rust-lang/crates.io/blob/main/svelte/src/routes/docs/trusted-publishing/+page.svelte). Read it there rather than at `https://crates.io/docs/trusted-publishing`, which renders client side and returns an empty shell to anything that fetches it.

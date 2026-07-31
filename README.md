@@ -13,8 +13,10 @@ Curated agent skills for open source maintainers.
   ships.
 - **Both forges.** 55 of the 59 rules score GitHub and GitLab alike. Three are
   GitHub-only, one is GitLab-only, and every rule says which.
-- **Four registries.** Release publishing for npm, RubyGems, PyPI, and
-  crates.io.
+- **Eleven ecosystems, on two tracks.** Nine get a full release flow, credential
+  and all: npm, PyPI, RubyGems, crates.io, NuGet, Maven Central, Hex, pub.dev,
+  and container images. Go modules and Packagist get the tag-published flow
+  instead, which has no publish credential at all.
 
 Install the kit:
 
@@ -76,7 +78,7 @@ continuous integration.
 | `oss-readme` | Orders the README and checks its claims against the source. |
 | `oss-ci` | Writes the test, lint, and build jobs for either forge. |
 | `oss-harden` | Pins action SHAs, trims permissions, and guards the branch. |
-| `oss-publish` | Publishes to npm, RubyGems, PyPI, and crates.io, and signs it. |
+| `oss-publish` | Publishes to eleven ecosystems, gates the run, and signs it. |
 | `oss-changelog` | Keeps CHANGELOG.md, picks the bump, writes release notes. |
 | `oss-writing` | Fixes the sentences in commits, reviews, docs, and issues. |
 | `oss-skill` | Fixes the structure and portability of the skills you ship. |
