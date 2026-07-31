@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-07-31
+
 ### Added
 
 - `oss-audit` writes `oss-audit-report.md` at the root of the repository it scores, untracked by default. It carries the repository facts the audit established, the prerequisites no API can perform, one verdict line per scored rule, and an execution order that groups fails by owning skill with one pull request each. A fail's line quotes that rule's `Check:` text verbatim, so a fix session works from the report alone. The eight rule-fixing skills read their group from it where it exists.
@@ -309,7 +311,8 @@ Five new rules, and `oss-audit` now reports the gaps alone rather than every rul
 - `oss-audit` scores a repository against `STANDARD.md`, reports each gap with the rule it fails, and names the skill that fixes it.
 - `oss-skill` fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` conformance to the Agent Skills specification, oversized bodies that belong in `references/`, and the license field an extracted skill carries with it.
 
-[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/svyatov/oss-kit/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/svyatov/oss-kit/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/svyatov/oss-kit/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/svyatov/oss-kit/compare/v0.6.0...v0.7.0
