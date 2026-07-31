@@ -31,7 +31,7 @@ On rubygems.org, open `https://rubygems.org/gems/<name>/trusted_publishers/new` 
 
 - Repository owner: the owner from Step 1
 - Repository name: the repository name from Step 1
-- Workflow filename: the publish workflow's filename only, for example `publish.yml`
+- Workflow filename: `release.yml`, the filename only, not the full path
 - Environment: the approval environment name from `SKILL.md` Step 4, for example `release`
 
 Leaving Environment empty means RubyGems mints a token for any run of that workflow, approved or not; it is the field that makes the approval gate load-bearing, not optional.
@@ -192,7 +192,7 @@ Two rules apply here and they ask for different things. R-PUB-05 wants an invent
 This reference names no SBOM generator for Ruby. The ones in common use are third-party tools rather than part of the packaging toolchain, and a tool that reads the dependency tree inside the release workflow is one the maintainer vets before it goes there. What answers R-PUB-05 without one, on GitHub, is the forge's own export of the repository's dependency graph, which is already SPDX and needs nothing installed:
 
 ```yaml
-  release:
+  github-release:
     runs-on: ubuntu-latest
     needs: [publish]
     permissions:

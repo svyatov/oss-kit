@@ -44,7 +44,9 @@ Note that GitLab's rendered documentation page for this integration no longer ex
 
 ## Write the hardened release workflow (Step 3)
 
-There is no publish job to harden, because no job publishes anything. The workflow's job is to make the tag safe to create, since the tag is what ships:
+There is no publish job to harden, because no job publishes anything. The workflow's job is to make the tag safe to create, since the tag is what ships.
+
+This is the one departure from the workflow shape `SKILL.md` states, and it is the tag-published track's, not this ecosystem's. The jobs below stay in `.github/workflows/ci.yml` under `name: CI`, with no `Release` workflow and no `release` environment, because pushing the tag is the publish and there is nothing left for a separate workflow to do. `test` keeps its name, and the asset job is still `github-release`.
 
 ```yaml
 name: CI
@@ -102,7 +104,7 @@ Two rules apply here and they ask for different things. R-PUB-05 wants that inve
 What answers R-PUB-05 without a generator, on GitHub, is the forge's own export of the repository's dependency graph, which is already SPDX and needs nothing installed. The `gh api` step below writes it into `dist/`, so it ships as a release asset for R-PUB-05 and is listed in `SHA256SUMS` and attested alongside the assets for R-PUB-06:
 
 ```yaml
-  release:
+  github-release:
     runs-on: ubuntu-latest
     permissions:
       contents: write

@@ -42,7 +42,7 @@ Sign in to nuget.org, open Trusted Publishing from the username menu, and add a 
 
 - Repository Owner: the owner from Step 1
 - Repository: the repository name from Step 1
-- Workflow File: the publish workflow's filename only, for example `release.yml`, not the `.github/workflows/` path
+- Workflow File: `release.yml`, the filename only, not the `.github/workflows/` path
 - Environment: the approval environment name from `SKILL.md` Step 4, for example `release`
 
 Leaving Environment empty means the policy matches any run of that workflow, approved or not. Fill it in, for the same reason the other registries' environment fields exist: it is the field that makes the approval gate in Step 4 part of the registry's identity check rather than a forge convenience.
@@ -102,7 +102,7 @@ jobs:
       - run: dotnet restore --locked-mode
       - run: dotnet test --no-restore  # oss-ci decides the actual command from CONTRIBUTING.md (R-CI-02)
 
-  pack:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -151,7 +151,7 @@ The version check is the file test rather than a property query, because `dotnet
 
 `--locked-mode` needs `packages.lock.json` committed, which NuGet does not create unless asked; R-SEC-08 and `oss-harden` own that decision, including NuGet's own guidance that a library other projects depend on should not check the lock file in. Drop the flag rather than inventing a lock file here, and hand the gap to `oss-harden`.
 
-`oss-harden` pins every `uses:` line above to a commit SHA and sets the test and pack jobs' minimal permissions, including the `contents: read` this skill left off them. This skill writes only the grants a job needs to authenticate, publish, and attest.
+`oss-harden` pins every `uses:` line above to a commit SHA and sets the test and build jobs' minimal permissions, including the `contents: read` this skill left off them. This skill writes only the grants a job needs to authenticate, publish, and attest.
 
 If an existing workflow reads a `NUGET_API_KEY` from repository secrets, remove it from the YAML now and tell the user to delete the secret and revoke the key on nuget.org once the new flow is verified.
 
@@ -209,7 +209,7 @@ Two rules apply here and they ask for different things. R-PUB-05 wants an invent
 This reference names no SBOM generator for .NET. The ones in common use are separate tools rather than part of the SDK, and a tool that reads the dependency tree inside the release workflow is one the maintainer vets before it goes there. What answers R-PUB-05 without one, on GitHub, is the forge's own export of the repository's dependency graph, which is already SPDX and needs nothing installed. The `gh api` step below writes it into `dist/`, so it ships as a release asset for R-PUB-05 and is listed in `SHA256SUMS` and attested alongside the packages for R-PUB-06:
 
 ```yaml
-  release:
+  github-release:
     runs-on: ubuntu-latest
     needs: [publish]
     permissions:
@@ -247,7 +247,7 @@ sha256sum -c SHA256SUMS
 
 Run the first command against each asset downloaded, never against `SHA256SUMS`, which is a subject of nothing. `--signer-workflow <owner>/<repo>/.github/workflows/release.yml` pins which workflow the attestation must have come from.
 
-A third job is what makes the grants above safe, so copy the job boundary along with them. The pack job runs `dotnet pack` against the project's own targets, so giving it release-asset writes and an attestation identity is exactly the credential split Step 3 exists to enforce, and it would write assets before the approval gate. The publish job holds the registry key. Only a separate job satisfies both, and `needs: [publish]` is what keeps the assets behind the gate.
+A third job is what makes the grants above safe, so copy the job boundary along with them. The build job runs `dotnet pack` against the project's own targets, so giving it release-asset writes and an attestation identity is exactly the credential split Step 3 exists to enforce, and it would write assets before the approval gate. The publish job holds the registry key. Only a separate job satisfies both, and `needs: [publish]` is what keeps the assets behind the gate.
 
 The four grants above are copied exactly, on this job only, and the workflow's top-level block stays `contents: read`. Narrowing anything else, pinning each `uses:` to a commit SHA, and auditing the result are `oss-harden`'s. On GitLab CI/CD the forge attestation is unavailable, so a GitLab release can carry the same `SHA256SUMS` with nothing signing it; say that rather than presenting the file as provenance.
 

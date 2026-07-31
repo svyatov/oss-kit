@@ -18,6 +18,8 @@ This skill owns what runs: which checks execute, on which triggers, across which
 
 The SEC rules, security posture of the same files such as pinned action SHAs, minimal permissions, dependency updaters, branch protection, and pinned images, belong to oss-harden. The REL rules, publishing a built artifact to a registry with trusted publishing, provenance, and an approval gate, belong to oss-publish. Do not add a `permissions:` block, pin a SHA, configure branch protection, or write a publish job while working from this skill; note that the project needs it and hand the work to the owning skill. A GitHub Pages deploy is the single exception, and it covers only the two blocks [references/github-actions.md](references/github-actions.md) already emits: top-level `contents: read`, and `pages: write` plus `id-token: write` on the deploying job. Those grants are how the deployment authenticates, so a workflow written without them cannot run at all, and stripping them to honour the ban ships a green pipeline that deploys nothing. Every other permissions question still goes to `oss-harden`.
 
+`oss-writing` is not one of those hand-offs. It owns no rule area and takes no work over, so nothing here is handed to it. Read it before writing a branch name, a commit message, a change request title or description, or an issue, which is all of what this skill leaves behind on the forge.
+
 Deploying a built static site to the forge's own Pages hosting is also something that runs on a push, so it stays here rather than with oss-publish, which owns registry releases. No rule requires it: a project publishes a site because it has one, so it is written only where the repository builds a site and the user asks for the deployment.
 
 ## Principles

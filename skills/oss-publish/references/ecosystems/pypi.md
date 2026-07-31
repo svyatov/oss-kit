@@ -30,8 +30,8 @@ For an already-published project, open `https://pypi.org/manage/project/<name>/s
 
 - Owner: the owner from Step 1
 - Repository name: the repository name from Step 1
-- Workflow name: the publish workflow's filename, for example `publish.yml`
-- Environment name: the approval environment name from `SKILL.md` Step 4, for example `pypi`
+- Workflow name: `release.yml`, the filename rather than the workflow's `name:`
+- Environment name: the approval environment name from `SKILL.md` Step 4, which this skill always writes as `release`
 
 In the workflow, the publish job needs:
 
@@ -61,7 +61,7 @@ In the pipeline, the publish job needs:
 
 ```yaml
 environment:
-  name: pypi
+  name: release
 id_tokens:
   PYPI_ID_TOKEN:
     aud: pypi
@@ -115,7 +115,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     needs: [test, build]
-    environment: pypi
+    environment: release
     permissions:
       id-token: write
     steps:
@@ -136,7 +136,9 @@ If an existing workflow uses `secrets.PYPI_API_TOKEN`, remove it from the YAML n
 
 ## Gate on manual approval (Step 4)
 
-Pin the publish job to `environment: pypi` as above (the name is conventional, not required; keep whatever the trusted publisher's Environment name field says), and create that environment at `https://github.com/<owner>/<repo>/settings/environments/new` with required reviewers, or, on GitLab Premium or Ultimate, as a protected environment with approval rules. GitHub required reviewers work for public repositories on current plans; private or internal repositories need GitHub Enterprise Cloud. If the repository's visibility or plan provides no native approval gate, report R-PUB-04 as unmet. PyPI has no registry-side approval fallback.
+Pin the publish job to `environment: release` as above, and create that environment at `https://github.com/<owner>/<repo>/settings/environments/new` with required reviewers, or, on GitLab Premium or Ultimate, as a protected environment with approval rules. GitHub required reviewers work for public repositories on current plans; private or internal repositories need GitHub Enterprise Cloud. If the repository's visibility or plan provides no native approval gate, report R-PUB-04 as unmet. PyPI has no registry-side approval fallback.
+
+PyPI does not require any particular environment name, and `pypi` is what its own examples use. This skill writes `release` for every ecosystem, so the same word means the same thing in every repository it touches. What matters is that the form's Environment name field and the job's `environment:` are the same string; where a repository already has a working publisher entry naming something else, keep it rather than renaming both to match this file.
 
 Create it with the API rather than the form. Reviewers and the tag policy are both settable, so nothing here needs a browser.
 
@@ -188,7 +190,7 @@ Two rules apply here and they ask for different things. R-PUB-05 wants an invent
 This reference names no SBOM generator for Python. The ones in common use are third-party tools rather than part of the packaging toolchain, and a tool that reads the dependency tree inside the release workflow is one the maintainer vets before it goes there. What answers R-PUB-05 without one, on GitHub, is the forge's own export of the repository's dependency graph, which is already SPDX and needs nothing installed. The `gh api` step below writes it into `dist/`, so it ships as a release asset for R-PUB-05 and is listed in `SHA256SUMS` and attested alongside the distributions for R-PUB-06:
 
 ```yaml
-  release:
+  github-release:
     runs-on: ubuntu-latest
     needs: [publish]
     permissions:

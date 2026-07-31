@@ -31,7 +31,7 @@ Enter:
 
 - Organization or user: the owner from Step 1
 - Repository: the repository name from Step 1
-- Workflow filename: the publish workflow's filename only, for example `publish.yml`, not the full path
+- Workflow filename: `release.yml`, the filename only, not the full path
 - Environment: the approval environment name from `SKILL.md` Step 4, for example `release`
 - Allowed actions: enable `npm stage publish` and leave `npm publish` disabled, so a compromised or bypassed CI run still cannot ship a version without the 2FA approval in Step 4 below
 
@@ -135,7 +135,7 @@ jobs:
 
 The version comparison assumes tags such as `v1.2.3`; derive the comparison from the repository's actual tag format. `npm pack` creates the exact tarball handed to `npm stage publish`, so the credentialed job does not check out source, install dependencies, or rebuild. `package-manager-cache: false` prevents `setup-node` from automatically restoring a package-manager cache in the credentialed job.
 
-`oss-harden` pins every `uses:` line above to a commit SHA and sets the test and build jobs' minimal permissions, including the `contents: read` this skill left off them; do not pin them or narrow them here. This skill writes only the grants a job needs to authenticate, to publish, and to attest: the publish job's two above, and the release job's four in Step 6. On GitLab CI/CD, use separate test and build jobs, pass the resulting `.tgz` as an artifact, and make the publish job run only `npm stage publish package/*.tgz --ignore-scripts`. Give that job `environment: name: release` with `when: manual`, plus the `id_tokens` block from Step 2.
+`oss-harden` pins every `uses:` line above to a commit SHA and sets the test and build jobs' minimal permissions, including the `contents: read` this skill left off them; do not pin them or narrow them here. This skill writes only the grants a job needs to authenticate, to publish, and to attest: the publish job's two above, and the github-release job's four in Step 6. On GitLab CI/CD, use separate test and build jobs, pass the resulting `.tgz` as an artifact, and make the publish job run only `npm stage publish package/*.tgz --ignore-scripts`. Give that job `environment: name: release` with `when: manual`, plus the `id_tokens` block from Step 2.
 
 If an existing workflow uses `secrets.NPM_TOKEN`, remove it from the YAML now and tell the user to delete the corresponding secret and revoke the token once the new flow is verified.
 
@@ -203,7 +203,7 @@ Name `--omit=dev` rather than relying on the default. `npm sbom` omits developme
 Attach and attest in a third job, after the publish job:
 
 ```yaml
-  release:
+  github-release:
     runs-on: ubuntu-latest
     needs: [publish]
     permissions:

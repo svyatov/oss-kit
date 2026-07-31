@@ -29,7 +29,7 @@ Open `https://crates.io/crates/<name>/settings/new-trusted-publisher`, choose Gi
 
 - Repository owner: the owner from Step 1
 - Repository name: the repository name from Step 1
-- Workflow filename: the publish workflow's filename only, for example `release.yml`
+- Workflow filename: `release.yml`, the filename only, not the full path
 - Environment: the approval environment name from `SKILL.md` Step 4, for example `release`
 
 In the workflow, the publish job needs:
@@ -190,7 +190,7 @@ Two rules apply here and they ask for different things. R-PUB-05 wants an invent
 This reference names no SBOM generator for Rust. The ones in common use are third-party tools rather than part of the toolchain, and a tool that reads the dependency tree inside the release workflow is one the maintainer vets before it goes there. What answers R-PUB-05 without one, on GitHub, is the forge's own export of the repository's dependency graph, which is already SPDX and needs nothing installed. The `gh api` step below writes it into `dist/`, so it ships as a release asset for R-PUB-05 and is listed in `SHA256SUMS` and attested alongside the binaries for R-PUB-06:
 
 ```yaml
-  release:
+  github-release:
     runs-on: ubuntu-latest
     needs: [publish]
     permissions:
