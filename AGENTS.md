@@ -122,7 +122,7 @@ Neither `osv-scanner` job meets R-CI-05, and neither can. A job that calls a reu
 
 1. Update the skills table in `README.md` if the skill's one-line description changed.
 2. Run `bash scripts/check-drift.sh`, which fails when a skill cites a rule ID that `STANDARD.md` does not define, when `STANDARD.md` names a rule as fixed by a skill that does not claim it, or when a rule names `oss-audit` as its owner.
-3. Run `node scripts/check-ecosystems.mjs`, which fails when a skill named in the roster's `sections` map is missing an ecosystem file, carries one the roster does not list, or ships a file missing a declared heading, an empty section, or a malformed `Verified` line.
+3. Run `bun scripts/check-ecosystems.mjs`, which fails when a skill named in the roster's `sections` map is missing an ecosystem file, carries one the roster does not list, or ships a file missing a declared heading, an empty section, or a malformed `Verified` line.
 4. Run `bun run validate` and `bun test`. `CONTRIBUTING.md` lists the full check sequence CI runs.
 5. Confirm the `SKILL.md` body is still under 500 lines.
 6. Where the change moves a derived skill further from its upstream, amend that skill's newest `sources.json` entry. Start a new entry only when the last one already shipped in a release.
