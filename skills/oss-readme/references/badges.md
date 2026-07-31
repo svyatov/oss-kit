@@ -24,13 +24,14 @@ Never put badges inside the `#` heading: they leak into the generated anchor slu
 
 ## 1. Version
 
-Keep the registry's own label (`gem`, `npm`, `pypi`), since it tells the reader where the package lives, for free. Go is the one exception: `tag` names a git artifact rather than a published version, so relabel it.
+Keep the registry's own label (`gem`, `npm`, `pypi`, `hex`), since it tells the reader where the package lives, for free. Go is the one exception: `tag` names a git artifact rather than a published version, so relabel it.
 
 | Ecosystem | Badge | Link |
 |---|---|---|
 | Ruby | `https://img.shields.io/gem/v/NAME` | `https://rubygems.org/gems/NAME` |
 | Node | `https://img.shields.io/npm/v/NAME` | `https://www.npmjs.com/package/NAME` |
 | Python | `https://img.shields.io/pypi/v/NAME` | `https://pypi.org/project/NAME` |
+| Elixir | `https://img.shields.io/hexpm/v/NAME` | `https://hex.pm/packages/NAME` |
 | Go | `https://img.shields.io/github/v/tag/OWNER/REPO?label=version` | `https://pkg.go.dev/github.com/OWNER/REPO` |
 
 Go uses the git tag because that is what the module proxy resolves; it has no concept of a GitHub Release. The same `github/v/tag` form is the fallback for any repo not published to a registry.

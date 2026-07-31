@@ -236,10 +236,11 @@
       "https://docs.github.com/en/code-security/reference/supply-chain-security/dependency-graph-supported-package-ecosystems",
       "https://docs.github.com/en/code-security/concepts/supply-chain-security/about-dependabot-alerts",
       "https://google.github.io/osv-scanner/supported-languages-and-lockfiles/",
-      "https://docs.gitlab.com/user/application_security/dependency_scanning/"
+      "https://docs.gitlab.com/user/application_security/dependency_scanning/",
+      "https://docs.github.com/en/code-security/dependabot/ecosystems-supported-by-dependabot/supported-ecosystems-and-repositories"
     ],
     "verified": "2026-07-28",
-    "note": "Alert coverage follows dependency graph support rather than the updater's ecosystem list, which is why the rule compares what the forge reports watching against the resolved set instead of treating alerting as on or off. The GitLab source establishes the Ultimate tier; the Free-tier scanner path it leaves open is this project's own position, taken because a rule no Free project could ever satisfy would exclude most of the population the standard is written for."
+    "note": "Alert coverage follows dependency graph support rather than the updater's ecosystem list, which is why the rule compares what the forge reports watching against the resolved set instead of treating alerting as on or off. The GitLab source establishes the Ultimate tier; the Free-tier scanner path it leaves open is this project's own position, taken because a rule no Free project could ever satisfy would exclude most of the population the standard is written for. The version-updates-without-security-updates case in the Check comes from GitHub's own ecosystem table, read 2026-07-31, which marks both bun and mix supported for version updates and unsupported for security updates. That is a different residual from an unparsed lockfile: the forge is not missing part of the dependency set, it is watching none of it for advisories, so a scanner reading the lockfile is the project's only watcher rather than a supplement to the forge's. This repository is its own worked example on the bun half."
   },
   "R-SEC-12": {
     "sources": ["https://github.com/ossf/scorecard/blob/main/docs/checks.md"],
@@ -259,20 +260,24 @@
       "https://docs.npmjs.com/trusted-publishers/",
       "https://docs.pypi.org/trusted-publishers/",
       "https://github.com/rubygems/guides/blob/main/trusted-publishing.md",
-      "https://crates.io/docs/trusted-publishing"
+      "https://crates.io/docs/trusted-publishing",
+      "https://hex.pm/docs/publish",
+      "https://github.com/hexpm/hex/blob/main/CHANGELOG.md",
+      "https://github.com/hexpm/hexpm/blob/main/lib/hexpm_web/controllers/api/release_controller.ex"
     ],
     "verified": "2026-07-28",
-    "note": "All four registries confirm id-token: write and short-lived tokens replacing long-lived ones; the RubyGems guide is explicit that the permission belongs at job level, workflow level discouraged. crates.io is client-rendered and returns only a shell to a fetcher, so it has to be read in a browser, not by fetching; read that way it is complete and shipped. It documents both GitHub and GitLab, GitLab still in public beta, tokens expiring after 30 minutes, and an initial publish that still requires an API token because the crate must already exist. The GitHub path is the rust-lang/crates-io-auth-action@v1 action; the GitLab path is a hand-rolled curl exchange against /api/v1/trusted_publishing/tokens with an id_tokens block, which is worth knowing before a check assumes an action exists on both."
+    "note": "All four registries confirm id-token: write and short-lived tokens replacing long-lived ones; the RubyGems guide is explicit that the permission belongs at job level, workflow level discouraged. crates.io is client-rendered and returns only a shell to a fetcher, so it has to be read in a browser, not by fetching; read that way it is complete and shipped. It documents both GitHub and GitLab, GitLab still in public beta, tokens expiring after 30 minutes, and an initial publish that still requires an API token because the crate must already exist. The GitHub path is the rust-lang/crates-io-auth-action@v1 action; the GitLab path is a hand-rolled curl exchange against /api/v1/trusted_publishing/tokens with an id_tokens block, which is worth knowing before a check assumes an action exists on both. Hex is the checked negative, and it is why the Check now separates a registry that offers no flow from one this project has not verified. Its publish page names exactly one CI path, a long-lived HEX_API_KEY in an environment variable, and the hex client changelog through v2.5.2-dev mentions no OIDC, trusted publishing, or attestation, though it does add an OAuth device flow in v2.4.0. The scoped-token fallback is reachable there rather than theoretical: the hexpm release controller authorizes :publish on domains [{\"api\", \"write\"}, \"package\"] gated by package_owner, so a key scoped package:<name> publishes that one package and nothing else, which is what the fallback asks for. The three Hex sources were read on 2026-07-31; the four registry sources above were last read on the verified date."
   },
   "R-PUB-03": {
     "sources": [
       "https://docs.npmjs.com/generating-provenance-statements",
       "https://docs.npmjs.com/trusted-publishers/",
       "https://docs.pypi.org/api/integrity/",
-      "https://guides.rubygems.org/trusted-publishing/"
+      "https://guides.rubygems.org/trusted-publishing/",
+      "https://hex.pm/docs/publish"
     ],
     "verified": "2026-07-28",
-    "note": "npm confirms what provenance attests to, that npm audit signatures verifies it, and that trusted publishing generates it automatically for public packages. PyPI's Integrity API is the verification endpoint: GET /integrity/<project>/<version>/<filename>/provenance, returning attestation bundles with signatures, certificates, transparency log entries, and publisher identity, 404 when a file has no provenance. RubyGems and crates.io are both checked negatives: their trusted publishing pages cover OIDC authentication only and document no attestation or provenance for the published artifact, so on those two registries this rule falls back to a forge attestation and the registry limitation the Check already tells an auditor to report."
+    "note": "npm confirms what provenance attests to, that npm audit signatures verifies it, and that trusted publishing generates it automatically for public packages. PyPI's Integrity API is the verification endpoint: GET /integrity/<project>/<version>/<filename>/provenance, returning attestation bundles with signatures, certificates, transparency log entries, and publisher identity, 404 when a file has no provenance. RubyGems, crates.io, and Hex are all checked negatives: their publishing documentation covers authentication only and documents no attestation or provenance for the published artifact, so on those three registries this rule falls back to a forge attestation and the registry limitation the Check already tells an auditor to report. Hex is the weakest of the three, because it serves no provenance and offers no OIDC either, leaving the forge attestation as the only link between a published tarball and the workflow that built it. Its page was read on 2026-07-31; the other sources were last read on the verified date."
   },
   "R-PUB-04": {
     "sources": [
