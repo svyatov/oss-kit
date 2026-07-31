@@ -143,3 +143,13 @@ Quoting `Check:` verbatim is what makes a fix session self-sufficient. Without i
 - Cutting a release runs last, and gets its own final group. Rules that verify only against a published artifact or a newly pushed tag, which is where R-PUB-03 and R-SEC-05 sit, close there and nowhere earlier. Say so in that group, so a reader does not read them as defects they failed to fix.
 
 Say in this section that each group is a fresh session that reads this file and works from it. A group finishing with a merged pull request is a checkpoint, so the next group starts from a small context rather than carrying every earlier group's in it. Carrying them all is what takes a run to a 300k window that every later turn then pays for.
+
+## Step 8: Audit again, and diff
+
+When the fix groups are done, run this skill again and diff the new report against the one the first run wrote. Keep both. The diff is the only evidence that a rule the first audit passed is still passing, and that a rule it failed is actually closed rather than reported closed.
+
+Read three things out of it. A verdict that went from fail to pass is a fix landing. A verdict that went from pass to fail is either a fix that broke something else or a first audit that was wrong, and reading the file settles which. A verdict that did not move on a rule the plan targeted is a fix that did not take, whatever the fix session reported.
+
+Say plainly what the diff shows, including a rule that moved for the second reason. A repository re-audited this way surfaced two rules the first audit had passed, a title-case heading and a changelog entry marked with the wrong emphasis, both of which predated the fix work and neither of which anything in the run would otherwise have caught.
+
+The diff has one limit worth stating rather than discovering. It compares two runs, so it catches a verdict that moved and it cannot catch two runs that are wrong the same way. A rule both audits misread stays green across the diff. Only rescoring against the rule text catches that, which is what Step 3 is for.
