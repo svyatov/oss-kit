@@ -26,6 +26,18 @@ Detect which forge the repository under audit uses: look for `.github/workflows/
 
 A rule marked retired is not scored, and appears in no count. Its number is kept so nobody reuses it, which is the whole of what it is still doing there.
 
+Then detect which distribution ecosystems the repository uses. `ecosystems.json` sits beside `STANDARD.md` in this skill's own installed directory, so Step 1's rule reads it: resolve it from the absolute directory this `SKILL.md` was loaded from, never from the repository under audit. It names every ecosystem the kit covers and, for each, the manifest and lockfile names that mark it, the registry it publishes to, and the release track it takes. Where it disagrees with anything written in prose, including the files this skill's `references/ecosystems/` directory ships, it wins. If it is missing, say so, and score what you can from the manifests you find rather than reconstructing a roster from memory.
+
+Detection runs on two axes, and the two answers stay apart.
+
+An ecosystem is present when any manifest or lockfile the roster lists for it turns up anywhere in the checkout. A dev-only manifest counts. So does one that builds the docs site, one inside an example, and one that declares nothing publishable at all.
+
+An ecosystem is shipped when the repository publishes to it. The release area's preamble states what makes an artifact published, and that is the evidence to look for; for container images, which have no manifest, the signal is a push to a registry rather than a Dockerfile.
+
+Keeping the axes apart is what makes the rest of the audit accurate. What a repository ships is what reaches the PUB area and R-CHG-07. What is merely present is what reaches R-CI-03, R-SEC-03, R-SEC-08, and R-SEC-11, because a vulnerability arrives through a dependency whether or not anything is published from it. Fold the two together and a Go command-line tool carrying a `package.json` under `docs/` gets told to configure npm trusted publishing, while a repository that ships a gem and builds its site with npm has its npm lockfile scored as though it were not there.
+
+The signals that decide each ecosystem, including the cases that are easy to get backwards, a `package.json` carrying `"private": true`, a manifest that exists only to configure a linter, and a lockfile with no manifest beside it, are in `references/ecosystems/<name>.md`, one file per roster entry. Read the file for an ecosystem before recording it as shipped, present, or absent.
+
 Some areas carry a preamble under their own `##` heading that gates the area rather than any single rule, scoping it to a kind of repository rather than to a forge. Read that preamble before the area's first rule. Where its precondition is unmet, mark the whole area not applicable in one step and report it that way, rather than checking its rules one at a time. Where a precondition names a file, resolve symlinked directories before concluding the file is absent, as R-SKL-01's check requires.
 
 ## Step 3: Check each rule, area by area
@@ -35,6 +47,10 @@ Some areas carry a preamble under their own `##` heading that gates the area rat
 For every applicable rule, turn its `Check:` line into an observation against the repository: open the file or configuration it names, and record what is actually there. A `Check:` line asking whether the README's first paragraph is a single sentence before any heading is answered by reading `README.md`. A `Check:` line asking whether every `uses:` line resolves to a 40-character SHA is answered by reading every workflow file. Mark the rule pass when the evidence matches what the `Check:` line asks for and fail when it does not. Hold both to the same standard of evidence, whether or not the rule reaches the report: a fail with no evidence is a guess rather than a finding, and a pass with no evidence is the score that discredits every other one.
 
 A rule met by a fallback the standard marks below the bar is a pass, and counts as one. Give that rule a report line naming which fallback carried it, which is the one place a pass earns a line of its own. `STANDARD.md`'s preamble tells the reader to revisit a below-the-bar fallback when the platform catches up, and an unqualified pass leaves them nothing to revisit: a maintainer publishing on a long-lived scoped token reads that pass and never learns they are on the degraded variant.
+
+Some `Check:` lines name evidence that exists once per ecosystem rather than once per repository: a lockfile, a toolchain matrix, an update configuration, a vulnerability feed. Score such a rule against every ecosystem the relevant axis from Step 2 puts in scope for it, one observation each, and mark it pass only when every one of them passes. One failing ecosystem fails the rule, because a repository whose Ruby dependencies are watched and whose JavaScript ones are not is not two thirds covered, it is uncovered on one side. Carry the ecosystem name with the observation; Step 6 puts it in the finding.
+
+The PUB area resolves in one step from the shipped set, not rule by rule. Where nothing is shipped, the whole area is not applicable, which is Step 2's preamble handling and nothing more. Where something is shipped, read the preamble for the track each shipped ecosystem takes, confirm it against that ecosystem's `references/ecosystems/<name>.md`, and record the track once. The track decides which of the area's rules reach the repository at all, so a repository on the tag-published track has the rules that track drops marked not applicable together, on one scope sentence, and they are not checked one at a time. A repository shipping on both tracks scores each rule against the ecosystems whose track keeps it.
 
 Mark a rule not applicable only when its area preamble, rule text, or `Check:` line states a precondition that the repository does not meet. Do not infer an unstated precondition from missing evidence: where the rule requires a file, setting, or value and does not define an exception, its absence is a failure. Record the scope sentence that made each rule not applicable so another audit reaches the same result.
 
@@ -64,16 +80,24 @@ Open with one count line: how many rules were applicable, how many of those pass
 
 Say in a parenthetical why the not-applicable rules were skipped, grouped by reason, so the reader can tell a rule that does not reach their repository from one the audit quietly dropped. Group by the scope sentence you recorded in Step 3 rather than listing rule IDs one by one. This is the count line's only qualifier; do not follow it with a section listing what was skipped.
 
-Then list every fail and every unknown, most important first, one line each. A line carries the rule ID, the status, the evidence you found, and the skill named in that rule's `Fixed by:` line:
+Under it, give one line for the ecosystems you detected, with shipped and present kept apart and named in that order, and say plainly when nothing is shipped. Every per-ecosystem finding below was scored against one of those two sets, so a reader who disputes a finding needs to see which set produced it, and one sentence saying the repository publishes nothing is what explains an entire area marked not applicable.
+
+Then list every fail and every unknown, most important first, one line each. A line carries the rule ID, the status, the evidence you found, and the skill named in that rule's `Fixed by:` line. Where the rule was scored per ecosystem, name the ecosystem that failed, before the evidence:
 
 ```text
-Audited 40 applicable rules: 34 pass, 4 fail, 2 unknown, 6 not applicable (5 PUB, the project publishes no package; 1 GitLab-only).
+Audited 50 applicable rules: 45 pass, 4 fail, 1 unknown, 9 not applicable
+(7 SKL, the repository ships no agent skills; 1 GitLab-only; 1 where the
+ecosystem does not encode the major version in package identity).
+Ships rubygems. npm present through site/package.json and site/package-lock.json.
 
 1. R-COM-01 fail, no LICENSE file, run oss-community
 2. R-DOC-01 fail, README.md opens with a badge row before any sentence about the project, run oss-readme
 3. R-SEC-01 fail, three uses: lines in .github/workflows/ci.yml pin a tag rather than a SHA, at lines 12, 19, and 31, run oss-harden
-4. R-SEC-04 unknown, the check reads repos/{owner}/{repo}/rulesets and no forge access was available, run oss-harden
+4. R-SEC-08 fail, npm: site/package-lock.json is committed but the docs job runs npm install rather than npm ci, run oss-harden
+5. R-SEC-04 unknown, the check reads repos/{owner}/{repo}/rulesets and no forge access was available, run oss-harden
 ```
+
+Naming the ecosystem is what completes the routing. Every skill that fixes an ecosystem-sensitive rule carries a `references/ecosystems/<name>.md` for each roster entry, so the skill from the `Fixed by:` line plus the ecosystem name is the address of the fix, and there is no roster entry that address fails to resolve for. Without the ecosystem, line 4 above sends a maintainer to read four files to work out which lockfile you meant.
 
 The numbers above illustrate the shape. Derive yours from the count in Step 5.
 
