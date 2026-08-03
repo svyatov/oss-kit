@@ -104,11 +104,13 @@ curl --request POST \
   "https://gitlab.example.com/api/v4/projects/:id/job_token_scope/allowlist"
 ```
 
-## Automated dependency updates (R-SEC-03)
+## Automated dependency updates (R-SEC-03, R-SEC-14)
 
 GitLab Dependency Scanning finds known-vulnerable dependencies already in use; it does not open update merge requests, and its dependency list is gated to Ultimate. GitLab ships no hosted update bot. Renovate's official self-hosting documentation recommends its `renovate-runner` GitLab project and scheduled-pipeline templates, so follow that project's current setup instead of inventing a one-job `latest` image example here. For GitLab Self-Managed, Renovate recommends cloning or importing that runner project to the instance.
 
 Before adopting Renovate, review its documented trust model: a self-hosted Renovate instance must trust developers of the repositories it monitors and needs credentials for GitLab plus GitHub.com access for changelogs and tools. Store credentials as masked and hidden CI/CD variables, protect them where the schedule runs only on protected refs, and use the narrowest token and repository scope the documented runner supports. Enable only the managers the repository needs. Renovate's `gitlabci` manager covers images, services, and components; verify any additional manager against its current official documentation.
+
+R-SEC-14 is `minimumReleaseAge` in the same configuration. It takes a duration string rather than a number, so `"minimumReleaseAge": "7 days"` and `"1 week"` both parse, and it defaults to `null`, which is no delay at all. Renovate handles a vulnerability alert through a separate option, `minimumReleaseAgeBehaviour`, so the delay does not have to be qualified to keep a security fix prompt. Renovate's `config:best-practices` preset reaches the setting through `security:minimumReleaseAgeNpm`, which waits until an npm package is three days old, so a repository extending that preset may satisfy the rule for npm without an explicit key and satisfy it for nothing else. Resolve the configuration rather than reading the file alone before reporting the key missing, and check which ecosystems the resolved value actually covers before reporting it present.
 
 ## Branch protection and required review (R-SEC-04, R-SEC-12)
 

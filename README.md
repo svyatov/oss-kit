@@ -6,12 +6,12 @@ Curated agent skills for open source maintainers.
 [![CI](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13884/badge)](https://www.bestpractices.dev/projects/13884)
 
-- **59 rules.** Each states the check it is scored by and the one skill that
+- **61 rules.** Each states the check it is scored by and the one skill that
   fixes it.
 - **Seven areas.** Documentation, community files, CI, security posture,
   release publishing, changelog discipline, and the agent skills a repository
   ships.
-- **Both forges.** 55 of the 59 rules score GitHub and GitLab alike. Three are
+- **Both forges.** 57 of the 61 rules score GitHub and GitLab alike. Three are
   GitHub-only, one is GitLab-only, and every rule says which.
 - **Eleven ecosystems, answered seven ways.** npm, PyPI, RubyGems, crates.io,
   Go modules, Packagist, NuGet, Maven Central, Hex, pub.dev, and container
@@ -34,7 +34,7 @@ It answers with the gaps and nothing else, each keyed to the rule it missed and
 routed to the skill that fixes it. Rules that already pass do not appear:
 
 ```text
-Audited 50 applicable rules: 47 pass, 2 fail, 1 unknown, 9 not applicable
+Audited 52 applicable rules: 49 pass, 2 fail, 1 unknown, 9 not applicable
 (7 PUB, the project publishes no package; 1 GitLab-only; 1 where the
 ecosystem does not encode the major version in package identity).
 

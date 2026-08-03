@@ -29,7 +29,20 @@ Yarn and pnpm both default that flag on in CI, and pnpm's default also requires 
 
 Verified 2026-07-31 against [npm install](https://docs.npmjs.com/cli/v12/commands/npm-install), [package-lock.json](https://docs.npmjs.com/cli/v12/configuring-npm/package-lock-json), and [npm/cli issue 4828](https://github.com/npm/cli/issues/4828), and the shrinkwrap paragraph on 2026-08-03 against [npm CLI v12.0.0](https://github.com/npm/cli/releases/tag/v12.0.0).
 
-## Dependency install scripts
+## Update cooldown (R-SEC-14)
+
+The rule is scored against the updater, so `cooldown` in `dependabot.yml` or `minimumReleaseAge` in a Renovate configuration is what closes it, and `references/github.md` and `references/gitlab.md` carry those. Three of the four managers here also carry their own, which is worth setting alongside because it covers an install the updater never touched, such as a contributor adding a dependency by hand.
+
+- **npm** has `min-release-age`, default `null`, counted in **days**: "only versions that were available more than the given number of days ago will be installed". `min-release-age-exclude` takes package names or minimatch globs. Note the interaction with `npm audit fix`: where the fix is younger than the threshold, npm keeps the vulnerable version and exits non-zero, which is a failure a project has to be ready to read.
+- **yarn** has `npmMinimalAgeGate` and it is already on, defaulting to one week.
+- **pnpm** has `minimumReleaseAge`, counted in **minutes**, and it is on by default at 1440, one day, from pnpm v11. Setting it to `0` turns the protection off.
+- **bun** has `minimumReleaseAge` under `[install]` in `bunfig.toml`, counted in **seconds**, with `minimumReleaseAgeExcludes`. It is off by default and it leaks: it is bypassed for a version already pinned in `bun.lock`, including under `--frozen-lockfile`, `bunx --minimum-release-age` is a silent no-op, and `bun upgrade` ignores it. Set it, and do not report it as the project's only cooldown.
+
+Three units across four managers, so read which manager the repository uses before writing a number. A value meant as one day is 1 in npm, 1440 in pnpm, and 86400 in bun.
+
+Verified 2026-08-03 against [npm config](https://docs.npmjs.com/cli/v12/using-npm/config), [Yarn configuration](https://yarnpkg.com/configuration/yarnrc), [pnpm supply chain security](https://pnpm.io/supply-chain-security), [bun install](https://bun.com/docs/pm/cli/install), and the three bun issues at [30525](https://github.com/oven-sh/bun/issues/30525), [30748](https://github.com/oven-sh/bun/issues/30748), and [30533](https://github.com/oven-sh/bun/issues/30533).
+
+## Dependency install scripts (R-SEC-15)
 
 An install-time lifecycle script is the shortest path from a compromised package to a shell on the runner, holding whatever token the job holds. Every manager in this ecosystem now blocks dependency scripts by default, but they arrived there at different times and they are configured in four different places, so read which manager the repository uses before concluding anything.
 
