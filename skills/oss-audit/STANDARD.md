@@ -6,12 +6,12 @@ Some rules name a fallback marked below the bar. That marker means the blessed o
 
 Rule IDs are `R-<AREA>-<NN>`. Areas are DOC, COM, CI, SEC, PUB, CHG, and SKL. IDs are permanent: a retired rule keeps its number and is marked retired rather than reused.
 
-The standard holds 59 rules:
+The standard holds 61 rules:
 
 - Documentation: R-DOC-01 through R-DOC-10
 - Community: R-COM-01 through R-COM-09
 - Continuous integration: R-CI-01 through R-CI-06
-- Security posture: R-SEC-01 through R-SEC-13
+- Security posture: R-SEC-01 through R-SEC-15
 - Release and publishing: R-PUB-01 through R-PUB-07
 - Changelog and versioning: R-CHG-01 through R-CHG-07
 - Agent skills: R-SKL-01 through R-SKL-07
@@ -366,6 +366,24 @@ Forges: both
 A tag is the name a consumer installs by, and git lets anyone with push access repoint one at a different commit. Moving a released tag changes what every later fetch resolves to while the version number stays put, which is the one change a version number exists to make visible. Restricting who may create a tag matters for the same reason from the other end: where the registry reads the forge rather than taking an upload, creating the tag is the publish, so tag creation is the last gate before a version becomes public and the only thing standing where an approval gate would stand on the registry-push track.
 
 Check: on GitHub, a repository ruleset targeting `refs/tags/*` blocks tag update and tag deletion and restricts tag creation to named principals, read back with `gh api repos/{owner}/{repo}/rulesets` rather than inferred from the write; on GitLab, protected tags cover the release tag pattern with a create access level set and no role permitted to force-update it, read back with `GET /projects/:id/protected_tags`. This rule covers a git tag only. A container registry tag is mutable by design, lives outside the forge, and is reachable by no forge control, so the immutable identity of a published image is its digest rather than its tag.
+
+Fixed by: oss-harden
+Forges: both
+
+### R-SEC-14: A newly published version waits before the updater proposes it
+
+An attacker who takes a maintainer account publishes within seconds, and the registry serves it just as fast. What ends those incidents is other people looking: the malicious versions in the npm compromises of September 2025 were found and pulled within hours. An updater with no cooldown opens its pull request inside that window, so a project that merges its bumps promptly is the one that installs the bad version before anybody has looked at it, and diligence about updating becomes the exposure. A cooldown moves the update out of the window at no cost, because it delays a routine version bump and not a fix for a known vulnerability.
+
+Check: the repository's dependency updater configuration delays a newly published version before proposing it, through a `cooldown` block carrying at least `default-days` in `.github/dependabot.yml`, or `minimumReleaseAge` in a Renovate configuration. Read the value as well as the key: a cooldown shorter than a day does not outlast the window it exists to cover. Dependabot's cooldown applies to version updates and never to a security update, and Renovate's behaviour on a vulnerability alert is set separately by `minimumReleaseAgeBehaviour`, so neither setting has to be qualified to keep an advisory-driven fix prompt. A repository with no updater configuration at all falls outside this rule and fails R-SEC-03 instead, which is the same gap counted once.
+
+Fixed by: oss-harden
+Forges: both
+
+### R-SEC-15: CI installs dependencies without running the code they ship
+
+A dependency that runs code during install gets a shell on the runner, with whatever token the job holds and whatever the job can push to. That is the step the September 2025 npm worm used to spread, and it needs no vulnerability in the project: installing is enough. Every package manager that has this problem has now shipped a control for it, so the rule is about writing the control down where a reader can see it rather than inheriting whatever the runner's manager version happens to default to.
+
+Check: every CI step that installs registry dependencies either runs the package manager in a mode that executes no dependency-supplied install or build code, or the repository commits the allowlist that manager reads. For the npm ecosystem that is `--ignore-scripts` on the install command, or `allowScripts` in `package.json` for npm 12, `enableScripts: false` for Yarn, `allowBuilds` for pnpm, or `trustedDependencies` for Bun. For Composer it is `--no-scripts` and `--no-plugins`, or the `allow-plugins` map in `composer.json`, which from Composer 2.2.0 permits nothing until a plugin is listed. For Python it is `--only-binary`, because a wheel install runs no packaged code where a source distribution runs the project's build backend. Where the package manager documents no way to decline that code, the rule falls outside that ecosystem rather than failing it: that is Cargo, whose `build.rs` runs for every dependency that has one and can only be replaced through the `links` override; RubyGems, whose native extensions build on install; Hex, which compiles dependency source; Maven and NuGet, which run only what the project's own build file declares; and Go modules, container images, and pub.dev packages, where nothing a dependency ships runs during resolution at all.
 
 Fixed by: oss-harden
 Forges: both

@@ -4,10 +4,18 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # R-SEC-14. A version published minutes ago has had nobody look at it, and
+    # the compromises this guards against get found in hours. A cooldown never
+    # applies to a security update, so an advisory-driven fix still arrives the
+    # day it is published.
+    cooldown:
+      default-days: 7
   - package-ecosystem: "bun"
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
   # The docs site has its own dependency tree, so the root entry above does not
   # reach it. Bun gets version updates only, never security updates, so a CVE in
   # Astro arrives through this weekly bump or not at all.
@@ -15,3 +23,5 @@ updates:
     directory: "/site"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7

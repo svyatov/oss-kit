@@ -95,11 +95,11 @@ A slate reads like this. This one is the slate this kit's own README came from:
 ```text
 Candidate facts  (pick 3 to 5)
 
-  scope  1. GitHub and GitLab, 55 of 59 rules on both
+  scope  1. GitHub and GitLab, 57 of 61 rules on both
             src: STANDARD.md, Forges: lines
   scope  2. Publishing for npm, RubyGems, PyPI, crates.io
             src: skills/oss-publish/references/
-  scale  3. 59 rules, each with the check it is scored by
+  scale  3. 61 rules, each with the check it is scored by
             src: STANDARD.md, 59 "### R-" headings
   fit    4. Node 22 or Bun, nothing installed
             src: skills/oss-skill/scripts/validate.mjs
@@ -137,9 +137,9 @@ Keep the usage example small, 4 to 10 lines, and show its result when a short la
 
 Curated agent skills for open source maintainers.
 
-- **59 rules.** Each states the check it is scored by and the one skill that
+- **61 rules.** Each states the check it is scored by and the one skill that
   fixes it.
-- **Both forges.** 55 of the 59 rules score GitHub and GitLab alike.
+- **Both forges.** 57 of the 61 rules score GitHub and GitLab alike.
 
 ```bash
 npx skills add svyatov/oss-kit --skill '*'
@@ -152,7 +152,7 @@ Audit this repository against the oss-kit standard.
 ```
 
 ```text
-Audited 50 applicable rules: 47 pass, 2 fail, 1 unknown, 9 not applicable.
+Audited 52 applicable rules: 49 pass, 2 fail, 1 unknown, 9 not applicable.
 ```
 ````
 

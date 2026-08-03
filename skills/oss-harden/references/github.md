@@ -112,9 +112,9 @@ Every permission not named in a `permissions:` block is set to `none`, not left 
 
 A job that calls a reusable workflow is the one place where trimming a scope breaks the run rather than tightening it. The called workflow declares its own `permissions:`, and granting it less fails the whole run before any job starts, with `The workflow is requesting 'security-events: write', but is only allowed 'security-events: none'.` An input that disables the step needing the scope does not change this, because the check compares the two declarations rather than what the run goes on to do. Read the called workflow's top-level block and grant exactly that, then narrow what it does through its inputs.
 
-## Automated dependency updates (R-SEC-03)
+## Automated dependency updates (R-SEC-03, R-SEC-14)
 
-`dependabot.yml` version 2 needs one `updates` entry per ecosystem, each with `package-ecosystem`, `directory`, and `schedule.interval`:
+`dependabot.yml` version 2 needs one `updates` entry per ecosystem, each with `package-ecosystem`, `directory`, and `schedule.interval`, and a `cooldown` for R-SEC-14:
 
 ```yaml
 version: 2
@@ -123,13 +123,19 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
 ```
 
 `github-actions` scans every `.github/workflows/*.yml` file regardless of the `directory` value, so `directory: "/"` is correct even for a monorepo with workflows only at the root. `schedule.interval` accepts `daily`, `weekly`, `monthly`, `quarterly`, `semiannually`, or `yearly`, or a `cron` schedule for finer control; `daily` runs on weekdays only. Add one `package-ecosystem` entry per manifest ecosystem the project actually uses; do not add an ecosystem the repository has no manifest for.
+
+`cooldown` delays a version update by the number of days given, and Dependabot's own default inside the block is 3 days where `default-days` is absent. Write the number anyway, because a reader cannot tell an intended 3 from a forgotten key. `semver-major-days`, `semver-minor-days`, and `semver-patch-days` refine it for the ecosystems that track semantic versioning, and `include` and `exclude` take up to 150 entries each with wildcards, `exclude` winning. What the block does not do is delay a security update, which is the point: an advisory-driven fix still arrives the day it is published, so raising the cooldown costs the project nothing it wanted. Seven days is a defensible starting value and the standard asks only for at least a day; set it against how quickly the project actually merges bumps, since a cooldown longer than the gap between merges changes nothing.
 
 A workflow step that installs a tool with `pip install <package>` with no version pin, or `uv tool install git+<url>` with no ref, is not covered by the `github-actions` ecosystem above; Dependabot updates what a `uses:` line or a manifest names, not an arbitrary shell command. Pinning and updating that kind of install is the supply-chain observation `SKILL.md` Step 3 describes; note it in the summary rather than assuming `github-actions` coverage extends to it.
 

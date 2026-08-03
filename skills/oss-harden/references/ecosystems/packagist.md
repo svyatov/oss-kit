@@ -22,6 +22,18 @@ What Composer does not do is fail when that lockfile has drifted from `composer.
 
 Verified 2026-07-31 against [the Composer config reference](https://getcomposer.org/doc/06-config.md).
 
+## Dependency install scripts (R-SEC-15)
+
+Composer runs two kinds of package-supplied code, and they take different controls.
+
+Scripts are the ones a `composer.json` declares under `scripts`, including the `post-install-cmd` and `post-update-cmd` events an install fires. `--no-scripts` "Skips execution of scripts defined in `composer.json`", and it is what a CI install should carry, with the project's own scripts run as explicit steps after it where they are needed.
+
+Plugins are the sharper problem, because a plugin executes during the Composer run itself rather than at an event the project chose. `--no-plugins` disables them for one run. The durable form is the `allow-plugins` map in `composer.json`, added in Composer 2.2.0 to "restrict which Composer plugins are able to execute code during a Composer run". It "Defaults to `{}` which does not allow any plugins to be loaded", and an unlisted plugin prints a warning and, in an interactive run, a prompt. That default is what makes the map worth committing rather than relying on: a non-interactive CI run with no map loads nothing, and a developer answering the prompt locally is how an entry gets added without anybody deciding to add it.
+
+So the rule is satisfied here by `--no-scripts --no-plugins` on the CI install, or by a committed `allow-plugins` map that names only what the project has actually reviewed.
+
+Verified 2026-08-03 against [Composer CLI](https://getcomposer.org/doc/03-cli.md) and [Composer config](https://getcomposer.org/doc/06-config.md).
+
 ## Static analysis (R-SEC-09)
 
 CodeQL does not support PHP; it appears nowhere in the supported languages list, so CodeQL default setup is not the answer here and adding an empty CodeQL configuration would be worse than none.

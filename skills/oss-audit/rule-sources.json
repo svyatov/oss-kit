@@ -456,5 +456,28 @@
     ],
     "verified": "2026-07-31",
     "note": "Go is the only ecosystem on the current roster that encodes the major version in package identity, and it states the requirement rather than leaving it to convention: 'If the module is released at major version 2 or higher, the module path must end with a major version suffix like /v2', with the matching prohibition that 'Major version suffixes are not allowed at major versions v0 or v1', and the gopkg.in exception carrying the suffix at every major with a dot rather than a slash. The rule is worded for the general case rather than for Go alone because the failure is structural: the suffix reaches the import path of every package in the module, so the mismatch is not a stale number but a package nobody can import. Everything else on the roster falls outside the rule by its own Check, which is why this is a one-ecosystem rule that is worth having at all. Retire it if Go drops the suffix requirement, and widen it if another roster ecosystem adopts one."
+  },
+  "R-SEC-14": {
+    "sources": [
+      "https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference",
+      "https://docs.renovatebot.com/configuration-options/",
+      "https://github.blog/security/supply-chain-security/our-plan-for-a-more-secure-npm-supply-chain/",
+      "https://pnpm.io/supply-chain-security"
+    ],
+    "verified": "2026-08-03",
+    "note": "Dependabot documents cooldown as applying to version updates and not to security updates, which is what lets the rule ask for a delay without slowing an advisory-driven fix. Renovate settles the same question separately through minimumReleaseAgeBehaviour. The day floor is this project position: no source names a number, and the incidents the rule exists for were found and pulled in hours rather than minutes. pnpm shipping minimumReleaseAge on by default at one day in v11, and Yarn defaulting npmMinimalAgeGate to one week, are the closest thing to a published value. What would retire the rule is every updater defaulting a cooldown on."
+  },
+  "R-SEC-15": {
+    "sources": [
+      "https://github.com/npm/cli/releases/tag/v12.0.0",
+      "https://github.com/npm/cli/blob/latest/docs/lib/content/commands/npm-install-scripts.md",
+      "https://yarnpkg.com/configuration/yarnrc",
+      "https://pnpm.io/supply-chain-security",
+      "https://bun.com/docs/pm/cli/install",
+      "https://getcomposer.org/doc/06-config.md",
+      "https://pip.pypa.io/en/stable/cli/pip_install/"
+    ],
+    "verified": "2026-08-03",
+    "note": "The falls-outside list was read once per ecosystem rather than assumed. Cargo documents no way to decline a dependency build.rs beyond the links override, RubyGems builds native extensions on install with no documented allowlist, Mix documents no flag that compiles a project without compiling its dependencies, Maven and NuGet execute only what the consuming project own build file declares, and Go modules, pub.dev packages, and container base images run nothing during resolution. The rule asks for the flag or the allowlist to be written down even where the manager now blocks this code by default, which is this project position and the same one R-SEC-08 takes about frozen installs: a default that depends on the runner manager version is not evidence in a configuration file. What would retire that half is every manager in scope making the control unconditional."
   }
 }

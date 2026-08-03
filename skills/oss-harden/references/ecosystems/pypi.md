@@ -27,6 +27,18 @@ A project with no lockfile at all reaches the same place through a fully hashed 
 
 Verified 2026-07-31 against [uv resolution](https://docs.astral.sh/uv/concepts/resolution/), [Poetry basic usage](https://python-poetry.org/docs/basic-usage/), and [pip-tools](https://pip-tools.readthedocs.io/en/latest/).
 
+## Dependency install scripts (R-SEC-15)
+
+Python has no postinstall hook, so there is no flag named for one. What it has instead is the build step: installing a wheel unpacks files and runs no packaged code, while installing a source distribution invokes that project's build backend, which is arbitrary Python executing on the runner. The control is therefore about which artifact the install accepts rather than about scripts.
+
+`--only-binary` is that control: pip documents it as "Do not use source packages", and `--only-binary=:all:` applies it to every requirement. A package with no wheel for the runner's platform then fails the install rather than building quietly, which is the finding rather than a regression: it names exactly which dependency runs code at install time, and the answer is usually to keep the flag and exclude that one package by name.
+
+`--no-build-isolation` is not this control and is sometimes mistaken for it. It changes where the build's own dependencies come from and still runs the build. There is no pip flag that installs a source distribution without executing its build backend.
+
+Where the project installs with uv or Poetry rather than pip, read that tool's current documentation for its equivalent before writing a flag; do not carry pip's spelling across.
+
+Verified 2026-08-03 against [pip install](https://pip.pypa.io/en/stable/cli/pip_install/).
+
 ## Static analysis (R-SEC-09)
 
 CodeQL supports Python, so CodeQL default setup covers this ecosystem on GitHub. GitLab's SAST table lists Python under its Semgrep-based analyzer with GitLab-managed rules.
