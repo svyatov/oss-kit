@@ -52,6 +52,8 @@ Run `scripts/collect.mjs` from this skill's own directory first, against the rep
 node <this skill's directory>/scripts/collect.mjs <repository root>
 ```
 
+The output is one object with seven keys: `root`, `presence`, `workflows`, `actions`, `readme`, `changelog`, and `summary`. A `workflows` entry carries `file`, `triggers`, `triggerFilters`, `topLevelPermissions`, `concurrency`, `jobs`, and `uses`; note the first is `file` rather than `path`, which is the one key an audit reliably guesses wrong. Read the shape before writing a filter over it, because a script that reads a key the output does not have prints nothing and looks like a repository with nothing to report.
+
 It parses the workflow rather than matching lines in it, and that is the point. A regex over job-shaped lines counts a top-level `env:` block's keys as jobs, which is how one audit reported every job as missing a timeout when none was. It also reads every `action.yml` the repository ships, because a composite action's steps take `uses:` and an unpinned action there is invisible to any scan of `.github/workflows` alone.
 
 The script decides no rule. Whether the sentence before a code block names that block's destination, or whether a differentiator carries evidence, is judgement and stays below. Prose findings are `oss-writing`'s, through the `scripts/prose.mjs` that skill ships, so nothing here duplicates its banned-word table.
@@ -174,6 +176,8 @@ One line per group, in the order this section computed, with the rule count and 
 ## Step 8: Audit again, and diff
 
 When the fix groups are done, run this skill again and diff the new report against the one the first run wrote. Keep both. The diff is the only evidence that a rule the first audit passed is still passing, and that a rule it failed is actually closed rather than reported closed.
+
+Run it in a fresh session, for the same reason each fix group gets one. This step arrives at the end of the longest context in the run, and it needs the whole of this file to work from. A run that reaches here in the session that did the fixing gets compacted partway through and continues against a truncated copy of these instructions, which is how one closing audit had to be started over. The report file is the handover, so a fresh session needs nothing else.
 
 Read three things out of it. A verdict that went from fail to pass is a fix landing. A verdict that went from pass to fail is either a fix that broke something else or a first audit that was wrong, and reading the file settles which. A verdict that did not move on a rule the plan targeted is a fix that did not take, whatever the fix session reported.
 
