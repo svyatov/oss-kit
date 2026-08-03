@@ -396,11 +396,11 @@ The area runs on two tracks, and which track a repository takes decides how many
 
 A repository that ships only its source, with no package identity any registry resolves, publishes nothing to secure here and falls outside this area on either track. Shipping through git tags is not by itself what places a repository outside it, because that is exactly how a Go module publishes; the absence of a resolvable package identity is.
 
-### R-PUB-01: Publishing happens in CI, triggered by a tag, never from a developer machine
+### R-PUB-01: Publishing happens in CI, tied to a release tag, never from a developer machine
 
-A local publish ships whatever is in the working tree, from a machine holding a long-lived registry token. A tag-triggered CI publish ships a commit that is in the repository and that CI has tested.
+A local publish ships whatever is in the working tree, from a machine holding a long-lived registry token. A CI publish tied to a release tag ships a commit that is in the repository and that CI has tested.
 
-Check: a release workflow or pipeline triggered by a tag push runs the publish command, and the publish command appears in no local script intended for manual use.
+Check: the publish command runs in a release workflow or pipeline that is either triggered by a tag push or creates the release tag in the same run, and appears in no local script intended for manual use. A release-automation workflow such as release-please, semantic-release, or changesets satisfies this by the second clause: it triggers on a merge to the default branch and then tags, releases, and publishes in one run, so the published commit is still one the repository holds and CI has tested. What fails is a publish with no release tag on either side of it, and a publish a person can run from a working tree.
 
 Fixed by: oss-publish
 Forges: both

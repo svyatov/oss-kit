@@ -142,6 +142,8 @@ The version comparison assumes tags such as `v1.2.3`; derive the comparison from
 
 If an existing workflow uses `secrets.NPM_TOKEN`, remove it from the YAML now and tell the user to delete the corresponding secret and revoke the token once the new flow is verified.
 
+Where a release tool already owns the release, keep it and fit the publish job inside it rather than adding a second release path. release-please, semantic-release, and changesets all work the same way: the workflow triggers on a merge to the default branch, the tool decides whether that merge is a release, and where it is, the tool creates the tag and the forge release and the publish runs behind it in the same job graph. That satisfies R-PUB-01 through the clause covering a run that creates the release tag itself, so do not rewrite it into a `push: tags` trigger to make the rule read more literally. Three things do change. The tool's own job outputs whether a release happened, and every job after it needs the condition, or the workflow publishes on every merge; the version check against the tag comes from the tool's manifest rather than from `GITHUB_REF_NAME`; and the environment gate belongs on the publish job exactly as above, because the tag is created by then and the approval has to sit between the tag and the registry rather than before the tag.
+
 ## Gate on manual approval (Step 4)
 
 Two gates apply together, not as alternatives:
