@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+### Changed
+
+- The seven npm ecosystem references track npm 12, released 2026-07-08, rather than npm 11. Every `docs.npmjs.com/cli/v11` link now resolves to the v12 page and each claim behind it was read again there. `oss-ci`'s matrix example is Node 22, 24, and 26; the 20 it used to name reached end of life on 2026-04-30, and the file now says which dates turn the set over rather than leaving the next reader to find out. `npm-shrinkwrap.json` is no longer a lockfile: npm 12 removed the command and stopped loading the file, so `oss-harden` reports one as a finding, `oss-changelog` drops it as a version source, and `oss-audit` says a checkout carrying one proves a dependency tree and nothing about how it resolves.
+- `oss-publish`'s npm reference states the Node range npm 12 requires, warns that a newly published version is not installable while npm's publish-time malware scan runs, typically around five minutes and up to fifteen or more, and explains why the R-PUB-02 token fallback does not reach npm: classic tokens were revoked on 2025-12-09, granular tokens expire within 90 days, and a 2FA-bypass token loses direct publish around January 2027.
+
+### Added
+
+- `oss-harden`'s npm reference answers dependency install scripts, which are the shortest path from a compromised package to a shell on the runner. All four managers now block them by default and each is configured somewhere different: npm 12 through `allowScripts` and `npm install-scripts`, Yarn through `enableScripts`, pnpm through `allowBuilds` since version 10, and Bun through `trustedDependencies`. npm 12 also stopped resolving git and URL dependencies by default.
+
 ## [0.10.0] - 2026-07-31
 
 ### Added

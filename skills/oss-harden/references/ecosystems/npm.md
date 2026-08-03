@@ -8,9 +8,9 @@ On GitLab, where nothing equivalent to Dependabot ships with the platform, the R
 
 ## Lockfile and frozen install (R-SEC-08)
 
-Every package manager here writes a lockfile without being asked: `package-lock.json` or `npm-shrinkwrap.json`, `yarn.lock`, `pnpm-lock.yaml`, or `bun.lock`. The frozen-install command differs by manager, and each fails rather than re-resolving:
+Every package manager here writes a lockfile without being asked: `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, or `bun.lock`. The frozen-install command differs by manager, and each fails rather than re-resolving:
 
-- `npm ci`, which needs an existing `package-lock.json` or `npm-shrinkwrap.json`, and where "If dependencies in the package lock do not match those in `package.json`, `npm ci` will exit with an error, instead of updating the package lock".
+- `npm ci`, which needs an existing `package-lock.json`, and where "If dependencies in the package lock do not match those in `package.json`, `npm ci` will exit with an error, instead of updating the package lock".
 - `yarn install --immutable`, documented as "Abort with an error exit code if the lockfile was to be modified".
 - `pnpm install --frozen-lockfile`, which "doesn't generate a lockfile and fails to install if the lockfile is out of sync with the manifest / an update is needed or no lockfile is present".
 - `bun install --frozen-lockfile`, which installs the exact versions in the lockfile and exits with an error when `package.json` disagrees with `bun.lock`.
@@ -25,7 +25,22 @@ Yarn and pnpm both default that flag on in CI, and pnpm's default also requires 
 
 **Every lockfile needs a directory the updater is configured to read.** Dependabot reaches the directories its configuration lists and no others, so a workspace or a nested package whose directory is unlisted keeps a lockfile nobody bumps. List each one, and give the project a single command that regenerates them all.
 
-Verified 2026-07-31 against [npm install](https://docs.npmjs.com/cli/v11/commands/npm-install), [package-lock.json](https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json), and [npm/cli issue 4828](https://github.com/npm/cli/issues/4828).
+**`npm-shrinkwrap.json` is no longer a lockfile.** npm 12 removed the `npm shrinkwrap` command and no longer loads or honors a file of that name, so a repository still carrying one is installing from nothing. Rename it to `package-lock.json`, or use `bundleDependencies` where the point was to ship a locked tree. The roster still lists the filename because repositories still carry it, and finding one is now a finding rather than a pass.
+
+Verified 2026-07-31 against [npm install](https://docs.npmjs.com/cli/v12/commands/npm-install), [package-lock.json](https://docs.npmjs.com/cli/v12/configuring-npm/package-lock-json), and [npm/cli issue 4828](https://github.com/npm/cli/issues/4828), and the shrinkwrap paragraph on 2026-08-03 against [npm CLI v12.0.0](https://github.com/npm/cli/releases/tag/v12.0.0).
+
+## Dependency install scripts
+
+An install-time lifecycle script is the shortest path from a compromised package to a shell on the runner, holding whatever token the job holds. Every manager in this ecosystem now blocks dependency scripts by default, but they arrived there at different times and they are configured in four different places, so read which manager the repository uses before concluding anything.
+
+- **npm** blocks dependency lifecycle scripts by default from version 12, released 2026-07-08, and governs the exceptions with an `allowScripts` field in the root `package.json`. Maintain it with `npm install-scripts approve|deny|ls|prune`; `npm approve-scripts` and `npm deny-scripts` are aliases for the first two. `approve` writes a version-pinned entry such as `pkg@1.2.3` unless `--no-allow-scripts-pin` is passed, `deny` writes a name-only `false` entry that survives a later `approve --all`, `ls` reports what is blocked without editing anything, and `npm rebuild` runs a script that was approved after the install. npm 12 also changed `allow-git` and `allow-remote` to default to `none`, so a git or tarball-URL dependency no longer resolves until one of them is set to `all` or `root`.
+- **yarn** defaults `enableScripts` to false, documented as "Yarn will not execute the postinstall scripts from third-party packages".
+- **pnpm** disabled automatic execution of dependency `postinstall` scripts in version 10. `allowBuilds` lists the dependencies permitted to build; `dangerouslyAllowAllBuilds` turns the protection off wholesale and its name is the review comment.
+- **bun** never runs a dependency lifecycle script, and `trustedDependencies` in `package.json` is the opt-in list.
+
+`--ignore-scripts` is a blunter and older instrument that still works and is worth writing in CI anyway, because it is evidence in the workflow file rather than a default the runner's manager version happens to carry. Note what it costs: it suppresses the project's own scripts too, which is why a job that needs `prepare` or `prepublishOnly` runs them as an explicit step rather than relying on the install to trigger them.
+
+Verified 2026-08-03 against [npm config](https://docs.npmjs.com/cli/v12/using-npm/config), [npm install-scripts](https://github.com/npm/cli/blob/latest/docs/lib/content/commands/npm-install-scripts.md), [npm CLI v12.0.0](https://github.com/npm/cli/releases/tag/v12.0.0), [Yarn configuration](https://yarnpkg.com/configuration/yarnrc), [pnpm supply chain security](https://pnpm.io/supply-chain-security), and [bun install](https://bun.com/docs/pm/cli/install).
 
 ## Static analysis (R-SEC-09)
 
@@ -39,4 +54,4 @@ Advisories come from the GitHub Advisory Database, which names this ecosystem Np
 
 `osv-scanner` reads `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, and `bun.lock`, so it closes both the Bun parsing gap and the Bun security-update gap in one job.
 
-Verified 2026-07-31 against [Dependabot supported ecosystems and repositories](https://docs.github.com/en/code-security/reference/supply-chain-security/supported-ecosystems-and-repositories), [Dependency graph supported package ecosystems](https://docs.github.com/en/code-security/reference/supply-chain-security/dependency-graph-supported-package-ecosystems), [GitHub Advisory Database](https://docs.github.com/en/code-security/concepts/vulnerability-reporting-and-management/github-advisory-database), [npm-ci](https://docs.npmjs.com/cli/v11/commands/npm-ci), [yarn install](https://yarnpkg.com/cli/install), [pnpm install](https://pnpm.io/cli/install), [bun install](https://bun.com/docs/pm/cli/install), [CodeQL supported languages and frameworks](https://codeql.github.com/docs/codeql-overview/supported-languages-and-frameworks/), [GitLab SAST](https://docs.gitlab.com/user/application_security/sast/), [Renovate managers](https://docs.renovatebot.com/modules/manager/), and [osv-scanner supported languages and lockfiles](https://google.github.io/osv-scanner/supported-languages-and-lockfiles/).
+Verified 2026-07-31 against [Dependabot supported ecosystems and repositories](https://docs.github.com/en/code-security/reference/supply-chain-security/supported-ecosystems-and-repositories), [Dependency graph supported package ecosystems](https://docs.github.com/en/code-security/reference/supply-chain-security/dependency-graph-supported-package-ecosystems), [GitHub Advisory Database](https://docs.github.com/en/code-security/concepts/vulnerability-reporting-and-management/github-advisory-database), [npm-ci](https://docs.npmjs.com/cli/v12/commands/npm-ci), [yarn install](https://yarnpkg.com/cli/install), [pnpm install](https://pnpm.io/cli/install), [bun install](https://bun.com/docs/pm/cli/install), [CodeQL supported languages and frameworks](https://codeql.github.com/docs/codeql-overview/supported-languages-and-frameworks/), [GitLab SAST](https://docs.gitlab.com/user/application_security/sast/), [Renovate managers](https://docs.renovatebot.com/modules/manager/), and [osv-scanner supported languages and lockfiles](https://google.github.io/osv-scanner/supported-languages-and-lockfiles/).
