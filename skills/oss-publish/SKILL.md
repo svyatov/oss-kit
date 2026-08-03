@@ -90,7 +90,7 @@ Read each R-PUB rule's `Check:` line in `STANDARD.md` against the workflow, the 
 
 ## Scope
 
-The PUB rules belong here: R-PUB-01 tag-triggered CI, R-PUB-02 trusted publishing, R-PUB-03 build provenance, R-PUB-04 human approval, R-PUB-05 artifact inventory, R-PUB-06 signed assets, and R-PUB-07 tag-published registry updates.
+The PUB rules belong here: R-PUB-01 publishing in CI tied to a release tag, R-PUB-02 trusted publishing, R-PUB-03 build provenance, R-PUB-04 human approval, R-PUB-05 artifact inventory, R-PUB-06 signed assets, and R-PUB-07 tag-published registry updates.
 
 When `oss-audit-report.md` exists at the repository root, read the group addressed to this skill and work from that. Each failing rule there carries the audit's evidence and that rule's `Check:` text verbatim, so reading `STANDARD.md` as well adds nothing. Where the file is absent, work from the request as usual.
 
