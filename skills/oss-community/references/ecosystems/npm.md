@@ -8,7 +8,7 @@ Two values name no license at all, and each changes what there is to compare. `"
 
 The manifest side of R-COM-01 is therefore the `license` string of every `package.json` the repository publishes from, and the file side is the root license file. A workspace has one value per member manifest, so several comparisons rather than one. A manifest carrying `"private": true` and no `license` key declares nothing, which leaves that manifest out of the comparison without leaving the repository out of the rule.
 
-Source: [package.json fields](https://docs.npmjs.com/cli/v11/configuring-npm/package-json).
+Source: [package.json fields](https://docs.npmjs.com/cli/v12/configuring-npm/package-json).
 
 ## Funding platform name
 
@@ -16,4 +16,4 @@ Tidelift's platform name for this ecosystem is `npm`, so the GitHub funding file
 
 The roster at `skills/oss-audit/ecosystems.json` records `"tidelift": "npm"` and is the canonical copy. This line exists because a single-skill install of `oss-community` does not carry that file; where the two disagree, the roster is right and this line is corrected to it.
 
-Verified 2026-07-31 against [package.json fields](https://docs.npmjs.com/cli/v11/configuring-npm/package-json) and [Displaying a sponsor button in your repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository).
+Verified 2026-08-03 against [package.json fields](https://docs.npmjs.com/cli/v12/configuring-npm/package-json) and [Displaying a sponsor button in your repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository).

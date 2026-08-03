@@ -2,7 +2,9 @@
 
 Concrete flow for the decisions `SKILL.md` makes, for a package published to the public npm registry. npm accepts three trusted publishing providers: GitHub Actions, GitLab CI/CD on GitLab.com shared runners, and CircleCI Cloud. This file covers GitHub Actions and GitLab CI/CD because `oss-kit`'s forge scope is GitHub and GitLab. Self-hosted runners are not supported. Trusted publishing needs npm CLI 11.5.1 or newer and Node 22.14.0 or newer. Staged publishing needs npm CLI 11.15.0 or newer. Resolve an exact supported Node release from Node's official archive immediately before writing the workflow, and read the npm version that release bundles from the same archive rather than assuming one. Do not install a floating npm range in the credentialed job.
 
-Source: [npm Docs, Trusted publishing for npm packages](https://docs.npmjs.com/trusted-publishers/), [npm Docs, Staged publishing](https://docs.npmjs.com/staged-publishing/), and [Node.js download archive, Node 24.18.0](https://nodejs.org/en/download/archive/v24.18.0).
+Those are floors rather than recommendations. npm 12 is the current major, released 2026-07-08, and it requires Node `^22.22.2 || ^24.15.0 || >=26.0.0`, so a job that pins an older patch release within a supported line cannot run it. Where the release the workflow pins bundles an npm below the floor, install one exact npm version in the job rather than widening the Node pin, and write the exact version rather than a range.
+
+Source: [npm Docs, Trusted publishing for npm packages](https://docs.npmjs.com/trusted-publishers/), [npm Docs, Staged publishing](https://docs.npmjs.com/staged-publishing/), [npm CLI v12.0.0](https://github.com/npm/cli/releases/tag/v12.0.0), and [Node.js download archive, Node 24.18.0](https://nodejs.org/en/download/archive/v24.18.0).
 
 ## Contents
 
@@ -16,6 +18,7 @@ Source: [npm Docs, Trusted publishing for npm packages](https://docs.npmjs.com/t
 - [Describe and sign what the release attaches (Step 6)](#describe-and-sign-what-the-release-attaches-step-6)
 - [Not yet published packages](#not-yet-published-packages)
 - [Monorepo packages](#monorepo-packages)
+- [Why this file never reaches for a token](#why-this-file-never-reaches-for-a-token)
 
 ## Gather facts (Step 1)
 
@@ -179,7 +182,9 @@ npm audit signatures
 
 The output must report verified provenance for that dependency. The package page also shows provenance details. A bare `npm audit signatures` in the source repository does not verify the newly published package unless that exact version is installed there.
 
-Source: [npm Docs, Trusted publishing for npm packages](https://docs.npmjs.com/trusted-publishers/) and [npm Docs, Viewing package provenance](https://docs.npmjs.com/viewing-package-provenance/).
+**A newly published version is not installable straight away.** npm scans every publish for malware before the version becomes available, "typically around five minutes" and "up to 15 minutes or more, at peak times or depending on a package's content and size". The install above fails while the scan is pending, and so does anything else the release does with the version it just shipped: `npm deprecate` and `npm unpublish` both wait on availability, and only `npm dist-tag` keeps working throughout. So do not read a failed install in the first minutes as a failed publish. Wait and repeat it, and where a workflow step installs the package it just published, npm's own instruction is to "update it to tolerate a short availability delay" rather than to retry immediately and fail the release on a scan that has not finished.
+
+Source: [npm Docs, Trusted publishing for npm packages](https://docs.npmjs.com/trusted-publishers/), [npm Docs, Viewing package provenance](https://docs.npmjs.com/viewing-package-provenance/), and [npm publish-time malware scanning and dual-use metadata](https://github.blog/changelog/2026-07-28-npm-publish-time-malware-scanning-and-dual-use-metadata/).
 
 ## Describe and sign what the release attaches (Step 6)
 
@@ -244,6 +249,14 @@ A trusted publisher is configured on the package's npm settings page, which does
 
 Every public workspace package needs its own trusted publisher entry pointing at the same repository and workflow filename; a package left out stays unprotected. `npm stage` is unaware of workspaces. Pack each publishable workspace in the build job, then stage each resulting tarball explicitly, preferably in one approval-gated publish job per independently versioned package. Match each job's tag trigger and version check to that package. `npm sbom --workspace <name>` scopes Step 6's bill of materials to one of them.
 
+## Why this file never reaches for a token
+
+npm's token track is being withdrawn, so a reader who arrives here with a working `NPM_TOKEN` should know it has an end date rather than a trade-off. Classic tokens stopped being issued on 2025-11-05, and every one of them was revoked by 2025-12-09. What replaced them, granular access tokens, expire in at most 90 days. From early August 2026 a 2FA-bypass granular token can no longer change trusted publishing configuration or perform account, package, and organization management, and around January 2027 it loses the ability to publish directly, leaving it able to read private packages and to stage a publish for someone else to approve.
+
+npm's own recommendation for automated publishing is trusted publishing, or staged publishing with a human approval step, which is what the rest of this file builds. R-PUB-02 permits a scoped token as a below-the-bar fallback where a registry documents no OIDC flow at all. npm documents one, so that fallback does not reach this ecosystem, and a token here is a finding rather than a slower road to the same place.
+
+Source: [npm classic token creation disabled](https://github.blog/changelog/2025-11-05-npm-security-update-classic-token-creation-disabled-and-granular-token-changes/), [npm classic tokens revoked](https://github.blog/changelog/2025-12-09-npm-classic-tokens-revoked-session-based-auth-and-cli-token-management-now-available/), and [npm install-time security and GAT bypass2fa deprecation](https://github.blog/changelog/2026-07-08-npm-install-time-security-and-gat-bypass2fa-deprecation/).
+
 Step 7 is in `SKILL.md`: read each R-PUB rule's `Check:` line against what this file produced, and fix what fails before reporting done.
 
-Verified 2026-07-31 against [npm Docs, Trusted publishing for npm packages](https://docs.npmjs.com/trusted-publishers/) and [npm Docs, Staged publishing for npm packages](https://docs.npmjs.com/staged-publishing/).
+Verified 2026-07-31 against [npm Docs, Trusted publishing for npm packages](https://docs.npmjs.com/trusted-publishers/) and [npm Docs, Staged publishing for npm packages](https://docs.npmjs.com/staged-publishing/). The npm 12 floor, the malware-scan delay, and the token section were added on 2026-08-03 against [npm CLI v12.0.0](https://github.com/npm/cli/releases/tag/v12.0.0) and the three GitHub changelog entries cited beside them.

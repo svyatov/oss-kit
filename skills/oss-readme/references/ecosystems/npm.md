@@ -22,4 +22,4 @@ npm install PACKAGE
 
 One command is enough. A README that stacks npm, Yarn, pnpm, and Bun rows for the same package spends four lines restating one fact, and every row is a line that can go stale independently. Show the second manager only where installing under it genuinely differs.
 
-Verified 2026-07-31 against [npm-install](https://docs.npmjs.com/cli/v11/commands/npm-install), [NPM Version badge](https://shields.io/badges/npm-version), and `services/npm/npm-version.service.js` plus `services/npm/npm-base.js` and `services/version.js` in [badges/shields](https://github.com/badges/shields).
+Verified 2026-08-03 against [npm-install](https://docs.npmjs.com/cli/v12/commands/npm-install), [NPM Version badge](https://shields.io/badges/npm-version), and `services/npm/npm-version.service.js` plus `services/npm/npm-base.js` and `services/version.js` in [badges/shields](https://github.com/badges/shields).
