@@ -352,6 +352,23 @@ JSON
 
 Name the release principals explicitly there, with the same `actor_type` values the earlier section lists, and keep the list as short as the release process allows. Repository admin is the widest defensible entry and a named team or app is usually narrower.
 
+#### Where the tag is created by automation on a personal account
+
+Check who actually pushes the release tag before writing the second ruleset, because for one common shape it cannot be written at all. Where a release tool such as release-please, semantic-release, or changesets creates the tag, the principal that needs the bypass is the GitHub Actions integration rather than any person. On a repository owned by a personal account, GitHub refuses that entry:
+
+```text
+422 Validation Failed
+Actor GitHub Actions integration must be part of the ruleset source or owner organization
+```
+
+There is no workaround at the API. A `creation` rule with an empty bypass list would block the automation from tagging, and the release then fails at the tag step with every earlier job green, which is a worse failure than the one the rule prevents. So on a personal-account repository with automated tagging there are three ways forward, and none of them is free:
+
+- Create `tags-immutable` alone and leave creation unrestricted. This is usually right. It keeps the half that matters most, since a released tag can no longer be moved or deleted by anybody, the owner included, and it leaves open only the creation of new tags, which publishes nothing on its own where an approval gate stands between a tag and the registry. R-SEC-13 fails, and the report should say why rather than marking it not applicable: tag creation genuinely is unrestricted.
+- Transfer the repository to an organization. The GitHub Actions integration becomes a legal bypass actor there and the second ruleset goes in as written.
+- Tag by hand, locally and signed, and name the maintainer in the bypass list instead of the automation. This closes R-SEC-05 at the same time, since a hand-made tag can be annotated and signed where the one a tool creates through `POST /repos/{owner}/{repo}/git/refs` is a bare ref carrying no tagger and no signature. The cost is that a release stops being one merge.
+
+Whichever is chosen, verify it against a real release rather than against the API response. A `creation` rule that locks the release tool out looks identical to a correct one until the day someone releases.
+
 Match `refs/tags/*` only where the project tags nothing else. Where releases are `v`-prefixed and other tags are not, `refs/tags/v*` protects the releases without freezing every scratch tag someone pushes.
 
 Read it back rather than trusting the write, the same two calls the branch case needs:
