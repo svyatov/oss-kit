@@ -6,6 +6,10 @@ import readmeText from "../../../README.md?raw"
 import standardText from "../../../skills/oss-audit/STANDARD.md?raw"
 import { FORGE_LABEL, parseRules, skillSummaries } from "../../scripts/generate.mjs"
 
+// Re-exported so a page quoting the standard reaches for one module rather than
+// two, and so nothing on the homepage has a reason to transcribe a rule by hand.
+export { FORGE_LABEL, leadClause } from "../../scripts/generate.mjs"
+
 export const rules = parseRules(standardText)
 
 export const domains = [...new Set(rules.map((rule) => rule.section))].map((section) => {
@@ -19,6 +23,11 @@ export const domains = [...new Set(rules.map((rule) => rule.section))].map((sect
 })
 
 export const sampleRule = rules.find((rule) => rule.id === "R-SEC-01")
+
+// The rule the homepage's contract panel takes apart. A second area, so the page
+// does not show the same rule twice, and read from the standard rather than
+// transcribed: see leadClause for what the transcription cost.
+export const contractRule = rules.find((rule) => rule.id === "R-CI-01")
 
 /** @param {number} n */
 const plural = (n) => `${n} ${n === 1 ? "rule" : "rules"}`
