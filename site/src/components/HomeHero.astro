@@ -64,7 +64,18 @@ import { domains, sampleRule } from "../lib/content.mjs"
                 <span class="domain-bay__number">{String(index + 1).padStart(2, "0")}</span>
                 <span class="domain-bay__icon"><DomainIcon name={domain.area.toLowerCase()} /></span>
                 <span class="domain-bay__name">{domain.section}</span>
-                <span class="domain-bay__count">{domain.rules.length} rules</span>
+                <span class="domain-bay__count">
+                  {/* The lit bay used to say so in green and in nothing else. The
+                      marker is a shape rather than a second tint, and the word
+                      behind it is what a reader who cannot see either one gets. */}
+                  {domain.area === "SEC" && (
+                    <>
+                      <i aria-hidden="true" />
+                      <span class="sr-only">Scanning now. </span>
+                    </>
+                  )}
+                  {domain.rules.length} rules
+                </span>
               </a>
             </li>
           ))

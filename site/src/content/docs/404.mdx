@@ -1,0 +1,20 @@
+---
+title: Signal not found
+description: The requested oss-kit documentation page does not exist.
+template: splash
+tableOfContents: false
+pagefind: false
+editUrl: false
+---
+
+import SearchPrompt from "../../components/SearchPrompt.astro";
+
+<div className="not-found">
+  <p className="doc-kind-label">404 · No matching route</p>
+  <p>The page may have moved while the documentation structure was still taking shape. Search finds a rule by its ID or its statement, and a skill by name.</p>
+  <div className="not-found__actions">
+    <SearchPrompt />
+    <a className="kit-button kit-button--secondary" href="/">Back to the homepage</a>
+    <a className="kit-button kit-button--secondary" href="/skills/">Browse skills</a>
+  </div>
+</div>

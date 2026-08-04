@@ -11,28 +11,40 @@ import InstallCommand from "./InstallCommand.astro"
     <Pagination />
   </div>
 
+  {/* The band is full bleed and the row inside it is not. Both rows share the
+      measure the homepage sections use, so the footer's left edge continues the
+      one every section above it established rather than starting a third. */}
   <section class="kit-footer__install" aria-labelledby="footer-install-title">
-    <div>
-      <p class="kit-label">Install the kit</p>
-      <h2 id="footer-install-title">Put the current skills in your agent.</h2>
-      <p>Install the full collection, or choose one skill from the install guide.</p>
+    <div class="kit-footer__row">
+      <div>
+        <p class="kit-label">Install the kit</p>
+        <h2 id="footer-install-title">Put the current skills in your agent.</h2>
+        <p>Install the full collection, or choose one skill from the install guide.</p>
+      </div>
+      <InstallCommand compact />
     </div>
-    <InstallCommand compact />
   </section>
 
   <div class="kit-footer__utility">
-    <a class="kit-footer__brand" href="/">
-      <BrandMark />
-      <span>oss-kit</span>
-    </a>
-    <p>Curated agent skills for open source maintainers.</p>
-    <nav aria-label="Footer">
-      <a href="/skills/">Skills</a>
-      <a href="/standard/">Standard</a>
-      <a href="/guides/getting-started/">Guides</a>
-      <a href="/changelog/">Changelog</a>
-      <a href="https://github.com/svyatov/oss-kit">GitHub</a>
-      <a href="https://github.com/svyatov/oss-kit/blob/main/LICENSE">MIT license</a>
-    </nav>
+    <div class="kit-footer__row">
+      <a class="kit-footer__brand" href="/">
+        <BrandMark />
+        <span>oss-kit</span>
+      </a>
+      <p>Curated agent skills for open source maintainers.</p>
+      {/* Rules and Ecosystems are in the sidebar and nowhere else, and the
+          sidebar is absent from the one page that introduces both. The header
+          row has no space left; the footer is where the whole map belongs. */}
+      <nav aria-label="Footer">
+        <a href="/skills/">Skills</a>
+        <a href="/standard/">Standard</a>
+        <a href="/rules/">Rules</a>
+        <a href="/ecosystems/">Ecosystems</a>
+        <a href="/guides/getting-started/">Start here</a>
+        <a href="/changelog/">Changelog</a>
+        <a href="https://github.com/svyatov/oss-kit">GitHub</a>
+        <a href="https://github.com/svyatov/oss-kit/blob/main/LICENSE">MIT license</a>
+      </nav>
+    </div>
   </div>
 </footer>

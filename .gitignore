@@ -1,7 +1,12 @@
 .compound-engineering/
 .claude/settings.local.json
 .claude/worktrees/
-docs/
+# Anchored, because an unanchored `docs/` matches a directory of that name at
+# any depth, and this repository has a second one: the site's content tree,
+# whose handwritten pages are tracked. Unanchored, this rule silently shadowed
+# it, so any page added there after the first commit could not be staged at all.
+# The generated pages under that tree are ignored by name further down.
+/docs/
 STRATEGY.md
 CONCEPTS.md
 PRODUCT.md

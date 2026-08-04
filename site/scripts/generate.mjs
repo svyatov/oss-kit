@@ -154,13 +154,16 @@ function ruleInstrument(rule, { position = "", level, full }) {
     // top of it with nothing naming the rule they came from.
     `<div><dt>Fixed by</dt><dd><a href="/skills/${rule.fixedBy}/#${rule.id.toLowerCase()}">${rule.fixedBy}</a></dd></div>`,
   ]
+  // The panel's id is keyed by rule rather than a bare `check`, because the
+  // standard renders every rule through this same function onto one page, where
+  // a fixed id would repeat once per rule.
   return `<dl class="doc-instrument-meta">
   ${cells.join("\n  ")}
 </dl>
 
 ${rule.why}
 
-<section class="doc-check">
+<section class="doc-check" id="${rule.id.toLowerCase()}-check">
   <h${level}>Observable check</h${level}>
   <p>${inlineCodeHtml(rule.check)}</p>
 </section>`
@@ -233,7 +236,11 @@ export function renderRuleSources(entry) {
  *   rule's entry in rule-sources.json.
  */
 export function renderRulePage(rule, sourcePath, place, entry) {
-  const position = place ? ` · ${place.position} of ${place.total}` : ""
+  // The count is one token: unwrapped it broke as "1 of" over "13" in a cell
+  // narrow enough to need two lines.
+  const position = place
+    ? ` <span class="doc-instrument-meta__place">· ${place.position} of ${place.total}</span>`
+    : ""
   const body = `${ruleInstrument(rule, { position, level: 2, full: true })}
 
 ${renderRuleSources(entry)}
@@ -418,7 +425,9 @@ export function renderSkillPage(sourcePath, text, summary, rules = []) {
   const anchored = anchorOwnedRules(body.replace(/^# .*\n/m, ""), byId)
   const fallback = anchored === body.replace(/^# .*\n/m, "") ? ownedRules(rules) : ""
   return frontmatter(
-    { title, description, sidebar: { badge: "Skill" }, editUrl: `${EDIT}/${sourcePath}` },
+    // No badge. Every one of these read "Skill", under a sidebar group already
+    // named Skills, so nine identical badges marked nothing.
+    { title, description, editUrl: `${EDIT}/${sourcePath}` },
     `${lede}${agentNotice(sourcePath)}\n\n${fallback}${anchored}`,
   )
 }
@@ -654,6 +663,38 @@ the job in front of you.
     )
   }
 
+  // The eleven ecosystem pages were reachable only from a sidebar group, and the
+  // one page that introduces the ecosystems is the splash page, which has no
+  // sidebar. This is the landing page the footer and that group both point at.
+  written.push(
+    write(
+      outDir,
+      "ecosystems/index.mdx",
+      frontmatter(
+        {
+          title: "Ecosystems",
+          description: "How the oss-kit skills read each distribution ecosystem, from detection to release.",
+          sidebar: { label: "All ecosystems" },
+          editUrl: `${EDIT}/${rosterPath}`,
+          tableOfContents: false,
+        },
+        `import Rack from "../../../components/Rack.astro";
+
+The roster covers ${ecosystems.length} distribution ecosystems. Each page answers for one of them in the
+voice of all ${sectionSkills.length} skills that detect, document, and release it.
+
+<Rack items={${JSON.stringify(
+          ecosystems.map(([eco, meta]) => ({
+            href: `/ecosystems/${eco}/`,
+            name: meta.title,
+            meta: (meta.manifests ?? []).join(", "),
+            count: meta.registry ?? "no registry",
+          })),
+        )}} variant="ecosystems" />`,
+      ),
+    ),
+  )
+
   const changelog = readFileSync(join(repoRoot, "CHANGELOG.md"), "utf8")
   // A relative target in the changelog names a file in the repository, and this
   // is the one page with no sibling page to point at, so it goes to the source.
@@ -674,6 +715,11 @@ the job in front of you.
           title: "Changelog",
           description: "Every notable change to oss-kit.",
           editUrl: `${EDIT}/CHANGELOG.md`,
+          // Versions only. Keep a Changelog gives every release the same set of
+          // Added / Changed / Fixed headings, so a contents list that took them
+          // repeated the same four words once per release and named no version
+          // a reader could navigate to.
+          tableOfContents: { maxHeadingLevel: 2 },
         },
         // A bare div, blank-line separated, so CommonMark closes the HTML block
         // and parses the releases as Markdown. The headings stay real headings,
