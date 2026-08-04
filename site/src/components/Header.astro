@@ -4,11 +4,16 @@ import ThemeSelect from "virtual:starlight/components/ThemeSelect"
 import BrandMark from "./BrandMark.astro"
 
 const pathname = Astro.url.pathname
+const { hasSidebar } = Astro.locals.starlightRoute
+// GitHub belongs in this list rather than beside the header controls. It is a
+// destination like the other four, and as a lone anchor between the search
+// field and the theme control it read as a control that does nothing.
 const links = [
   { label: "Skills", href: "/skills/" },
   { label: "Standard", href: "/standard/" },
-  { label: "Guides", href: "/guides/getting-started/" },
+  { label: "Start here", href: "/guides/getting-started/" },
   { label: "Changelog", href: "/changelog/" },
+  { label: "GitHub", href: "https://github.com/svyatov/oss-kit", external: true },
 ]
 ---
 
@@ -23,7 +28,7 @@ const links = [
       links.map((link) => (
         <a
           href={link.href}
-          aria-current={pathname.startsWith(link.href) ? "page" : undefined}
+          aria-current={!link.external && pathname.startsWith(link.href) ? "page" : undefined}
         >
           {link.label}
         </a>
@@ -33,19 +38,20 @@ const links = [
 
   <div class="kit-header__tools">
     <Search />
-    <a class="kit-header__github" href="https://github.com/svyatov/oss-kit">GitHub</a>
     <ThemeSelect />
     <a class="kit-header__install" href="/guides/install/">Install</a>
     {
-      // Only the splash page lacks a sidebar, so only it needs a nav drawer.
-      // On a docs page Starlight's own menu button already owns that job, and a
-      // second drawer beside it would offer the reader two different "Menu"s.
-      pathname === "/" && (
+      // Any page without a sidebar needs this drawer, not the home page alone:
+      // the 404 is a splash template too, and gating on the path left it with no
+      // navigation at all under 1024px, which is the width a lost reader most
+      // needs a way out. On a page that has a sidebar, Starlight's own menu
+      // button already owns the job, and a second drawer beside it would offer
+      // the reader two different "Menu"s.
+      !hasSidebar && (
         <details class="kit-mobile-nav">
           <summary>Menu</summary>
           <nav aria-label="Mobile primary">
             {links.map((link) => <a href={link.href}>{link.label}</a>)}
-            <a href="https://github.com/svyatov/oss-kit">GitHub</a>
           </nav>
         </details>
       )

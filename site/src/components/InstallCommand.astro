@@ -3,12 +3,22 @@ import FaIcon from "./FaIcon.astro"
 
 const { compact = false } = Astro.props
 const command = "npx skills add svyatov/oss-kit --skill '*'"
+// One span per argument, with the flag and its value kept as one. The spans are
+// `pre`, so the spaces between them are the only places the line can ever break
+// and `--skill '*'` always arrives whole. Non-breaking spaces were not enough:
+// `pre-wrap` also breaks after a hyphen, and it chose the one inside `--skill`,
+// which is the argument the whole arrangement exists to protect. Joining the
+// parts back with single spaces reproduces `command`, so the copy handler still
+// reads textContent and no shell ever sees the shaping.
+const words = command.split(" ")
+const flag = words.indexOf("--skill")
+const parts = [...words.slice(0, flag), words.slice(flag).join(" ")]
 ---
 
 <kit-copy-command class:list={["install-command", { "install-command--compact": compact }]}>
   <span class="install-command__line">
     <span class="install-command__prompt" aria-hidden="true">$</span>
-    <code tabindex="0">{command}</code>
+    <code tabindex="0">{parts.map((part, i) => (<>{i > 0 ? " " : ""}<span>{part}</span></>))}</code>
   </span>
   <button type="button" data-copy aria-label="Copy install command">
     <FaIcon name="copy" />
@@ -26,9 +36,12 @@ const command = "npx skills add svyatov/oss-kit --skill '*'"
       if (!button || !label || !code) return
 
       // Nothing in CSS asks whether an element overflows, so the fade that
-      // says "this line continues" has to be set from here.
+      // says "this line continues" has to be set from here. The width goes with
+      // it: a fixed 40px fade over 3px of hidden text dims the last flag of a
+      // command that very nearly fits, which is the case at most desktop widths.
       const edges = () => {
         const hidden = code.scrollWidth - code.clientWidth
+        code.style.setProperty("--kit-fade", `${Math.min(40, Math.max(hidden, 0))}px`)
         code.dataset.overflow =
           hidden < 2 ? "" : code.scrollLeft < 2 ? "end" : code.scrollLeft > hidden - 2 ? "start" : "both"
       }

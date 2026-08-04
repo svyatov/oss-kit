@@ -1,0 +1,24 @@
+---
+// Opens the search already in the header rather than rendering a second one.
+// Starlight's Search component hard-codes `id="starlight__search"` on the
+// element Pagefind mounts into, so two of them on one page break search
+// outright rather than merely duplicating a control.
+import FaIcon from "./FaIcon.astro"
+---
+
+<button class="kit-button kit-button--primary" type="button" data-open-site-search>
+  <FaIcon name="search" />
+  Search the documentation
+</button>
+
+<script>
+  document.querySelector("[data-open-site-search]")?.addEventListener("click", () => {
+    // Deferred by a turn. Clicking the search button from inside this handler
+    // opened the dialog while the original click was still propagating, and the
+    // dialog's own dismiss-on-outside-click saw that click land outside itself
+    // and closed it again in the same tick.
+    setTimeout(() => {
+      document.querySelector<HTMLButtonElement>("site-search button[data-open-modal]")?.click()
+    })
+  })
+</script>

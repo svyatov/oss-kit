@@ -131,7 +131,11 @@ export default defineConfig({
         {
           label: "Ecosystems",
           collapsed: true,
-          items: ecosystems.map(([name, meta]) => ({ label: meta.title, link: `/ecosystems/${name}/` })),
+          // A slug entry, as in Rules above, so the index supplies its own label.
+          items: [
+            { slug: "ecosystems" },
+            ...ecosystems.map(([name, meta]) => ({ label: meta.title, link: `/ecosystems/${name}/` })),
+          ],
         },
         { label: "Changelog", link: "/changelog/" },
       ],

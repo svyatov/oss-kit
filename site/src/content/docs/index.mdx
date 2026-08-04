@@ -13,7 +13,6 @@ tableOfContents: false
 ---
 
 import DomainRack from "../../components/DomainRack.astro";
-import InlineCode from "../../components/InlineCode.astro";
 import { rules, sampleRule } from "../../lib/content.mjs";
 
 <DomainRack />
@@ -49,7 +48,12 @@ import { rules, sampleRule } from "../../lib/content.mjs";
     <li>
       <span className="workflow-trace__step">02 · Check</span>
       <strong>Observable evidence</strong>
-      <p><InlineCode text={sampleRule?.check} /></p>
+      {/* The rule's own Check line runs to 400 characters, which in a card this
+          size is a wall nobody reads and which forced the other three cards to
+          match its height. The leading clause is quoted here and the link goes
+          to the whole thing. */}
+      <p>Every external <code>uses:</code> line resolves to a 40-character commit SHA.</p>
+      <a href="/rules/r-sec-01/#r-sec-01-check">Read the full check</a>
     </li>
     <li>
       <span className="workflow-trace__step">03 · Fix</span>
@@ -61,6 +65,7 @@ import { rules, sampleRule } from "../../lib/content.mjs";
       <span className="workflow-trace__step">04 · Verify</span>
       <strong>Run the same check</strong>
       <p>The rerun closes the gap only when the repository contains the required evidence.</p>
+      <a href="/skills/oss-audit/">Open the audit</a>
     </li>
   </ol>
 </section>
