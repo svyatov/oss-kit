@@ -93,7 +93,18 @@ export default defineConfig({
         useStarlightUiThemeColors: false,
         styleOverrides: {
           borderColor: "var(--kit-line)",
-          borderRadius: "0.5rem",
+          // The panel step, taken from the same token the stylesheet uses
+          // rather than repeated as a number here. Expressive Code emits this
+          // straight into --ec-brdRad and draws the frame at that plus its
+          // border width, so a block's outer edge measures 9px and its content
+          // measures the 8px the scale asks for. That pixel is the border, not
+          // a fifth radius.
+          //
+          // Changing this needs the Astro cache cleared to see the effect. The
+          // dev server keeps serving the previously generated Expressive Code
+          // stylesheet, and the stale one renders every block at 0px, which
+          // reads as a broken value rather than as a stale build.
+          borderRadius: "var(--kit-radius-panel)",
           frames: { frameBoxShadowCssValue: "none" },
         },
       },

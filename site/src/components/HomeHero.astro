@@ -9,7 +9,7 @@ FORM: user-pinned lateral control surface based on approved composition A; no co
 import DomainIcon from "./FaIcon.astro"
 import InlineCode from "./InlineCode.astro"
 import InstallCommand from "./InstallCommand.astro"
-import { domains, sampleRule } from "../lib/content.mjs"
+import { domains, leadClause, sampleRule } from "../lib/content.mjs"
 ---
 
 <section class="kit-hero" aria-labelledby="kit-hero-title">
@@ -31,12 +31,17 @@ import { domains, sampleRule } from "../lib/content.mjs"
   </div>
 
   <div class="maintenance-map" aria-label="How oss-kit connects repository maintenance domains">
-    <div class="maintenance-map__rail">
-      <span>Cross-domain scan</span>
-      <a href="/skills/oss-audit/">oss-audit</a>
+    {/* The rail named oss-audit and never said what it produces. Its two
+        captions read "Cross-domain scan" and "Every standard domain", both were
+        hidden below 34rem, and the definition a reader needed sat a thousand
+        pixels down the page in the domain rack. It says it here now, and the
+        whole strip is the link rather than the one word inside it. */}
+    <a class="maintenance-map__rail" href="/skills/oss-audit/">
+      <strong>oss-audit</strong>
       <span class="maintenance-map__pulse" aria-hidden="true"></span>
-      <span>Every standard domain</span>
-    </div>
+      <span class="maintenance-map__rail-note">Evidence and gaps across every standard domain</span>
+      <DomainIcon name="arrow" />
+    </a>
 
     <div class="maintenance-map__body">
       <article class="repo-hub">
@@ -67,11 +72,14 @@ import { domains, sampleRule } from "../lib/content.mjs"
                 <span class="domain-bay__count">
                   {/* The lit bay used to say so in green and in nothing else. The
                       marker is a shape rather than a second tint, and the word
-                      behind it is what a reader who cannot see either one gets. */}
+                      behind it is what a reader who cannot see either one gets.
+                      That word said "Scanning now.", which described an activity
+                      no visitor had started on a repository none had supplied.
+                      The bay is lit because the route below expands it. */}
                   {domain.area === "SEC" && (
                     <>
                       <i aria-hidden="true" />
-                      <span class="sr-only">Scanning now. </span>
+                      <span class="sr-only">Example domain. </span>
                     </>
                   )}
                   {domain.rules.length} rules
@@ -84,16 +92,32 @@ import { domains, sampleRule } from "../lib/content.mjs"
 
       {
         sampleRule && (
-          <article class="rule-route">
+          <article class="rule-route" aria-labelledby="rule-route-label">
             <div class="rule-route__head">
-              <span>Example route</span>
+              <span id="rule-route-label">Example route</span>
               <a href={`/rules/${sampleRule.id.toLowerCase()}/`}>{sampleRule.id}</a>
             </div>
-            <h2>{sampleRule.statement}</h2>
+            {/* A statement, not a section heading. As an h2 this was the second
+                heading on the site, ahead of every section, so anyone browsing
+                by heading met a SHA-pinning rule before the page's structure.
+                It renders at 11.5px, which is the size that gave it away. */}
+            <p class="rule-route__statement">{sampleRule.statement}</p>
             <dl>
               <div>
                 <dt>Check</dt>
-                <dd><InlineCode text={sampleRule.check} /></dd>
+                {/* The whole Check ran to nine wrapped lines of 11px monospace,
+                    the largest text mass in the map and its least readable
+                    panel, at the point the route was meant to arrive. Mono
+                    carries machine-facing facts here, not explanations. */}
+                <dd>
+                  <InlineCode text={leadClause(sampleRule.check)} />
+                  <a
+                    class="rule-route__more"
+                    href={`/rules/${sampleRule.id.toLowerCase()}/#${sampleRule.id.toLowerCase()}-check`}
+                  >
+                    Read the full check
+                  </a>
+                </dd>
               </div>
               <div>
                 <dt>Fixed by</dt>
