@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+### Changed
+
+- R-SEC-14 accounts for the three-day cooldown Dependabot applies on its own. Its reason told a maintainer that an updater with no cooldown opens its pull request inside the window a compromised release lives in, and that stopped being true on 2026-07-14, when GitHub made the delay the default for version updates whether or not `dependabot.yml` configures one. A maintainer on Dependabot checked the repository, found the stated danger absent, and the rule lost the argument it needs to be followed. The rule now rests on the two arguments that survive: a written value outlasts a platform default, and it is a decision a reader can audit. The check gains a reading instruction rather than a new requirement, so no repository's verdict changes. Dependabot with no `cooldown` block is reported as an unwritten control, and Renovate with no `minimumReleaseAge` as an open window, because that option still defaults to no delay. `oss-harden` carries the dates and the GitHub Enterprise Server floor.
+
 ## [0.11.0] - 2026-08-04
 
 ### Added

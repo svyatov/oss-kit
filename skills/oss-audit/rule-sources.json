@@ -461,11 +461,12 @@
     "sources": [
       "https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference",
       "https://docs.renovatebot.com/configuration-options/",
+      "https://github.blog/changelog/2026-07-14-dependabot-version-updates-introduce-default-package-cooldown/",
       "https://github.blog/security/supply-chain-security/our-plan-for-a-more-secure-npm-supply-chain/",
       "https://pnpm.io/supply-chain-security"
     ],
-    "verified": "2026-08-03",
-    "note": "Dependabot documents cooldown as applying to version updates and not to security updates, which is what lets the rule ask for a delay without slowing an advisory-driven fix. Renovate settles the same question separately through minimumReleaseAgeBehaviour. The day floor is this project position: no source names a number, and the incidents the rule exists for were found and pulled in hours rather than minutes. pnpm shipping minimumReleaseAge on by default at one day in v11, and Yarn defaulting npmMinimalAgeGate to one week, are the closest thing to a published value. What would retire the rule is every updater defaulting a cooldown on."
+    "verified": "2026-08-04",
+    "note": "The two updaters differ, and the rule says so because a source settles each half. Dependabot applies a three-day cooldown to version updates with no cooldown block configured: the options reference states it, and the changelog post of 2026-07-14 dates it and scopes it to github.com and to GitHub Enterprise Server 3.23. Renovate's minimumReleaseAge defaults to null, which is no delay, so the open window the rule was written for is still open there. That default is also why the rule now asks for the value to be written down rather than inherited, which is the position R-SEC-08 and R-SEC-15 take about a manager default: a number the platform chose can be changed by the platform, and a reader auditing a repository cannot see it. Dependabot documents the cooldown as never applying to a security update, and Renovate settles the same question through minimumReleaseAgeBehaviour, which is what lets the rule ask for a delay without slowing an advisory-driven fix. The day floor is this project position: no source names a number, and the incidents the rule exists for were found and pulled in hours rather than minutes. pnpm shipping minimumReleaseAge on by default at one day in v11, and Yarn defaulting npmMinimalAgeGate to one week, are the closest thing to a published value. What would retire the rule is every updater defaulting a cooldown on, which Dependabot has now half done."
   },
   "R-SEC-15": {
     "sources": [
