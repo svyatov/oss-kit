@@ -84,6 +84,19 @@ export function parseRules(text) {
   })
 }
 
+/**
+ * The first sentence of a rule's Check, for the two homepage panels that are
+ * too small to hold the whole clause. Quoting a prefix is the only abridgement
+ * that cannot say something the standard does not: the panel used to carry a
+ * hand-written summary of R-CI-01's Check, and it dropped the `branches:`
+ * filter condition, so it told a repository carrying one that it passed.
+ * @param {string} check
+ */
+export function leadClause(check) {
+  const end = check.indexOf(". ")
+  return end === -1 ? check : check.slice(0, end + 1)
+}
+
 /** @param {Record<string,unknown>} fields @param {string} body */
 export function frontmatter(fields, body) {
   const head = Object.entries(fields)

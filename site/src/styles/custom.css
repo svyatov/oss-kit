@@ -25,9 +25,28 @@
      carrying content goes below this. Marks that carry none, like the mono
      eyebrow rules, are not exempt either: they are words. */
   --kit-annotation: 0.7rem;
+  /* Four steps, and every rounded thing on the site takes one of them. There
+     used to be eleven values across 24 declarations, most of them a fraction of
+     a pixel apart: a control at 5.6px beside a control at 6px, a panel at 8px
+     beside a panel at 8.8px. Nothing documented a reason for any of the gaps,
+     and no two of the near-identical pairs ever appeared together, so the
+     spread was drift rather than a distinction. The one nesting that a reader
+     does see is kept: the map is the faceplate, and the panels inside it round
+     tighter than it does. Circles stay 50% and the mobile bay stays square,
+     because neither is a radius on this scale. */
+  --kit-radius-indicator: 2px;
+  --kit-radius-control: 6px;
+  --kit-radius-panel: 8px;
+  --kit-radius-faceplate: 12px;
   --kit-signal: #56f27b;
   --kit-signal-strong: #56f27b;
   --kit-signal-low: #102e19;
+  /* The step the primary control takes on hover. It lived as a hex literal in
+     the one rule that used it, which made the site's main action the only
+     colour on the page outside the palette. Light mode does not override it,
+     so hovering there still lifts toward this rather than deepening; that is
+     the behaviour as it stands, not a decision this token is making. */
+  --kit-signal-lift: #7af594;
   --kit-display: "Barlow Condensed", "Arial Narrow", sans-serif;
   --kit-body: "Public Sans", system-ui, sans-serif;
   --kit-mono: "Commit Mono", ui-monospace, monospace;
@@ -182,7 +201,7 @@ a {
   min-height: 2.85rem;
   padding: 0.75rem 1rem;
   border: 1px solid var(--kit-line);
-  border-radius: 0.375rem;
+  border-radius: var(--kit-radius-control);
   color: var(--kit-text);
   font-size: 0.9rem;
   font-weight: 650;
@@ -211,8 +230,8 @@ button.kit-button {
 }
 
 .kit-button--primary:hover {
-  border-color: #7af594;
-  background: #7af594;
+  border-color: var(--kit-signal-lift);
+  background: var(--kit-signal-lift);
   color: #080b0a;
 }
 
@@ -305,7 +324,7 @@ button.kit-button {
   width: clamp(10rem, 15vw, 16rem);
   height: 2.45rem;
   border-color: var(--kit-line);
-  border-radius: 0.375rem;
+  border-radius: var(--kit-radius-control);
   background: var(--kit-panel);
   color: var(--kit-muted);
 }
@@ -313,6 +332,41 @@ button.kit-button {
 .kit-header__tools site-search button[data-open-modal]:hover {
   border-color: var(--kit-muted);
   color: var(--kit-text);
+}
+
+/* Starlight and Expressive Code round four things from their own component
+   styles, at 4px and 3.2px, which are the two values the scale does not carry.
+   Each takes the step its role names. The search shortcut hint and the rule ID
+   badge are small inline marks, and the badge is the case the Shapes section
+   names by hand: an area page prints 61 of them. The table of contents links
+   are navigation rows, so they match the sidebar links rather than the badges.
+   The code block's copy control is a button, and its inner layer follows it. */
+.kit-header__tools site-search kbd,
+.sl-badge {
+  border-radius: var(--kit-radius-indicator);
+}
+
+starlight-toc a,
+mobile-starlight-toc a {
+  border-radius: var(--kit-radius-control);
+}
+
+.expressive-code .copy button,
+.expressive-code .copy button div {
+  border-radius: var(--kit-radius-control);
+}
+
+/* A search result is one card split into a title and the matches beneath it.
+   Pagefind rounds each half to half its own radius, which lands at 4px, so the
+   card's outer corners came out tighter than any panel on the site. The two
+   halves take the panel step on the outer corners and stay square at the seam
+   they share, which is what makes them read as one card. */
+site-search .pagefind-ui__result-title {
+  border-radius: var(--kit-radius-panel) var(--kit-radius-panel) 0 0;
+}
+
+site-search .pagefind-ui__result-nested {
+  border-radius: 0 0 var(--kit-radius-panel) var(--kit-radius-panel);
 }
 
 /* The custom element is inline by default, so its line box added roughly 8px
@@ -328,7 +382,7 @@ button.kit-button {
   height: 2.45rem;
   padding-block: 0;
   border-color: var(--kit-line);
-  border-radius: 0.375rem;
+  border-radius: var(--kit-radius-control);
   background-color: var(--kit-panel);
 }
 
@@ -338,7 +392,7 @@ button.kit-button {
   min-height: 2.45rem;
   padding-inline: 0.9rem;
   border: 1px solid var(--kit-signal);
-  border-radius: 0.375rem;
+  border-radius: var(--kit-radius-control);
   background: var(--kit-signal);
   color: #080b0a;
   font-size: 0.8rem;
@@ -365,7 +419,7 @@ button.kit-button {
   min-height: 3.6rem;
   padding: 0.45rem 0.55rem 0.45rem 0.9rem;
   border: 1px solid var(--kit-line);
-  border-radius: 0.5rem;
+  border-radius: var(--kit-radius-panel);
   background: var(--kit-panel);
 }
 
@@ -440,7 +494,7 @@ button.kit-button {
   min-height: 2.5rem;
   padding-inline: 0.6rem;
   border: 1px solid transparent;
-  border-radius: 0.35rem;
+  border-radius: var(--kit-radius-control);
   background: transparent;
   color: var(--kit-muted);
   cursor: pointer;
@@ -556,7 +610,7 @@ button.kit-button {
 .maintenance-map {
   position: relative;
   border: 1px solid var(--kit-line);
-  border-radius: 0.75rem;
+  border-radius: var(--kit-radius-faceplate);
   background: var(--kit-surface);
   /* 50px of blur on a dark surface reads as haze rather than as lift. This is
      a machined panel, so the shadow is tight enough to look like one. */
@@ -598,7 +652,7 @@ html[data-theme="light"] .maintenance-map {
 
 .maintenance-map__rail {
   display: grid;
-  grid-template-columns: auto auto minmax(3rem, 1fr) auto;
+  grid-template-columns: auto minmax(3rem, 1fr) auto auto;
   gap: 0.8rem;
   align-items: center;
   min-height: 2.65rem;
@@ -606,20 +660,24 @@ html[data-theme="light"] .maintenance-map {
   border-bottom: 1px solid var(--kit-line);
   color: var(--kit-faint);
   font-size: var(--kit-annotation);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  text-decoration: none;
 }
 
-.maintenance-map__rail a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.5rem;
+.maintenance-map__rail strong {
   color: var(--kit-signal-strong);
-  font-size: 0.82rem;
-  font-weight: 600;
-  letter-spacing: 0;
-  text-decoration: none;
-  text-transform: none;
+  font: 600 0.82rem/1 var(--kit-mono);
+}
+
+/* A sentence, so it takes the body face. The rail's other text is uppercase
+   annotation and this is not: an instrument label and a definition are two
+   different jobs, and the second one reads badly in tracked-out capitals. */
+.maintenance-map__rail-note {
+  color: var(--kit-muted);
+  font: 450 var(--kit-annotation)/1.4 var(--kit-body);
+}
+
+.maintenance-map__rail:hover .maintenance-map__rail-note {
+  color: var(--kit-text);
 }
 
 .maintenance-map__pulse {
@@ -646,7 +704,6 @@ html[data-theme="light"] .maintenance-map {
   grid-template-columns: minmax(8.5rem, 0.82fr) minmax(21rem, 1.55fr) minmax(10rem, 0.95fr);
   gap: 0.85rem;
   align-items: center;
-  min-height: 35rem;
   padding: 1rem;
 }
 
@@ -654,7 +711,7 @@ html[data-theme="light"] .maintenance-map {
 .rule-route {
   position: relative;
   border: 1px solid var(--kit-line);
-  border-radius: 0.55rem;
+  border-radius: var(--kit-radius-panel);
   background: var(--kit-panel);
 }
 
@@ -822,7 +879,7 @@ html[data-theme="light"] .maintenance-map {
   min-height: 3.65rem;
   padding: 0.5rem 0.65rem;
   border: 1px solid var(--kit-line);
-  border-radius: 0.45rem;
+  border-radius: var(--kit-radius-panel);
   background: var(--kit-panel);
   color: var(--kit-text);
   text-decoration: none;
@@ -838,6 +895,20 @@ html[data-theme="light"] .maintenance-map {
 .domain-bay--active a {
   border-color: var(--kit-signal);
   box-shadow: 0 3px 18px rgba(86, 242, 123, 0.08);
+}
+
+/* The lit bay is a state, so its boundary is held to WCAG 1.4.11's 3:1 rather
+   than to nothing. Light mode's --kit-signal measures 2.66:1 on the white
+   panel and fails it; --kit-signal-strong is the same green three steps down,
+   already the light mode's text green, and measures 5.43:1. Dark mode passes
+   on --kit-signal and keeps it. */
+html[data-theme="light"] .domain-bay--active a {
+  border-color: var(--kit-signal-strong);
+}
+
+html[data-theme="light"] .repo-hub__state i,
+html[data-theme="light"] .domain-bay__count i {
+  background: var(--kit-signal-strong);
 }
 
 .domain-bay__number,
@@ -880,12 +951,13 @@ html[data-theme="light"] .maintenance-map {
   text-decoration: none;
 }
 
-.rule-route h2 {
+.rule-route__statement {
   margin: 0;
   padding: 0.8rem 0.7rem;
   border-bottom: 1px solid var(--kit-line);
   font-family: var(--kit-body);
   font-size: 0.72rem;
+  font-weight: 600;
   line-height: 1.35;
   letter-spacing: 0;
 }
@@ -911,10 +983,26 @@ html[data-theme="light"] .maintenance-map {
   color: var(--kit-signal-strong);
 }
 
+/* Its own line, because it follows a quotation and a link tucked against the
+   end of one reads as part of it. */
+.rule-route__more {
+  display: block;
+  margin-top: 0.45rem;
+  font-family: var(--kit-mono);
+}
+
+/* Where the route arrives. It read as one more line of annotation, which left
+   the one panel asserting a verified state looking like the two describing an
+   unfinished one. The border takes the strong signal in both themes: the plain
+   one measures 2.66:1 on the light panel, and this marks a state. */
 .rule-route__verified {
   display: inline-flex;
   gap: 0.4rem;
   align-items: center;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--kit-signal-strong);
+  border-radius: var(--kit-radius-indicator);
+  background: var(--kit-signal-low);
   color: var(--kit-signal-strong);
   font-family: var(--kit-mono);
 }
@@ -980,7 +1068,7 @@ html[data-theme="light"] .maintenance-map {
   min-height: 4.5rem;
   padding-inline: 1rem;
   border: 1px solid var(--kit-signal);
-  border-radius: 0.45rem;
+  border-radius: var(--kit-radius-panel);
   background: var(--kit-signal-low);
   color: var(--kit-text);
   text-decoration: none;
@@ -1139,7 +1227,7 @@ html[data-theme="light"] .maintenance-map {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   border: 1px solid var(--kit-line);
-  border-radius: 0.65rem;
+  border-radius: var(--kit-radius-panel);
   background: var(--kit-surface);
 }
 
@@ -1211,7 +1299,7 @@ html[data-theme="light"] .maintenance-map {
 
 .standard-sheet {
   border: 1px solid var(--kit-line);
-  border-radius: 0.65rem;
+  border-radius: var(--kit-radius-panel);
   background: var(--kit-panel);
 }
 
@@ -1226,8 +1314,23 @@ html[data-theme="light"] .maintenance-map {
   text-transform: uppercase;
 }
 
-.standard-sheet__head span:last-child {
+/* The rule ID is a link now. The panel invites a reader to check the bar, and
+   it used to be the one element on the page offering nothing to check it
+   against. */
+.standard-sheet__head a {
   color: var(--kit-signal-strong);
+  text-decoration: none;
+}
+
+.standard-sheet__more {
+  display: inline-block;
+  margin: 0 1.25rem 1.4rem;
+  color: var(--kit-signal-strong);
+  font: 500 var(--kit-annotation)/1.3 var(--kit-mono);
+}
+
+.standard-sheet > p:has(+ .standard-sheet__more) {
+  margin-bottom: 0.55rem;
 }
 
 /* Scoped under the markdown wrapper on purpose. Unscoped this is (0,1,1) and
@@ -1338,7 +1441,7 @@ html[data-theme="light"] .maintenance-map {
 
 .sl-markdown-content :where(code):not(pre code) {
   border: 1px solid var(--kit-line);
-  border-radius: 0.2rem;
+  border-radius: var(--kit-radius-indicator);
   background: var(--kit-panel-strong);
 }
 
@@ -1354,7 +1457,7 @@ html[data-theme="light"] .maintenance-map {
 
 #starlight__sidebar summary,
 #starlight__sidebar a {
-  border-radius: 0.25rem;
+  border-radius: var(--kit-radius-control);
 }
 
 #starlight__sidebar [aria-current="page"] {
@@ -1398,7 +1501,7 @@ html[data-theme="light"] .maintenance-map {
 
 .pagination-links a {
   border-color: var(--kit-line);
-  border-radius: 0.5rem;
+  border-radius: var(--kit-radius-panel);
   background: var(--kit-panel);
   box-shadow: none;
 }
@@ -1416,7 +1519,7 @@ html[data-theme="light"] .maintenance-map {
   overflow: hidden;
   margin: 0 0 2rem;
   border: 1px solid var(--kit-line);
-  border-radius: 0.5rem;
+  border-radius: var(--kit-radius-panel);
   background: var(--kit-line);
 }
 
@@ -1458,7 +1561,7 @@ html[data-theme="light"] .maintenance-map {
   margin-block: 2rem;
   padding: 1.2rem;
   border: 1px solid var(--kit-line);
-  border-radius: 0.5rem;
+  border-radius: var(--kit-radius-panel);
   background: var(--kit-panel);
 }
 
@@ -1515,7 +1618,7 @@ html[data-theme="light"] .maintenance-map {
   margin-block: 2rem;
   padding: 1.2rem;
   border: 1px solid var(--kit-line);
-  border-radius: 0.5rem;
+  border-radius: var(--kit-radius-panel);
   background: var(--kit-panel);
 }
 
@@ -1582,7 +1685,7 @@ html[data-theme="light"] .maintenance-map {
    Each variant keeps its own signal; none of them borrows a second hue. */
 .starlight-aside {
   border-inline-start-width: 1px;
-  border-radius: 0.5rem;
+  border-radius: var(--kit-radius-panel);
   padding: 1rem 1.15rem;
 }
 
@@ -1897,7 +2000,7 @@ html[data-theme="light"] .maintenance-map {
     min-height: 2.45rem;
     padding-inline: 0.72rem;
     border: 1px solid var(--kit-line);
-    border-radius: 0.375rem;
+    border-radius: var(--kit-radius-control);
     background: var(--kit-panel);
     color: var(--kit-text);
     cursor: pointer;
@@ -1924,14 +2027,14 @@ html[data-theme="light"] .maintenance-map {
     width: min(16rem, calc(100vw - 2rem));
     padding: 0.45rem;
     border: 1px solid var(--kit-line);
-    border-radius: 0.5rem;
+    border-radius: var(--kit-radius-panel);
     background: var(--kit-panel);
     box-shadow: 0 18px 42px rgba(0, 0, 0, 0.35);
   }
 
   .kit-mobile-nav nav a {
     padding: 0.78rem;
-    border-radius: 0.3rem;
+    border-radius: var(--kit-radius-control);
     color: var(--kit-text);
     font-size: 0.82rem;
     font-weight: 600;
@@ -2000,23 +2103,37 @@ html[data-theme="light"] .maintenance-map {
     white-space: nowrap;
   }
 
-  .domain-rack__skills {
-    display: none;
-  }
-
-  /* On the skills rack the summary is the content, not an annotation, so it
-     moves to its own row rather than being dropped. */
-  .domain-rack--skills a {
-    grid-template-columns: 2.4rem 1.2rem minmax(0, 1fr) auto auto;
+  /* The middle column moves to a second row rather than being dropped. On the
+     domain rack it holds the skills that own the domain, which is the whole
+     claim the section headline makes, and hiding it left seven rows of name and
+     arrow restating the bays a reader had already scrolled past. Same treatment
+     the skills rack below has always had, for the same reason. */
+  .domain-rack a {
     align-items: start;
     padding-block: 0.9rem;
   }
 
-  .domain-rack--skills .domain-rack__skills {
-    display: block;
+  .domain-rack__skills {
     grid-column: 3 / -1;
     grid-row: 2;
     margin-top: 0.3rem;
+  }
+
+  .domain-rack--skills a {
+    grid-template-columns: 2.4rem 1.2rem minmax(0, 1fr) auto auto;
+  }
+
+  .domain-rack--skills .domain-rack__skills {
+    font: 400 0.85rem/1.45 var(--kit-body);
+  }
+
+  /* These two carry no icon, so their tracks are shifted and the row-2 span
+     above would land under the wrong column. Their meta is one skill name and
+     one ecosystem note beside a full rule statement, which is the annotation
+     the treatment above exists to spare. They stay dropped. */
+  .domain-rack--rules .domain-rack__skills,
+  .domain-rack--ecosystems .domain-rack__skills {
+    display: none;
   }
 
   .workflow-trace {
@@ -2114,7 +2231,7 @@ html[data-theme="light"] .maintenance-map {
 
   starlight-menu-button button {
     border: 1px solid var(--kit-line);
-    border-radius: 0.375rem;
+    border-radius: var(--kit-radius-control);
     background: var(--kit-panel);
     color: var(--kit-text);
     box-shadow: none;
@@ -2149,13 +2266,19 @@ html[data-theme="light"] .maintenance-map {
    between 529px and 543px; 34rem is the first width where one column is not
    needed. Check it against `.maintenance-map__body`, not the document. */
 @media (max-width: 34rem) {
+  /* The rail's caption used to be dropped here, which left a green line and a
+     word above the map and nothing saying what either meant. It wraps to a
+     second row instead: the name and the scan line keep row one, the sentence
+     that defines them takes the width of row two. */
   .maintenance-map__rail {
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto minmax(2rem, 1fr) auto;
+    row-gap: 0.35rem;
+    padding-block: 0.55rem;
   }
 
-  .maintenance-map__rail > span:first-child,
-  .maintenance-map__rail > span:last-child {
-    display: none;
+  .maintenance-map__rail-note {
+    grid-column: 1 / -1;
+    grid-row: 2;
   }
 
   .maintenance-map__body {
@@ -2295,8 +2418,11 @@ html[data-theme="light"] .maintenance-map {
     grid-column: 1 / -1;
   }
 
+  /* The count column stays. It reads "10 rules", it is four characters wider
+     than the arrow it sits beside, and dropping it left the rack claiming one
+     responsibility per skill while showing neither the skill nor the rules. */
   .domain-rack a {
-    grid-template-columns: 2rem 1.2rem minmax(0, 1fr) auto;
+    grid-template-columns: 2rem 1.2rem minmax(0, 1fr) auto auto;
     gap: 0.65rem;
     min-height: 4rem;
     padding-inline: 0.25rem;
@@ -2307,7 +2433,11 @@ html[data-theme="light"] .maintenance-map {
     grid-template-columns: auto minmax(0, 1fr) auto;
   }
 
-  .domain-rack__rules {
+  /* Three tracks above, so these two keep dropping their count. It holds a
+     forge scope rather than a rule count here, and "GitHub and GitLab" beside a
+     wrapped rule statement at this width is the column that has to go. */
+  .domain-rack--rules .domain-rack__rules,
+  .domain-rack--ecosystems .domain-rack__rules {
     display: none;
   }
 

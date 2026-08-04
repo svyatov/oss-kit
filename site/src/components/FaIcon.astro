@@ -40,7 +40,10 @@ if (!glyph) throw new Error(`FaIcon: no icon mapped for "${name}"`)
 const svg = icon(glyph, {
   attributes: {
     "aria-hidden": label ? "false" : "true",
-    "aria-label": label,
+    // Spread rather than assigned: an undefined label serialized to the literal
+    // string aria-label="undefined" on every icon the site draws. Masked while
+    // the icon stays hidden, and live the moment one is given a name.
+    ...(label && { "aria-label": label }),
     focusable: "false",
   },
 }).html.join("")
