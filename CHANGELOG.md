@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-08-04
+
 ### Added
 
 - R-SEC-14 asks the dependency updater to wait before proposing a version published minutes ago, through Dependabot's `cooldown` or Renovate's `minimumReleaseAge`. What ends a registry compromise is other people looking, and that takes hours; an updater with no cooldown opens its pull request inside that window, so a project diligent about merging bumps is the one that installs the bad version first. Neither setting delays a fix for a known vulnerability. The rule is scored against the updater configuration, so it is one observation per repository, and `oss-harden`'s npm reference carries the package manager side, where three managers ship their own knob in three different units.
@@ -343,7 +345,8 @@ Five new rules, and `oss-audit` now reports the gaps alone rather than every rul
 - `oss-audit` scores a repository against `STANDARD.md`, reports each gap with the rule it fails, and names the skill that fixes it.
 - `oss-skill` fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` conformance to the Agent Skills specification, oversized bodies that belong in `references/`, and the license field an extracted skill carries with it.
 
-[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/svyatov/oss-kit/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/svyatov/oss-kit/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/svyatov/oss-kit/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/svyatov/oss-kit/compare/v0.7.0...v0.8.0
