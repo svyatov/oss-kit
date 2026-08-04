@@ -389,8 +389,8 @@ button.kit-button {
 /* The command never breaks where the browser chooses. Ellipsis hid `--skill
    '*'` and free wrapping split it, and either one costs the reader the
    difference between installing the kit and installing one skill. Wider
-   viewports scroll it; below 27rem it takes the single authored break the
-   component's non-breaking spaces leave open. */
+   viewports scroll it; below 34.5rem it wraps only at the spaces the component
+   leaves open, because each argument sits in its own `pre` span. */
 .install-command code {
   flex: 1 1 auto;
   min-width: 0;
@@ -688,7 +688,10 @@ html[data-theme="light"] .maintenance-map {
   align-items: center;
 }
 
-.repo-hub__state i {
+/* One shape means one thing across the map, so the repository hub's state marker
+   and the lit domain bay's are one rule rather than two that agree today. */
+.repo-hub__state i,
+.domain-bay__count i {
   width: 0.38rem;
   height: 0.38rem;
   border-radius: 50%;
@@ -847,15 +850,6 @@ html[data-theme="light"] .maintenance-map {
   display: inline-flex;
   gap: 0.35rem;
   align-items: center;
-}
-
-/* Same marker the repository hub uses for its own state, so one shape means one
-   thing across the map. */
-.domain-bay__count i {
-  width: 0.38rem;
-  height: 0.38rem;
-  border-radius: 50%;
-  background: var(--kit-signal);
 }
 
 .domain-bay__icon {
@@ -1804,8 +1798,10 @@ html[data-theme="light"] .maintenance-map {
   justify-content: flex-end;
 }
 
-/* Same 24px floor and the same way of reaching it as the header nav: padding
-   above and below rather than a larger face, so the row keeps its weight. */
+/* The same 24px floor the header nav carries, reached the other way: the box
+   grows to it and the 0.74rem face stays as it is, so the row keeps its weight.
+   The header pads instead, because its underline is positioned against that
+   padding and a taller box would drop the mark away from the word. */
 .kit-footer__utility nav a {
   display: inline-flex;
   align-items: center;
@@ -2125,6 +2121,24 @@ html[data-theme="light"] .maintenance-map {
   }
 }
 
+/* Under 34.5rem no column on the site is wide enough to hold the command at a
+   size worth reading, so it stops scrolling and takes its one break. The docs
+   footer is the tightest instance and starts hiding characters at 547px, which
+   is where this threshold comes from rather than from a round number. The
+   component puts each argument in its own `pre` span and keeps `--skill '*'` in
+   one, so the spaces between arguments are the only breaks the browser is
+   offered and the flag never arrives split from its value. */
+@media (max-width: 34.5rem) {
+  .install-command code {
+    overflow-x: visible;
+    white-space: normal;
+  }
+
+  .install-command code span {
+    white-space: pre;
+  }
+}
+
 /* The map stacks a repository hub above its domain bays here rather than at the
    26rem the header shrinks at. Its two-column form needs about 510px of body,
    so between 418px and 526px it stayed side by side inside a 396px container
@@ -2186,24 +2200,6 @@ html[data-theme="light"] .maintenance-map {
 
   .domain-bay__count {
     white-space: nowrap;
-  }
-}
-
-/* Under 34.5rem no column on the site is wide enough to hold the command at a
-   size worth reading, so it stops scrolling and takes its one break. The docs
-   footer is the tightest instance and starts hiding characters at 547px, which
-   is where this threshold comes from rather than from a round number. The
-   component puts each half of the command in its own `pre` span, so the single
-   space between them is the only break the browser is offered and `--skill '*'`
-   arrives on the second line whole. */
-@media (max-width: 34.5rem) {
-  .install-command code {
-    overflow-x: visible;
-    white-space: normal;
-  }
-
-  .install-command code span {
-    white-space: pre;
   }
 }
 
@@ -2334,6 +2330,13 @@ html[data-theme="light"] .maintenance-map {
     top: auto;
     right: 1.7rem;
     bottom: -0.35rem;
+  }
+
+  /* The second card's dot comes back. It is hidden at 64rem because two columns
+     put a row boundary after it, and one column puts none, so without this the
+     stack ran dot, no dot, dot. */
+  .workflow-trace li:nth-child(2)::after {
+    display: block;
   }
 
   .standard-sheet__meta {

@@ -687,8 +687,13 @@ voice of all ${sectionSkills.length} skills that detect, document, and release i
           ecosystems.map(([eco, meta]) => ({
             href: `/ecosystems/${eco}/`,
             name: meta.title,
-            meta: (meta.manifests ?? []).join(", "),
-            count: meta.registry ?? "no registry",
+            // `||`, not `??`. Container images carry an empty string for the
+            // registry and an empty manifest list, because the roster detects
+            // them by a registry push rather than by a file. An empty string is
+            // not nullish, so `??` let both through and the row rendered two
+            // blank cells where the fallback was the whole point.
+            meta: (meta.manifests ?? []).join(", ") || "no manifest",
+            count: meta.registry || "no registry",
           })),
         )}} variant="ecosystems" />`,
       ),
