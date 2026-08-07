@@ -136,14 +136,14 @@ If an existing workflow uses `secrets.PYPI_API_TOKEN`, remove it from the YAML n
 
 ## Gate on manual approval (Step 4)
 
-Pin the publish job to `environment: release` as above, and create that environment at `https://github.com/<owner>/<repo>/settings/environments/new` with required reviewers, or, on GitLab Premium or Ultimate, as a protected environment with approval rules. GitHub required reviewers work for public repositories on current plans; private or internal repositories need GitHub Enterprise Cloud. If the repository's visibility or plan provides no native approval gate, report R-PUB-04 as unmet. PyPI has no registry-side approval fallback.
+Pin the publish job to `environment: release` as above, and create that environment at `https://github.com/<owner>/<repo>/settings/environments/new` with required reviewers. On GitLab Premium or Ultimate, use one blocking manual job in a protected environment. GitHub required reviewers work for public repositories on current plans; private or internal repositories need GitHub Enterprise Cloud. If the repository's visibility or plan provides no native approval gate, report R-PUB-04 as unmet. PyPI has no registry-side approval fallback.
 
 PyPI does not require any particular environment name, and `pypi` is what its own examples use. This skill writes `release` for every ecosystem, so the same word means the same thing in every repository it touches. What matters is that the form's Environment name field and the job's `environment:` are the same string; where a repository already has a working publisher entry naming something else, keep it rather than renaming both to match this file.
 
 Create it with the API rather than the form. Reviewers and the tag policy are both settable, so nothing here needs a browser.
 
 ```sh
-ENV=pypi
+ENV=release
 GHUID=$(gh api user --jq .id)
 gh api -X PUT "repos/{owner}/{repo}/environments/$ENV" \
   -F wait_timer=0 \

@@ -22,7 +22,9 @@ A registry's documentation is not proof that a command still exists. Before hand
 
 When a registry's documentation and its client disagree, that is a defect in the registry, not a puzzle to work around. Name which two sources disagree and what you ran to establish it. Do not improvise a substitute credential path, do not extract an undocumented on-disk token, and do not pin around the version where it last worked. Offer to report it upstream, and write the issue with `oss-writing`.
 
-Present policy choices instead of guessing at them, even when the repository already contains a release workflow or a stored token. Which cooldown to use, whether to keep an existing publish step, and how much of an existing workflow to carry over are decisions the user makes.
+Configure one publication gate by default. Additional gates remain valid, but they add another human action to every release. In an established release flow, preserve every configured gate, report the human actions it requires, and recommend the default path. Change those gates only after the maintainer accepts the migration.
+
+Present other policy choices instead of guessing at them, even when the repository already contains a release workflow or a stored token. Which cooldown to use, whether to keep an existing publish step, and how much of an existing workflow to carry over are decisions the user makes.
 
 ## The shape of a release workflow
 
@@ -56,6 +58,8 @@ Detect what the repository ships, not what it merely contains. A manifest presen
 
 Collect, from the manifest and the repository, before changing anything: the package, gem, or crate name and version; the owner and repository, from the manifest's own repository or source metadata first, falling back to the git remote; repository visibility and forge plan, since approval protection is not available on every plan; whether the owner is an organization or a personal account; whether the package is already published, since an unpublished package may need a different first-release path; the existing tag format from `git tag --sort=-creatordate | head`, keeping whatever format is already in use; and any existing release workflow or pipeline, especially one referencing a stored registry token, which this skill's changes should remove.
 
+Identify each release flow. One tag or release event can publish several packages when they version and ship together. Independently tagged packages are separate flows. Inventory every forge and registry approval each flow already requires before proposing a change.
+
 Detect the forge the same way `oss-ci` does: look for `.github/workflows/` or `.gitlab-ci.yml`, check the git remote host, or ask directly if neither signal is present. If the user states the forge explicitly, trust that over any signal found in the repository.
 
 Route to the matching reference file now, using the table at the end of this file. If what the repository ships matches none of the eleven rows there, say so plainly: name the ecosystem found and state that this skill has no reference file for it, rather than improvising a publishing flow for a registry nobody has read the documentation of.
@@ -74,7 +78,13 @@ Trigger the workflow on a version tag, matching the format found in Step 1. Befo
 
 ### Step 4: Gate on manual approval with two-factor authentication
 
-Pin the publish job to a GitHub environment with required reviewers, or a GitLab protected environment with a manual job and approval rules, naming at least one approver who is not an automation account. Check availability before writing the workflow; the reference file for this registry names the plan each gate needs. Do not simulate a missing native gate with an unverified third-party approval action. Where the registry offers its own proof-of-presence gate, such as npm staged publishing with two-factor approval, use it as an additional gate and as the documented fallback when the forge plan has no native approval gate. For another registry on a plan without a native gate, report that R-PUB-04 cannot be satisfied until the repository visibility or plan changes.
+Choose the last enforced publication gate that covers the complete release flow. A registry gate qualifies only when the CI identity cannot approve its own staged artifact. It must also approve every package in the flow with one human action. npm staged publishing meets both conditions for a flow containing one package.
+
+Where a registry gate qualifies, use it as the default. Keep any forge environment binding that forms part of the publisher identity, but configure no required reviewer there. Where no registry gate qualifies, pin the publish job to a GitHub environment with required reviewers. On GitLab, use a protected environment with one blocking manual job. Set `when: manual` and `allow_failure: false`, and restrict deployment permission to at least one person who is not an automation account.
+
+Check feature availability before writing the workflow. The ecosystem reference names the plan each gate needs. Do not simulate a missing native gate with an unverified third-party approval action. If the forge plan provides no native gate and the registry has no qualifying gate, report R-PUB-04 as unmet.
+
+Additional gates still satisfy R-PUB-04. If a release flow already has more than one, report each human action and suggest the one-gate default. Do not remove or weaken an established gate until the maintainer accepts that change.
 
 ### Step 5: Verify provenance after the first release
 

@@ -144,7 +144,7 @@ If an existing workflow reads a `CARGO_REGISTRY_TOKEN` from repository secrets, 
 
 ## Gate on manual approval (Step 4)
 
-Pin the publish job to `environment: release` as above, and create that environment at `https://github.com/<owner>/<repo>/settings/environments/new` with required reviewers, or, on GitLab Premium or Ultimate, as a protected environment with approval rules. GitHub required reviewers work for public repositories on current plans; private or internal repositories need GitHub Enterprise Cloud. crates.io has no registry-side approval fallback, so report R-PUB-04 as unmet when the forge plan provides no native gate.
+Pin the publish job to `environment: release` as above, and create that environment at `https://github.com/<owner>/<repo>/settings/environments/new` with required reviewers. On GitLab Premium or Ultimate, use one blocking manual job in a protected environment. GitHub required reviewers work for public repositories on current plans; private or internal repositories need GitHub Enterprise Cloud. crates.io has no registry-side approval fallback, so report R-PUB-04 as unmet when the forge plan provides no native gate.
 
 Create it with the API rather than the form. Reviewers and the tag policy are both settable, so nothing here needs a browser.
 

@@ -65,7 +65,7 @@ gcloud auth print-identity-token --audiences=https://pub.dev | dart pub token ad
 dart pub publish --force
 ```
 
-The exported key is a long-lived credential and Dart's documentation says to treat it like a password, because anyone who reads it can publish the package. Store it as a GitLab CI/CD variable that is masked, protected, and scoped to a protected environment with approval rules, so the key is unreadable outside an approved release job.
+The exported key is a long-lived credential and Dart's documentation says to treat it like a password, because anyone who reads it can publish the package. Store it as a GitLab CI/CD variable that is masked, protected, and scoped to a protected environment. Make the publish job blocking and manual, so the key is unreadable outside an approved release job.
 
 This is well below the bar R-PUB-02 sets: an exported service account key is a stored credential in exactly the sense the rule exists to eliminate, and it is account-shaped rather than package-shaped. It is also worse than the scoped-token fallbacks elsewhere in this directory, so say so plainly. Take it only while the page names no GitLab provider, and re-read that page before each release process is written.
 
@@ -119,7 +119,7 @@ On the forge, create the environment at `https://github.com/<owner>/<repo>/setti
 Create it with the API rather than the form. Reviewers and the tag policy are both settable, so nothing here needs a browser.
 
 ```sh
-ENV=pub.dev
+ENV=release
 GHUID=$(gh api user --jq .id)
 gh api -X PUT "repos/{owner}/{repo}/environments/$ENV" \
   -F wait_timer=0 \
