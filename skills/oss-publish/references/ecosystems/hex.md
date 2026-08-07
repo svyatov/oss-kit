@@ -116,13 +116,13 @@ The version check is a file test rather than a property query, because `mix hex.
 
 `mix hex.publish` also builds and publishes documentation by running `mix docs`, so the credentialed job runs the documentation toolchain too unless the project splits the two. `mix hex.publish package` publishes the package alone and `mix hex.publish docs` the documentation alone; splitting them lets the docs build run in an uncredentialed job and keeps the credentialed one to the package upload. Offer that split rather than assuming it, because it costs a second key or a second approval.
 
-`oss-harden` pins every `uses:` line above to a commit SHA and sets the test job's minimal permissions. Cache nothing in either job: a restored build cache in a job that compiles dependencies and holds a publish key is the worst version of the exposure this section is about. On GitLab CI/CD the same two jobs apply, with `HEX_API_KEY` as a masked and protected variable and the publish job behind a protected environment with approval rules.
+`oss-harden` pins every `uses:` line above to a commit SHA and sets the test job's minimal permissions. Cache nothing in either job: a restored build cache in a job that compiles dependencies and holds a publish key is the worst version of the exposure this section is about. On GitLab CI/CD the same two jobs apply, with `HEX_API_KEY` as a masked and protected variable and the publish job blocking and manual in a protected environment.
 
 If an existing workflow reads an account-wide `HEX_API_KEY` from repository secrets, replace it with the scoped key from Step 2 and tell the user to revoke the old one from the account's key list on hex.pm once the new flow is verified.
 
 ## Gate on manual approval (Step 4)
 
-Pin the publish job to `environment: release` as above, and create that environment at `https://github.com/<owner>/<repo>/settings/environments/new` with required reviewers naming at least one person other than an automation account, and with `HEX_API_KEY` as an environment secret rather than a repository secret. Required reviewers work for public repositories on current GitHub plans; private or internal repositories need GitHub Enterprise Cloud. On GitLab Premium or Ultimate, use a protected environment with approval rules.
+Pin the publish job to `environment: release` as above, and create that environment at `https://github.com/<owner>/<repo>/settings/environments/new` with required reviewers naming at least one person other than an automation account, and with `HEX_API_KEY` as an environment secret rather than a repository secret. Required reviewers work for public repositories on current GitHub plans; private or internal repositories need GitHub Enterprise Cloud. On GitLab Premium or Ultimate, use one blocking manual job in a protected environment.
 
 Create it with the API rather than the form. Reviewers and the tag policy are both settable, so nothing here needs a browser.
 

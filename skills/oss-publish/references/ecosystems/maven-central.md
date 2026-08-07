@@ -1,6 +1,6 @@
 # Maven Central
 
-Concrete flow for the decisions `SKILL.md` makes, for a component published to Maven Central through the Sonatype Central Portal. This is the one registry on the roster with no OIDC flow of any kind, so Step 2 below is a gap rather than a configuration, and R-PUB-02's account-scoped clause is what admits the fallback it gives instead. Everything else follows the usual shape, and the approval gate in Step 4 is unusually strong here because the Portal has a registry-side one of its own.
+Concrete flow for the decisions `SKILL.md` makes, for a component published to Maven Central through the Sonatype Central Portal. This is the one registry on the roster with no OIDC flow of any kind, so Step 2 below is a gap rather than a configuration, and R-PUB-02's account-scoped clause is what admits the fallback it gives instead. Step 4 protects that credential with the forge publication gate.
 
 Two things about Maven Central shape every decision below. A release is immutable, and Sonatype's FAQ answers the question of whether a published component can be changed, modified, deleted, removed, or updated with a plain no. And publishing rights are namespace rights, verified against the account, so the credential's blast radius is the namespace rather than a single artifact.
 
@@ -53,7 +53,7 @@ R-PUB-02's own clause admits an account-scoped token where the registry document
 - An expiry set when the token is generated, and a rotation date the project keeps.
 - Revocation and replacement on compromise, from the same user token page, which invalidates the old pair.
 - Namespace ownership verified against the account, so what the token can reach is bounded by what the account owns.
-- A publishing type that holds a validated deployment until a person releases it, which is Step 4 below.
+- The token and signing secrets available only to the publish job after the forge publication gate passes, which is Step 4 below.
 
 This sits below R-PUB-02's bar and stays there while Sonatype documents nothing narrower than the publishing account. It retires the day scoped tokens ship, or the day the Portal documents an OIDC flow.
 
@@ -73,12 +73,13 @@ Central's file-level requirements decide what the build has to produce: a `.asc`
   <extensions>true</extensions>
   <configuration>
     <publishingServerId>central</publishingServerId>
-    <autoPublish>false</autoPublish>
+    <autoPublish>true</autoPublish>
+    <waitUntil>published</waitUntil>
   </configuration>
 </plugin>
 ```
 
-Leave `autoPublish` at `false`. The Portal API's equivalent setting is `publishingType`, whose default `USER_MANAGED` holds a validated deployment at the `VALIDATED` state until a person publishes it, where `AUTOMATIC` proceeds to Maven Central on its own. Confirm the plugin's mapping against the plugin documentation before relying on it as the approval gate, because the gate is the whole reason for the setting.
+Set `autoPublish` to `true` and `waitUntil` to `published`. Sonatype documents automatic publishing as the usual CI path, and the wait makes the job report the final registry result. The Portal API equivalent is `publishingType=AUTOMATIC`.
 
 ```yaml
 name: Release
@@ -126,19 +127,19 @@ jobs:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 ```
 
-`setup-java` writes the `settings.xml` server entry from the two environment variable names, so the credential never appears in a file the repository tracks. `server-id` must match `publishingServerId` in the plugin configuration exactly, and the pair the two secrets hold is the token username and password from Step 2, not a Sonatype account password.
+`setup-java` writes the `settings.xml` server entry from the two environment variable names, so the credential never appears in a file the repository tracks. `server-id` must match `publishingServerId` in the plugin configuration exactly, and the pair the two secrets hold is the token username and password from Step 2, not a Sonatype account password. Store all three Central secrets and the GPG key as environment secrets on GitHub.
 
 `-DskipTests` in the publish job is deliberate: the tests ran in the uncredentialed job, and re-running them in the job holding the token and the signing key puts the project's whole test dependency tree inside the credentialed blast radius. `mvn deploy` still compiles and packages there, which is the residual this reference cannot remove, because the Maven plugin builds the bundle from a build in that same reactor.
 
-`oss-harden` pins every `uses:` line above to a commit SHA and sets the test job's minimal permissions. On GitLab CI/CD the same `mvn deploy` runs unchanged: the credential path is identical because there is no OIDC on either forge. What differs is only where the two secrets live, which is a masked and protected CI/CD variable, and how the gate is configured, which is a protected environment with approval rules.
+`oss-harden` pins every `uses:` line above to a commit SHA and sets the test job's minimal permissions. On GitLab CI/CD the same `mvn deploy` runs unchanged: the credential path is identical because there is no OIDC on either forge. Store each secret as a masked, protected variable scoped to `release`. Make the publish job blocking and manual, and restrict it through the protected environment.
 
 Neither `setup-java` block above sets `cache`, so nothing is restored. `oss-harden` owns dependency caching under R-CI-04, and a restored cache in a job that can sign and publish is the same cache-poisoning exposure every other reference in this directory refuses; leave the input off rather than setting it to a value.
 
 ## Gate on manual approval (Step 4)
 
-Two gates apply together here, and Maven Central is unusual in having a real registry-side one.
+Use the forge publication gate. The Central user token can upload a `USER_MANAGED` deployment and publish it through the Portal API. The registry stop does not block a compromised job that already holds that token. Sonatype also documents `autoPublish=true` as the usual CI configuration.
 
-The workflow gate is `environment: release` on the publish job above, with required reviewers configured at `https://github.com/<owner>/<repo>/settings/environments/new`, or a GitLab protected environment with approval rules. Required reviewers work for public repositories on current GitHub plans; private or internal repositories need GitHub Enterprise Cloud.
+On GitHub, keep `environment: release` on the publish job and configure required reviewers at `https://github.com/<owner>/<repo>/settings/environments/new`. Required reviewers work for public repositories on current GitHub plans; private or internal repositories need GitHub Enterprise Cloud. The Central token and signing secrets become available only after approval.
 
 Create it with the API rather than the form. Reviewers and the tag policy are both settable, so nothing here needs a browser.
 
@@ -159,9 +160,11 @@ Three details decide whether that runs. `gh api` substitutes `{owner}` and `{rep
 
 `reviewers[][id]` takes a numeric user or team id rather than a login. A team needs `type=Team` and that team's id.
 
-The registry gate is the `USER_MANAGED` publishing type. A deployment uploaded that way runs through validation, stops at the `VALIDATED` state, and waits for a person to publish it from the Portal interface or through a second authenticated call to `/api/v1/publisher/deployment/<deploymentId>`. That is a genuine proof-of-presence gate in the sense R-PUB-04 asks for, and it survives a compromised workflow, because the workflow cannot approve itself without the token being used a second time by whoever is watching the Portal.
+On GitLab Premium or Ultimate, protect `release` and make the publish job blocking and manual. Do not add deployment approval rules by default, because GitLab requires a separate manual job start after approval. Add them only when the maintainer requests a second human action.
 
-Keep both. Where the forge plan provides no native gate, the Portal gate alone can satisfy R-PUB-04, which puts Maven Central in a better position than most of this directory. Say so plainly rather than reporting the rule unmet. What a maintainer must not do is set `autoPublish` to `true` to make the pipeline finish green, because that removes the only gate a compromised release workflow cannot walk through.
+`USER_MANAGED` remains useful when the maintainer wants to inspect or test the validated deployment. Treat it as an optional second stop. It does not satisfy R-PUB-04 by itself because the CI token can call `/api/v1/publisher/deployment/<deploymentId>`.
+
+If the forge plan provides no native gate, report R-PUB-02 and R-PUB-04 as unmet. The account-wide token would be available to a run no person approved.
 
 ## Verify provenance (Step 5)
 
@@ -238,4 +241,4 @@ Do the namespace work before writing any of the workflow above, because a deploy
 
 Step 7 is in `SKILL.md`: read each R-PUB rule's `Check:` line against what this file produced, and fix what fails before reporting done.
 
-Verified 2026-07-31 against [Central Portal, Publishing by using the Portal Publisher API](https://central.sonatype.org/publish/publish-portal-api/), [Central Portal, Publishing by using the Maven plugin](https://central.sonatype.org/publish/publish-portal-maven/), [Central Portal, Generate a portal token](https://central.sonatype.org/publish/generate-portal-token/), and [Central Portal, Requirements](https://central.sonatype.org/publish/requirements/). The OSSRH sunset and Sigstore announcements linked above were read the same day.
+Verified 2026-08-07 against [Central Portal, Publishing by using the Portal Publisher API](https://central.sonatype.org/publish/publish-portal-api/), [Central Portal, Publishing by using the Maven plugin](https://central.sonatype.org/publish/publish-portal-maven/), [Central Portal, Generate a portal token](https://central.sonatype.org/publish/generate-portal-token/), and [Central Portal, Requirements](https://central.sonatype.org/publish/requirements/). The OSSRH sunset and Sigstore announcements linked above were read the same day.

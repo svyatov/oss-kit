@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** R-PUB-02 requires Maven Central credentials to become available only after a native forge publication gate. A USER_MANAGED Portal stop alone no longer passes because the same user token can publish through the Portal API.
+- `oss-publish` configures one publication gate by default. It uses npm staged approval for one package, a forge gate for packages released together, and a forge gate with automatic Maven Central publication. It preserves existing extra gates until the maintainer accepts a migration.
+- GitLab release examples use one protected blocking manual job by default. Deployment approval rules remain an optional extra gate because GitLab also requires a manual job start after approval.
+
+### Fixed
+
+- npm staged publication examples use `./package/*.tgz`, so npm reads the values as local tarball paths.
+- PyPI and pub.dev examples use the `release` environment name consistently.
+
 ## [0.12.0] - 2026-08-04
 
 ### Changed
