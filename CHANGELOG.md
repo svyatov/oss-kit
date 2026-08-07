@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-08-07
+
 ### Changed
 
 - **Breaking:** R-PUB-02 requires Maven Central credentials to become available only after a native forge publication gate. A USER_MANAGED Portal stop alone no longer passes because the same user token can publish through the Portal API.
@@ -364,7 +366,8 @@ Five new rules, and `oss-audit` now reports the gaps alone rather than every rul
 - `oss-audit` scores a repository against `STANDARD.md`, reports each gap with the rule it fails, and names the skill that fixes it.
 - `oss-skill` fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` conformance to the Agent Skills specification, oversized bodies that belong in `references/`, and the license field an extracted skill carries with it.
 
-[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/svyatov/oss-kit/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/svyatov/oss-kit/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/svyatov/oss-kit/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/svyatov/oss-kit/compare/v0.9.0...v0.10.0
