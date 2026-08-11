@@ -19,10 +19,30 @@ test("every harness manifest is valid JSON naming oss-kit", () => {
   }
 })
 
-test("every manifest that declares a skills path points at skills/", () => {
-  for (const path of MANIFESTS) {
-    const m = json(path)
-    if ("skills" in m) expect(m.skills, path).toBe("./skills/")
+// The `skills` array is what makes `npx skills` render one select-all group
+// instead of nine loose rows, and it has to name every skill literally: the
+// installer matches a skill's own directory against the array, so "./skills/"
+// on its own groups nothing.
+//
+// It is also load-bearing for Claude Code. `skills` normally adds to the
+// default `skills/` scan, but the plugin's marketplace entry resolves to the
+// marketplace root, which is the documented exception where the declared paths
+// replace that scan. A skill missing from the array would stop loading.
+test("the claude manifest declares every skill, so none silently stops loading", () => {
+  const declared = json(".claude-plugin/plugin.json").skills
+  const present = readdirSync("skills")
+    .filter((n) => existsSync(`skills/${n}/SKILL.md`))
+    .map((n) => `./skills/${n}`)
+  // Comparing against paths built as `./skills/<name>` also pins the leading
+  // `./` the installer requires: an entry without it is skipped in silence.
+  expect([...declared].sort()).toEqual(present.sort())
+})
+
+// Only the Claude manifest enumerates. Codex and Cursor scan the directory, so
+// they keep the one-line form and need no maintenance when a skill is added.
+test("the other harness manifests point at skills/ as a whole", () => {
+  for (const path of MANIFESTS.filter((p) => p !== ".claude-plugin/plugin.json")) {
+    expect(json(path).skills, path).toBe("./skills/")
   }
 })
 

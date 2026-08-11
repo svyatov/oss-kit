@@ -10,5 +10,16 @@
   "homepage": "https://github.com/svyatov/oss-kit",
   "repository": "https://github.com/svyatov/oss-kit",
   "license": "MIT",
-  "keywords": ["open-source", "readme", "changelog", "ci", "security", "release"]
+  "keywords": ["open-source", "readme", "changelog", "ci", "security", "release"],
+  "skills": [
+    "./skills/oss-audit",
+    "./skills/oss-changelog",
+    "./skills/oss-ci",
+    "./skills/oss-community",
+    "./skills/oss-harden",
+    "./skills/oss-publish",
+    "./skills/oss-readme",
+    "./skills/oss-skill",
+    "./skills/oss-writing"
+  ]
 }
