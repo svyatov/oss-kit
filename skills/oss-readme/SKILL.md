@@ -142,7 +142,7 @@ Curated agent skills for open source maintainers.
 - **Both forges.** 57 of the 61 rules score GitHub and GitLab alike.
 
 ```bash
-npx skills add svyatov/oss-kit --skill '*'
+npx skills add svyatov/oss-kit
 ```
 
 Then ask your agent:

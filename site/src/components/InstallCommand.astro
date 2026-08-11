@@ -2,17 +2,14 @@
 import FaIcon from "./FaIcon.astro"
 
 const { compact = false } = Astro.props
-const command = "npx skills add svyatov/oss-kit --skill '*'"
-// One span per argument, with the flag and its value kept as one. The spans are
-// `pre`, so the spaces between them are the only places the line can ever break
-// and `--skill '*'` always arrives whole. Non-breaking spaces were not enough:
-// `pre-wrap` also breaks after a hyphen, and it chose the one inside `--skill`,
-// which is the argument the whole arrangement exists to protect. Joining the
-// parts back with single spaces reproduces `command`, so the copy handler still
-// reads textContent and no shell ever sees the shaping.
-const words = command.split(" ")
-const flag = words.indexOf("--skill")
-const parts = [...words.slice(0, flag), words.slice(flag).join(" ")]
+const command = "npx skills add svyatov/oss-kit"
+// One span per argument. The spans are `pre`, so the spaces between them are the
+// only places the line can ever break. Non-breaking spaces were not enough:
+// `pre-wrap` also breaks after a hyphen, and every hyphen here sits inside a
+// name a reader has to retype. Joining the parts back with single spaces
+// reproduces `command`, so the copy handler still reads textContent and no shell
+// ever sees the shaping.
+const parts = command.split(" ")
 ---
 
 <kit-copy-command class:list={["install-command", { "install-command--compact": compact }]}>

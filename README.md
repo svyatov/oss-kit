@@ -21,7 +21,7 @@ Curated agent skills for open source maintainers.
 Install the kit:
 
 ```bash
-npx skills add svyatov/oss-kit --skill '*'
+npx skills add svyatov/oss-kit
 ```
 
 Then ask your agent:

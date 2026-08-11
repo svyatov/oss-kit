@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+### Changed
+
+- The documented install is `npx skills add svyatov/oss-kit`. The `--skill '*'` flag existed to preselect nine loose rows in the picker, and 0.14.0 replaced those rows with one select-all row, so the flag now only repeats what a single keystroke does.
+- `oss-skill` says a repository documenting a whole-collection install groups its skills through a plugin manifest rather than through `--skill '*'`. The reference recommended the flag, which was the only answer before the CLI read a manifest for groupings.
+
 ## [0.14.0] - 2026-08-11
 
 ### Changed

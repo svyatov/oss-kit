@@ -24,7 +24,9 @@ Running `npx skills add <owner>/<repo>` checks the repository root, `skills/`, t
 
 `--skill <name>` (short form `-s`) installs only the named skill or skills from the source instead of every skill found. `--list` prints what is available without installing anything.
 
-Installation is interactive by default, so a bare `add` prompts for the skills, the agents, and the scope. The value `'*'` means every match, for `--skill` and for `--agent` alike, and `-y` skips the confirmation prompts. `--all` is the shorthand for `--skill '*' --agent '*' -y`. A repository that documents a whole-collection install wants `--skill '*'`, which preselects the skills and leaves the agent and scope questions to the reader; `--all` answers those two for them.
+Installation is interactive by default, so a bare `add` prompts for the skills, the agents, and the scope. The value `'*'` means every match, for `--skill` and for `--agent` alike, and `-y` skips the confirmation prompts. `--all` is the shorthand for `--skill '*' --agent '*' -y`.
+
+A repository that documents a whole-collection install does not need `--skill '*'` for it. The CLI groups a repository's skills under one select-all row when a plugin manifest at the repository root names each skill's own directory, so a bare `add` offers the whole collection in a single keystroke and still leaves the agent and scope questions to the reader. The manifest has to name each directory: a single `./skills/` entry matches no skill's own directory and groups nothing. Without such a manifest the picker lists every skill as a loose row, which is what `--skill '*'` used to answer. Verified 2026-08-11 against `getPluginGroupings` in `src/plugin-manifest.ts`.
 
 The receiving path is client-specific. Current examples are `.claude/skills/` for Claude Code and `.agents/skills/` for Codex, Cursor, Gemini CLI, GitHub Copilot, Kimi Code CLI, and the universal target. Global paths differ by client, so read the CLI's current `Supported Agents` table instead of deriving one. Interactive installation uses one canonical copy with client symlinks by default; `--copy` requests independent copies.
 
