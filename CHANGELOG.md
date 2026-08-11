@@ -6,11 +6,23 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+### Added
+
+- `oss-harden` counts a repository's workflow files as source in an analyzed language. R-SEC-09 now reaches a repository whose application language no analyzer supports. Step 11 read as CodeQL over application code alone, and reported such a repository outside the rule while nothing examined its workflows.
+- The GitHub reference names CodeQL's `actions` language and zizmor as the analyzers for those files. It maps zizmor's audits onto the five rules the kit otherwise scores by reading the files: R-SEC-01, R-SEC-02, R-SEC-07, R-SEC-14, and R-PUB-02.
+- The RubyGems reference covers Bundler's own `cooldown` setting under R-SEC-14. It gives the three precedence layers and the `Gemfile` form. Two conditions leave a configured cooldown covering less than it reads. A version whose gem server emits no `created_at` stays resolvable. From Bundler 4.0.15, a version already in `Gemfile.lock` is exempt on every resolution path.
+- The RubyGems reference states the install-time code execution that R-SEC-15 places outside itself, and gives the command that counts the installed gems holding it.
+
 ### Changed
 
 - The documented install is `npx skills add svyatov/oss-kit`. The `--skill '*'` flag existed to preselect nine loose rows in the picker, and 0.14.0 replaced those rows with one select-all row, so the flag now only repeats what a single keystroke does.
 - `oss-skill` says a repository documenting a whole-collection install groups its skills through a plugin manifest rather than through `--skill '*'`. The reference recommended the flag, which was the only answer before the CLI read a manifest for groupings.
 - `oss-harden` prices GitHub Code Quality at its general availability rate, says the product reaches organization-owned repositories on GitHub Team or GitHub Enterprise Cloud only, and gives the setup command that decides whether the `code_quality` ruleset rule can be added at all. The paragraph was written during the public preview, when the cost was deferred and the availability limit was unstated.
+
+### Fixed
+
+- The RubyGems reference no longer says `bundle config set --local frozen true` writes the setting where a reviewer and CI can read it. `bundle gem` generates a `.gitignore` ignoring `/.bundle/`, so on a gem skeleton nothing commits that file. The reference now says to read the ignore file first, and names `BUNDLE_FROZEN` as the setting that reaches CI.
+- The GitHub reference's contents list links to its dependency updates heading again. That heading gained R-SEC-14 and the anchor was left behind.
 
 ## [0.14.0] - 2026-08-11
 
