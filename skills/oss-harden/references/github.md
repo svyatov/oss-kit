@@ -425,7 +425,17 @@ gh api repos/{owner}/{repo}/code-scanning/default-setup --jq '{state, languages}
 
 A `tool` name that matches nothing the repository reports reads as "not configured" and blocks every merge, so verify the name before the rule goes active.
 
-GitHub Code Quality adds a second rule of the same shape, `code_quality`, whose `parameters.severity` names the level at or above which a result blocks the merge; `errors` is the value verified against a live ruleset. Two cautions belong with any recommendation of it. It is absent from the rulesets REST reference, which documents `code_scanning` and not this rule, so the API accepting it is currently better evidence than the reference is. And it is a licensed product that must be turned on per repository or organization and that consumes Actions minutes for its CodeQL passes plus per-seat licensing and AI credits for the rest, so name that cost before proposing it, and do not add the rule to a repository where Code Quality is not already on: a rule requiring a tool that never reports blocks every merge. R-SEC-09 does not require it, and CodeQL default setup with the `code_scanning` rule satisfies the rule on its own.
+GitHub Code Quality adds a second rule of the same shape, `code_quality`, whose `parameters.severity` names the level at or above which a result blocks the merge. `errors` is the value verified against a live ruleset, and the rules reference names the levels Errors, Warnings and higher, and All. Check availability first, because it settles most cases in one step. The product reaches organization-owned repositories on GitHub Team or GitHub Enterprise Cloud. It does not run on GitHub Enterprise Server, and a user-owned repository cannot enable it at all. Price it before proposing it. It went generally available on 2026-07-20 at 10 US dollars per active committer per month. A committer counts as active for 90 days after a push, and once per organization. Add metered usage for the AI analysis and Actions minutes for the CodeQL passes.
+
+Note that `code_quality` is absent from the rulesets REST schema, which documents `code_scanning` and not this rule. The API accepting it is better evidence than that reference is. The branch rule is documented under its interface name, Require code quality results.
+
+Read the setup back before adding the rule:
+
+```bash
+gh api repos/{owner}/{repo}/code-quality/setup --jq '{state, languages}'
+```
+
+`state` reads `configured` or `not-configured`. A 404 reading `Code quality is not available for this repository` means the plan or the ownership excludes the product, rather than that somebody switched it off. Add the rule only on `configured`. On the other two answers it names a tool that never reports, and blocks every merge with nothing to read. R-SEC-09 does not require it, and CodeQL default setup with the `code_scanning` rule satisfies the rule on its own.
 
 ## Detection controls (R-SEC-10, R-SEC-11)
 
