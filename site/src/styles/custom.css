@@ -440,11 +440,11 @@ site-search .pagefind-ui__result-nested {
   font-weight: 600;
 }
 
-/* The command never breaks where the browser chooses. Ellipsis hid `--skill
-   '*'` and free wrapping split it, and either one costs the reader the
-   difference between installing the kit and installing one skill. Wider
-   viewports scroll it; below 34.5rem it wraps only at the spaces the component
-   leaves open, because each argument sits in its own `pre` span. */
+/* The command never breaks where the browser chooses. Ellipsis hid the end of
+   it and free wrapping split an argument mid-hyphen, and either one leaves a
+   reader retyping something they cannot see. Wider viewports scroll it; below
+   34.5rem it wraps only at the spaces the component leaves open, because each
+   argument sits in its own `pre` span. */
 .install-command code {
   flex: 1 1 auto;
   min-width: 0;
@@ -546,9 +546,10 @@ site-search .pagefind-ui__result-nested {
 .kit-hero {
   display: grid;
   /* The copy column has to hold the install command on one line, or the
-     primary action ships with its last flag faded out on every desktop. 0.85fr
-     was three pixels short of that at 1440, which is enough to fade the closing
-     quote of `--skill '*'`. The map's floor is 43.5rem because that is what its
+     primary action ships with its last argument faded out on every desktop.
+     0.85fr was three pixels short of that at 1440, measured against the longer
+     `--skill '*'` form the command used to carry, so there is slack now rather
+     than a new measurement. The map's floor is 43.5rem because that is what its
      three-column body plus gaps, padding and border actually measure; 42rem was
      20px under, so the floor could be satisfied while the body clipped. */
   grid-template-columns: minmax(19rem, 0.92fr) minmax(43.5rem, 1.48fr);
@@ -2242,9 +2243,9 @@ html[data-theme="light"] .domain-bay__count i {
    size worth reading, so it stops scrolling and takes its one break. The docs
    footer is the tightest instance and starts hiding characters at 547px, which
    is where this threshold comes from rather than from a round number. The
-   component puts each argument in its own `pre` span and keeps `--skill '*'` in
-   one, so the spaces between arguments are the only breaks the browser is
-   offered and the flag never arrives split from its value. */
+   component puts each argument in its own `pre` span, so the spaces between
+   arguments are the only breaks the browser is offered and no argument ever
+   arrives split at one of its own hyphens. */
 @media (max-width: 34.5rem) {
   .install-command code {
     overflow-x: visible;

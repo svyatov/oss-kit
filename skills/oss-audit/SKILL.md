@@ -16,7 +16,7 @@ This skill owns no rule. It reads what `STANDARD.md` says a rule needs, checks t
 
 `STANDARD.md` sits next to this file, in this skill's own installed directory. Read it from there, not from the repository under audit. The audit runs with the target repository as the working directory, so a bare `STANDARD.md` or `./STANDARD.md` resolves against that repository and is the wrong file or no file. Resolve the standard from the absolute directory this `SKILL.md` was loaded from, and read `STANDARD.md` beside it.
 
-The directory travels intact in every documented install, so the file is always beside this one: a git checkout, the Claude Code plugin install, `npx skills add svyatov/oss-kit --skill '*'` for the whole kit, and `npx skills add svyatov/oss-kit --skill oss-audit` for this skill alone. There is no documented install that brings in this skill's directory but leaves one of its own files behind.
+The directory travels intact in every documented install, so the file is always beside this one: a git checkout, the Claude Code plugin install, `npx skills add svyatov/oss-kit` for the whole kit, and `npx skills add svyatov/oss-kit --skill oss-audit` for this skill alone. There is no documented install that brings in this skill's directory but leaves one of its own files behind.
 
 If no `STANDARD.md` sits beside this file, the file is genuinely missing: the skill's own directory did not install completely, or the file was moved or deleted afterward. Say this plainly, name the file that is missing, and stop rather than guessing at another path or scoring against a remembered or reconstructed rule set. An audit with no rules to check against is not a smaller audit; it is no audit.
 
