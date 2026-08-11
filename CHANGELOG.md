@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-08-11
+
 ### Changed
 
 - `.claude-plugin/plugin.json` lists all nine skills in a `skills` array. `npx skills` groups a repository's skills under one select-all row only when a plugin manifest names each skill directory, and it matches a skill's own directory, so a single `./skills/` entry grouped nothing. Installing oss-kit offered nine separate rows before this.
@@ -380,7 +382,8 @@ Five new rules, and `oss-audit` now reports the gaps alone rather than every rul
 - `oss-audit` scores a repository against `STANDARD.md`, reports each gap with the rule it fails, and names the skill that fixes it.
 - `oss-skill` fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` conformance to the Agent Skills specification, oversized bodies that belong in `references/`, and the license field an extracted skill carries with it.
 
-[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/svyatov/oss-kit/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/svyatov/oss-kit/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/svyatov/oss-kit/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/svyatov/oss-kit/compare/v0.10.0...v0.11.0
