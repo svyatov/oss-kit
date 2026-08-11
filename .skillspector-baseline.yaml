@@ -1,0 +1,20 @@
+version: 1
+
+# One suppression, and it stays one. Every other skillspector finding still
+# scores, so the scan keeps failing the build when a new one arrives.
+#
+# A glob rule rather than a fingerprint: a fingerprint hashes the line span and
+# the message, so it expires the next time somebody edits the file, and the
+# finding returns without anybody having re-read it.
+
+rules:
+  - id: "PE3"
+    path: "oss-harden/SKILL.md"
+    message: "*access tokens*"
+    reason: >-
+      False positive on a documentation link. The skill cites GitLab's personal
+      access tokens page as the source for the read_api and api scopes an audit
+      run needs, and the scanner reads the page title as credential access. The
+      skill reads no credential file. Remove this rule if oss-harden ever tells
+      a reader to read a token from disk, because that is the finding it would
+      hide.

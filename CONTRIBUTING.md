@@ -38,11 +38,11 @@ bun run validate
 bash tests/test-check-drift.sh
 bash scripts/check-drift.sh
 bun scripts/check-ecosystems.mjs
-skillspector scan ./skills/ --no-llm --format json
+skillspector scan ./skills/ --no-llm --format json --baseline .skillspector-baseline.yaml
 cd site && bun run build
 ```
 
-`bun run typecheck` checks the repository's own TypeScript. `bun test` runs the validator's own test suite. `bun run validate` runs `skills/oss-skill/scripts/validate.mjs`, which checks every skill against R-SKL-01 through R-SKL-05: layout, frontmatter conformance, body size, the license field, and what a skill may ship as a script. `tests/test-check-drift.sh` is the test suite for `scripts/check-drift.sh`, which fails when a skill cites a rule ID that `skills/oss-audit/STANDARD.md` does not define, or when a rule names a skill that does not claim it. `scripts/check-ecosystems.mjs` reads `skills/oss-audit/ecosystems.json` and fails when a skill is missing a file for a roster ecosystem, when a file is missing a heading its skill declares, when a declared heading has nothing under it, or when a file does not end with a well-formed `Verified` line. `skillspector scan` checks the skills for prompt injection and other agent-facing risks.
+`bun run typecheck` checks the repository's own TypeScript. `bun test` runs the validator's own test suite. `bun run validate` runs `skills/oss-skill/scripts/validate.mjs`, which checks every skill against R-SKL-01 through R-SKL-05: layout, frontmatter conformance, body size, the license field, and what a skill may ship as a script. `tests/test-check-drift.sh` is the test suite for `scripts/check-drift.sh`, which fails when a skill cites a rule ID that `skills/oss-audit/STANDARD.md` does not define, or when a rule names a skill that does not claim it. `scripts/check-ecosystems.mjs` reads `skills/oss-audit/ecosystems.json` and fails when a skill is missing a file for a roster ecosystem, when a file is missing a heading its skill declares, when a declared heading has nothing under it, or when a file does not end with a well-formed `Verified` line. `skillspector scan` checks the skills for prompt injection and other agent-facing risks. `.skillspector-baseline.yaml` suppresses one false positive and nothing else, so a new finding still fails the scan. Read it before adding a second entry: it says what would make each suppression wrong.
 
 `bun scripts/ecosystem-freshness.mjs` reports how recently each ecosystem file was checked against its sources, oldest first. It never gates, so it is not in the list above. `bun scripts/rule-freshness.mjs` does the same for rule sources.
 
