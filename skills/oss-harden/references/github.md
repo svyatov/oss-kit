@@ -7,7 +7,7 @@ Concrete commands and settings for the decisions `SKILL.md` makes, on GitHub Act
 - [Read the current state (Step 2)](#read-the-current-state-step-2)
 - [Pin external actions and reusable workflows to a commit SHA (R-SEC-01)](#pin-external-actions-and-reusable-workflows-to-a-commit-sha-r-sec-01)
 - [Set least-privilege permissions (R-SEC-02)](#set-least-privilege-permissions-r-sec-02)
-- [Automated dependency updates (R-SEC-03)](#automated-dependency-updates-r-sec-03)
+- [Automated dependency updates (R-SEC-03, R-SEC-14)](#automated-dependency-updates-r-sec-03-r-sec-14)
 - [Branch protection and rulesets (R-SEC-04, R-SEC-12)](#branch-protection-and-rulesets-r-sec-04-r-sec-12)
   - [Deriving the required checks](#deriving-the-required-checks)
   - [Updating an existing ruleset](#updating-an-existing-ruleset)
@@ -22,6 +22,7 @@ Concrete commands and settings for the decisions `SKILL.md` makes, on GitHub Act
 - [Tag rulesets (R-SEC-13)](#tag-rulesets-r-sec-13)
 - [Untrusted input (R-SEC-07)](#untrusted-input-r-sec-07)
 - [Static analysis (R-SEC-09)](#static-analysis-r-sec-09)
+  - [The workflow files are one of the languages](#the-workflow-files-are-one-of-the-languages)
 - [Detection controls (R-SEC-10, R-SEC-11)](#detection-controls-r-sec-10-r-sec-11)
   - [The write is not the evidence](#the-write-is-not-the-evidence)
   - [Absent is not disabled](#absent-is-not-disabled)
@@ -400,6 +401,23 @@ Quoting the expression directly inside `run:` is not sufficient because expressi
 ## Static analysis (R-SEC-09)
 
 For a public repository in a CodeQL-supported language, prefer CodeQL default setup and confirm its pull request analysis appears as a required status check. Private repositories require GitHub Code Security on an eligible GitHub Team or Enterprise plan. If CodeQL does not support the language, use the project's established analyzer and require its pull request result rather than adding a no-op CodeQL configuration.
+
+### The workflow files are one of the languages
+
+`actions` is a CodeQL language, generally available since April 2025, so the repository's own workflows are inside R-SEC-09 whatever the application is written in. Default setup enables it once workflow files are on the default branch; advanced setup analyzes them only where the matrix names `actions`. Its queries cover script injection, unvalidated dangerous inputs, and missing permissions, with data flow tracked between steps rather than by pattern match, so read the matrix before reporting a repository with workflows as analyzed.
+
+CodeQL is the deeper half of this surface and not the wider one. zizmor audits the same files for the classes those queries largely leave, and its audits map onto five rules this kit already owns: `unpinned-uses`, `stale-action-refs`, and `impostor-commit` onto R-SEC-01, `excessive-permissions` onto R-SEC-02, `template-injection`, `github-env`, and `dangerous-triggers` onto R-SEC-07, `dependabot-cooldown` onto R-SEC-14, and `use-trusted-publishing` onto R-PUB-02. Those rules are otherwise scored by reading the files, so a project that runs it converts five judgements into a check. Recommend it as a second analyzer beside CodeQL rather than a replacement for it.
+
+```yaml
+- name: Run zizmor
+  uses: zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054 # v0.6.2
+```
+
+Two things about that step are worth saying to the user rather than leaving in the defaults. It uploads SARIF to code scanning unless `advanced-security` is set to `false`, so the job needs `security-events: write` and its findings arrive where the `code_scanning` rule below can block on them. And its `version` input defaults to `latest`, so pinning the action by SHA pins the wrapper while the analyzer it downloads still floats; set `version` to close the gap R-SEC-01 exists for.
+
+zizmor reads GitHub Actions, Dependabot, and pre-commit configurations. It does not read `.gitlab-ci.yml`, so this is a GitHub-side recommendation with no GitLab equivalent, and `references/gitlab.md` answers that forge with GitLab SAST instead.
+
+Verified 2026-08-11 against [CodeQL Actions built-in queries](https://docs.github.com/en/code-security/code-scanning/managing-your-code-scanning-configuration/actions-built-in-queries), [the Actions workflow analysis GA announcement](https://github.blog/changelog/2025-04-22-github-actions-workflow-security-analysis-with-codeql-is-now-generally-available/), [zizmor's audit reference](https://docs.zizmor.sh/audits/), and [zizmor-action](https://github.com/zizmorcore/zizmor-action).
 
 Where the branch is guarded by a ruleset, the `code_scanning` rule is the stronger way to make the analysis binding, and it is worth having alongside the status check rather than instead of it:
 
