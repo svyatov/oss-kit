@@ -8,7 +8,7 @@
 # The generated pages under that tree are ignored by name further down.
 /docs/
 STRATEGY.md
-CONCEPTS.md
+CONTEXT.md
 PRODUCT.md
 DESIGN.md
 .impeccable/
