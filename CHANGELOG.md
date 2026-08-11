@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-08-11
+
 ### Added
 
 - `oss-harden` counts a repository's workflow files as source in an analyzed language. R-SEC-09 now reaches a repository whose application language no analyzer supports. Step 11 read as CodeQL over application code alone, and reported such a repository outside the rule while nothing examined its workflows.
@@ -400,7 +402,8 @@ Five new rules, and `oss-audit` now reports the gaps alone rather than every rul
 - `oss-audit` scores a repository against `STANDARD.md`, reports each gap with the rule it fails, and names the skill that fixes it.
 - `oss-skill` fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` conformance to the Agent Skills specification, oversized bodies that belong in `references/`, and the license field an extracted skill carries with it.
 
-[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.14.0...HEAD
+[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/svyatov/oss-kit/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/svyatov/oss-kit/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/svyatov/oss-kit/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/svyatov/oss-kit/compare/v0.11.0...v0.12.0
