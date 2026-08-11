@@ -1,0 +1,55 @@
+name: codeql
+
+# Advanced setup rather than default setup, for two reasons.
+#
+# Default setup returns a neutral verdict on a pull request that changes no
+# analyzable code, because it has no analysis to compare against the one on the
+# default branch. The `main` ruleset's code_scanning rule blocks on a neutral
+# verdict, so every release, which only ever touches three plugin manifests and
+# the changelog, was unmergeable. This workflow runs on every pull request with
+# no path filter, so a verdict always arrives.
+#
+# Default setup also excludes pull requests from forks, and every contribution
+# here arrives from one, so R-SEC-09 was open on the path that matters most.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Keeps the default branch analyzed as CodeQL's own queries change, which
+    # is what default setup's weekly schedule did.
+    - cron: "24 4 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  analyze:
+    name: analyze ${{ matrix.language }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        # Default setup reported actions, javascript, javascript-typescript,
+        # and typescript. The middle identifier is the one that covers both
+        # JavaScript and TypeScript, so naming all three analyzes the same tree
+        # three times.
+        language: ["actions", "javascript-typescript"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: github/codeql-action/init@5595ccaf912efad79be6eef63a5619ff05969be3  # v4
+        with:
+          language: ${{ matrix.language }}
+      - uses: github/codeql-action/analyze@5595ccaf912efad79be6eef63a5619ff05969be3  # v4
+        with:
+          category: "/language:${{ matrix.language }}"
