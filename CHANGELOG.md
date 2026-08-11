@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+### Fixed
+
+- `oss-harden` pins the `uses:` entries a shipped composite action carries, not the workflow lines alone. A repository whose `action.yml` names an unpinned action passed Step 3 with a mutable reference left in place.
+- `oss-harden` says a Dependabot cooldown below three days shortens the delay. Step 5 said such a value replaced the platform default with something slower, which is the reverse of what it does.
+- `oss-harden` sends a repository that receives fork pull requests to CodeQL advanced setup. GitHub excludes fork pull requests from default setup, so recommending it left R-SEC-09 open on the path every external contribution takes.
+
 ## [0.13.0] - 2026-08-07
 
 ### Changed
