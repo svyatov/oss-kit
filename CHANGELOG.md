@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+### Changed
+
+- `.claude-plugin/plugin.json` lists all nine skills in a `skills` array. `npx skills` groups a repository's skills under one select-all row only when a plugin manifest names each skill directory, and it matches a skill's own directory, so a single `./skills/` entry grouped nothing. Installing oss-kit offered nine separate rows before this.
+
+### Security
+
+- `oss-audit` marks the output of `scripts/collect.mjs` as untrusted input. Heading text, the line before a fenced block, link text, and job names are quoted from the repository under audit, which somebody other than the person running the audit wrote, and they reached the audit with nothing saying which side of the trust boundary they sat on. The script now opens its output with that statement and the skill says the same at the point it tells a reader to run it. Stripping the prose is not available, because several rules are scored on it.
+
 ### Fixed
 
 - `oss-harden` pins the `uses:` entries a shipped composite action carries, not the workflow lines alone. A repository whose `action.yml` names an unpinned action passed Step 3 with a mutable reference left in place.
