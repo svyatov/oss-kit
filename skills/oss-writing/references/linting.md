@@ -18,7 +18,6 @@ This skill also ships `scripts/prose.mjs`, which needs nothing installed and cov
 | Curly quote | regex for U+2018, U+2019, U+201C, U+201D |
 | Emoji | regex for `\p{Extended_Pictographic}` |
 | Inline-header bullet | regex `^\s*[-*] \*\*[^*]+:\*\*\s` |
-| Tool attribution trailer | regex `Co-Authored-By:` or `Generated with` |
 | Heading not in sentence case | Vale `capitalization` with a proper-noun exception list |
 | Subject over 72 characters | commitlint `header-max-length` |
 | Subject ends in a period | commitlint `subject-full-stop` |

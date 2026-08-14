@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+### Removed
+
+- `oss-writing` no longer bans a tool attribution trailer. The rule argued accountability: a trailer records who answers for a change, and a tool cannot. Disclosure is a separate question, and the rule never reached it. Two projects now require what the rule forbade. The Linux kernel asks for an `Assisted-by` trailer where a coding tool helped write a patch, and rust-lang asks for LLM disclosure in a change request description. In such a repository the skill told a contributor to drop a required line, against its own first instruction to read the local contract. `references/linting.md` and `scripts/prose.mjs` drop the matching check, which sat in the `--house` tier.
+
 ## [0.15.0] - 2026-08-11
 
 ### Added

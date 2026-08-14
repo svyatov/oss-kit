@@ -67,7 +67,6 @@ Read the draft against this list and fix what it catches.
 - Never inflect a code element or use one as a verb: `send a POST request`, not `POST the data`; `the --force flag`, not `force it`.
 - No promotional adjective describing the project: `robust`, `powerful`, `seamless`, `comprehensive`, `blazing`, `effortless`. Name the property instead: `retries 3 times`, `no config file`.
 - No recap section restating what the text just said. The reader just read it.
-- No `Generated with`, `Co-Authored-By: Claude`, or tool attribution footers. A trailer records who is accountable for the change, and a tool cannot be.
 - No boilerplate caveats. State a precondition, limitation, or risk when it changes what the reader should do. A caveat that changes nothing trains the reader to skip the one that matters.
 - No contrast with an invented alternative. In `X rather than Y` or `X instead of Y`, keep Y only when Y exists outside the draft. A prior behavior, a real endpoint, or a default the reader would hit qualifies. `Instead of returning a deck nobody asked for` names code nobody wrote. Delete that clause and let X stand.
 - No clause telling the reader how to weigh a fact just stated. Delete the clause and see what is lost. If no fact goes with it, it was defending the sentence. A constraint or a consequence is a fact and stays. An alternative stays only when the contrast check above keeps it.
