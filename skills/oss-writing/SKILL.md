@@ -76,7 +76,7 @@ Fix what the list catches, then read the revision against the list again, becaus
 
 If the draft still reads padded, generic, or promotional after that pass, the remaining fault is lexical. Check it against [references/tells.md](references/tells.md), which names each pattern and what to write instead.
 
-Run `scripts/prose.mjs` in this skill's own directory over the files you touched, before returning them. It reports the part of the list above that a regex can decide, with a file and a line for each hit, and it needs nothing installed:
+Run `scripts/prose.mjs` in this skill's own directory over the files you touched, before returning them. It reports the part of the list above that a regex can decide, with a file and a line for each hit. It needs Node 22 or later, or Bun, and nothing installed:
 
 ```sh
 node <this skill's directory>/scripts/prose.mjs README.md docs/

@@ -26,7 +26,7 @@ This skill also ships `scripts/prose.mjs`, which needs nothing installed and cov
 | Body line over 72 characters | commitlint `body-max-line-length`, for a message typed in an editor rather than a forge field |
 | Conventional Commits shape, where the repository has adopted it | commitlint `type-enum` and `subject-empty` |
 
-Two figures need an explicit override rather than a default. `@commitlint/config-conventional` ships `header-max-length` at 72, which is the ceiling this skill wants. A repository that prefers Git's 50 sets it deliberately, and accepts that `type(scope): ` spends 15 to 20 of those characters. A body wrapped at 72 is correct for a message composed in an editor. It is wrong for text typed into a forge field, which reflows on its own.
+Two figures need an explicit override rather than a default. `@commitlint/config-conventional` ships `header-max-length` at 100, so the 72-character ceiling this skill wants is a setting, not the default. A repository that prefers Git's 50 sets it deliberately, and accepts that `type(scope): ` spends 15 to 20 of those characters. A body wrapped at 72 is correct for a message composed in an editor. It is wrong for text typed into a forge field, which reflows on its own.
 
 ## What a checker cannot decide
 
