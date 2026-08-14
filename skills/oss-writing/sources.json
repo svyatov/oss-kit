@@ -26,7 +26,7 @@
   ],
   "modifications": [
     "Authoring-first rather than editing-first, and narrowed to the prose that lives in a repository or on a forge. Dropped humanizer's draft, audit, and final rewrite loop, its travel-blog example, and its DETECTION GUIDANCE and PERSONALITY AND SOUL sections. Voiced and long-form prose stays with humanizer. Dropped the curly-quote pattern, since a model emits straight ASCII, and the Wikipedia-article framing of the significance, notability, and challenges patterns.",
-    "Added what no upstream carries: a content rule that git prose says why rather than what, a default of silence for the commit body, worked examples shaped like real commits, and a check list that runs before a draft is returned. That list names the anti-patterns of agent-written prose, among them the tool-attribution trailer, the recap section, and the caveat that changes nothing.",
+    "Added what no upstream carries: a content rule that git prose says why rather than what, a default of silence for the commit body, worked examples shaped like real commits, and a check list that runs before a draft is returned. That list names the anti-patterns of agent-written prose, among them the recap section, the invented contrast, and the caveat that changes nothing.",
     "Inverted upstream's diff-anchored-writing rule for commits, changelogs, and migration guides, where narrating the change is the job.",
     "Condensed DO NOT TOUCH to five lines and extended it to identifiers, CLI flags, and file paths.",
     "Renamed from repo-prose to oss-writing on migration into oss-kit.",

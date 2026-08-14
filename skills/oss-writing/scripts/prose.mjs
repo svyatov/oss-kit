@@ -103,7 +103,6 @@ function scan(file, opts) {
   if (opts.house) patterns.push(
     ["curly-quote", /[‘’“”]/g, "curly quote"],
     ["inline-header-bullet", /^\s*[-*] \*\*[^*]+:\*\*\s/g, "inline-header bullet"],
-    ["attribution", /Co-Authored-By:|Generated with/g, "tool attribution trailer"],
   )
 
   const words = opts.house ? [...RULE_WORDS, ...HOUSE_WORDS] : RULE_WORDS
