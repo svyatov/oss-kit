@@ -4,7 +4,7 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.0.0/), and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) over the public API declared in the [README](README.md#versioning).
 
-## [Unreleased]
+## [0.16.0] - 2026-08-14
 
 ### Changed
 
@@ -13,6 +13,11 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 ### Removed
 
 - `oss-writing` no longer bans a tool attribution trailer. The rule argued accountability: a trailer records who answers for a change, and a tool cannot. Disclosure is a separate question, and the rule never reached it. Two projects now require what the rule forbade. The Linux kernel asks for an `Assisted-by` trailer where a coding tool helped write a patch, and rust-lang asks for LLM disclosure in a change request description. In such a repository the skill told a contributor to drop a required line, against its own first instruction to read the local contract. `references/linting.md` and `scripts/prose.mjs` drop the matching check, which sat in the `--house` tier.
+
+### Fixed
+
+- `oss-writing` presents a 72-character commit header as a setting rather than as what `@commitlint/config-conventional` ships. The preset limits the header to 100 characters, so a reader trusting the old claim skipped the override and accepted 100-character subjects.
+- `oss-writing` states the runtime `scripts/prose.mjs` needs, Node 22 or later, or Bun. The skill said the script needs nothing installed without naming one.
 
 ## [0.15.0] - 2026-08-11
 
@@ -410,7 +415,8 @@ Five new rules, and `oss-audit` now reports the gaps alone rather than every rul
 - `oss-audit` scores a repository against `STANDARD.md`, reports each gap with the rule it fails, and names the skill that fixes it.
 - `oss-skill` fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` conformance to the Agent Skills specification, oversized bodies that belong in `references/`, and the license field an extracted skill carries with it.
 
-[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/svyatov/oss-kit/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/svyatov/oss-kit/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/svyatov/oss-kit/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/svyatov/oss-kit/compare/v0.12.0...v0.13.0
