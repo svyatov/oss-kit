@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+### Changed
+
+- `oss-writing` gives the commit and change-request body a fourth slot, what this change does about the problem, answered in the same breath as the problem is raised. The present-tense rule now scopes to the problem clause, git's imperative rule for the fix returns beside it, and a body that has to describe more than one change is the signal to split the commit rather than the description. Measured over twelve cases against the unedited skill, the edit carried more facts on 6 of 12 paired passes over the band where a change has separable parts and fewer on 1, and it narrowed a spread that had returned 4, 1, and 4 facts on one case across three fresh generations.
+
 ### Removed
 
 - `oss-writing` no longer bans a tool attribution trailer. The rule argued accountability: a trailer records who answers for a change, and a tool cannot. Disclosure is a separate question, and the rule never reached it. Two projects now require what the rule forbade. The Linux kernel asks for an `Assisted-by` trailer where a coding tool helped write a patch, and rust-lang asks for LLM disclosure in a change request description. In such a repository the skill told a contributor to drop a required line, against its own first instruction to read the local contract. `references/linting.md` and `scripts/prose.mjs` drop the matching check, which sat in the `--house` tier.
