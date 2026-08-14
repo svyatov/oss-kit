@@ -155,8 +155,8 @@ Default reports what R-DOC-05's Check names: em and en dashes, " -- ", emoji,
 Title Case headings, and the six promotional words that rule lists.
 
   --house   add the rest of the house style in references/linting.md:
-            curly quotes, inline-header bullets, attribution trailers, and the
-            full banned-word table. Every hit needs a human decision.
+            curly quotes, inline-header bullets, and the full banned-word
+            table. Every hit needs a human decision.
   --length  add sentences over 25 words. Noisy by design; opt in.
   --only    report only the named checks, comma separated.
   --proper  add proper nouns, one per line, so a heading is not misread.
