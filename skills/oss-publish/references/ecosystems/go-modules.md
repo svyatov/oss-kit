@@ -162,11 +162,14 @@ Run the first command against each asset downloaded, never against `SHA256SUMS`,
 
 ### Where the project already uses GoReleaser
 
-A Go project shipping binaries commonly builds them with GoReleaser, and such a project does not need most of the job above. `goreleaser release` compiles every target into `dist/`, writes a checksum file in `sha256sum` format beside the archives, creates the forge release, and uploads all of it, so the `go build`, `go version -m`, `sha256sum`, and `gh release upload` steps are already covered. Its `sboms:` block answers R-PUB-05 where the project supplies the generator GoReleaser shells out to and that generator writes SPDX or CycloneDX. The generator is a third-party tool the runner does not ship and the maintainer vets before it reaches a release workflow, so naming one is the maintainer's call here as everywhere else in this skill.
+A Go project shipping binaries commonly builds them with GoReleaser, and such a project does not need most of the job above. `goreleaser release` compiles every target into `dist/`, writes a checksum file in `sha256sum` format beside the archives, creates the forge release, and uploads all of it, so the `go build`, `go version -m`, `sha256sum`, and `gh release upload` steps are already covered. Its `sboms:` block answers R-PUB-05 in one of the rule's two formats without further configuration: the default generator is `syft` and the default arguments write `spdx-json`. What the block does not do is install the generator, which is a third-party tool the runner does not ship, so the workflow puts `syft` on the PATH before the release step and the maintainer vets it as they would any other tool this skill leaves them to choose.
 
 What is left is the attestation, and it is the same action:
 
 ```yaml
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0  # goreleaser reads the full tag history
       - uses: goreleaser/goreleaser-action@v7
         with:
           args: release --clean
@@ -177,7 +180,9 @@ What is left is the attestation, and it is the same action:
           subject-checksums: dist/checksums.txt
 ```
 
-Read the checksum file's name from the project's `.goreleaser.yml` rather than assuming it. GoReleaser's default is `{{ .ProjectName }}_{{ .Version }}_checksums.txt`, so a path of `dist/checksums.txt` means the project set `checksum.name_template`. Two settings in the same block break the step rather than rename its input: `checksum.disable` writes no manifest at all, and `checksum.split` writes one file per artifact instead of one manifest, so `subject-checksums` has nothing single to read and the step falls back to a `subject-path` glob over `dist/`. Confirm the manifest lists the SBOMs as well as the archives, because `subject-checksums` attests exactly what the file names and nothing else; `checksum.ids` is what narrows it. See [GoReleaser, Checksums](https://goreleaser.com/customization/package/checksum/). The job carries `contents: write`, `id-token: write`, `attestations: write`, and `artifact-metadata: write`, the same four as above.
+`fetch-depth: 0` is not optional. GoReleaser's own Actions page says the full history "is required for GoReleaser to work properly", and the default shallow checkout gives it one commit, so a release built on the default fails or produces the wrong changelog rather than warning.
+
+Read the checksum file's name from the project's `.goreleaser.yml` rather than assuming it. GoReleaser's default is `{{ .ProjectName }}_{{ .Version }}_checksums.txt`, so a path of `dist/checksums.txt` means the project set `checksum.name_template`, which is what GoReleaser's own attestations page tells a project to do for exactly this reason: the workflow has to name the file and the template has to produce that name. Two settings in the same block break the step rather than rename its input: `checksum.disable` writes no manifest at all, and `checksum.split` writes one file per artifact instead of one manifest, so `subject-checksums` has nothing single to read and the step falls back to a `subject-path` glob over `dist/`. Confirm the manifest lists the SBOMs as well as the archives, because `subject-checksums` attests exactly what the file names and nothing else; `checksum.ids` is what narrows it. See [GoReleaser, Checksums](https://goreleaser.com/customization/package/checksum/) and [GoReleaser, Attestations](https://goreleaser.com/customization/attestations/). The job carries `contents: write`, `id-token: write`, `attestations: write`, and `artifact-metadata: write`, the same four as above.
 
 The job boundary this section argues for collapses here, and saying so is better than presenting a split that is not there: one GoReleaser step both compiles the binaries and writes them to the release, so the build has the release-asset write. Recovering the split means running `goreleaser release --skip=publish` in one job and uploading from another, which gives up the release creation and the changelog handling the project chose GoReleaser for. Where a project accepts the collapse, R-SEC-13's restriction on who may create a tag is the only control left between a push and a published asset, so report it as that rather than as one control among several.
 
