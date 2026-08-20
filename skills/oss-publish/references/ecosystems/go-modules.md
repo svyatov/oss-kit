@@ -12,6 +12,7 @@ Source: [Go, Publishing a module](https://go.dev/doc/modules/publishing), [proxy
 - [Gate on manual approval (Step 4): the gate is on tag creation](#gate-on-manual-approval-step-4-the-gate-is-on-tag-creation)
 - [Verify provenance (Step 5): a gap, not a check](#verify-provenance-step-5-a-gap-not-a-check)
 - [Describe and sign what the release attaches (Step 6)](#describe-and-sign-what-the-release-attaches-step-6)
+  - [Where the project already uses GoReleaser](#where-the-project-already-uses-goreleaser)
 - [Withdrawing a bad version](#withdrawing-a-bad-version)
 
 ## Gather facts (Step 1)
@@ -159,7 +160,26 @@ Run the first command against each asset downloaded, never against `SHA256SUMS`,
 
 `gh release upload` fails when no release exists for the tag. Either create it in this job with `gh release create "$GITHUB_REF_NAME" --generate-notes` first, or have the maintainer publish the release from the tag. This reference does not choose between them, because release notes are the project's own.
 
-## Withdrawing a bad version
+### Where the project already uses GoReleaser
+
+A Go project shipping binaries commonly builds them with GoReleaser, and such a project does not need most of the job above. `goreleaser release` compiles every target into `dist/`, writes a checksum file in `sha256sum` format beside the archives, creates the forge release, and uploads all of it, so the `go build`, `go version -m`, `sha256sum`, and `gh release upload` steps are already covered. Its `sboms:` block answers R-PUB-05 where the project supplies the generator GoReleaser shells out to and that generator writes SPDX or CycloneDX. The generator is a third-party tool the runner does not ship and the maintainer vets before it reaches a release workflow, so naming one is the maintainer's call here as everywhere else in this skill.
+
+What is left is the attestation, and it is the same action:
+
+```yaml
+      - uses: goreleaser/goreleaser-action@v7
+        with:
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/attest@v4
+        with:
+          subject-checksums: dist/checksums.txt
+```
+
+Read the checksum file's name from the project's `.goreleaser.yml` rather than assuming it. GoReleaser's default is `{{ .ProjectName }}_{{ .Version }}_checksums.txt`, so a path of `dist/checksums.txt` means the project set `checksum.name_template`. Two settings in the same block break the step rather than rename its input: `checksum.disable` writes no manifest at all, and `checksum.split` writes one file per artifact instead of one manifest, so `subject-checksums` has nothing single to read and the step falls back to a `subject-path` glob over `dist/`. Confirm the manifest lists the SBOMs as well as the archives, because `subject-checksums` attests exactly what the file names and nothing else; `checksum.ids` is what narrows it. See [GoReleaser, Checksums](https://goreleaser.com/customization/package/checksum/). The job carries `contents: write`, `id-token: write`, `attestations: write`, and `artifact-metadata: write`, the same four as above.
+
+The job boundary this section argues for collapses here, and saying so is better than presenting a split that is not there: one GoReleaser step both compiles the binaries and writes them to the release, so the build has the release-asset write. Recovering the split means running `goreleaser release --skip=publish` in one job and uploading from another, which gives up the release creation and the changelog handling the project chose GoReleaser for. Where a project accepts the collapse, R-SEC-13's restriction on who may create a tag is the only control left between a push and a published asset, so report it as that rather than as one control among several.
 
 A published version cannot be unpublished; deleting the tag does not remove it from the mirror. The documented remedy is the `retract` directive: add it to `go.mod` and publish a new version containing it, higher than every other release or pre-release. Retracted versions stay available so existing builds keep working, drop out of `@latest` and range queries, hide from `go list -m -versions` unless `-retracted` is passed, and surface to users on `go list -m -u`. `oss-changelog` owns how that gets recorded, under R-CHG-01.
 

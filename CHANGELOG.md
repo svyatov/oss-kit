@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.0.0/), and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) over the public API declared in the [README](README.md#versioning).
 
+## [Unreleased]
+
+### Added
+
+- The Go modules reference covers the GoReleaser path. `goreleaser release` already builds into `dist/`, writes the checksum file, creates the release, and uploads everything, so the section's `go build`, `go version -m`, `sha256sum`, and `gh release upload` steps are done and only the attestation is left. The subsection names the checksum file's default template, since `subject-checksums` attests exactly what one manifest lists, and the two settings that break the step rather than rename its input: `checksum.disable` writes no manifest and `checksum.split` writes one file per artifact. It also states the job boundary this collapses, because one GoReleaser step both compiles the binaries and writes them to the release, leaving R-SEC-13's tag restriction as the only control between a push and a published asset. A run following the file against a GoReleaser project had to improvise the attest step, and improvised it wrong.
+- `oss-publish` Step 6 names `actions/attest` as the GitHub action and says not to write `actions/attest-build-provenance` into a new workflow. The wrapper was named nowhere a reader of the skill reached, only inside a `sources.json` provenance entry, so a run recalling it from elsewhere found nothing in the skill contradicting it. Upstream keeps the wrapper for workflows already using it; its v4 is a composite action whose only step calls `actions/attest`.
+
 ## [0.16.0] - 2026-08-14
 
 ### Changed
