@@ -4,6 +4,7 @@ on:
   pull_request:
   schedule:
     - cron: "30 12 * * 1"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -40,9 +41,11 @@ jobs:
     with:
       upload-sarif: false
 
-  # Reports the whole repository and never gates a merge.
-  scheduled:
-    if: github.event_name == 'schedule'
+  # Reports the whole repository and never gates a merge. Also runs on
+  # workflow_dispatch, so a fix landed on the default branch can be confirmed
+  # and its code scanning alerts closed without waiting for the weekly cron.
+  full-scan:
+    if: github.event_name != 'pull_request'
     permissions:
       actions: read
       contents: read
