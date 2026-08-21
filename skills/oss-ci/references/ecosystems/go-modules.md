@@ -7,7 +7,7 @@ On GitHub Actions, `actions/setup-go` installs a Go version and puts it on the P
 ```yaml
 strategy:
   matrix:
-    go-version: ['1.24', '1.25']
+    go-version: ['1.26', '1.27']  # the two supported lines on 2026-08-20; read the policy, not this list
 steps:
   - uses: actions/setup-go@v7  # oss-harden pins this to a commit SHA
     with:
@@ -17,6 +17,8 @@ steps:
 `go-version-file: go.mod` reads the directive instead of repeating it, which keeps one version in one place; from v6 the action prefers the `toolchain` directive when the file carries one and falls back to `go`. That form pins a single version rather than a matrix, so use it for a single-version pipeline and the explicit list above for a matrix.
 
 Go's own release policy bounds how many lines there are to cover: each major release is supported until two newer major releases exist. A module whose `go` directive names an unsupported version still claims it, so the matrix covers the directive's version and every supported line above it.
+
+Compute the list rather than copying the one above, because Go ships a major release roughly every six months and any list written into a file is wrong within one of them. `curl -s 'https://go.dev/dl/?mode=json'` returns exactly the supported lines, which is the policy applied for you.
 
 On GitLab, run the job in the Go official image and vary the tag with `parallel:matrix`.
 
@@ -47,4 +49,4 @@ That means `go.mod` carrying no test entry says nothing about whether a suite ex
 
 Sources: [Publishing a module](https://go.dev/doc/modules/publishing).
 
-Verified 2026-07-31 against https://github.com/actions/setup-go, https://go.dev/ref/mod, https://go.dev/doc/devel/release, https://go.dev/doc/modules/publishing, https://github.com/docker-library/golang, and https://docs.gitlab.com/ci/yaml/.
+Verified 2026-08-20 against https://github.com/actions/setup-go, https://go.dev/ref/mod, https://go.dev/doc/devel/release, https://go.dev/doc/modules/publishing, https://github.com/docker-library/golang, and https://docs.gitlab.com/ci/yaml/.
