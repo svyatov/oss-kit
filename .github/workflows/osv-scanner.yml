@@ -23,11 +23,13 @@ jobs:
   # every outside contributor. The job's value is the pass or fail; the
   # scheduled run below is what populates code scanning.
   #
-  # security-events: write stays even so. The called workflow declares it at
-  # its own top level, and granting less fails the run before any job starts:
-  # "The workflow is requesting 'security-events: write', but is only allowed
-  # 'security-events: none'." An input that disables the step needing it does
-  # not change that.
+  # security-events: write stays even so. The called workflow requests it for
+  # its scan job, and granting less fails with "The workflow is requesting
+  # 'security-events: write', but is only allowed 'security-events: none'." An
+  # input that disables the step needing it does not change that. Before v2.5.0
+  # the request sat at the called workflow's top level and the run died before
+  # any job started; v2.5.0 moved it to the job, which is where zizmor wants a
+  # permission scoped. The grant this block has to make is the same either way.
   pull-request:
     if: github.event_name == 'pull_request'
     permissions:
