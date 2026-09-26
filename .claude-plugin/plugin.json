@@ -1,5 +1,6 @@
 {
   "name": "oss-kit",
+  "displayName": "oss-kit",
   "description": "Curated agent skills for open source maintainers",
   "version": "0.17.0",
   "author": {
@@ -7,7 +8,7 @@
     "email": "leonid@svyatov.com",
     "url": "https://www.svyatov.com"
   },
-  "homepage": "https://github.com/svyatov/oss-kit",
+  "homepage": "https://oss-kit.svyatov.com/",
   "repository": "https://github.com/svyatov/oss-kit",
   "license": "MIT",
   "keywords": ["open-source", "readme", "changelog", "ci", "security", "release"],
