@@ -3,9 +3,7 @@
   "description": "Maintenance tooling for oss-kit. Not published.",
   "type": "module",
   "scripts": {
-    "test": "bun test",
-    "typecheck": "tsc --noEmit",
-    "validate": "bun skills/oss-skill/scripts/validate.mjs ."
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/bun": "^1.4.2",

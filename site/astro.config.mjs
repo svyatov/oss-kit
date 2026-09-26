@@ -74,7 +74,6 @@ export default defineConfig({
       editLink: { baseUrl: `${REPO}/edit/main/site/` },
       credits: false,
       head: [
-        { tag: "link", attrs: { rel: "icon", href: "/favicon.ico", sizes: "32x32" } },
         { tag: "link", attrs: { rel: "apple-touch-icon", href: "/apple-touch-icon.png" } },
         { tag: "link", attrs: { rel: "manifest", href: "/manifest.webmanifest" } },
         meta("og:image", `${SITE}/og.png`),

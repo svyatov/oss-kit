@@ -4,12 +4,14 @@ This file covers how to set up, test, and submit a change to oss-kit.
 
 ## Setup
 
-Clone the repository. The repository's own tests and typecheck need Bun, at the version pinned in `.bun-version`. Install Bun with the command Bun's own site publishes, then install the dev dependencies:
+Clone the repository. The repository's own tests and typecheck need Bun, at the version pinned in `.bun-version`. Install Bun with the command Bun's own site publishes, then install the dev dependencies, which live in `tools/`:
 
 ```bash
 curl -fsSL https://bun.com/install | bash
-bun install --frozen-lockfile
+cd tools && bun install --frozen-lockfile
 ```
+
+They live there because the repository root is also the Claude Code plugin root. Claude Code installs the packages of a plugin whose root holds both `package.json` and a lockfile, so a manifest at the root would install this repository's dev dependencies on every user's machine.
 
 The documentation site under `site/` has its own dependency tree. Install it
 too if you are changing anything the site renders, which includes every skill
@@ -32,9 +34,9 @@ It installs from its upstream repository, pinned to a full commit SHA, because i
 Run the same checks CI runs:
 
 ```bash
-bun run typecheck
+bun run --cwd tools typecheck
 bun test
-bun run validate
+bun skills/oss-skill/scripts/validate.mjs .
 bash tests/test-check-drift.sh
 bash scripts/check-drift.sh
 bun scripts/check-ecosystems.mjs
@@ -42,7 +44,7 @@ skillspector scan ./skills/ --no-llm --format json --baseline .skillspector-base
 cd site && bun run build
 ```
 
-`bun run typecheck` checks the repository's own TypeScript. `bun test` runs the validator's own test suite. `bun run validate` runs `skills/oss-skill/scripts/validate.mjs`, which checks every skill against R-SKL-01 through R-SKL-05: layout, frontmatter conformance, body size, the license field, and what a skill may ship as a script. `tests/test-check-drift.sh` is the test suite for `scripts/check-drift.sh`, which fails when a skill cites a rule ID that `skills/oss-audit/STANDARD.md` does not define, or when a rule names a skill that does not claim it. `scripts/check-ecosystems.mjs` reads `skills/oss-audit/ecosystems.json` and fails when a skill is missing a file for a roster ecosystem, when a file is missing a heading its skill declares, when a declared heading has nothing under it, or when a file does not end with a well-formed `Verified` line. `skillspector scan` checks the skills for prompt injection and other agent-facing risks. `.skillspector-baseline.yaml` suppresses one false positive and nothing else, so a new finding still fails the scan. Read it before adding a second entry: it says what would make each suppression wrong.
+`bun run --cwd tools typecheck` checks the repository's own TypeScript. `bun test` runs the validator's own test suite. `skills/oss-skill/scripts/validate.mjs` checks every skill against R-SKL-01 through R-SKL-05: layout, frontmatter conformance, body size, the license field, and what a skill may ship as a script. `tests/test-check-drift.sh` is the test suite for `scripts/check-drift.sh`, which fails when a skill cites a rule ID that `skills/oss-audit/STANDARD.md` does not define, or when a rule names a skill that does not claim it. `scripts/check-ecosystems.mjs` reads `skills/oss-audit/ecosystems.json` and fails when a skill is missing a file for a roster ecosystem, when a file is missing a heading its skill declares, when a declared heading has nothing under it, or when a file does not end with a well-formed `Verified` line. `skillspector scan` checks the skills for prompt injection and other agent-facing risks. `.skillspector-baseline.yaml` suppresses one false positive and nothing else, so a new finding still fails the scan. Read it before adding a second entry: it says what would make each suppression wrong.
 
 `bun scripts/ecosystem-freshness.mjs` reports how recently each ecosystem file was checked against its sources, oldest first. It never gates, so it is not in the list above. `bun scripts/rule-freshness.mjs` does the same for rule sources.
 
