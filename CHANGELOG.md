@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.0.0/), and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html) over the public API declared in the [README](README.md#versioning).
 
+## [Unreleased]
+
+### Added
+
+- The plugin carries an icon at `.claude-plugin/icon.svg`, the same mark as the documentation site, for the Claude plugin directory listing.
+- The README says what the skills run and which bundled scripts reach the network.
+
+### Fixed
+
+- Installing the Claude Code plugin no longer installs this repository's dev dependencies. The root held `package.json` beside `bun.lock`, and Claude Code runs `bun install` in any plugin root that holds both, so every install fetched TypeScript and the Bun type definitions and ran nothing with them. The dev tooling now lives in `tools/`.
+
 ## [0.17.0] - 2026-08-21
 
 ### Added

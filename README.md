@@ -88,6 +88,21 @@ Each skill page on the [documentation site](https://oss-kit.svyatov.com/skills/)
 carries the full description, including the validator `oss-skill` bundles. That
 validator runs on Node 22 or later, or on Bun, with nothing installed.
 
+## What the skills run
+
+The skills are instructions and reference files. They tell the agent to read
+your repository and to run `gh` or `glab` against it, with the credentials those
+tools already hold. Installing the kit runs nothing.
+
+Two bundled scripts reach the network, both in `oss-harden`:
+
+- `scripts/resolve-pin.mjs` reads tags and commits from `api.github.com` to pin
+  an action to a commit SHA. It sends `GH_TOKEN` or `GITHUB_TOKEN` to that host
+  when one is set, only to raise the rate limit.
+- `scripts/ruleset.mjs` reads and writes a repository ruleset through `gh`.
+
+Every other bundled script reads local files only.
+
 ## More install paths
 
 One skill at a time:

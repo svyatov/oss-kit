@@ -10,6 +10,8 @@ oss-kit is a curated set of agent skills for open source maintainers. It current
 
 `site/src/content/docs/` holds the public prose the site renders. Handwritten pages stay tracked there. The generator writes rule, skill, standard, ecosystem, and changelog pages into the same tree; those outputs stay gitignored. An ecosystem page is stitched from the seven skills' files for that ecosystem, in the roster's `sections` order, with each file's headings demoted one level under a `##` naming the skill. A skill with no file for an ecosystem renders a hole paragraph rather than a broken build, which is what the checker exists to catch first.
 
+The repository root is the Claude Code plugin root, and the Claude directory scans every file under it. Keep `package.json` and any lockfile out of the root: Claude Code installs the packages of a plugin whose root holds both, so the dev tooling's manifest, lockfile, and `tsconfig.json` live in `tools/`. Keep binary files other than PNG, JPEG, GIF, WebP, and fonts out of the tree too, because the directory holds each one for a reviewer. The directory listing's icon is `.claude-plugin/icon.svg`, the mark from `site/public/icon.svg` on a white square, so change both together. The directory rejects an SVG that holds a `<style>` element, a script, an event handler, `foreignObject`, animation, or a reference outside the file, which is why the listing icon carries no dark-mode variant.
+
 `docs/` is gitignored in full. Agent-facing project documentation lives there and stays untracked. Never `git add -f` it.
 
 ## Repo rules
@@ -123,7 +125,7 @@ Neither `osv-scanner` job meets R-CI-05, and neither can. A job that calls a reu
 1. Update the skills table in `README.md` if the skill's one-line description changed.
 2. Run `bash scripts/check-drift.sh`, which fails when a skill cites a rule ID that `STANDARD.md` does not define, when `STANDARD.md` names a rule as fixed by a skill that does not claim it, or when a rule names `oss-audit` as its owner.
 3. Run `bun scripts/check-ecosystems.mjs`, which fails when a skill named in the roster's `sections` map is missing an ecosystem file, carries one the roster does not list, or ships a file missing a declared heading, an empty section, or a malformed `Verified` line.
-4. Run `bun run validate` and `bun test`. `CONTRIBUTING.md` lists the full check sequence CI runs.
+4. Run `bun skills/oss-skill/scripts/validate.mjs .` and `bun test`. `CONTRIBUTING.md` lists the full check sequence CI runs.
 5. Confirm the `SKILL.md` body is still under 500 lines.
 6. Where the change moves a derived skill further from its upstream, amend that skill's newest `sources.json` entry. Start a new entry only when the last one already shipped in a release.
 7. Before a release, bump `version` in all three plugin manifests, `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, and `.cursor-plugin/plugin.json`. `tests/manifests.test.ts` fails when they disagree.

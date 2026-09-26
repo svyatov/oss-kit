@@ -23,7 +23,9 @@ jobs:
         with:
           bun-version-file: ".bun-version"
       - run: bun install --frozen-lockfile --ignore-scripts
+        working-directory: tools
       - run: bun run typecheck
+        working-directory: tools
       - run: bun test
       - run: ./tests/test-check-drift.sh
       - run: ./scripts/check-drift.sh
