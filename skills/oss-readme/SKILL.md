@@ -264,7 +264,7 @@ Before finishing, read every package manifest, the lockfile, the CI configuratio
 15. The license, changelog, and contributing links resolve to files that exist.
 16. Every version, command, and support claim matches the manifest, the CI configuration, and the source.
 17. Skimming only headings and the facts list still tells the story.
-18. The draft has been through oss-writing.
+18. The draft has been through oss-writing: `node <oss-writing skill directory>/scripts/prose.mjs README.md` (a sibling of this skill's directory) reports no findings. A hand-rolled grep for dashes or banned words does not count. Where oss-writing is not installed, say so rather than reporting this item as passing.
 19. Every image has meaningful alt text, and repository images use relative paths.
 
-Fix what the checklist catches, then read each R-DOC rule's `Check:` line in `STANDARD.md` against the README as it now stands. Start the checklist again after each fix, since reordering a section moves what the next item is looking at. Do not report done while any item or any cited rule still fails.
+Fix what the checklist catches, then read each R-DOC rule's `Check:` line in `STANDARD.md` (in the `oss-audit` skill's directory, a sibling of this one) against the README as it now stands. Start the checklist again after each fix, since reordering a section moves what the next item is looking at. Do not report done while any item or any cited rule still fails.

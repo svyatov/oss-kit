@@ -50,7 +50,7 @@ Two more statements close the rule. State that a change adding functionality arr
 
 ### Step 4: CODE_OF_CONDUCT.md (R-COM-03)
 
-Use an established code of conduct rather than drafting new standards of behavior. Read the steward's official site for the version it currently publishes and fetch that adoption template from there; do not assume a version number, because the one a skill or an existing file names goes stale the moment the steward publishes the next one. Preserve the attribution and license notice, and customize only the fields that version's own adoption instructions invite the project to customize, which for the Contributor Covenant is the reporting instructions and, in versions that have one, the section describing the project's own enforcement process. Fill in the verified reporting contact, and confirm no placeholder text survives before finishing.
+Use an established code of conduct rather than drafting new standards of behavior. Fetch the version the steward publishes today, read from the steward's own index, because a version number a skill or an existing file names goes stale the moment the steward publishes the next one. For the Contributor Covenant, `https://www.contributor-covenant.org/version/` lists every version, and the newest one's Markdown is at `https://www.contributor-covenant.org/version/<major>/<minor>/code_of_conduct/code_of_conduct.md`. Preserve the attribution and license notice, and customize only the fields that version's own adoption instructions invite the project to customize, which for the Contributor Covenant is the reporting instructions and, in versions that have one, the section describing the project's own enforcement process. Fill in the verified reporting contact, and confirm no placeholder text, such as a bold `[NOTE: ...]` block, survives before finishing.
 
 A code of conduct already in the repository at an older version of the same document still satisfies R-COM-03, provided its reporting contact works. Say that the newer version exists and let the maintainer decide; do not replace a working file to chase a version number.
 
@@ -96,6 +96,6 @@ Write who decides and what happens if they stop. For a project with one maintain
 
 ### Step 11: Present the result
 
-Before presenting, read each R-COM rule's `Check:` line in `STANDARD.md` against the files and settings as they now stand, and fix what fails. One fix moves another rule, so start the list again after each one, and do not report done while any cited rule still fails.
+Before presenting, read each R-COM rule's `Check:` line in `STANDARD.md`, which ships in the `oss-audit` skill beside this one (`../oss-audit/STANDARD.md` from this file), against the files and settings as they now stand, and fix what fails. Where `oss-audit` is not installed, say that the rules could not be checked. One fix moves another rule, so start the list again after each one, and do not report done while any cited rule still fails.
 
 Then list every file written or proposed, every setting changed or proposed, the rule each satisfies, and every fact that came from asking rather than reading, so the maintainer can see what they confirmed. Flag anything left unresolved, such as a CONTRIBUTING.md with no test command because the repository has no tests, rather than silently shipping a gap.

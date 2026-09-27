@@ -206,7 +206,7 @@ The four review fields sit at their off values because that is correct where one
 
 ### Deriving the required checks
 
-Read the checks that actually report, twice, and require their union:
+Read the checks that actually report, twice, and require their union, then drop any check that has not reported on a pull request head:
 
 ```bash
 gh api repos/{owner}/{repo}/commits/{ref}/check-runs \
@@ -214,6 +214,8 @@ gh api repos/{owner}/{repo}/commits/{ref}/check-runs \
 ```
 
 Run it once against the default branch and once against the head commit of a recently merged pull request. One read is not enough: the endpoint returns only what reported on the commit named, so a workflow triggered by `pull_request` alone never appears on a default-branch commit and drops out of the ruleset silently. This repository is the worked example, since `.github/workflows/osv-scanner.yml` triggers on `pull_request` and `schedule` only. The checks most often scoped to pull requests are the security scans, and a ruleset that reports complete while the scan gates nothing is the failure R-SEC-04 exists to prevent.
+
+The union can also fail the other way. A ruleset evaluates the pull request head, so a check that reports on the default branch and not on a pull request head blocks every pull request. CodeQL default setup is the measured case: it analyzed pushes to `main` and reported `1 configuration not found` on a Dependabot pull request, so a required `Analyze (actions)` never arrived there. Before you require a check, confirm it on a pull request head. Once Step 5's updater has opened a pull request, confirm it on that Dependabot pull request too.
 
 The command returns `integration_id` alongside each context for the reason given above: without it, anything reporting the same context name satisfies the check. A check reported by more than one app is the escape hatch, and takes the bare `context` with no `integration_id`. The known cost of pinning is that a check migrating to a different app makes the requirement unsatisfiable until somebody edits the ruleset.
 
@@ -400,7 +402,7 @@ Quoting the expression directly inside `run:` is not sufficient because expressi
 
 ## Static analysis (R-SEC-09)
 
-For a public repository in a CodeQL-supported language, prefer CodeQL default setup and confirm its pull request analysis appears as a required status check. Private repositories require GitHub Code Security on an eligible GitHub Team or Enterprise plan. If CodeQL does not support the language, use the project's established analyzer and require its pull request result rather than adding a no-op CodeQL configuration.
+For a public repository in a CodeQL-supported language, use CodeQL advanced setup wherever its analysis will be a required status check, because default setup does not analyze fork pull requests and, in a measured run, did not analyze Dependabot's. Confirm the check reports on such a pull request before requiring it. Private repositories require GitHub Code Security on an eligible GitHub Team or Enterprise plan. If CodeQL does not support the language, use the project's established analyzer and require its pull request result rather than adding a no-op CodeQL configuration.
 
 ### The workflow files are one of the languages
 

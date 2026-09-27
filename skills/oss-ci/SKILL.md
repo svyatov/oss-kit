@@ -102,6 +102,6 @@ Confirm the configuration is syntactically valid with the forge's own validator 
 
 ### Step 8: Present the result
 
-Before presenting, read each R-CI rule's `Check:` line in `STANDARD.md` against the configuration as it now stands, and fix what fails. Start the list again after each fix, and do not report done while any cited rule still fails. On GitHub there is no local validator, so this reference-plus-checklist pass is the validator, and the loop terminates when every cited rule passes rather than when the file looks finished.
+Before presenting, read each R-CI rule's `Check:` line in `skills/oss-audit/STANDARD.md` (from the plugin root, like the roster in Step 2) against the configuration as it now stands, and fix what fails. The file is long: read only its R-CI section. Start the list again after each fix, and do not report done while any cited rule still fails. On GitHub there is no local validator, so this reference-plus-checklist pass is the validator, and the loop terminates when every cited rule passes rather than when the file looks finished.
 
 Then show the generated file, a short summary of what was detected and decided, the list of secrets to configure, and anything left for the user to set at the repository or project level, such as branch protection or environment approvers, naming the skill that owns it rather than attempting it here.

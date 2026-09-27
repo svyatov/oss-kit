@@ -66,17 +66,17 @@ Verified 2026-07-23 against the current `code.claude.com` documentation.
 
 ## Codex
 
-Source: `developers.openai.com/codex/skills`, which redirects to `learn.chatgpt.com/docs/build-skills.md`, and `learn.chatgpt.com/docs/build-plugins.md`.
+Source: `developers.openai.com/codex/skills`, which redirects to `learn.chatgpt.com/docs/build-skills.md`, `developers.openai.com/plugins/build/plugins.md`, and `learn.chatgpt.com/docs/enterprise/plugin-management.md`.
 
 Codex reads skills from repository, user, admin, and system locations. For repositories it scans `.agents/skills/` in the current working directory, in the parent directory above it, and at the repository root, when run inside a git repository. At the user level it reads `~/.agents/skills/`. At the machine or container level it reads `/etc/codex/skills/`. It also ships a set of its own skills, bundled with Codex by OpenAI. Codex follows a symlinked skill folder to its target when scanning any of these locations. Each skill is a directory holding a `SKILL.md`.
 
 Separately, `~/.codex/config.toml` can carry `[[skills.config]]` entries with `path` and `enabled` keys. This is documented as the way to disable a discovered skill without deleting it, not as a way to declare a new discovery path.
 
-Codex's plugin system is separate from skills discovery. Its manifest is `.codex-plugin/plugin.json`, installed with `codex plugin marketplace add svyatov/oss-kit`. That command reads the marketplace list at `$REPO_ROOT/.agents/plugins/marketplace.json`.
+Codex's plugin system is separate from skills discovery. Its portable entry point is a `plugin.json` at the plugin root, in the Agent Plugins format. A `.codex-plugin/plugin.json` is optional, and Codex reads it as a compatibility fallback when the root manifest carries no `extensions.com.openai` object. Codex also accepts legacy and Claude-compatible manifests, such as `.claude-plugin/plugin.json`, so a repository that ships only that file still installs. Install with `codex plugin marketplace add svyatov/oss-kit`. That command reads the marketplace list at `$REPO_ROOT/.agents/plugins/marketplace.json`.
 
 Codex scans `.agents/skills/`, not `.claude/skills/`.
 
-Verified 2026-07-23.
+Verified 2026-07-23, and the plugin manifest paragraph on 2026-09-27.
 
 ## Cursor
 
