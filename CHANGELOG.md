@@ -11,9 +11,23 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 - The plugin carries an icon at `.claude-plugin/icon.svg`, the same mark as the documentation site, for the Claude plugin directory listing.
 - The README says what the skills run and which bundled scripts reach the network.
 
+### Changed
+
+- `oss-harden` recommends CodeQL advanced setup wherever the analysis becomes a required check, and says to drop any check from a ruleset's required list that has not reported on a pull request head. Default setup analyzed pushes to `main` and reported `1 configuration not found` on a Dependabot pull request, so a required `Analyze (actions)` never arrived and every Dependabot pull request stayed blocked. The skill had preferred default setup for any repository without fork pull requests. Turning an existing default setup off is presented as a settings block the user confirms, since it weakens a security control.
+- `oss-harden` Step 14 adds a fifth status, declined, for a rule whose fix the maintainer saw and chose not to take, recorded with their reason. The four statuses left such a rule nowhere to go, and the rule against reporting done while one fails had no exception for it.
+- R-SEC-08 names the frozen install command for each npm-ecosystem package manager and says a bare `bun install` fails the rule unless `bunfig.toml` sets `frozenLockfile`, because Bun does not turn frozen mode on in CI by itself. The rule said "current frozen mode" without naming one, so a run fetched Bun's documentation to find out.
+- R-SKL-06 points at `oss-skill`'s `references/hosts.md` for the manifest path each host reads, and says a host that accepts another host's manifest passes on that file.
+
 ### Fixed
 
 - Installing the Claude Code plugin no longer installs this repository's dev dependencies. The root held `package.json` beside `bun.lock`, and Claude Code runs `bun install` in any plugin root that holds both, so every install fetched TypeScript and the Bun type definitions and ran nothing with them. The dev tooling now lives in `tools/`.
+- `oss-writing` says what to do when `prose.mjs` flags a heading that a required template sets, such as a pull request template's: the heading stays as the template writes it. The skill named only `--proper` as the remedy for a wrong heading hit, which fits a proper noun and leaves a template's heading to a guess between two of its own rules.
+- `oss-writing` counts the characters in a commit subject or change request title in its final check, with the ` (#123)` a squash appends, and says that a repository's past examples do not lift a limit the skill sets. The check counted only sentence words and called that the one limit that needs counting, so runs in repositories whose history carried 100 to 690 character subjects followed the history past the 72-character cap.
+- `oss-skill`'s `references/hosts.md` describes Codex's plugin manifests as OpenAI documents them: a root `plugin.json` is the portable entry point, `.codex-plugin/plugin.json` is an optional compatibility fallback, and Claude-compatible manifests are accepted too. It had called `.codex-plugin/plugin.json` Codex's manifest.
+- `oss-readme` checklist item 18 names the command that satisfies it, `scripts/prose.mjs` from `oss-writing`, and says a hand-rolled grep does not count. A run improvised its own dash and banned-word checks and reported the item as passing.
+- `oss-readme`, `oss-community`, and `oss-ci` say where `STANDARD.md` lives when they send the reader to it: in the `oss-audit` skill beside them. Runs guessed a path or searched the install for the file.
+- `oss-community` names the Contributor Covenant's version index and the Markdown URL of each version, and names the bold `[NOTE: ...]` block as placeholder text to remove. Runs spent two or three calls finding the current file.
+- `oss-changelog` Step 7 says which commit gets a backfilled tag when released versions were never tagged: the release commit that set the version, or else the last commit that still carries it. A run made up one rule for the first version and another for the rest, then locked the tags against moving.
 
 ## [0.17.0] - 2026-08-21
 

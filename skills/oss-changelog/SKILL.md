@@ -186,6 +186,8 @@ R-CHG-01 is the check for this structure.
 
 Write the version decided in Step 5 into every file Step 1 found, and into the changelog heading written in Step 6. R-CHG-03 checks that the release tag, the version sources for that release unit, and its newest changelog entry agree, so all three have to carry one number before the tag is pushed.
 
+When earlier changelog versions have no tag, as in a project that released by commit alone, tag each version on the commit that shipped it. Use the release commit that set the manifest to that version where the project made one. Otherwise, use the last commit whose manifest still carries that version and whose changes the next version's section does not list. Check each commit with `git show <sha>:<manifest>` before pushing, and put the version-to-commit mapping in the report, because once a tag ruleset is in place a pushed tag cannot be moved.
+
 ### Step 8: Derive the forge release body from the changelog section
 
 Keep `CHANGELOG.md` canonical. A forge-generated pull request list is useful raw material, not a finished changelog. Start the release body from the corresponding changelog section without retyping it. It may add a brief announcement, installation or verification details, migration links, contributor credit, and attached-asset context, but it must not omit or contradict notable changes. R-CHG-04 checks that relationship.

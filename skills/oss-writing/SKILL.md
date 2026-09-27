@@ -14,7 +14,7 @@ When `oss-audit-report.md` exists at the repository root, read the group address
 
 ## Read the local contract first
 
-Before drafting, read the repository's instructions, contribution guide, templates, and the most recent accepted examples of the same artifact. They decide the commit convention, the required sections, the terminology, and the audience. Follow the convention the repository declares rather than inventing one, and keep required template sections and legally mandated wording.
+Before drafting, read the repository's instructions, contribution guide, templates, and the most recent accepted examples of the same artifact. They decide the commit convention, the required sections, the terminology, and the audience. Follow the convention the repository declares rather than inventing one, and keep required template sections and legally mandated wording. Past examples show a convention's shape. They do not lift a limit this skill sets: only a stated rule does.
 
 Verify every claim against the diff, the source, or command output. Prose that reads well and says something untrue is the one failure no rule below catches.
 
@@ -59,7 +59,8 @@ Ship the revision, not the draft.
 
 Read the draft against this list and fix what it catches.
 
-- Find the longest sentence and count its words. Over 25, or over 20 for an instruction, and it splits. Two clauses joined by `and` or `so` are usually two sentences; a relative clause opening with `which` is usually the second half of one. This is the limit a draft breaks most often, and the only one that needs counting rather than reading.
+- Find the longest sentence and count its words. Over 25, or over 20 for an instruction, and it splits. Two clauses joined by `and` or `so` are usually two sentences; a relative clause opening with `which` is usually the second half of one.
+- Count the characters in a commit subject or change request title, plus any ` (#123)` the forge appends on squash. Over 72, and it moves detail into the body. A subject that lists several changes means the commit should be split.
 - No em dashes, en dashes, or ` -- `. In short technical prose they are a reliable machine-written tell. A period, comma, colon, or pair of parentheses carries the same break.
 - No emoji anywhere, including headings and bullets. Their width and glyph vary by terminal and font, so they break alignment in fixed-width contexts.
 - Headings in sentence case, not Title Case. The Google style guide prescribes it. Mixing the two inside one document reads as text assembled from two sources.
@@ -83,7 +84,7 @@ node <this skill's directory>/scripts/prose.mjs README.md docs/
 
 By default it reports what R-DOC-05 names: em and en dashes, ` -- `, emoji, Title Case headings, and the six promotional words that rule lists. `--house` adds the rest of the house style, where every hit needs your judgement rather than a fix. `--length` adds sentences over 25 words and is noisy on purpose. It exits 1 when it reports anything.
 
-The script skips fenced blocks and inline code, so a quoted dash in sample output is not a finding, and a rule may name inside backticks the pattern it forbids. It cannot tell a heading's proper noun from an ordinary capitalized word, so a wrongly flagged heading means passing `--proper` with a file of terms rather than rewriting the heading.
+The script skips fenced blocks and inline code, so a quoted dash in sample output is not a finding, and a rule may name inside backticks the pattern it forbids. It cannot tell a heading's proper noun from an ordinary capitalized word, so a wrongly flagged heading means passing `--proper` with a file of terms rather than rewriting the heading. A heading that a required template sets stays as the template writes it: its hit is expected, so leave it.
 
 An install that brings in this skill alone still has the script, because it sits inside this directory. Anything calling it from another skill checks that it is there and reads the files itself when it is not.
 
