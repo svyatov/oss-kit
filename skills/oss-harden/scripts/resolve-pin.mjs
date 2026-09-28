@@ -38,10 +38,12 @@ async function api(path) {
 // points at a tag object, and pinning that SHA pins something no checkout can
 // resolve. This is the dereference every hand-rolled version forgot.
 async function resolveTag(owner, repo, ref) {
-  const found = await api(`/repos/${owner}/${repo}/git/ref/tags/${encodeURIComponent(ref)}`)
+  const name = encodeURIComponent(ref)
+  const found = await api(`/repos/${owner}/${repo}/git/ref/tags/${name}`)
   if (!found) return null
-  if (found.object.type === "commit") return { sha: found.object.sha, kind: "tag" }
-  const tag = await api(`/repos/${owner}/${repo}/git/tags/${found.object.sha}`)
+  const { type, sha } = found.object
+  if (type === "commit") return { sha, kind: "tag" }
+  const tag = await api(`/repos/${owner}/${repo}/git/tags/${sha}`)
   if (!tag) return null
   return { sha: tag.object.sha, kind: "annotated tag" }
 }
@@ -49,7 +51,8 @@ async function resolveTag(owner, repo, ref) {
 // A moving ref is the finding, not a fallback. `ruby/setup-ruby@v1` is a branch,
 // so a workflow naming it runs whatever was last pushed there.
 async function resolveBranch(owner, repo, ref) {
-  const found = await api(`/repos/${owner}/${repo}/git/ref/heads/${encodeURIComponent(ref)}`)
+  const name = encodeURIComponent(ref)
+  const found = await api(`/repos/${owner}/${repo}/git/ref/heads/${name}`)
   return found ? { sha: found.object.sha, kind: "branch" } : null
 }
 
@@ -65,7 +68,7 @@ async function resolve(reference) {
   if (!owner || !repo) throw new Error(`${reference} is not owner/repo@ref`)
   // A path inside a repository, as in `owner/repo/.github/workflows/x.yml@ref`,
   // is pinned by the repository's ref like any other.
-  const subpath = rest.length ? `/${rest.join("/")}` : ""
+  const subpath = rest.length ? "/" + rest.join("/") : ""
 
   let ref = at === -1 ? null : reference.slice(at + 1)
   let assumedDefault = false
@@ -83,7 +86,8 @@ async function resolve(reference) {
 }
 
 function line(r) {
-  const pinned = `${r.owner}/${r.repo}${r.subpath}@${r.sha}`
+  const { owner, repo, subpath, sha } = r
+  const pinned = `${owner}/${repo}${subpath}@${sha}`
   if (r.kind === "already a sha") return `uses: ${pinned}`
   const warning =
     r.kind === "branch"

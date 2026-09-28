@@ -24,7 +24,7 @@ cd site && bun install --frozen-lockfile
 The specification validator that ships in `skills/oss-skill/scripts/validate.mjs` needs nothing installed. It runs on Node 22 or later, which is the claim it makes to the users who bundle it. One check needs a tool:
 
 ```bash
-uv tool install git+https://github.com/NVIDIA/skillspector.git@a54947c307fe19a24a43db55f6148e181a987a67
+uv tool install git+https://github.com/NVIDIA/skillspector.git@89e90872e2ec813bcb137bf6b3145c92e55811ae
 ```
 
 It installs from its upstream repository, pinned to a full commit SHA, because it has no official package on a registry.
@@ -40,11 +40,11 @@ bun skills/oss-skill/scripts/validate.mjs .
 bash tests/test-check-drift.sh
 bash scripts/check-drift.sh
 bun scripts/check-ecosystems.mjs
-skillspector scan ./skills/ --no-llm --format json --baseline .skillspector-baseline.yaml
+for skill in skills/*/; do skillspector scan "$skill" --no-llm --format json --baseline .skillspector-baseline.yaml; done
 cd site && bun run build
 ```
 
-`bun run --cwd tools typecheck` checks the repository's own TypeScript. `bun test` runs the validator's own test suite. `skills/oss-skill/scripts/validate.mjs` checks every skill against R-SKL-01 through R-SKL-05: layout, frontmatter conformance, body size, the license field, and what a skill may ship as a script. `tests/test-check-drift.sh` is the test suite for `scripts/check-drift.sh`, which fails when a skill cites a rule ID that `skills/oss-audit/STANDARD.md` does not define, or when a rule names a skill that does not claim it. `scripts/check-ecosystems.mjs` reads `skills/oss-audit/ecosystems.json` and fails when a skill is missing a file for a roster ecosystem, when a file is missing a heading its skill declares, when a declared heading has nothing under it, or when a file does not end with a well-formed `Verified` line. `skillspector scan` checks the skills for prompt injection and other agent-facing risks. `.skillspector-baseline.yaml` suppresses one false positive and nothing else, so a new finding still fails the scan. Read it before adding a second entry: it says what would make each suppression wrong.
+`bun run --cwd tools typecheck` checks the repository's own TypeScript. `bun test` runs the validator's own test suite. `skills/oss-skill/scripts/validate.mjs` checks every skill against R-SKL-01 through R-SKL-05: layout, frontmatter conformance, body size, the license field, and what a skill may ship as a script. `tests/test-check-drift.sh` is the test suite for `scripts/check-drift.sh`, which fails when a skill cites a rule ID that `skills/oss-audit/STANDARD.md` does not define, or when a rule names a skill that does not claim it. `scripts/check-ecosystems.mjs` reads `skills/oss-audit/ecosystems.json` and fails when a skill is missing a file for a roster ecosystem, when a file is missing a heading its skill declares, when a declared heading has nothing under it, or when a file does not end with a well-formed `Verified` line. `skillspector scan` checks each skill on its own for prompt injection and other agent-facing risks. `.skillspector-baseline.yaml` suppresses only findings that stay by design: scanner parse limits on valid source, documentation of the paths and endpoints the skills describe, and warnings whose wording the scanner reads as the danger they warn about. A new finding still fails the scan. Read the file before adding an entry: each rule says why its finding stays. Fix a finding at its source where the sentence is not a warning.
 
 `bun scripts/ecosystem-freshness.mjs` reports how recently each ecosystem file was checked against its sources, oldest first. It never gates, so it is not in the list above. `bun scripts/rule-freshness.mjs` does the same for rule sources.
 

@@ -90,6 +90,11 @@ function list(slug) {
   return JSON.parse(gh(["api", `repos/${slug}/rulesets`]))
 }
 
+/** @param {string} slug @param {number} id @returns {string} */
+function rulesetPath(slug, id) {
+  return `repos/${slug}/rulesets/${id}`
+}
+
 /** @param {string} slug @param {string} nameOrId @returns {any} */
 function find(slug, nameOrId) {
   const all = list(slug)
@@ -98,7 +103,7 @@ function find(slug, nameOrId) {
   // The list endpoint answers with a summary. The full rule and bypass list
   // only comes from the by-id endpoint, and merging over the summary would
   // silently drop every rule the summary omits.
-  return JSON.parse(gh(["api", `repos/${slug}/rulesets/${match.id}`]))
+  return JSON.parse(gh(["api", rulesetPath(slug, match.id)]))
 }
 
 // The merge and the null strip are exported so a test can exercise them
@@ -131,10 +136,10 @@ if (command === "put") {
   const current = find(slug, nameOrId)
   const patch = JSON.parse(readFileSync(patchPath, "utf8"))
   const body = writable(merge(writable(current), patch))
-  gh(["api", "-X", "PUT", `repos/${slug}/rulesets/${current.id}`, "--input", "-"], JSON.stringify(body))
+  gh(["api", "-X", "PUT", rulesetPath(slug, current.id), "--input", "-"], JSON.stringify(body))
   // Print what the API reports now, not what was sent. A ruleset that accepted
   // a write and stored something else is the case this exists to surface.
-  process.stdout.write(JSON.stringify(JSON.parse(gh(["api", `repos/${slug}/rulesets/${current.id}`])), null, 2) + "\n")
+  process.stdout.write(JSON.stringify(JSON.parse(gh(["api", rulesetPath(slug, current.id)])), null, 2) + "\n")
   process.exit(0)
 }
 
