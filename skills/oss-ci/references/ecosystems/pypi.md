@@ -7,7 +7,7 @@ On GitHub Actions, `actions/setup-python` installs CPython, PyPy, or GraalPy and
 ```yaml
 strategy:
   matrix:
-    python-version: ['3.11', '3.12', '3.13']
+    python-version: ['3.12', '3.13', '3.14']
 steps:
   - uses: actions/setup-python@v7  # oss-harden pins this to a commit SHA
     with:

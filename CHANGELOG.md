@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 - `oss-harden` Step 14 adds a fifth status, declined, for a rule whose fix the maintainer saw and chose not to take, recorded with their reason. The four statuses left such a rule nowhere to go, and the rule against reporting done while one fails had no exception for it.
 - R-SEC-08 names the frozen install command for each npm-ecosystem package manager and says a bare `bun install` fails the rule unless `bunfig.toml` sets `frozenLockfile`, because Bun does not turn frozen mode on in CI by itself. The rule said "current frozen mode" without naming one, so a run fetched Bun's documentation to find out.
 - R-SKL-06 points at `oss-skill`'s `references/hosts.md` for the manifest path each host reads, and says a host that accepts another host's manifest passes on that file.
+- Workflow examples in `oss-ci`, `oss-harden`, and `oss-publish` name current versions: `actions/checkout@v7`, `actions/setup-java@v6`, `actions/cache@v6`, zizmor-action v0.6.4, Node 24.21.0 for npm publishing, Node 22, 24, and 26 in the CI matrix, and Python 3.12 to 3.14. The Node matrix still listed Node 20, which reached end of life in April 2026.
 
 ### Fixed
 

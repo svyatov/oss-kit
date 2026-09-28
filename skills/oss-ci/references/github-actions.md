@@ -52,7 +52,7 @@ Build the matrix from the version range the manifest declares, not a single pinn
 strategy:
   fail-fast: false
   matrix:
-    node-version: ['20', '22', '24']
+    node-version: ['22', '24', '26']
 steps:
   - uses: actions/setup-node@v7  # oss-harden pins this to a commit SHA
     with:

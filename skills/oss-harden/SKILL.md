@@ -85,7 +85,7 @@ On GitHub, every external `uses:` line in every workflow and shipped composite a
 `scripts/resolve-pin.mjs` does that resolution. Pipe the workflow through it, or pass the references directly:
 
 ```sh
-node skills/oss-harden/scripts/resolve-pin.mjs actions/checkout@v5 ruby/setup-ruby@v1
+node skills/oss-harden/scripts/resolve-pin.mjs actions/checkout@v7 ruby/setup-ruby@v1
 cat .github/workflows/ci.yml | node skills/oss-harden/scripts/resolve-pin.mjs -
 ```
 
