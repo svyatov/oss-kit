@@ -412,7 +412,7 @@ CodeQL is the deeper half of this surface and not the wider one. zizmor audits t
 
 ```yaml
 - name: Run zizmor
-  uses: zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054 # v0.6.2
+  uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
 ```
 
 Two things about that step are worth saying to the user rather than leaving in the defaults. It uploads SARIF to code scanning unless `advanced-security` is set to `false`, so the job needs `security-events: write` and its findings arrive where the `code_scanning` rule below can block on them. And its `version` input defaults to `latest`, so pinning the action by SHA pins the wrapper while the analyzer it downloads still floats; set `version` to close the gap R-SEC-01 exists for.

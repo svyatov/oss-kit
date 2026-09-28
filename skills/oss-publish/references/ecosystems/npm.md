@@ -4,7 +4,7 @@ Concrete flow for the decisions `SKILL.md` makes, for a package published to the
 
 Those are floors rather than recommendations. npm 12 is the current major, released 2026-07-08, and it requires Node `^22.22.2 || ^24.15.0 || >=26.0.0`, so a job that pins an older patch release within a supported line cannot run it. Where the release the workflow pins bundles an npm below the floor, install one exact npm version in the job rather than widening the Node pin, and write the exact version rather than a range.
 
-Source: [npm Docs, Trusted publishing for npm packages](https://docs.npmjs.com/trusted-publishers/), [npm Docs, Staged publishing](https://docs.npmjs.com/staged-publishing/), [npm CLI v12.0.0](https://github.com/npm/cli/releases/tag/v12.0.0), and [Node.js download archive, Node 24.18.0](https://nodejs.org/en/download/archive/v24.18.0).
+Source: [npm Docs, Trusted publishing for npm packages](https://docs.npmjs.com/trusted-publishers/), [npm Docs, Staged publishing](https://docs.npmjs.com/staged-publishing/), [npm CLI v12.0.0](https://github.com/npm/cli/releases/tag/v12.0.0), and [Node.js download archive, Node 24.21.0](https://nodejs.org/en/download/archive/v24.21.0).
 
 ## Contents
 
@@ -47,7 +47,7 @@ permissions:
 steps:
   - uses: actions/setup-node@v7
     with:
-      node-version: '24.18.0'
+      node-version: '24.21.0'
       registry-url: 'https://registry.npmjs.org'
       package-manager-cache: false
 ```
@@ -91,7 +91,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
-          node-version: '24.18.0'
+          node-version: '24.21.0'
           package-manager-cache: false
       - run: npm ci --ignore-scripts
       - run: npm test  # oss-ci decides the actual command from CONTRIBUTING.md (R-CI-02)
@@ -104,7 +104,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
-          node-version: '24.18.0'
+          node-version: '24.21.0'
           package-manager-cache: false
       - run: npm ci --ignore-scripts
       - run: test "${GITHUB_REF_NAME#v}" = "$(node -p "require('./package.json').version")"
@@ -130,7 +130,7 @@ jobs:
           path: package/
       - uses: actions/setup-node@v7
         with:
-          node-version: '24.18.0'
+          node-version: '24.21.0'
           registry-url: 'https://registry.npmjs.org'
           package-manager-cache: false
       - run: npm stage publish ./package/*.tgz --ignore-scripts

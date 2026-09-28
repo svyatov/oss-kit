@@ -6,8 +6,8 @@
 // default branch is not always `main`.
 //
 // Usage:
-//   resolve-pin.mjs actions/checkout@v5 ruby/setup-ruby@v1
-//   resolve-pin.mjs --json actions/checkout@v5
+//   resolve-pin.mjs actions/checkout@v7 ruby/setup-ruby@v1
+//   resolve-pin.mjs --json actions/checkout@v7
 //   cat .github/workflows/ci.yml | resolve-pin.mjs -
 //
 // `-` reads a workflow on stdin and resolves every external `uses:` in it.

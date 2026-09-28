@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs"
 import { defineConfig } from "astro/config"
 import starlight from "@astrojs/starlight"
+import { satteri } from "@astrojs/markdown-satteri"
 import { codeThemes } from "./code-theme.mjs"
 import { parseRules } from "./scripts/generate.mjs"
 
@@ -27,25 +28,21 @@ const ecosystems = Object.entries(roster.ecosystems)
 // This claims the id before Astro's own pass, which keeps an id a heading
 // already has and records it as the slug, so the anchor link and the contents
 // list follow without a second rewrite. Claiming it afterwards is not an
-// option: user rehype plugins run first. Nor is emitting the heading as raw
+// option: user hast plugins run first. Nor is emitting the heading as raw
 // HTML, which passes through unparsed and would drop the rule from the
 // contents list entirely.
 const RULE_HEADING = /^(R-[A-Z]{2,3}-\d{2}):/
 
-/** @param {any} node @returns {string} */
-const textOf = (node) =>
-  node.value ?? (node.children ?? []).map(textOf).join("")
-
-const ruleAnchors = () => (/** @type {any} */ tree) => {
-  /** @param {any} node */
-  const walk = (node) => {
-    if (/^h[1-6]$/.test(node.tagName ?? "")) {
-      const match = RULE_HEADING.exec(textOf(node))
-      if (match) (node.properties ??= {}).id = (match[1] ?? "").toLowerCase()
-    }
-    for (const child of node.children ?? []) walk(child)
-  }
-  walk(tree)
+/** @type {import("satteri").HastPluginDefinition} */
+const ruleAnchors = {
+  name: "rule-anchors",
+  element: {
+    filter: ["h1", "h2", "h3", "h4", "h5", "h6"],
+    visit(node, ctx) {
+      const match = RULE_HEADING.exec(ctx.textContent(node))
+      if (match) ctx.setProperty(node, "id", (match[1] ?? "").toLowerCase())
+    },
+  },
 }
 
 /** @param {string} property @param {string} content */
@@ -56,7 +53,7 @@ const meta = (property, content) => ({
 
 export default defineConfig({
   site: SITE,
-  markdown: { rehypePlugins: [ruleAnchors] },
+  markdown: { processor: satteri({ hastPlugins: [ruleAnchors] }) },
   integrations: [
     starlight({
       title: "oss-kit",

@@ -90,7 +90,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@v7
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: <frozen project install command from CONTRIBUTING.md>
       - run: pytest  # oss-ci decides the actual command from CONTRIBUTING.md (R-CI-02)
 
@@ -102,7 +102,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@v7
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - run: <frozen build-tool install command>
       - run: python -c "import os,sys,tomllib; sys.exit(tomllib.load(open('pyproject.toml','rb'))['project']['version'] != os.environ['GITHUB_REF_NAME'].removeprefix('v'))"
       - run: <documented build command>
