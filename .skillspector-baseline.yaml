@@ -1,20 +1,131 @@
-version: 1
+version: 2
 
-# One suppression, and it stays one. Every other skillspector finding still
-# scores, so the scan keeps failing the build when a new one arrives.
+# CI scans each skill on its own, so every path below is relative to one
+# skill's directory. Each rule names a finding that stays by design, and every
+# other finding is fixed at its source, so the scan still fails the build when
+# a new one arrives.
 #
-# A glob rule rather than a fingerprint: a fingerprint hashes the line span and
+# Glob rules rather than fingerprints: a fingerprint hashes the line span and
 # the message, so it expires the next time somebody edits the file, and the
 # finding returns without anybody having re-read it.
 
 rules:
-  - id: "PE3"
-    path: "oss-harden/SKILL.md"
-    message: "*access tokens*"
+  # Incomplete analysis. skillspector runs a shell parser over JavaScript and
+  # Markdown, and gives up on valid source it cannot parse as shell.
+
+  - id: "AE1"
+    path: "SKILL.md"
+    message: "scripts/collect.mjs (partial)"
     reason: >-
-      False positive on a documentation link. The skill cites GitLab's personal
-      access tokens page as the source for the read_api and api scopes an audit
-      run needs, and the scanner reads the page title as credential access. The
-      skill reads no credential file. Remove this rule if oss-harden ever tells
-      a reader to read a token from disk, because that is the finding it would
-      hide.
+      oss-audit: the shell parser pairs quote characters in regexes and
+      comments that sit up to 90 lines apart, such as the three backticks in
+      the fence regex, and reads everything between them as one unclosed
+      word. The script makes no shell call.
+
+  - id: "AE1"
+    path: "SKILL.md"
+    message: "scripts/release-notes.mjs (partial)"
+    reason: >-
+      oss-changelog: the same quote pairing across 30 lines of a script that
+      makes no shell call.
+
+  - id: "AE1"
+    path: "SKILL.md"
+    message: "scripts/prose.mjs (partial)"
+    reason: >-
+      oss-writing: the same quote pairing across 110 lines, starting in a
+      comment that quotes a heading. The script makes no shell call.
+
+  - id: "AE1"
+    path: "SKILL.md"
+    message: "references/ecosystems/*.md (partial)"
+    reason: >-
+      oss-ci and oss-publish: the shell parser pairs apostrophes in prose,
+      such as the one in "maintainer's", across dozens of lines. The Maven
+      Central reference also documents a real command substitution,
+      $(printf '%s' '<groupId>' | tr . /), which the parser declines by
+      design. These files are read, never executed.
+
+  - id: "AE1"
+    path: "SKILL.md"
+    message: "STANDARD.md (partial)"
+    reason: >-
+      oss-audit: R-SEC-15's Check line names npm's --ignore-scripts flag, and
+      the obfuscation check reads "ignore" followed by quoted names as an
+      instruction to delete markers from the text. Every rewording that keeps
+      the flag name trips it.
+
+  - id: "AE1"
+    path: "SKILL.md"
+    message: "SKILL.md (partial)"
+    reason: >-
+      oss-audit and oss-skill: both skills name files in the repository they
+      work on, such as .gitlab-ci.yml, oss-audit-report.md, and
+      site/package-lock.json. skillspector expects every path a skill names
+      to be a file the skill bundles.
+
+  # Documentation of what the skills exist to describe.
+
+  - id: "AS1"
+    path: "references/hosts.md"
+    reason: >-
+      oss-skill: the file documents where each agent host reads its
+      configuration, such as ~/.codex/config.toml, so a maintainer can tell
+      which install path a host honors. The skill reads none of them.
+
+  - id: "AS3"
+    reason: >-
+      The kit's subject is agent skills. oss-skill lists the directories each
+      host scans, oss-readme shows the path of a skill in this repository, and
+      rule-sources.json cites upstream skills by URL. Naming a skill path is
+      the content, not enumeration of the reader's installed skills.
+
+  - id: "RP1"
+    reason: >-
+      Install commands quoted as their upstream publishes them, npx skills
+      add and the docker commands GitHub and GitLab document. The oss-readme
+      containers reference quotes the unpinned pull in order to tell the
+      reader to pin the tag.
+
+  - id: "E1"
+    path: "references/*"
+    reason: >-
+      Read-only API calls the skills document: the Scorecard API, GitLab's
+      protected branches endpoint, a crates.io existence check, and the NuGet
+      service index. Each sends only a public package or repository name.
+
+  - id: "RA2"
+    path: "references/*"
+    reason: >-
+      The scanner reads a table of contents in the Hex reference and a
+      paragraph about where the skills CLI writes on install as session
+      persistence. Neither tells the reader to persist anything.
+
+  - id: "LP3"
+    reason: >-
+      allowed-tools would name harness-specific tools, which AGENTS.md
+      forbids in any skill because each host names its tools differently.
+
+  # Warnings. The scanner flags the danger a sentence warns about, and
+  # rewording the sentence to clear it would weaken the warning.
+
+  - id: "PE3"
+    path: "references/ecosystems/*"
+    reason: >-
+      oss-harden's RubyGems reference names .npmrc and .netrc as what a
+      malicious gem stole. oss-publish's containers and npm references tell
+      the reader to remove a stored access token and describe npm's granular
+      access tokens by name. No skill reads a credential file.
+
+  - id: "TM1"
+    path: "references/ecosystems/packagist.md"
+    reason: >-
+      oss-harden quotes Composer's --no-check-lock option to warn that a
+      pipeline without the validate step installs a stale lockfile.
+
+  - id: "EA2"
+    path: "references/ecosystems/pypi.md"
+    message: "*without checking*"
+    reason: >-
+      oss-harden warns that uv's --frozen and pipenv sync install without
+      checking the lockfile, which is why neither is the CI command.
