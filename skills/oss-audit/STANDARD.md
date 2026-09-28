@@ -499,7 +499,7 @@ Forges: both
 
 ### R-CHG-05: A public API is deprecated in a release before it is removed
 
-Removing an API without warning turns an upgrade into an outage. Users need a released version where the old path still works and the interface they use directs them to the replacement.
+Removing an API with no deprecation first turns an upgrade into an outage. Users need a released version where the old path still works and the interface they use directs them to the replacement.
 
 Check: every public item under Removed appeared under Deprecated in an earlier release, stayed usable for the project's stated deprecation window, and produced an interface-appropriate notice naming the replacement or migration path and earliest removal version. For stable SemVer, deprecation ships in a MINOR release and removal waits for a later MAJOR release. A project that has removed no public item falls outside this rule rather than satisfying it with nothing to check.
 

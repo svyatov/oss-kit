@@ -10,7 +10,7 @@ A body is earned when a change's safety rests on a fact the diff cannot show, an
 
 A body that exists says what is wrong now, what this change does about it, why this way, and what was discarded, in that order. Answer each problem in the same breath as you raise it. The count of fix statements is the count of problems, not the count of files the change touches.
 
-Write the problem clause in the present tense: the loader retries forever, not the loader used to retry forever. The commit is what turns that sentence into history. Write the fix in the imperative: retry three times, then fail, not this patch makes the loader retry three times.
+Write the problem clause in the present tense: the date picker shows the wrong month, not the date picker used to show the wrong month. The commit is what turns that sentence into history. Write the fix in the imperative: show the selected month, not this patch makes the date picker show the selected month.
 
 A body that has to describe more than one change is the signal the commit should have been split. Split the commit, never the description of what landed.
 

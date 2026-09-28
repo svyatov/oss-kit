@@ -64,7 +64,7 @@ Resolve the version the workflow already selects. Do not silently turn pinning i
 gh api repos/{owner}/{repo}/releases/latest --jq '.tag_name'
 ```
 
-This endpoint returns the newest non-draft, non-prerelease release overall. It does not identify the newest compatible backport for a workflow that deliberately stays on an older major. Inspect the release list or immutable version tags for that comparison. A project that tags releases without cutting GitHub Releases returns 404 here; inspect its immutable release tags instead of assuming a moving major tag is a release.
+This endpoint returns the newest non-draft, non-prerelease release overall. It does not identify the newest compatible backport for a workflow that deliberately stays on an older major. Inspect the release list or immutable version tags for that comparison. A project that tags releases but creates no GitHub Releases returns 404 here; inspect its immutable release tags instead of assuming a moving major tag is a release.
 
 Where the current major is ahead of the one the workflow uses, say so and name both versions rather than pinning the old major to a SHA silently. The upgrade is the user's call, since a major bump can change the action's inputs, but a pin recorded without that observation buries the staleness under a line that now looks deliberate and audited.
 
