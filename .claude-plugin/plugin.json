@@ -2,7 +2,7 @@
   "name": "oss-kit",
   "displayName": "oss-kit",
   "description": "Curated agent skills for open source maintainers",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "author": {
     "name": "Leonid Svyatov",
     "email": "leonid@svyatov.com",
