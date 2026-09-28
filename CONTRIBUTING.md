@@ -24,10 +24,10 @@ cd site && bun install --frozen-lockfile
 The specification validator that ships in `skills/oss-skill/scripts/validate.mjs` needs nothing installed. It runs on Node 22 or later, which is the claim it makes to the users who bundle it. One check needs a tool:
 
 ```bash
-uv tool install git+https://github.com/NVIDIA/skillspector.git@89e90872e2ec813bcb137bf6b3145c92e55811ae
+uv tool install git+https://github.com/NVIDIA/skillspector.git@c7958a3268d9498644b22edb75d0f051bbc8cbfc
 ```
 
-It installs from its upstream repository, pinned to a full commit SHA, because it has no official package on a registry.
+It installs from its upstream repository, pinned to a full commit SHA, because it has no official package on a registry. The SHA is the v2.12.0 release, the version CI runs through `svyatov/setup-skillspector`. When a Dependabot bump of that action changes the SkillSpector version, reinstall with `--force` at the new release's commit.
 
 ## Test
 

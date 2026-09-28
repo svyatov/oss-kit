@@ -69,15 +69,6 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
-      - run: uv tool install git+https://github.com/NVIDIA/skillspector.git@89e90872e2ec813bcb137bf6b3145c92e55811ae
-      # One scan per skill, because skillspector scores a directory holding
-      # several skills as one and warns that it should not.
-      - run: |
-          status=0
-          for skill in skills/*/; do
-            echo "::group::$skill"
-            skillspector scan "$skill" --no-llm --format json --baseline .skillspector-baseline.yaml || { echo "::error::skillspector failed on $skill"; status=1; }
-            echo "::endgroup::"
-          done
-          exit "$status"
+        with:
+          persist-credentials: false
+      - uses: svyatov/setup-skillspector@451614c57972f6053b0bd07f73503aeaf9addbe5  # v1.0.0
