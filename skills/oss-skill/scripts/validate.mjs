@@ -574,7 +574,7 @@ export function checkLayout(root, skillFiles) {
       out.push({
         severity: "error",
         rule: "R-SKL-01",
-        file: `skills${sep}${entry.name}${sep}`,
+        file: "skills" + sep + entry.name + sep,
         message: "directory under skills/ holds no SKILL.md",
       })
     }
@@ -802,12 +802,13 @@ function main() {
   const root = process.argv[2] ?? "."
   const findings = validate(root)
   for (const finding of findings) {
-    const rule = finding.rule ? ` ${finding.rule}` : ""
+    const { severity, message } = finding
+    const rule = finding.rule ? " " + finding.rule : ""
     // Most findings take their path from relative(), which returns backslashes
     // on Windows. Normalizing here rather than at the two sep literals covers
     // every finding, whatever built its path.
     const file = finding.file.replaceAll(sep, "/")
-    process.stdout.write(`${finding.severity}${rule} ${file}: ${finding.message}\n`)
+    process.stdout.write(`${severity}${rule} ${file}: ${message}\n`)
   }
   const errorCount = findings.filter((finding) => finding.severity === "error").length
   process.stdout.write(`${errorCount} error(s), ${findings.length - errorCount} warning(s)\n`)

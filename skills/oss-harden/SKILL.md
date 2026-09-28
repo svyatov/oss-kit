@@ -76,7 +76,7 @@ The current branch or merge request protection settings for the default branch, 
 
 Whether the newest release tag is signed, if a release has shipped yet; a repository with no tags yet has nothing to check here, so say that plainly instead of treating it as a gap.
 
-Verified 2026-08-07 against [GitHub repository REST endpoints](https://docs.github.com/en/rest/repos/repos), [GitLab personal access tokens](https://docs.gitlab.com/user/profile/personal_access_tokens/), [GitLab job token scope API](https://docs.gitlab.com/api/project_job_token_scopes/), [GitLab project security settings API](https://docs.gitlab.com/api/project_security_settings/), and the current sources named in `references/ecosystems/`.
+Verified 2026-08-07 against [GitHub repository REST endpoints](https://docs.github.com/en/rest/repos/repos), [GitLab token scopes](https://docs.gitlab.com/user/profile/personal_access_tokens/), [GitLab job token scope API](https://docs.gitlab.com/api/project_job_token_scopes/), [GitLab project security settings API](https://docs.gitlab.com/api/project_security_settings/), and the current sources named in `references/ecosystems/`.
 
 ### Step 3: Pin third-party references to immutable content
 
