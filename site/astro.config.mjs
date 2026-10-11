@@ -53,6 +53,9 @@ const meta = (property, content) => ({
 
 export default defineConfig({
   site: SITE,
+  redirects: {
+    "/skills/oss-publish/pypi/": "/ecosystems/pypi/#oss-publish",
+  },
   markdown: { processor: satteri({ hastPlugins: [ruleAnchors] }) },
   integrations: [
     starlight({
