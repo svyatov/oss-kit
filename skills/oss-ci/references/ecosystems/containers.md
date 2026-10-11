@@ -36,7 +36,7 @@ One version floor travels with the `gha` backend: since 2025-04-15 only version 
 
 On GitLab, layer caching for a Docker-in-Docker build is documented separately, and GitLab also recommends the `overlay2` storage driver over the default `vfs`, which copies the whole filesystem on each run.
 
-Sources: [Docker, cache backends in GitHub Actions](https://docs.docker.com/build/ci/github-actions/cache/), [GitLab, use Docker to build Docker images](https://docs.gitlab.com/ci/docker/using_docker_build/).
+Sources: [Docker, cache backends in GitHub Actions](https://docs.docker.com/build/ci/github-actions/cache.md), [GitLab, use Docker to build Docker images](https://docs.gitlab.com/ci/docker/using_docker_build/).
 
 ## Test command (R-CI-06)
 

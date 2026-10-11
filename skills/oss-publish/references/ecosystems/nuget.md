@@ -1,8 +1,6 @@
 # NuGet
 
-Concrete flow for the decisions `SKILL.md` makes, for a package published to nuget.org. NuGet documents one OIDC provider for trusted publishing: GitHub Actions. The exchange runs through the `NuGet/login` action, which trades the workflow's OIDC token for a temporary API key valid for one hour. Each OIDC token yields exactly one API key and can be used once, so the login step belongs immediately before the push rather than at the top of the job.
-
-Rollout is gradual. NuGet's own documentation says the Trusted Publishing option "might not be available to you yet", so confirm it appears under the account menu on nuget.org before writing a workflow that depends on it, and fall back to Step 2's stored-key path only when it does not.
+Concrete flow for the decisions `SKILL.md` makes, for a package published to nuget.org. NuGet documents trusted publishing for GitHub Actions and GitLab CI/CD. On GitHub, the exchange runs through the `NuGet/login` action, which trades the workflow's OIDC token for a temporary API key valid for one hour. Each OIDC token yields exactly one API key and can be used once, so the login step belongs immediately before the push rather than at the top of the job.
 
 Source: [Microsoft Learn, Trusted Publishing on nuget.org](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing).
 
@@ -11,7 +9,7 @@ Source: [Microsoft Learn, Trusted Publishing on nuget.org](https://learn.microso
 - [Gather facts (Step 1)](#gather-facts-step-1)
 - [Configure trusted publishing (Step 2)](#configure-trusted-publishing-step-2)
   - [GitHub Actions](#github-actions)
-  - [GitLab CI/CD: no documented flow](#gitlab-cicd-no-documented-flow)
+  - [GitLab CI/CD](#gitlab-cicd)
 - [Write the hardened release workflow (Step 3)](#write-the-hardened-release-workflow-step-3)
 - [Gate on manual approval (Step 4)](#gate-on-manual-approval-step-4)
 - [Verify provenance (Step 5): a gap, not a check](#verify-provenance-step-5-a-gap-not-a-check)
@@ -34,7 +32,7 @@ Anything other than `200` means the ID is unclaimed on nuget.org, or reserved un
 
 ## Configure trusted publishing (Step 2)
 
-Only one of the two sections below is a flow. NuGet documents GitHub Actions and says nothing about GitLab, so a GitLab project takes the fallback rather than a shorter version of the same setup.
+Use the policy and exchange for the repository's forge. Configure the policy scope and package glob for the intended publishing operation.
 
 ### GitHub Actions
 
@@ -47,7 +45,7 @@ Sign in to nuget.org, open Trusted Publishing from the username menu, and add a 
 
 Leaving Environment empty means the policy matches any run of that workflow, approved or not. Fill it in, for the same reason the other registries' environment fields exist: it is the field that makes the approval gate in Step 4 part of the registry's identity check rather than a forge convenience.
 
-A policy is owned by an individual user or by an organization, and it applies to every package that owner owns. That is a wider blast radius than the per-package trusted publisher entries npm, PyPI, and RubyGems use, and it is worth saying out loud to the maintainer: one policy plus one compromised workflow file reaches the whole account. Choose the owner deliberately, and keep the workflow filename specific. A policy whose creator later leaves the owning organization goes inactive until they are added back.
+Choose the individual or organization that owns the packages. Restrict policy scopes to the required publishing operations and its glob to the intended package IDs. Ownership sets the available package set; the scope and glob narrow access within it. Keep the workflow filename and environment specific. A creator who leaves the owning organization can make the policy inactive.
 
 In the workflow, the publish job needs:
 
@@ -64,19 +62,42 @@ steps:
 
 The step's `NUGET_API_KEY` output is the temporary key, consumed as `${{ steps.login.outputs.NUGET_API_KEY }}`. No long-lived `NUGET_API_KEY` secret needs to exist in the repository. The username in `user:` is not a credential, and the documentation recommends holding it in a secret anyway; either is defensible, so present it as the maintainer's choice rather than a requirement.
 
-### GitLab CI/CD: no documented flow
+### GitLab CI/CD
 
-NuGet's trusted publishing documentation describes GitHub Actions throughout and mentions GitLab CI/CD nowhere. That is silence, not a documented refusal, so read the page before reporting on it and do not assume a GitLab flow exists because other registries have one.
+Add a GitLab policy under nuget.org's federated credentials. Match `namespace_path` and `project_path` to the project, and set the environment to `release`. Restrict policy scopes and its package glob as above. The optional `ref` field accepts a branch name, not a tag; omit that field for this tag-triggered flow.
 
-Source: [Microsoft Learn, Trusted Publishing on nuget.org](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing).
+The publish job consumes packages built and tested in uncredentialed jobs. Use the project's existing SDK image with `curl` and `jq` already available. Install nothing after the job's OIDC token becomes available. Bind a blocking manual job to the protected environment, as Step 4 requires:
 
-Where the documentation names no GitLab provider, this is the strongest alternative:
+```yaml
+publish:
+  stage: publish
+  needs:
+    - job: test
+    - job: build
+      artifacts: true
+  environment:
+    name: release
+  when: manual
+  allow_failure: false
+  rules:
+    - if: '$CI_COMMIT_TAG'
+  id_tokens:
+    NUGET_ID_TOKEN:
+      aud: https://www.nuget.org
+  script:
+    - |
+      set -eu
+      API_KEY=$(curl -fsS -X POST https://www.nuget.org/api/v2/token \
+        -H 'Content-Type: application/json' \
+        -H "Authorization: Bearer $NUGET_ID_TOKEN" \
+        --data "$(jq -n --arg username "$NUGET_USERNAME" '{username: $username, tokenType: "ApiKey"}')")
+      API_KEY=$(printf '%s' "$API_KEY" | jq -er '.apiKey | select(type == "string" and length > 0)')
+      dotnet nuget push 'dist/*.nupkg' --api-key "$API_KEY" --source https://api.nuget.org/v3/index.json
+```
 
-Create a scoped API key on nuget.org, from the API Keys page under the username menu. Select the narrowest scope that still publishes, which is push only new package versions where the package already exists, and set the glob pattern to the exact package ID rather than to `*`. Every key carries an expiry; set the shortest one that fits the release cadence, and note that the scope cannot be edited afterwards while the package list can. Store the key as a GitLab CI/CD variable that is both masked and protected, so it is redacted from job logs and reachable only from a protected branch or tag. Make the publish job blocking and manual in a protected environment, so the key's presence in the pipeline is not on its own enough to publish. Register a code signing certificate and sign the package, so the uploaded bytes carry an identity the key alone does not give them.
+`NUGET_USERNAME` is the nuget.org profile name. Adapt the `test` and `build` job names and artifact path to the existing pipeline. Keep shell tracing off and never print either token. A failed HTTP response or missing API key stops publication. The exchange belongs immediately before pushing the exact built packages.
 
-Source for the key scopes and the glob pattern: [Microsoft Learn, Scoped API keys](https://learn.microsoft.com/en-us/nuget/nuget-org/scoped-api-keys).
-
-This is below the bar R-PUB-02 sets, because a scoped, expiring key is still a credential that can leak, where trusted publishing stores nothing at all. Take it only while the documentation names no GitLab provider, and re-read that page before each release process is written.
+Checked 2026-10-11 against [NuGet trusted publishing](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing), including GitLab claims and policy scopes.
 
 ## Write the hardened release workflow (Step 3)
 
@@ -123,7 +144,7 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
-    needs: [test, pack]
+    needs: [test, build]
     environment: release
     permissions:
       contents: read
@@ -198,7 +219,7 @@ gh attestation verify <id>.<version>.nupkg --repo <owner>/<repo>
 
 nuget.org does not surface or link to that attestation, so a consumer has to know to look for it. Signing the package as well is worth doing where the project already holds a certificate, because the signature travels with the package and the attestation does not.
 
-This sits below R-PUB-03, which asks for provenance tied to the exact published artifact. Report it as unmet with the registry limitation named. It retires the day nuget.org serves an attestation for a published version.
+Verify the exact published package against the expected repository and workflow through the forge attestation. Report R-PUB-03 as met only when that cryptographic verification succeeds, and name the registry-hosting limitation. Otherwise report it as unmet. A locally rebuilt artifact is not evidence for different bytes served by the registry.
 
 ## Describe and sign what the release attaches (Step 6)
 
@@ -206,7 +227,7 @@ Only for a release that attaches a built asset to the forge release. Pushing to 
 
 Two rules apply here and they ask for different things. R-PUB-05 wants an inventory of what went into the asset, in SPDX or CycloneDX. R-PUB-06 wants the assets signed, or listed by hash in a signed manifest. A manifest of hashes answers the second and nothing about the first, so do not report R-PUB-05 as met by publishing one.
 
-This reference names no SBOM generator for .NET. The ones in common use are separate tools rather than part of the SDK, and a tool that reads the dependency tree inside the release workflow is one the maintainer vets before it goes there. What answers R-PUB-05 without one, on GitHub, is the forge's own export of the repository's dependency graph, which is already SPDX and needs nothing installed. The `gh api` step below writes it into `dist/`, so it ships as a release asset for R-PUB-05 and is listed in `SHA256SUMS` and attested alongside the packages for R-PUB-06:
+This reference names no SBOM generator for .NET. The ones in common use are separate tools rather than part of the SDK, and a tool that reads the dependency tree inside the release workflow is one the maintainer vets before it goes there. GitHub's SPDX dependency-graph export can supplement an artifact inventory without installing another tool. It does not establish R-PUB-05 coverage by itself. The `gh api` step below writes it into `dist/`, so it ships as supplementary release evidence and is listed in `SHA256SUMS` and attested alongside the packages for R-PUB-06:
 
 ```yaml
   github-release:
@@ -234,7 +255,7 @@ This reference names no SBOM generator for .NET. The ones in common use are sepa
           GH_TOKEN: ${{ github.token }}
 ```
 
-State both of the export's limits to the maintainer rather than leaving them to be discovered. It is GitHub only, so a GitLab project keeps this gap and R-PUB-05 stays unmet there with the reason named. And it covers the repository's declared dependency graph rather than what is inside the asset, which is exact for a `.nupkg` that declares its dependencies rather than bundling them, and an approximation where the build embeds them. The graph resolves past the direct dependencies only where `packages.lock.json` is committed; R-SEC-08 places a library package, which NuGet's own guidance tells not to commit one, outside that requirement, so a library's export lists its direct dependencies alone and the report should say which of the two it is. Read the output back once with `gh api repos/<owner>/<repo>/dependency-graph/sbom --jq '.sbom.packages | length'` before reporting the rule met: a graph the forge does not parse for this ecosystem returns a near-empty package list rather than an error.
+The export describes the repository graph at the time of the request, not necessarily the tagged build or released asset. Read it back to detect an empty or unsupported graph, but a nonzero package count is not proof of coverage. Before passing R-PUB-05, verify that the inventory matches the exact release and includes every bundled dependency, runtime, and linked component. Otherwise generate an SPDX or CycloneDX inventory from the artifact or build, after vetting the required tool. If that coverage remains unproved, report R-PUB-05 unmet on either forge. A package declaration alone does not establish the contents of a compiled asset.
 
 `sha256sum` runs from inside `dist/` so the names it writes are the names the assets carry on the release. `subject-checksums` makes every file in the manifest a subject of the attestation in its own right, by name and digest; attesting `SHA256SUMS` itself with `subject-path` would leave a consumer able to verify the manifest and nothing about the assets it lists.
 

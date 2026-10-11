@@ -15,7 +15,7 @@
 // Prose findings are oss-writing's, through its own scripts/prose.mjs. This
 // script does not duplicate that skill's banned-word table.
 
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs"
+import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs"
 import { join, relative } from "node:path"
 import process from "node:process"
 
@@ -30,6 +30,12 @@ const has = (p) => existsSync(join(root, p))
 // runtime-specific global the same rule forbids. Grep is what this replaces:
 // counting jobs with a regex reads a top-level `env:` block's keys as jobs.
 function parseYaml(text) {
+  const unsupported = () => { throw new Error("Unsupported YAML; read this file manually before scoring the audit") }
+  const mapping = /^((?:"[^"\\]*"|'(?:[^']|'')*'|[^:'"\s][^:]*)):\s+(.*)$|^((?:"[^"\\]*"|'(?:[^']|'')*'|[^:'"\s][^:]*)):\s*$/
+  const pair = (s) => {
+    const match = mapping.exec(s)
+    return match ? [match[1] ?? match[3], match[2] ?? ""] : null
+  }
   const lines = []
   let blockIndent = null
   for (const raw of text.split("\n")) {
@@ -38,26 +44,66 @@ function parseYaml(text) {
       if (raw.trim() === "" || ind > blockIndent) continue
       blockIndent = null
     }
-    const noComment = raw.replace(/(^|\s)#.*$/, "$1")
+    if (/^\s*\t/.test(raw)) unsupported()
+    let quote = null, end = raw.length
+    for (let j = 0; j < raw.length; j++) {
+      const c = raw[j]
+      if (quote === '"' && c === "\\") { j++; continue }
+      if (quote === "'" && c === "'" && raw[j + 1] === "'") { j++; continue }
+      if (quote) { if (c === quote) quote = null }
+      else if ((c === '"' || c === "'") && (j === 0 || /[\s:[,]/.test(raw[j - 1]))) quote = c
+      else if (c === "#" && (j === 0 || /\s/.test(raw[j - 1]))) { end = j; break }
+    }
+    if (quote) unsupported()
+    const noComment = raw.slice(0, end)
     if (noComment.trim() === "") continue
     const indent = noComment.search(/\S/)
     let body = noComment.trim()
-    if (/[|>][+-]?$/.test(body)) { blockIndent = indent; body = body.replace(/\s*[|>][+-]?$/, ": ") }
+    if (/:\s*[|>][+-]?$/.test(body)) {
+      // These text fields do not supply audit facts. Other folded/literal
+      // values need a full YAML reader rather than an invented empty value.
+      if (!/^(?:-\s*)?(?:run|script|description):/.test(body)) unsupported()
+      blockIndent = indent
+      body = body.replace(/[|>][+-]?$/, '""')
+    }
     lines.push({ indent, body })
   }
 
   let i = 0
   const unquote = (s) => {
     const t = s.trim()
-    if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith("'") && t.endsWith("'"))) return t.slice(1, -1)
+    if (t.startsWith('"') && t.endsWith('"')) {
+      try { return JSON.parse(t) } catch { unsupported() }
+    }
+    if (t.startsWith("'") && t.endsWith("'")) return t.slice(1, -1).replaceAll("''", "'")
     // A flow sequence is a sequence, and `on: [push, pull_request]` is as legal
     // as the block form. Left as a scalar it reads as one event named
     // "[push, pull_request]", which is no event at all.
     if (t.startsWith("[") && t.endsWith("]")) {
       const inner = t.slice(1, -1).trim()
-      return inner === "" ? [] : inner.split(",").map(unquote)
+      if (inner === "") return []
+      const entries = []
+      let quote = null, start = 0
+      for (let j = 0; j < inner.length; j++) {
+        const c = inner[j]
+        if (quote === '"' && c === "\\") { j++; continue }
+        if (quote === "'" && c === "'" && inner[j + 1] === "'") { j++; continue }
+        if (quote) { if (c === quote) quote = null }
+        else if (c === '"' || c === "'") quote = c
+        else if (/[\[\]{}]/.test(c)) unsupported()
+        else if (c === ",") { entries.push(unquote(inner.slice(start, j))); start = j + 1 }
+      }
+      if (quote) unsupported()
+      if (inner.slice(start).trim()) entries.push(unquote(inner.slice(start)))
+      return entries
     }
+    if (/^[\[\]{&*!|>]/.test(t)) unsupported()
     return t
+  }
+  const put = (map, key, value) => {
+    key = unquote(key)
+    if (typeof key !== "string" || key === "<<" || Object.hasOwn(map, key)) unsupported()
+    map[key] = value
   }
 
   function block(indent) {
@@ -66,14 +112,19 @@ function parseYaml(text) {
       const arr = []
       while (i < lines.length && lines[i].indent === indent && lines[i].body.startsWith("- ")) {
         const rest = lines[i].body.slice(2).trim()
-        const kv = /^([^:\s][^:]*):\s*(.*)$/.exec(rest)
+        const kv = pair(rest)
         if (kv) {
           // First key of a map item sits on the dash line; the rest are indented.
-          const item = {}
-          item[kv[1].trim()] = kv[2] === "" ? null : unquote(kv[2])
+          const item = Object.create(null)
+          if (kv[1] === "") unsupported()
+          put(item, kv[0].trim(), unquote(kv[1]))
           i++
           const childIndent = i < lines.length ? lines[i].indent : -1
-          if (childIndent > indent) Object.assign(item, block(childIndent))
+          if (childIndent > indent) {
+            const child = block(childIndent)
+            if (Array.isArray(child)) unsupported()
+            for (const [key, value] of Object.entries(child)) put(item, key, value)
+          }
           arr.push(item)
         } else {
           arr.push(unquote(rest))
@@ -82,20 +133,37 @@ function parseYaml(text) {
       }
       return arr
     }
-    const map = {}
+    const map = Object.create(null)
     while (i < lines.length && lines[i].indent === indent) {
-      const kv = /^([^:\s][^:]*):\s*(.*)$/.exec(lines[i].body)
-      if (!kv) { i++; continue }
-      const key = kv[1].trim()
-      const inline = kv[2]
+      const kv = pair(lines[i].body)
+      if (!kv) unsupported()
+      const key = kv[0].trim()
+      const inline = kv[1]
       i++
-      if (inline !== "") { map[key] = unquote(inline); continue }
+      if (inline !== "") { put(map, key, unquote(inline)); continue }
       const childIndent = i < lines.length ? lines[i].indent : -1
-      map[key] = childIndent > indent ? block(childIndent) : null
+      put(map, key, childIndent > indent ? block(childIndent) : null)
     }
     return map
   }
-  return block(lines.length ? lines[0].indent : 0)
+  const result = block(lines.length ? lines[0].indent : 0)
+  if (i !== lines.length || Array.isArray(result)) unsupported()
+  return result
+}
+
+function readYaml(path) {
+  try { return parseYaml(read(path)) }
+  catch (error) { throw new Error(`${rel(path)}: ${error.message}`) }
+}
+
+function actionUses(value) {
+  if (!value || typeof value !== "object") return []
+  return Object.entries(value).flatMap(([key, child]) => {
+    if (key !== "uses" || typeof child !== "string") return actionUses(child)
+    const at = child.lastIndexOf("@")
+    const version = at === -1 ? null : child.slice(at + 1)
+    return [{ ref: child, local: child.startsWith("./"), pinnedToSha: version !== null && /^[0-9a-f]{40}$/.test(version), version }]
+  })
 }
 
 // ------------------------------------------------------------------ workflows
@@ -124,9 +192,7 @@ function collectWorkflows() {
   for (const name of readdirSync(dir)) {
     if (!/\.ya?ml$/.test(name)) continue
     const path = join(dir, name)
-    const text = read(path)
-    let doc = {}
-    try { doc = parseYaml(text) } catch { doc = {} }
+    const doc = readYaml(path)
     const jobs = doc.jobs && typeof doc.jobs === "object" && !Array.isArray(doc.jobs) ? doc.jobs : {}
     // `on` is YAML 1.1's boolean true, so a reader may see either key.
     const on = doc.on ?? doc.true ?? doc.On ?? {}
@@ -148,17 +214,7 @@ function collectWorkflows() {
         steps: Array.isArray(job?.steps) ? job.steps.length : 0,
       })),
       // Every uses: in the file, including inside steps, with how it is pinned.
-      uses: [...text.matchAll(/^\s*(?:-\s*)?uses:\s*['"]?([^'"\s#]+)/gm)].map((m) => {
-        const ref = m[1]
-        const at = ref.lastIndexOf("@")
-        const version = at === -1 ? null : ref.slice(at + 1)
-        return {
-          ref,
-          local: ref.startsWith("./"),
-          pinnedToSha: version !== null && /^[0-9a-f]{40}$/.test(version),
-          version,
-        }
-      }),
+      uses: actionUses(doc),
     })
   }
   return out
@@ -168,28 +224,25 @@ function collectWorkflows() {
 // repository ships and not only the workflows that call it.
 function collectActions() {
   const out = []
-  const walk = (dir, depth) => {
-    if (depth > 4 || !existsSync(dir)) return
+  const visited = new Set()
+  const walk = (dir) => {
+    const real = realpathSync(dir)
+    if (visited.has(real)) return
+    visited.add(real)
     for (const e of readdirSync(dir)) {
       if (e === "node_modules" || e === ".git") continue
       const p = join(dir, e)
-      let s
-      try { s = statSync(p) } catch { continue }
-      if (s.isDirectory()) walk(p, depth + 1)
+      const s = statSync(p)
+      if (s.isDirectory()) walk(p)
       else if (/^action\.ya?ml$/.test(e)) {
-        const text = read(p)
         out.push({
           file: rel(p),
-          uses: [...text.matchAll(/^\s*(?:-\s*)?uses:\s*['"]?([^'"\s#]+)/gm)].map((m) => ({
-            ref: m[1],
-            local: m[1].startsWith("./"),
-            pinnedToSha: /@[0-9a-f]{40}$/.test(m[1]),
-          })),
+          uses: actionUses(readYaml(p)),
         })
       }
     }
   }
-  walk(root, 0)
+  walk(root)
   return out
 }
 

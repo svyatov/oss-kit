@@ -6,7 +6,7 @@ RubyGems is present when a `*.gemspec`, a `Gemfile`, or a `Gemfile.lock` turns u
 
 RubyGems is shipped when a gemspec declares those fields and publish evidence exists: a release workflow running `gem push`, or an existing page on rubygems.org for that name.
 
-Sources: [Specification reference](https://guides.rubygems.org/specification-reference/), [Publishing your gem](https://guides.rubygems.org/publishing/).
+Sources: [Specification reference](https://guides.rubygems.org/specification-reference.md), [Publishing your gem](https://guides.rubygems.org/publishing/).
 
 Three cases decide most arguments:
 
@@ -18,4 +18,4 @@ Three cases decide most arguments:
 
 RubyGems takes the registry-push track. `gem push` uploads a built `.gem` file to the registry under a credential, so there is an upload to secure and a credential to scope, which is what assigns the track. The roster records `"track": "registry-push"` for RubyGems and the release area's preamble names RubyGems in its registry-push list.
 
-Verified 2026-07-31 against https://guides.rubygems.org/specification-reference/ and https://guides.rubygems.org/publishing/.
+Verified 2026-07-31 against https://guides.rubygems.org/specification-reference.md and https://guides.rubygems.org/publishing/.

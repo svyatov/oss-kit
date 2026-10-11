@@ -11,7 +11,7 @@ Project-level locations, files on the default branch, extension `.md`:
 - `.gitlab/issue_templates/` for issue templates
 - `.gitlab/merge_request_templates/` for merge request templates
 
-A file named `Default.md` (case insensitive) in either directory is preselected automatically every time a contributor opens a new issue or merge request; every other filename in the directory appears as a named choice the contributor selects manually. At minimum, ship one file in each directory; name it `Default.md` if the project wants it to load without the contributor choosing anything.
+A file named `Default.md` (case insensitive) supplies the repository default template. Project settings and the parent group's default take precedence. Merge requests also have inheritance rules involving commit messages and branch names. Read the effective configuration, then open a new issue or merge request to verify which template appears. Other filenames remain choices the contributor selects manually. At minimum, ship one file in each directory.
 
 On Premium or Ultimate, a group can also designate one direct child project as the source of templates shared across the group's projects, configured in the group's settings rather than by a file path. Mention that option when the maintainer wants shared templates, but the per-project directories above satisfy R-COM-05 on their own.
 
@@ -90,3 +90,5 @@ Which tabs exist is controlled in Settings, General, under visibility and projec
 ## FUNDING.yml
 
 GitLab has no equivalent of `.github/FUNDING.yml` or a built-in sponsor button. A project that wants to surface funding links on GitLab has to put them in the README or a dedicated file such as `FUNDING.md`; that content decision belongs to whoever owns the README, not to a forge-recognized schema this skill can write against.
+
+Default-template precedence checked 2026-10-11 against https://docs.gitlab.com/user/project/description_templates/#priority-of-default-description-templates.

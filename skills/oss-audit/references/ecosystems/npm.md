@@ -11,7 +11,7 @@ Source: [package.json fields](https://docs.npmjs.com/cli/v12/configuring-npm/pac
 Three cases decide most arguments:
 
 - `"private": true` settles the shipped answer on its own. npm's own words: "If you set `"private": true` in your package.json, then npm will refuse to publish it." The manifest is still present.
-- A docs-only manifest, a `package.json` under `docs/`, `site/`, `www/`, or `examples/` whose whole job is building a page or an example, is present and not shipped. oss-kit itself is this case twice over: a root manifest marked `"private": true` for its maintenance scripts and a `site/package.json` that builds the docs, with a `bun.lock` beside each, which puts npm firmly on the present axis in a repository that publishes no package at all.
+- A docs-only manifest, a `package.json` under `docs/`, `site/`, `www/`, or `examples/` whose whole job is building a page or an example, is present and not shipped. oss-kit itself is this case twice over: a `tools/package.json` marked `"private": true` for its maintenance scripts and a `site/package.json` that builds the docs, with a `bun.lock` beside each, which puts npm firmly on the present axis in a repository that publishes no package at all.
 - A lockfile with no manifest beside it is present. So is a workspace root whose `package.json` carries only `workspaces` and `devDependencies`; each member answers the shipped question for itself.
 
 `npm-shrinkwrap.json` stays in the present list and no longer means what it used to. npm 12 removed the `npm shrinkwrap` command and stopped loading a file of that name, so one in a checkout today proves a dependency tree exists, which is all the present axis asks of it, and proves nothing about how that tree resolves. `oss-harden` treats it as a finding.

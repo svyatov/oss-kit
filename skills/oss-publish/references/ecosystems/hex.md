@@ -1,17 +1,15 @@
 # Hex
 
-Concrete flow for the decisions `SKILL.md` makes, for a package published to hex.pm. Hex documents no OIDC flow and no trusted publishing: CI authenticates with a `HEX_API_KEY` in an environment variable and nothing else. What Hex does offer, and what makes it different from Maven Central's account-scoped token, is a key that can be scoped to a single package. R-PUB-02's own clause admits that as below the bar but permitted, and this file's Step 2 is how to get there.
+Concrete flow for packages published to hex.pm. Use GitHub Workload Identity for an existing public package. Hex exchanges the job's OIDC token for a short-lived package token. Unsupported providers retain the scoped-key fallback below.
 
 Two Hex behaviours shape the workflow. `mix hex.publish` builds the tarball it uploads, so build and publish cannot be split across jobs the way they are for npm or RubyGems. And a published version can be replaced for one hour, after which it is fixed.
-
-Read Step 2 before running any command hex.pm's publishing guide gives for CI. That guide's key-generation command was removed from the Hex client in 2026 and the guide still carries it, so it is the one place in this file where the registry's own documentation is not the source to follow.
 
 Source: [Hex, Publishing a package](https://hex.pm/docs/publish), [Hex docs, mix hex.publish](https://hex.hexdocs.pm/Mix.Tasks.Hex.Publish.html), and [hexpm/hex, CHANGELOG](https://github.com/hexpm/hex/blob/main/CHANGELOG.md).
 
 ## Contents
 
 - [Gather facts (Step 1)](#gather-facts-step-1)
-- [Configure trusted publishing (Step 2): a scoped key, not a check](#configure-trusted-publishing-step-2-a-scoped-key-not-a-check)
+- [Configure trusted publishing (Step 2)](#configure-trusted-publishing-step-2)
 - [Write the hardened release workflow (Step 3)](#write-the-hardened-release-workflow-step-3)
 - [Gate on manual approval (Step 4)](#gate-on-manual-approval-step-4)
 - [Verify provenance (Step 5): a gap, not a check](#verify-provenance-step-5-a-gap-not-a-check)
@@ -32,13 +30,25 @@ A `404` means the name is free, or taken and private. An unpublished package can
 
 Note whether `mix.lock` is committed. It has to be, for the exposure in Step 3 to be bounded at all.
 
-## Configure trusted publishing (Step 2): a scoped key, not a check
+## Configure trusted publishing (Step 2)
 
-Hex has no OIDC flow, no trusted publishing, and no equivalent under another name. What CI authenticates with is a stored key in the `HEX_API_KEY` environment variable. This is the checked negative R-PUB-02's clause was written for, so report it as a registry limitation and not as an unconfigured feature.
+Use Workload Identity on GitHub. Use the scoped-key fallback only for unsupported providers or deployments where the feature is disabled.
 
-**Do not take the CI section of hex.pm's publishing guide at face value.** It documents `mix hex.user key generate --key-name ... --permission ...`, and that command no longer exists. Hex 2.4.0, released 2026-03-14, replaced password based authentication with an OAuth device flow, and the `key` subcommand went with it. On Hex 2.5.1 the task's source declares `@switches []` and accepts three subcommands only, `whoami`, `auth`, and `deauth`, so every invocation the guide gives fails with `--key-name : Unknown option`. Upstream's own `hex.organization` documentation still refers to "the `hex.user key` commands" in passing, which is the same staleness in a second place. `HEX_API_KEY` itself is unaffected: the client still reads it, as `api_key` in `lib/hex/state.ex`, so a stored key remains how CI authenticates and only the way one is created has moved.
+### GitHub workload identity
 
-Reported upstream as [hexpm/hexpm#1787](https://github.com/hexpm/hexpm/issues/1787), with the documentation fix in [hexpm/hexpm#1788](https://github.com/hexpm/hexpm/pull/1788). Where those have merged, the guide and this section agree again; where they have not, this section is the current one.
+The public package must already exist. Publish its first release interactively, then configure its workload identity as a full owner with two-factor authentication.
+
+Open the package's Workload identities tab. Set the GitHub repository owner and name, workflow filename `release.yml`, and approval environment `release`. Workflow names are case-sensitive. For a private GitHub repository, supply its numeric repository ID from `gh api repos/<owner>/<repo> --jq .id`. Hex binds the owner and repository IDs to prevent a recreated name from inheriting access.
+
+The publish job requests an OIDC token for Hex's advertised audience and exchanges it at `/api/oauth/token`. The returned token expires after 15 minutes and covers only the package named in the scope. Pass it to Mix as `HEX_API_KEY="Bearer <token>"`. Request a new OIDC token for each package exchange; a token cannot be exchanged twice.
+
+Private Hex packages use an organization workload identity with a write role and an explicit package list. Their exchange scope is `package:ORG/PACKAGE`. Unlike a public package identity, this can create a new private package. Read the organization-specific requirements before configuring that branch.
+
+Source: [official Workload Identity source](https://github.com/hexpm/hexpm/blob/main/lib/hexpm_web/templates/docs/workload_identity.html.md), checked 2026-10-11. The publishing page recommends this flow, but its linked `/docs/workload-identity` guide returned 404 on that date. Confirm the tab and exchange are enabled on the target deployment before calling setup complete. A missing tab can also mean the account lacks full ownership.
+
+### Scoped-key fallback
+
+GitLab and other providers have no supported Workload Identity flow. Use a package-scoped, expiring key there, behind the native approval gate. This remains the below-the-bar R-PUB-02 fallback; it is not the default for supported GitHub publishing.
 
 Generate the key in the browser, at `https://hex.pm/dashboard/keys`. The form asks for a name, an expiry, and a set of permissions, and it re-prompts for authentication before it will create one. Set the expiry from the presets, 7, 30, 60, 90, or 365 days, or a custom date, to the shortest value that fits the release cadence, and plan to rotate on that schedule. For permissions, do not tick the whole-API box: that reaches every package the account owns. Tick the single package under Packages instead, which the form lists from the packages the account owns and which records a `package` permission scoped to that name.
 
@@ -52,7 +62,6 @@ An organization publishing to its own repository takes a different command, and 
 
 Store the key as a GitHub Actions secret bound to the approval environment from Step 4, not as a repository secret, so it is unreadable by any workflow run that has not been approved. On GitLab CI/CD, store it as a variable that is masked, protected, and scoped to the protected environment.
 
-This sits below R-PUB-02's bar, because a scoped, long-lived key is still a credential that can leak, where an OIDC exchange stores nothing at all. It stays below it while Hex documents no OIDC flow, and it retires the day one ships. [hexpm/hexpm#1785](https://github.com/hexpm/hexpm/pull/1785), "feat: trusted publisher", is open and is the change to watch: it would move Hex onto the same track as npm and PyPI and make this whole section a fallback of last resort. Re-read the Hex client changelog and that pull request before each release process is written rather than treating the absence as settled.
 
 ## Write the hardened release workflow (Step 3)
 
@@ -60,14 +69,14 @@ This sits below R-PUB-02's bar, because a scoped, long-lived key is still a cred
 
 That is also why this is the one file in this directory with no `build` job. `SKILL.md`'s workflow shape gives every other ecosystem one, and here it would have nothing to hand on: `mix hex.publish` accepts no prebuilt tarball path. `mix hex.build` in the test job is the closest thing, and it exists to fail the release before the credentialed job runs rather than to produce an artifact for it.
 
-The exposure is specific to Elixir rather than generic. `mix` runs dependency code at compile time through macros, so a job that holds a long-lived Hex key while compiling the dependency tree hands that key's reach to every transitive dependency in it. Hex has no OIDC to shorten the key's life, so a dependency that reads the environment during compilation reads a credential that is valid until somebody revokes it. Treat that as a known residual and say so to the maintainer, rather than presenting the workflow below as a solved problem.
+Mix can execute dependency code during compilation. Workload Identity limits token lifetime but does not remove that exposure in the publish job. Install and compile dependencies before exchanging the token, and run only the required package publication afterward. With a stored-key fallback, malicious dependency code can steal a credential valid until expiry or revocation.
 
 Four controls bound it, and all four are already in this skill's vocabulary:
 
 - A job that does nothing but publish. No tests, no linting, no documentation build, no release-notes step. Those belong in the uncredentialed job above it.
 - `mix deps.get --check-locked` against a committed `mix.lock`, so the tree compiled in the credentialed job is the exact tree CI already compiled and tested without a key. R-SEC-08 is the rule, and its `Check:` asks for the frozen mode rather than the plain install, so a bare `mix deps.get` in a workflow this skill writes fails a rule the kit owns and an audit run afterwards will score it. `oss-harden` owns the lockfile itself.
-- The key scoped as narrowly as Hex permits, per Step 2, so what a compromised dependency gets is publish rights on one package rather than on the account.
-- The key held in an environment gated by R-PUB-04's approval, so it is not available to every workflow run.
+- A package-scoped workload token, or the narrowest fallback key from Step 2.
+- The publish job bound to R-PUB-04's approval environment, with the identity policy matching that environment.
 
 ```yaml
 name: Release
@@ -98,6 +107,7 @@ jobs:
     environment: release
     permissions:
       contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v7
         with:
@@ -107,22 +117,39 @@ jobs:
           version-file: .tool-versions
           version-type: strict
       - run: mix deps.get --check-locked
-      - run: mix hex.publish --yes
+      - run: mix deps.compile
+      - name: Exchange identity and publish
         env:
-          HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
+          HEX_PACKAGE: <name>
+        run: |
+          set -euo pipefail
+          AUDIENCE=$(curl -fsS https://hex.pm/api/oidc/audience | jq -er '.audience | select(type == "string" and length > 0)')
+          OIDC_TOKEN=$(curl -fsS \
+            -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${AUDIENCE}" \
+            | jq -er '.value | select(type == "string" and length > 0)')
+          printf '::add-mask::%s\n' "$OIDC_TOKEN"
+          ACCESS_TOKEN=$(curl -fsS -X POST https://hex.pm/api/oauth/token \
+            -H 'Content-Type: application/x-www-form-urlencoded' \
+            --data-urlencode 'grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer' \
+            --data-urlencode "assertion=$OIDC_TOKEN" \
+            --data-urlencode "scope=package:hexpm/$HEX_PACKAGE" \
+            | jq -er '.access_token | select(type == "string" and length > 0)')
+          printf '::add-mask::%s\n' "$ACCESS_TOKEN"
+          HEX_API_KEY="Bearer $ACCESS_TOKEN" mix hex.publish package --yes
 ```
 
 The version check is a file test rather than a property query, because `mix hex.build` names its output `<app>-<version>.tar` from the project configuration: if the tag and `mix.exs` disagree, the expected file is simply not there. Replace `<name>` with the package name from Step 1 and adapt the `v` prefix strip to the repository's actual tag format. `--dry-run` builds the package and runs the local checks without publishing, which is what moves every failure that is not the upload itself into the job with no key. `--yes` publishes without the confirmation prompts, which a non-interactive job cannot answer.
 
-`mix hex.publish` also builds and publishes documentation by running `mix docs`, so the credentialed job runs the documentation toolchain too unless the project splits the two. `mix hex.publish package` publishes the package alone and `mix hex.publish docs` the documentation alone; splitting them lets the docs build run in an uncredentialed job and keeps the credentialed one to the package upload. Offer that split rather than assuming it, because it costs a second key or a second approval.
+`mix hex.publish package` limits the credentialed step to package publication. Build documentation without credentials, and configure its publication separately if the project ships docs. A plain `mix hex.publish` also runs the documentation toolchain while credentials are present. Compilation before exchange reduces that window but cannot prove the publish command executes no project code.
 
 `oss-harden` pins every `uses:` line above to a commit SHA and sets the test job's minimal permissions. Cache nothing in either job: a restored build cache in a job that compiles dependencies and holds a publish key is the worst version of the exposure this section is about. On GitLab CI/CD the same two jobs apply, with `HEX_API_KEY` as a masked and protected variable and the publish job blocking and manual in a protected environment.
 
-If an existing workflow reads an account-wide `HEX_API_KEY` from repository secrets, replace it with the scoped key from Step 2 and tell the user to revoke the old one from the account's key list on hex.pm once the new flow is verified.
+After verifying Workload Identity, revoke an old stored `HEX_API_KEY`. For a fallback deployment, replace an account-wide key with the package-scoped key from Step 2 and revoke the old key.
 
 ## Gate on manual approval (Step 4)
 
-Pin the publish job to `environment: release` as above, and create that environment at `https://github.com/<owner>/<repo>/settings/environments/new` with required reviewers naming at least one person other than an automation account, and with `HEX_API_KEY` as an environment secret rather than a repository secret. Required reviewers work for public repositories on current GitHub plans; private or internal repositories need GitHub Enterprise Cloud. On GitLab Premium or Ultimate, use one blocking manual job in a protected environment.
+Pin the publish job to `environment: release` as above, and create that environment at `https://github.com/<owner>/<repo>/settings/environments/new` with required reviewers naming at least one person other than an automation account, and match that environment in the workload identity. Only the stored-key fallback needs `HEX_API_KEY` as an environment secret. Required reviewers work for public repositories on current GitHub plans; private or internal repositories need GitHub Enterprise Cloud. On GitLab Premium or Ultimate, use one blocking manual job in a protected environment.
 
 Create it with the API rather than the form. Reviewers and the tag policy are both settable, so nothing here needs a browser.
 
@@ -145,11 +172,11 @@ Three details decide whether that runs. `gh api` substitutes `{owner}` and `{rep
 
 Hex has no registry-side approval gate. The one-hour replacement window below is not one: it runs after the version is already public and installable, so it shortens the damage rather than preventing it. Report R-PUB-04 as unmet when the forge plan provides no native gate, rather than presenting the window as a substitute.
 
-The gate carries more weight here than in most of this directory, because it is also what keeps the long-lived key out of unapproved runs. An environment secret behind required reviewers is the difference between a key any workflow run can read and one only an approved release job can.
+The gate restricts both token issuance through the matched workload identity and access to any fallback environment secret.
 
 ## Verify provenance (Step 5): a gap, not a check
 
-hex.pm serves no build provenance. There is no attestation object, no signature on a published tarball, and nothing comparable to npm's `npm audit signatures` or PyPI's Integrity API. The Hex client changelog through `v2.5.2-dev` mentions no OIDC, trusted publishing, attestation, provenance, or Sigstore work at all, so read both before reporting, and treat the absence as current rather than as something nobody looked for.
+Workload Identity authenticates the publisher; it does not by itself supply a cryptographically verifiable artifact attestation. Hex's implementation records OIDC claims with the release, but do not treat those claims or its provenance display as a signed bundle. Verify an attestation for the exact consumer artifact as described below.
 
 Source: [Hex, Publishing a package](https://hex.pm/docs/publish) and [hexpm/hex, CHANGELOG](https://github.com/hexpm/hex/blob/main/CHANGELOG.md).
 
@@ -169,7 +196,7 @@ gh attestation verify <name>-<version>.tar --repo <owner>/<repo>
 
 hex.pm neither surfaces nor links to that attestation, and a consumer installing through `mix deps.get` never sees it, so it is worth less here than in an ecosystem whose registry serves the record. On GitLab CI/CD there is no equivalent forge attestation in this skill's scope at all.
 
-This sits below R-PUB-03, which asks for provenance tied to the exact published artifact and the workflow that built it. Report it as unmet with the registry limitation named. It retires the day hex.pm serves an attestation for a published release.
+Verify the exact published package against the expected repository and workflow through the forge attestation. Report R-PUB-03 as met only when that cryptographic verification succeeds, and name the registry-hosting limitation. Otherwise report it as unmet. A locally rebuilt artifact is not evidence for different bytes served by the registry.
 
 ## Describe and sign what the release attaches (Step 6)
 
@@ -179,7 +206,7 @@ This reference names no SBOM generator for Elixir. The ones in common use are th
 
 Two rules apply here and they ask for different things. R-PUB-05 wants that inventory. R-PUB-06 wants the assets signed, or listed by hash in a signed manifest. A manifest of hashes answers the second and nothing about the first, so do not report R-PUB-05 as met by publishing one.
 
-What answers R-PUB-05 without a generator, on GitHub, is the forge's own export of the repository's dependency graph, which is already SPDX and needs nothing installed and, in particular, nothing added to the credentialed job. The `gh api` step below writes it into `dist/`, so it ships as a release asset for R-PUB-05 and is listed in `SHA256SUMS` and attested alongside the assets for R-PUB-06, in a job after the publish so everything stays behind the approval gate:
+GitHub's SPDX dependency-graph export can supplement an artifact inventory without installing another tool. It does not establish R-PUB-05 coverage by itself. The `gh api` step below writes it into `dist/`, so it ships as supplementary release evidence and is listed in `SHA256SUMS` and attested alongside the assets for R-PUB-06, in a job after the publish so everything stays behind the approval gate:
 
 ```yaml
   github-release:
@@ -207,7 +234,7 @@ What answers R-PUB-05 without a generator, on GitHub, is the forge's own export 
           GH_TOKEN: ${{ github.token }}
 ```
 
-State both of the export's limits to the maintainer rather than leaving them to be discovered. It is GitHub only, so a GitLab project keeps this gap and R-PUB-05 stays unmet there with the reason named. And it covers the repository's declared dependency graph rather than what is inside the asset, which is close for a compiled release, because it is assembled from the applications in that same graph, and silent about the Erlang and Elixir runtime bundled beside them. The graph resolves past the direct dependencies only where `mix.lock` is committed, which R-SEC-08 already requires. Read the output back once with `gh api repos/<owner>/<repo>/dependency-graph/sbom --jq '.sbom.packages | length'` before reporting the rule met: a graph the forge does not parse for this ecosystem returns a near-empty package list rather than an error.
+The export describes the repository graph at the time of the request, not necessarily the tagged build or released asset. Read it back to detect an empty or unsupported graph, but a nonzero package count is not proof of coverage. Before passing R-PUB-05, verify that the inventory matches the exact release and includes every bundled dependency, runtime, and linked component. Otherwise generate an SPDX or CycloneDX inventory from the artifact or build, after vetting the required tool. If that coverage remains unproved, report R-PUB-05 unmet on either forge. A package declaration alone does not establish the contents of a compiled asset.
 
 `sha256sum` runs from inside `dist/` so the names it writes are the names the assets carry on the release. `subject-checksums` makes every file in the manifest a subject of the attestation in its own right, by name and digest; attesting `SHA256SUMS` itself with `subject-path` would leave a consumer able to verify the manifest and nothing about the assets it lists.
 
@@ -228,6 +255,7 @@ Treat this as a window and not as an undo. It is measured from the first publish
 
 Step 7 is in `SKILL.md`: read each R-PUB rule's `Check:` line against what this file produced, and fix what fails before reporting done.
 
-Step 2 is deliberately not verified against [Hex, Publishing a package](https://hex.pm/docs/publish), because that page is the document that is wrong. It is verified against the client and the hex.pm source instead.
+
+Workload Identity checked 2026-10-11 against [publishing](https://hex.pm/docs/publish) and the [official setup source](https://github.com/hexpm/hexpm/blob/main/lib/hexpm_web/templates/docs/workload_identity.html.md).
 
 Verified 2026-07-31 against the 2.4.0 entry in [hexpm/hex, CHANGELOG](https://github.com/hexpm/hex/blob/main/CHANGELOG.md), recording the OAuth device flow that replaced password authentication; [hexpm/hex, lib/mix/tasks/hex.user.ex](https://github.com/hexpm/hex/blob/main/lib/mix/tasks/hex.user.ex), which declares `@switches []` and dispatches `whoami`, `auth`, and `deauth` alone; [hexpm/hex, lib/hex/state.ex](https://github.com/hexpm/hex/blob/main/lib/hex/state.ex), which still reads `HEX_API_KEY`; [hexpm/hex, lib/mix/tasks/hex.organization.ex](https://github.com/hexpm/hex/blob/main/lib/mix/tasks/hex.organization.ex), which still documents `key ORGANIZATION generate` with `--key-name` and `--permission` and defaults to `repository:ORGANIZATION`; [hexpm/hexpm, lib/hexpm_web/controllers/dashboard/key_controller.ex](https://github.com/hexpm/hexpm/blob/main/lib/hexpm_web/controllers/dashboard/key_controller.ex), whose `create` action is routed at `/dashboard/keys`, whose `munge_expiry` accepts 7, 30, 60, 90, and 365 days or a custom date, and whose `munge_permissions` accepts a `package` domain per owned package; [Hex docs, mix hex.publish](https://hex.hexdocs.pm/Mix.Tasks.Hex.Publish.html); [Hex docs, mix hex.build](https://hex.hexdocs.pm/Mix.Tasks.Hex.Build.html); the package-domain validation in [hexpm/hexpm, lib/hexpm/accounts/key_permission.ex](https://github.com/hexpm/hexpm/blob/main/lib/hexpm/accounts/key_permission.ex); the authorization plug in [hexpm/hexpm, lib/hexpm_web/controllers/api/release_controller.ex](https://github.com/hexpm/hexpm/blob/main/lib/hexpm_web/controllers/api/release_controller.ex); and the `checksum` field returned by `https://hex.pm/api/packages/<name>/releases/<version>`.

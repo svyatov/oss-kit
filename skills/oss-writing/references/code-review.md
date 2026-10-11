@@ -30,3 +30,5 @@ suggestion: Batch the ids and run one query.
 Author:
 Fixed. Batched into a single query. Latency on the 500-row page dropped from 1.9s to 40ms.
 ```
+
+In a reply, lead with the decision. Keep the reason or evidence needed to assess it, and omit context already established in the visible thread. Do not assume shared context when the thread is unavailable.

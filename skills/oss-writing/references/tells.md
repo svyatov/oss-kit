@@ -14,8 +14,6 @@ The lexicon that marks prose as machine-written. Each row names a pattern and wh
 | Intensifiers and minimizers: `very`, `simply`, `just`, `easily`, `of course` | Delete. `simply` and `just` tell a stuck reader the thing they cannot do is easy, and `very` is a number the writer did not look up |
 | Empty contrast: `not just X, but Y`; `X rather than Y` where Y was invented for the sentence (`instead of returning a deck nobody asked for`). Tailing negation: `no guessing`, `no wasted motion` | State the positive claim and stop. Keep a contrast only when the alternative is real: a prior behavior, a live endpoint, a default the reader would hit |
 | Manufactured list length | List what actually exists |
-| Elegant variation: calling one thing `the handler`, then `the callback`, then `the routine` | One name per concept, every time, across the whole document. Match the identifier in the code and the string in the UI |
-| False ranges: `from linting to deployment` | Name the two things |
 | Passive or subjectless: `was refactored`, `no config needed` | Name the actor: `the loader now caches`, `you do not need a config file` |
 | Filler: `in order to`, `due to the fact that`, `has the ability to`, `it is important to note that`, `in the event that`, `at this point in time`, `it's worth noting that`, `please note`, `a number of` | `to`, `because`, `can`, `if`, `now`, a count, delete |
 | Generic closer, upbeat (`this improves maintainability going forward`) or defensive (`and that is the finding rather than a gap to paper over`) | Delete it |

@@ -129,4 +129,4 @@ List every skill you touched, the rule each change satisfies, and every fault th
 
 ## Upstream sources
 
-Use the current [Agent Skills specification](https://agentskills.io/specification), [creator best practices](https://agentskills.io/skill-creation/best-practices), [evaluation guide](https://agentskills.io/skill-creation/evaluating-skills), [description optimization guide](https://agentskills.io/skill-creation/optimizing-descriptions), and [script guide](https://agentskills.io/skill-creation/using-scripts). Recheck them before changing a rule because the format and host implementations continue to evolve.
+Use the current [Agent Skills specification](https://agentskills.io/specification.md), [creator best practices](https://agentskills.io/skill-creation/best-practices.md), [evaluation guide](https://agentskills.io/skill-creation/evaluating-skills.md), [description optimization guide](https://agentskills.io/skill-creation/optimizing-descriptions.md), and [script guide](https://agentskills.io/skill-creation/using-scripts.md). Recheck them before changing a rule because the format and host implementations continue to evolve.

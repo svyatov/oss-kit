@@ -26,9 +26,10 @@ import { pathToFileURL } from "node:url"
 /**
  * @param {string} text
  * @param {string} version
+ * @param {boolean} [keepHeading]
  * @returns {{heading: string, body: string} | null}
  */
-export function findSection(text, version) {
+export function findSection(text, version, keepHeading = false) {
   const wanted = version.replace(/^v/, "")
   const lines = text.split("\n")
   const isVersionHeading = (/** @type {string} */ line) => /^##\s+/.test(line)
@@ -55,9 +56,23 @@ export function findSection(text, version) {
     }
   }
 
-  // A link-reference block at the foot of the file is not part of any section.
-  const body = lines.slice(start + 1, end).filter((/** @type {string} */ line) => !/^\[[^\]]+\]:\s*\S/.test(line))
-  return { heading: lines[start] ?? "", body: body.join("\n").trim() }
+  // Definitions may live outside the selected section. Keep those referenced
+  // by its text, including the heading only when the caller will print it.
+  const definition = /^ {0,3}\[([^\]]+)\]:\s*\S/
+  const body = lines.slice(start + 1, end).filter((line) => !definition.test(line)).join("\n").trim()
+  const heading = lines[start] ?? ""
+  const normalize = (/** @type {string} */ label) => label.trim().replace(/\s+/g, " ").toLowerCase()
+  const used = new Set([...`${keepHeading ? heading : ""}\n${body}`.matchAll(/\[([^\]]+)\]/g)].map((m) => normalize(m[1] ?? "")))
+  const seen = new Set()
+  const definitions = lines.filter((line) => {
+    const match = definition.exec(line)
+    if (!match) return false
+    const label = normalize(match[1] ?? "")
+    if (!used.has(label) || seen.has(label)) return false
+    seen.add(label)
+    return true
+  })
+  return { heading, body: body === "" ? "" : [body, ...definitions].join("\n\n") }
 }
 
 if (pathToFileURL(process.argv[1] ?? "").href === import.meta.url) {
@@ -82,7 +97,7 @@ try {
   process.exit(2)
 }
 
-const section = findSection(text, version)
+const section = findSection(text, version, keepHeading)
 if (!section) {
   process.stderr.write(`${file} has no section for ${version}\n`)
   process.exit(2)

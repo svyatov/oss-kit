@@ -25,7 +25,9 @@ Sources: [actions/setup-java](https://github.com/actions/setup-java), [maven-com
 
 ## Dependency caching (R-CI-04)
 
-`actions/setup-java` has a `cache` input, off by default, accepting `maven`, `gradle`, and `sbt`. Its key has the form `setup-java-${platform}-${packageManager}-${fileHash}`, and the README lists the files behind that hash: `**/pom.xml`, `**/.mvn/wrapper/maven-wrapper.properties`, and `**/.mvn/extensions.xml` for Maven, and `**/*.gradle*`, `**/gradle-wrapper.properties`, `buildSrc/**/Versions.kt`, `buildSrc/**/Dependencies.kt`, `gradle/*.versions.toml`, and `**/versions.properties` for Gradle.
+`actions/setup-java` has a `cache` input, off by default, accepting `maven`, `gradle`, and `sbt`. Its key has the form `setup-java-<runner-os>-<node-arch>-<package-manager>-<file-hash>`, and the README lists the files behind that hash: `**/pom.xml`, `**/.mvn/wrapper/maven-wrapper.properties`, and `**/.mvn/extensions.xml` for Maven, and `**/*.gradle*`, `**/gradle.properties`, `**/gradle-wrapper.properties`, `buildSrc/**/Versions.kt`, `buildSrc/**/Dependencies.kt`, `gradle/*.versions.toml`, and `**/versions.properties` for Gradle.
+
+`node-arch` is the architecture of the runner's Node process. Cache-key inputs checked 2026-10-11 against the action README.
 
 The Maven half is the one to be honest about. Apache Maven publishes no lockfile format, and the roster records `files: []` for it. So there is nothing resolved to key on, and the cache is keyed on the build files that declare requirements instead. Where a `pom.xml` names a version range or a property another artifact resolves, the same key can serve a different dependency set than the one that filled it, and no CI change fixes that because there is no file recording what was resolved. Maven's own answers are upstream of CI: fixed versions, `dependencyManagement`, and the enforcer rule `banDynamicVersions`. Report this as an ecosystem-level limit rather than a keying mistake, and note that Maven Resolver's Trusted Checksums record a committed hash file under `.mvn/checksums/` that pins content without being a lockfile. A Maven lockfile format would retire it.
 

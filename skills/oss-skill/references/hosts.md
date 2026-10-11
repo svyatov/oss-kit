@@ -20,7 +20,7 @@ This file records what each host reads, verified against that host's own documen
 
 Source: the `vercel-labs/skills` README at `github.com/vercel-labs/skills`.
 
-Running `npx skills add <owner>/<repo>` checks the repository root, `skills/`, the curated and experimental collections below it, and the supported clients' skill directories, including `.agents/skills/` and `.claude/skills/`. It walks the normal flat layout and one extra catalog level. Use `--full-depth` to discover skills elsewhere rather than depending on an undocumented repository shape.
+Running `npx skills add <owner>/<repo>` checks the repository root, `skills/`, the curated and experimental collections below it, and the supported clients' skill directories, including `.agents/skills/` and `.claude/skills/`. It walks the normal flat layout and two extra category levels. Use `--full-depth` to discover skills elsewhere rather than depending on an undocumented repository shape.
 
 `--skill <name>` (short form `-s`) installs only the named skill or skills from the source instead of every skill found. `--list` prints what is available without installing anything.
 
@@ -36,11 +36,11 @@ Verified 2026-07-27 against the `main` branch of `vercel-labs/skills`.
 
 ## Antigravity
 
-Source: `antigravity.google/docs/skills` and `antigravity.google/docs/cli/plugins`.
+Source: `antigravity.google/docs/skills` and `antigravity.google/docs/plugins?tab=cli`.
 
 Antigravity scans `<workspace>/.agents/skills/` for project skills, the current default, and keeps `<workspace>/.agent/skills/` working for backward compatibility. At the user level it reads `~/.gemini/config/skills/`.
 
-Antigravity's CLI is `agy`. `agy plugin install` accepts a local filesystem path only; there is no documented git-URL form, so a repository has no command-line install path through Antigravity's plugin system.
+Antigravity's CLI is `agy`. `agy plugin install` supports an official marketplace plugin, a GitHub URL, or a local path. Use the source form documented for the plugin being installed.
 
 Antigravity scans `.agents/skills/`, not `.claude/skills/`.
 
@@ -58,7 +58,7 @@ A plugin marketplace is `.claude-plugin/marketplace.json` at a repository root, 
 
 Any folder under a skills directory that itself contains `.claude-plugin/plugin.json` loads automatically as a plugin named `<name>@skills-dir`, with no marketplace and no install step.
 
-Outside these tiers, Claude Code also documents an enterprise tier that applies to every user in an organization and takes precedence: when a skill name collides across tiers, enterprise overrides personal and personal overrides project. The skills documentation's own location table sends this tier to "see managed settings" instead of naming a path, and the managed settings documentation in turn names filesystem paths for `managed-settings.json` and `managed-mcp.json`, but none for skills. So a documented enterprise tier exists and outranks the others; the documentation names no filesystem path for where its skills live. That gives four tiers in total: personal, project, plugin, and enterprise.
+Enterprise skills take precedence over personal and project skills, and personal skills take precedence over project skills. Their filesystem location is `<managed-settings-directory>/.claude/skills/<skill-name>/SKILL.md`; the managed-settings directory depends on the platform. Claude Code also documents skills from additional directories and synced account sources. Read the current location table before treating this list as exhaustive.
 
 Claude Code scans `.claude/skills/`, not `.agents/skills/`.
 
@@ -153,3 +153,5 @@ Verified 2026-07-23.
 ## Keeping this current
 
 Every claim above carries the date it was verified. A host changing its loader after that date makes the row wrong, not merely stale: re-verify against that host's own documentation before trusting a section, rather than assuming the passage of time alone is the problem.
+
+CLI discovery depth, Antigravity install sources, and Claude Code enterprise locations checked 2026-10-11 against their sources above.

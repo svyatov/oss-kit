@@ -24,7 +24,7 @@ This sits below what a registry badge gives. A tag exists whether or not the pro
 go get MODULE
 ```
 
-That is the line for a module a reader imports. A module whose point is an executable shows `go install MODULE@latest` instead, which Go documents as building in module-aware mode and ignoring any `go.mod` in the current directory, so it installs the tool without touching the reader's own dependencies.
+That is the line for a module a reader imports. For an executable, locate its `main` package first, such as `example.com/module/cmd/tool`. The command package path can differ from the module root. A module whose point is an executable shows `go install COMMAND_PACKAGE@latest` instead, which Go documents as building in module-aware mode and ignoring any `go.mod` in the current directory, so it installs the tool without touching the reader's own dependencies.
 
 Take `MODULE` from the `module` line of `go.mod` rather than from the repository URL. At major version 2 and above the two differ: the path carries a `/v2` suffix that the clone URL does not, and a README that drops it names a module that does not exist.
 

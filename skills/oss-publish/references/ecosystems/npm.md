@@ -36,7 +36,7 @@ Enter:
 - Repository: the repository name from Step 1
 - Workflow filename: `release.yml`, the filename only, not the full path
 - Environment: the approval environment name from `SKILL.md` Step 4, for example `release`
-- Allowed actions: for one package in the release flow, enable `npm stage publish` and leave `npm publish` disabled. For several packages released together, enable `npm publish` and leave staged publishing disabled. Step 4 explains why the gate moves.
+- Allowed actions: for one package without public forge assets, enable `npm stage publish` and leave `npm publish` disabled. For multiple packages or any public forge assets, enable `npm publish` and leave staged publishing disabled. Step 4 configures the matching approval gate.
 
 In the workflow, the publish job needs:
 
@@ -74,7 +74,10 @@ id_tokens:
 
 ## Write the hardened release workflow (Step 3)
 
-The publish job installs no dependencies, uses no cache, and calls no third-party action beyond checkout, `actions/setup-node`, and `actions/download-artifact`; anything else running in that job could publish the package. Build the package in a separate job, upload the output as an artifact, and download it in the publish job:
+Before choosing the pack command, inspect the existing package manager, workspace protocols, and packing hooks. For pnpm `workspace:` dependencies or `.pnpmfile.cjs` `beforePacking` hooks, use the project's frozen pnpm install and pack commands in the uncredentialed build job. Verify the package name, version, and rewritten dependency fields inside the resulting tarball. Hand that exact tarball to the publish job. The npm example below applies when npm can reproduce the project's packaging behavior; do not switch the credentialed client without establishing a separate need.
+
+
+The publish job installs no dependencies, uses no cache, and calls no third-party action beyond checkout, `actions/setup-node`, and `actions/download-artifact`; anything else running in that job could publish the package. Build the package in a separate job, upload the output as an artifact, and download it in the publish job. This example uses direct publishing behind Step 4's forge approval gate, which also covers Step 6's release assets. For one package without forge assets, Step 4 gives the staged-publishing variant.
 
 ```yaml
 name: Release
@@ -133,12 +136,12 @@ jobs:
           node-version: '24.21.0'
           registry-url: 'https://registry.npmjs.org'
           package-manager-cache: false
-      - run: npm stage publish ./package/*.tgz --ignore-scripts
+      - run: npm publish ./package/*.tgz --ignore-scripts
 ```
 
-The version comparison assumes tags such as `v1.2.3`; derive the comparison from the repository's actual tag format. `npm pack` creates the exact tarball handed to `npm stage publish`, so the credentialed job does not check out source, install dependencies, or rebuild. `package-manager-cache: false` prevents `setup-node` from automatically restoring a package-manager cache in the credentialed job.
+The version comparison assumes tags such as `v1.2.3`; derive the comparison from the repository's actual tag format. `npm pack` creates the exact tarball handed to the publish command. The credentialed job does not check out source, install dependencies, or rebuild. `package-manager-cache: false` prevents `setup-node` from automatically restoring a package-manager cache in the credentialed job.
 
-`oss-harden` pins every `uses:` line above to a commit SHA and sets the test and build jobs' minimal permissions, including the `contents: read` this skill left off them; do not pin them or narrow them here. This skill writes only the grants a job needs to authenticate, to publish, and to attest: the publish job's two above, and the github-release job's four in Step 6. On GitLab CI/CD, use separate test and build jobs, pass the resulting `.tgz` as an artifact, and make the publish job run only `npm stage publish ./package/*.tgz --ignore-scripts`. Give that job `environment: name: release` plus the `id_tokens` block from Step 2. Add `when: manual` only when Step 4 selects the forge gate.
+`oss-harden` pins every `uses:` line above to a commit SHA and sets the test and build jobs' minimal permissions, including the `contents: read` this skill left off them; do not pin them or narrow them here. This skill writes only the grants a job needs to authenticate, to publish, and to attest: the publish job's two above, and the github-release job's four in Step 6. On GitLab CI/CD, use separate test and build jobs and pass the resulting `.tgz` as an artifact. Run only the direct or staged publish command selected in Step 4. Give that job `environment: name: release` plus the `id_tokens` block from Step 2. For the forge gate, set `when: manual` and `allow_failure: false` on the protected environment's publish job.
 
 If an existing workflow uses `secrets.NPM_TOKEN`, remove it from the YAML now and tell the user to delete the corresponding secret and revoke the token once the new flow is verified.
 
@@ -146,34 +149,40 @@ Where a release tool already owns the release, keep it and fit the publish job i
 
 ## Gate on manual approval (Step 4)
 
-For one package, use npm staged publishing as the publication gate. Keep `environment: release` as part of the trusted-publisher identity and restrict it to version tags. Configure no required reviewer on the environment.
+For multiple packages or any public forge assets, use one forge gate before direct publication. Configure every trusted publisher for `npm publish` and disable staged publishing. Run one `npm publish ./package/<tarball>.tgz --ignore-scripts` command per package. On GitHub, add a required reviewer to `release`. On GitLab Premium or Ultimate, protect `release` and make the publish job blocking and manual. Asset-upload jobs must depend on successful completion of that publish job, without `always()` or another condition that bypasses failure. Do not add a second approval to the asset-upload job.
 
-Create a new environment and its tag policy with the API:
+GitHub required reviewers are available for public repositories on all plans. Private repositories need GitHub Enterprise for this gate. If the native gate is unavailable, report R-PUB-04 unmet for a flow that publishes forge assets.
+
+For GitHub's forge gate, create a new environment with a required reviewer and tag policy:
 
 ```sh
 ENV=release
+GHUID=$(gh api users/REVIEWER_LOGIN --jq .id)  # replace REVIEWER_LOGIN with the chosen reviewer
 gh api -X PUT "repos/{owner}/{repo}/environments/$ENV" \
   -F wait_timer=0 \
   -F prevent_self_review=false \
+  -f 'reviewers[][type]=User' -F "reviewers[][id]=$GHUID" \
   -F 'deployment_branch_policy[protected_branches]=false' \
   -F 'deployment_branch_policy[custom_branch_policies]=true'
 gh api -X POST "repos/{owner}/{repo}/environments/$ENV/deployment-branch-policies" \
   -f 'name=v*' -f type=tag
 ```
 
-Two details decide whether that runs. `gh api` substitutes `{owner}` and `{repo}` from the checkout it runs in. Use `-F` for booleans because `-f` sends every value as a string and the endpoint rejects a quoted boolean.
+`gh api` substitutes `{owner}` and `{repo}` from the checkout it runs in. Use `-F` for booleans and the numeric reviewer ID. A team reviewer needs `type=Team` and that team's ID.
+
+For one package without public forge assets, use npm staged publishing as the publication gate. Replace the example's publish command with `npm stage publish ./package/*.tgz --ignore-scripts`. Keep `environment: release` as part of the trusted-publisher identity and restrict it to version tags. Configure no required reviewer on a new environment for this branch; omit the reviewer lookup and reviewer fields above. Preserve an established gate until the maintainer accepts its removal.
 
 The registry-level gate is npm's staged publishing: the workflow runs `npm stage publish`, which uploads the package to a staging area without requiring 2FA, and a maintainer then runs `npm stage approve <stage-id>` from the CLI or approves it on npmjs.com, which does require 2FA. Because the trusted publisher above only allows `npm stage publish` and not `npm publish`, no run of this workflow, compromised or not, can ship a version without that 2FA step. Also set publishing access at `https://www.npmjs.com/package/<name>/access` to "Require two-factor authentication and disallow tokens", which revokes any existing publish token; warn the user first if another automation still uses one.
 
-For several packages released by one event, npm creates one stage and one approval per package. Use one forge gate for the complete flow. Configure every trusted publisher for `npm publish`, run one `npm publish ./package/<tarball>.tgz --ignore-scripts` command per package, and disable staged publishing. On GitHub, add a required reviewer to `release`. On GitLab Premium or Ultimate, protect `release` and make the publish job blocking and manual. This keeps the release at one human action.
+npm creates one stage and one approval per package. A completed staging job has not passed npm's approval step and cannot authorize a public asset upload.
 
-If an established flow has both forge review and staged approval, preserve both until the maintainer accepts a migration. Report how many actions the flow requires and recommend the branch above that matches its package count.
+If an established flow has both forge review and staged approval, preserve both until the maintainer accepts a migration. Report how many actions the flow requires. Select the branch above from both its package count and public asset inventory.
 
-Source: [npm Docs, Staged publishing for npm packages](https://docs.npmjs.com/staged-publishing/).
+Approval scope checked 2026-10-11 against [npm staged publishing](https://docs.npmjs.com/staged-publishing/) and [GitHub deployment environments](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments).
 
 ## Verify provenance (Step 5)
 
-When publishing a public package from a public GitHub or GitLab repository through trusted publishing, npm generates a provenance attestation automatically; no `--provenance` flag is needed. npm does not generate provenance for a private repository, even when the package is public. After approval publishes the staged version, verify the exact installed version in a clean temporary project. This runs on the maintainer's own machine and needs the npm CLI version named at the top of this file, not the one the workflow used:
+When publishing a public package from a public GitHub or GitLab repository through trusted publishing, npm generates a provenance attestation automatically; no `--provenance` flag is needed. npm does not generate provenance for a private repository, even when the package is public. After direct publication or staged approval, verify the exact installed version in a clean temporary project. This runs on the maintainer's own machine and needs the npm CLI version named at the top of this file, not the one the workflow used:
 
 ```bash
 npm install <name>@<version> --ignore-scripts
@@ -205,7 +214,7 @@ npm generates the bill of materials itself, so no third-party tool enters the re
 
 Name `--omit=dev` rather than relying on the default. `npm sbom` omits development dependencies only when `NODE_ENV` is `production`, so the default describes the build environment rather than what a consumer installs. Where the job has a lockfile but no `node_modules`, add `--package-lock-only`.
 
-Attach and attest in a third job, after the publish job:
+This flow requires Step 4's forge gate and direct npm publication. Attach and attest in a third job, after the approved publish job succeeds:
 
 ```yaml
   github-release:
@@ -237,7 +246,7 @@ The two attestation steps are not a duplicate. `actions/attest` generates SLSA b
 
 `gh release upload` fails when no release exists for the tag. Either create it in this job with `gh release create "$GITHUB_REF_NAME" --generate-notes` before the upload, or have the maintainer publish the release from the tag first. This reference does not choose between them, because release notes are the project's own.
 
-A third job is what makes the grants above safe, so copy the job boundary along with them. The build job runs `npm ci` and `npm run build`, so giving it release-asset writes and an attestation identity is exactly the credential split Step 3 exists to enforce, and it would write assets before the approval gate. The publish job holds the registry identity and runs nothing beyond the actions Step 3 names. Only a separate job satisfies both, and `needs: [publish]` is what keeps the assets behind the gate.
+A third job preserves the credential split, so copy the job boundary along with it. The build job runs project code and must not upload release assets before approval. The publish job holds the registry identity and runs only the actions Step 3 permits. With Step 4's forge gate, `needs: [publish]` places asset upload after approval and successful direct publication. That dependency alone cannot wait for approval of an npm stage. Keep the asset job's default success condition and omit another environment approval.
 
 The four grants above are copied exactly, on this job only. The workflow's top-level block stays `contents: read`. Narrowing anything else, pinning each `uses:` to a commit SHA, and auditing the result are `oss-harden`'s.
 
@@ -247,7 +256,7 @@ A trusted publisher is configured on the package's npm settings page, which does
 
 ## Monorepo packages
 
-Every public workspace package needs its own trusted publisher entry pointing at the same repository and workflow filename; a package left out stays unprotected. `npm stage` is unaware of workspaces. Independently tagged packages are separate release flows, so each can use staged publishing and one npm approval. Packages released together use direct publishing behind one forge gate, because staging requires one approval per package. Pack every package in the build job and publish each tarball explicitly. Match each independently versioned job's tag trigger and version check to that package. `npm sbom --workspace <name>` scopes Step 6's bill of materials to one of them.
+Every public workspace package needs its own trusted publisher entry pointing at the same repository and workflow filename; a package left out stays unprotected. `npm stage` is unaware of workspaces. Independently tagged packages are separate release flows. Each can use staged publishing only when its flow has no public forge assets. Packages released together, or with public forge assets, use direct publishing behind one forge gate. Pack every package in the build job and publish each tarball explicitly. Match each independently versioned job's tag trigger and version check to that package. `npm sbom --workspace <name>` scopes Step 6's bill of materials to one of them.
 
 ## Why this file never reaches for a token
 

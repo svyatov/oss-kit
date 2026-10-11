@@ -30,9 +30,9 @@ Sources: [erlef/setup-beam](https://github.com/erlef/setup-beam), [Mix.Project](
 
 ## Dependency caching (R-CI-04)
 
-Hex documents no cache directory to reuse, and `erlef/setup-beam` has no cache input. The action's README describes installing OTP, Elixir, Gleam, `rebar3`, and `local.hex`, with version resolution, problem matchers, and platform support, and no caching of anything. Hex's own FAQ and the `mix hex` task documentation cover configuration, publishing, and ownership, and name no local cache path and no `HEX_HOME`.
+Hex documents `HEX_HOME`, defaulting to `~/.hex`, as the directory holding its cache and configuration. This does not establish that the entire directory is safe to cache. `erlef/setup-beam` has no cache input.
 
-Source: [erlef/setup-beam](https://github.com/erlef/setup-beam), [Hex FAQ](https://hex.pm/docs/faq), [mix hex](https://hex.hexdocs.pm/Mix.Tasks.Hex.html).
+Source: [Hex configuration](https://hex.hexdocs.pm/Mix.Tasks.Hex.Config.md), [erlef/setup-beam](https://github.com/erlef/setup-beam), [Hex FAQ](https://hex.pm/docs/faq), [mix hex](https://hex.hexdocs.pm/Mix.Tasks.Hex.html).
 
 The strongest documented fallback is an explicit cache over the two directories Mix does document, keyed on the lockfile Mix names: `:deps_path` defaults to `deps`, `:build_path` defaults to `_build`, and `:lockfile` defaults to `mix.lock`. Both are inside the project directory, so this shape works unchanged on GitLab.
 
@@ -45,7 +45,7 @@ The strongest documented fallback is an explicit cache over the two directories 
     key: ${{ runner.os }}-otp${{ matrix.otp }}-elixir${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
 ```
 
-Both directories hold fetched sources and compiled BEAM files rather than package-manager download data, so this sits below the bar R-CI-04 sets and needs the OTP and Elixir versions in the key, since compiled artifacts are not portable across them. Hex documenting a download cache path, or `setup-beam` gaining a cache input keyed on `mix.lock`, would retire the gap.
+Both directories hold fetched sources and compiled BEAM files rather than package-manager download data, so this sits below the bar R-CI-04 sets and needs the OTP and Elixir versions in the key, since compiled artifacts are not portable across them. An upstream-documented cache-only path suitable for reuse, or `setup-beam` gaining a cache input keyed on `mix.lock`, would retire the gap.
 
 Sources: [Mix.Project](https://mix.hexdocs.pm/Mix.Project.html), [GitLab CI/CD YAML reference, cache](https://docs.gitlab.com/ci/yaml/#cachepaths).
 
@@ -56,5 +56,8 @@ Sources: [Mix.Project](https://mix.hexdocs.pm/Mix.Project.html), [GitLab CI/CD Y
 The command is declared by the layout rather than by a line in `mix.exs`, so read for the directory and the `_test.exs` files. A project that has moved its tests declares `test_paths` in the project list, and a project with an alias, such as an `aliases` entry mapping `test` to a setup step plus `test`, has already written the command CI should call.
 
 Sources: [mix test](https://mix.hexdocs.pm/Mix.Tasks.Test.html).
+
+
+Cache location checked 2026-10-11 against https://hex.hexdocs.pm/Mix.Tasks.Hex.Config.md.
 
 Verified 2026-07-31 against https://github.com/erlef/setup-beam, https://mix.hexdocs.pm/Mix.Project.html, https://mix.hexdocs.pm/Mix.Tasks.Test.html, https://hex.pm/docs/faq, https://hex.hexdocs.pm/Mix.Tasks.Hex.html, https://github.com/erlef/docker-elixir, and https://docs.gitlab.com/ci/yaml/.

@@ -88,8 +88,22 @@ test("extracts one version's section and stops at the next heading", () => {
   expect(section?.body).not.toContain("unreleased")
 })
 
-test("drops the link-reference block, which belongs to no section", () => {
+test("drops reference definitions unused by the selected release", () => {
   expect(findSection(CHANGELOG, "1.1.0")?.body).toBe("### Fixed\n\n- older thing")
+})
+
+test("keeps document-level reference destinations used by release notes", () => {
+  const text = CHANGELOG.replace("- a thing", "- See [migration guide][Migration] and [#123].") + `
+[migration]: https://example.com/migrate "Migration guide"
+[#123]: https://example.com/issues/123
+[unused]: https://example.com/unused
+`
+  const body = findSection(text, "1.2.0")?.body
+  expect(body).toContain('[migration]: https://example.com/migrate "Migration guide"')
+  expect(body).toContain("[#123]: https://example.com/issues/123")
+  expect(body).not.toContain("[unused]:")
+  expect(body).not.toContain("[1.2.0]:")
+  expect(findSection(text, "1.2.0", true)?.body).toContain("[1.2.0]: https://example.com/compare/")
 })
 
 test("returns nothing for a version the file does not carry", () => {

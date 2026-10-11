@@ -60,10 +60,10 @@ There is a changelog and it declares a different convention, or an earlier versi
 
 ### Step 3: Read the merged work since the last tag
 
-List the commits that landed after the newest tag:
+Resolve the previous release tag for this release unit. For its first release, use `git log --oneline HEAD`. Otherwise, confirm the prior tag is available locally, then list the commits after it. If a shallow checkout lacks a known release tag, retrieve that tag and history before continuing:
 
 ```bash
-git log --oneline "$(git describe --tags --abbrev=0)"..HEAD
+git log --oneline <confirmed-prior-tag>..HEAD
 ```
 
 `git describe --abbrev=0` suppresses the long format and prints the closest tag alone, and `--tags` makes it match a lightweight tag as well as an annotated one, so the range starts at the last release whichever kind the project pushes.

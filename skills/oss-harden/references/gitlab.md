@@ -6,6 +6,11 @@ Ten `curl` invocations appear below. Seven read: the protected branch, the appro
 
 ## Contents
 
+- [Credential requirements](#credential-requirements)
+- [Updater coverage and delay](#updater-coverage-and-delay)
+- [Signed-tag verification procedure](#signed-tag-verification-procedure)
+- [Untrusted input procedure](#untrusted-input-procedure)
+
 - [Read the current state (Step 2)](#read-the-current-state-step-2)
 - [No marketplace-action analogue; pin images and includes instead (R-SEC-06)](#no-marketplace-action-analogue-pin-images-and-includes-instead-r-sec-06)
 - [Inbound job token scope (R-SEC-06)](#inbound-job-token-scope-r-sec-06)
@@ -44,7 +49,7 @@ curl --header "PRIVATE-TOKEN: $TOKEN" \
   "https://gitlab.example.com/api/v4/projects/:id"
 ```
 
-Require at least one applicable rule with `approvals_required` of 1 or more on paid tiers, and require `only_allow_merge_if_pipeline_succeeds` to be `true`.
+Require at least one applicable rule with `approvals_required` of 1 or more on paid tiers where two or more principals can merge. Require `only_allow_merge_if_pipeline_succeeds` to be `true`.
 
 Read the inbound job-token scope and allowlist separately, per R-SEC-06:
 
@@ -110,13 +115,13 @@ GitLab Dependency Scanning finds known-vulnerable dependencies already in use; i
 
 Before adopting Renovate, review its documented trust model: a self-hosted Renovate instance must trust developers of the repositories it monitors and needs credentials for GitLab plus GitHub.com access for changelogs and tools. Store credentials as masked and hidden CI/CD variables, protect them where the schedule runs only on protected refs, and use the narrowest token and repository scope the documented runner supports. Enable only the managers the repository needs. Renovate's `gitlabci` manager covers images, services, and components; verify any additional manager against its current official documentation.
 
-R-SEC-14 is `minimumReleaseAge` in the same configuration. It takes a duration string rather than a number, so `"minimumReleaseAge": "7 days"` and `"1 week"` both parse, and it defaults to `null`, which is no delay at all. Renovate has no platform default standing behind that key the way Dependabot's three days stands behind `cooldown`, so a Renovate configuration missing it has the window open rather than a control left unwritten. Report it that way. Renovate handles a vulnerability alert through a separate option, `minimumReleaseAgeBehaviour`, so the delay does not have to be qualified to keep a security fix prompt. Renovate's `config:best-practices` preset reaches the setting through `security:minimumReleaseAgeNpm`, which waits until an npm package is three days old, so a repository extending that preset may satisfy the rule for npm without an explicit key and satisfy it for nothing else. Resolve the configuration rather than reading the file alone before reporting the key missing, and check which ecosystems the resolved value actually covers before reporting it present. A `packageRules` entry setting its own `minimumReleaseAge` overrides the top-level value for everything it matches, which is the Renovate form of the hollow cooldown `references/github.md` describes on the Dependabot side. Read the rules as well as the top-level key.
+R-SEC-14 is `minimumReleaseAge` in the same configuration. It takes a duration string rather than a number, so `"minimumReleaseAge": "7 days"` and `"1 week"` both parse, and it defaults to `null`, which is no delay at all. Renovate has no platform default standing behind that key the way Dependabot's three days stands behind `cooldown`, so a Renovate configuration missing it has the window open rather than a control left unwritten. Report it that way. `minimumReleaseAgeBehaviour` controls releases with missing timestamps. Check the resolved vulnerability-update configuration separately. The documented GitHub `vulnerabilityAlerts` defaults set `minimumReleaseAge` to `null`; this does not establish GitLab behavior. For GitLab OSV alerts, inspect the resolved update and confirm its security fix is not delayed before claiming that exemption. Renovate's `config:best-practices` preset reaches the setting through `security:minimumReleaseAgeNpm`, which waits until an npm package is three days old, so a repository extending that preset may satisfy the rule for npm without an explicit key and satisfy it for nothing else. Resolve the configuration rather than reading the file alone before reporting the key missing, and check which ecosystems the resolved value actually covers before reporting it present. A `packageRules` entry setting its own `minimumReleaseAge` overrides the top-level value for everything it matches, which is the Renovate form of the hollow cooldown `references/github.md` describes on the Dependabot side. Read the rules as well as the top-level key.
 
 ## Branch protection and required review (R-SEC-04, R-SEC-12)
 
 Give the user the resolved URL: `https://gitlab.com/{namespace}/{project}/-/settings/repository` (swap the host for a self-managed instance) for protected branches, and `https://gitlab.com/{namespace}/{project}/-/settings/merge_requests` for approval rules and merge checks.
 
-Protected branches, including blocking force pushes and restricting who can push directly, are available on every GitLab tier. Restricting "Allowed to push and merge" to a small group is what makes a merge request the only path onto the branch, which is what R-SEC-04 asks for, and it needs no paid tier.
+Protected branches, including blocking force pushes and restricting who can push directly, are available on every GitLab tier. Set "Allowed to push and merge" to "No one" and grant the intended maintainers merge access separately. This makes merge requests the only path onto the branch, as R-SEC-04 requires, without a paid tier.
 
 Enforced merge request approval rules, the setting that actually blocks a merge until a named number of people approve, need GitLab Premium or Ultimate; on Free, any Developer can approve a merge request but nothing stops a merge with zero approvals. This reaches only a project R-SEC-12 applies to, meaning one with two or more members at Developer or above. Where such a project is on Free, say plainly that required review is not available at the platform level, and record the rule as unmet by the tier rather than by the maintainer; the protected-branch restriction above is already in place for R-SEC-04 and is the strongest control the tier has. Revisit it if the project upgrades tier. A project with a single member needs no fallback here, because the rule does not reach it.
 
@@ -124,7 +129,7 @@ Also on Free, GitLab does not read CODEOWNERS for merge request approval at all;
 
 "Pipelines must succeed," the setting that blocks a merge while the pipeline is failing, is available on every tier, at Settings > Merge requests > Merge checks; turn it on regardless of what the approval rule situation allows.
 
-After the user confirms each setting, repeat all three reads from Step 2. Check `allow_force_push` is `false`, direct push is explicitly `No one`, `only_allow_merge_if_pipeline_succeeds` is `true`, and, on Premium or Ultimate, an applicable approval rule requires at least one approval.
+After the user confirms each setting, repeat all three reads from Step 2. Check `allow_force_push` is `false`, direct push is explicitly `No one`, `only_allow_merge_if_pipeline_succeeds` is `true`, and, on Premium or Ultimate where two or more principals can merge, an applicable approval rule requires at least one approval.
 
 Push rules, the project-level settings that reject unsigned commits, enforce a commit message or branch name pattern, or block secret filenames, are a separate, Premium-or-Ultimate-only control at Settings > Repository > Push rules; they are not required by any R-SEC rule here, so mention them as an available option on a project with that tier rather than a gap on a project without it.
 
@@ -172,7 +177,7 @@ Match the pattern to what the project actually tags. GitLab's wildcards work on 
 
 Naming groups or individual users under "Allowed to create" needs Premium or Ultimate. Selecting a role is available on Free, so a Free project reaches this rule with `create_access_level` set to Maintainer and does not need a fallback.
 
-The update and deletion half needs no setting, and is worth stating precisely rather than claiming as configuration. GitLab documents no force-update or overwrite toggle for a protected tag, the way a protected branch carries `allow_force_push`; blocking update and deletion is what protecting the tag does. So the whole of the evidence here is the one read above: an entry whose `name` covers the release pattern, with a `create_access_levels` set naming the principals the project means.
+GitLab documents no force-update toggle for a protected tag. Protection restricts updates and deletion, but principals in "Allowed to create" can delete protected tags. Read back the release pattern and `create_access_levels`, and report that remaining deletion capability explicitly. This configuration does not establish the deletion immutability provided by GitHub's separate ruleset with no bypass actors.
 
 This sits beside R-SEC-05 rather than replacing it. A signature says who cut the tag; protection keeps the tag on the commit they cut.
 
@@ -236,8 +241,35 @@ Dependency Scanning is Ultimate, and so is the dependency list that would show w
 
 For that job, use a scanner that reads the project's committed lockfiles against a public advisory database and fails on what the merge request introduces, while a scheduled pipeline runs the repository-wide scan that only reports. GitLab has no dependency graph of its own on Free, so there is no coverage comparison to run the way there is on GitHub; the scanner's own lockfile support is the coverage, and it should be checked against every lockfile the project commits.
 
-Where the project already runs Renovate for R-SEC-03, its `osvVulnerabilityAlerts` option checks dependencies against the OSV database and defaults to `true`, so that half may already be in place. It raises update merge requests rather than gating one, so it does not on its own satisfy the requirement that a vulnerability the change introduces blocks its merge.
+Where the project already runs Renovate for R-SEC-03, its `osvVulnerabilityAlerts` option checks dependencies against the OSV database and defaults to `false`. Confirm it is enabled before counting its coverage of direct dependencies in supported datasources. Retain a lockfile scanner for transitive dependencies. It raises update merge requests rather than gating one, so it does not on its own satisfy the requirement that a vulnerability the change introduces blocks its merge.
 
 ## Read OpenSSF Scorecard results (Step 13)
 
 OpenSSF's current weekly public dataset derives its project list from GitHub only, and its GitHub Action is the documented path for publishing repository-owned results to the REST API. Do not claim a GitLab project has current public API coverage without a successful dated response. If a result exists, report its date and use it only as supplementary evidence. If it does not, report no public result. Running the CLI is a separate task that requires installation and authentication, so do not add or run it unless the user asks.
+
+Protected-tag deletion and Renovate vulnerability options checked 2026-10-11 against [protected tags](https://docs.gitlab.com/user/project/protected_tags/) and [Renovate configuration](https://docs.renovatebot.com/configuration-options/).
+
+## Credential requirements
+
+On GitLab, an audit-only run and a repair run need different tokens, and the difference is worth keeping. The read set clears with a token carrying the `read_api` scope, which GitLab documents as read access to the API. The write set needs `api`, which GitLab documents as complete read and write access. Provision the read-only token for a sweep that only reports, so a run auditing the settings cannot rewrite them.
+
+Scope is not the whole answer, because several project-settings reads carry a role floor of their own. GitLab documents the job-token scope reads as needing the Maintainer or Owner role, and the security-settings read as needing Security Manager, Developer, Maintainer, or Owner. Both writes, the job-token allowlist and the security settings, need Maintainer or Owner. So a read-only sweep still needs a Maintainer token; do not assume the reads clear at a lower role than the writes.
+
+Read a refusal carefully. GitLab documents 403 as a request that is not allowed and 404 as a resource that could not be accessed, which its own wording extends to a user who is not authorized to reach it. A read denied for role reasons can therefore answer 404, which reads like a control that is off and is not. Report it as unknown.
+
+Supply the token from an environment variable read from the operator's own secret store, and never inline it. A token pasted into a command lands in shell history and in whatever transcript the run produces, which turns one audit into a leaked credential.
+
+## Updater coverage and delay
+
+Pinning freezes a reference until something unfreezes it; R-SEC-03 requires an updater covering both the project's application dependencies and its CI dependencies, on both forges. On GitHub, Dependabot's `github-actions` ecosystem is what proposes the SHA and comment update for every workflow this skill just pinned, so a `dependabot.yml` this skill writes or edits needs that ecosystem alongside one entry for every ecosystem the manifests read in Step 2 declare; a `dependabot.yml` that updates the package manager but leaves out `github-actions` re-freezes the actions the moment they are pinned. On GitLab, there is no equivalent of Dependabot shipped by the platform; the reference file names the documented alternative and what running it costs. Where a Renovate configuration already exists on either forge, extend its `packageRules` or presets rather than adding a competing Dependabot config; ask before replacing one updater with the other.
+
+The same configuration answers R-SEC-14, which asks the updater to wait before proposing a version that was published minutes ago. Add a `cooldown` block with `default-days` to `dependabot.yml`, or `minimumReleaseAge` to a Renovate configuration, and set it in days rather than hours: the window this closes is the one between a compromised publish and somebody noticing, which the incidents it exists for have taken hours to close. The two updaters start from different places, so say which one the user is on. Renovate waits zero days until the key is set, and that repository has the window open today. Dependabot already delays a version update by three days on its own, so writing the number pins a value the platform chose and can change again, and gives the next reader a decision to audit. Write at least that three days there, because a smaller number shortens the delay. Then check what the setting reaches: a Dependabot `include` or `exclude` list and a Renovate `packageRules` override both leave a configuration that reads as set and covers little. The reference files carry the resolution rules for each. Dependabot exempts security updates. For Renovate, verify the resolved vulnerability-update configuration for the actual platform and alert source before claiming that exemption. Where the repository has no updater at all, R-SEC-03 is the finding and this rule is not a second one.
+
+
+## Signed-tag verification procedure
+
+R-SEC-05 applies the same way on both forges, because the evidence comes from git itself, not from a forge API. Fetch the tags, then establish what the tag is before reaching for any key: `git cat-file -t <tag>` must print `tag`, and one `git for-each-ref` read returns the tagger's address and the signature format together. Only then resolve which account publishes the key and fetch it; the repository owner is that account only when the owner is a user, and neither the release publisher nor the tagged commit's author is a substitute, because either can differ from the tagger. Support OpenPGP, SSH, and X.509 signatures instead of assuming every maintainer uses GPG. Fetching a key by account proves publication and not control, so neither that fetch nor either forge's UI verification badge replaces confirming the maintainer through a channel they control. Distinguish a failed verification from an unconfigured verifier: with SSH signatures and no allowed-signers file, git exits nonzero with a configuration error, which is the check failing to run and scores unknown rather than failed. The per-forge command sequences are in `references/github.md` and `references/gitlab.md`. A repository with no release tag yet has nothing to check; say that rather than reporting a gap, and revisit at the first release.
+
+## Untrusted input procedure
+
+R-SEC-07 applies to both forges through different mechanisms, so read the matching reference file rather than carrying the syntax across. On GitHub the risk is textual: a `${{ }}` expression is substituted into the script before any shell sees it, so `${{ github.event.issue.title }}` inside a `run:` block executes whatever its author wrote. Move user-controlled values into an `env:` block and quote the environment variable in the shell. Separately, a `pull_request_target` or `workflow_run` workflow runs with the base repository's privileges, so it must not execute or check out contributor-controlled code; where one does, that is the highest-severity finding this skill produces and it belongs at the top of the summary. On GitLab, quote every user-controlled predefined variable in `script:` and pass values as arguments rather than evaluating generated shell. Store secrets as masked and hidden variables, protect them when only protected refs need them, and keep variable-reference expansion disabled.

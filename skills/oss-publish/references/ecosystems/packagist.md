@@ -91,7 +91,7 @@ Source: [Packagist, About](https://packagist.org/about).
 
 The strongest available substitute is a signed tag. The tag is the release, so signing it is the only thing that binds a version to an identity, and a consumer can check it directly against the repository. That is R-SEC-05 and `oss-harden` owns it. A forge attestation has nothing to cover here, because no artifact is produced.
 
-This sits below R-PUB-03, which asks for provenance tied to the exact published artifact and the workflow that built it. Report it as unmet with the registry limitation named. It would retire the day Packagist served an attestation or a signature for a version, and not before, since a signed tag proves who tagged the commit and not what any intermediary served.
+R-PUB-03 is not applicable on this tag-published track. Record the registry provenance limitation separately, without scoring it as a failed rule. Built assets attached to a forge release still take the inventory and signing checks in Step 6.
 
 ## Describe and sign what the release attaches (Step 6)
 
@@ -101,7 +101,7 @@ This reference names no SBOM generator for PHP. The ones in common use are third
 
 Two rules apply here and they ask for different things. R-PUB-05 wants that inventory. R-PUB-06 wants the assets signed, or listed by hash in a signed manifest. A manifest of hashes answers the second and nothing about the first, so do not report R-PUB-05 as met by publishing one.
 
-What answers R-PUB-05 without a generator, on GitHub, is the forge's own export of the repository's dependency graph, which is already SPDX and needs nothing installed. The `gh api` step below writes it into `dist/`, so it ships as a release asset for R-PUB-05 and is listed in `SHA256SUMS` and attested alongside the assets for R-PUB-06:
+GitHub's SPDX dependency-graph export can supplement an artifact inventory without installing another tool. It does not establish R-PUB-05 coverage by itself. The `gh api` step below writes it into `dist/`, so it ships as supplementary release evidence and is listed in `SHA256SUMS` and attested alongside the assets for R-PUB-06:
 
 ```yaml
   github-release:
@@ -128,7 +128,7 @@ What answers R-PUB-05 without a generator, on GitHub, is the forge's own export 
           GH_TOKEN: ${{ github.token }}
 ```
 
-State both of the export's limits to the maintainer rather than leaving them to be discovered. It is GitHub only, so a GitLab project keeps this gap and R-PUB-05 stays unmet there with the reason named. And it covers the repository's declared dependency graph rather than what is inside the asset, which is exact for a PHP package, because it bundles no dependencies and a consumer resolves them from those same declarations. The graph resolves past the direct dependencies only where `composer.lock` is committed, which R-SEC-08 already requires. Read the output back once with `gh api repos/<owner>/<repo>/dependency-graph/sbom --jq '.sbom.packages | length'` before reporting the rule met: a graph the forge does not parse for this ecosystem returns a near-empty package list rather than an error.
+The export describes the repository graph at the time of the request, not necessarily the tagged build or released asset. Read it back to detect an empty or unsupported graph, but a nonzero package count is not proof of coverage. Before passing R-PUB-05, verify that the inventory matches the exact release and includes every bundled dependency, runtime, and linked component. Otherwise generate an SPDX or CycloneDX inventory from the artifact or build, after vetting the required tool. If that coverage remains unproved, report R-PUB-05 unmet on either forge. A package declaration alone does not establish the contents of a compiled asset.
 
 `sha256sum` runs from inside `dist/` so the names it writes are the names the assets carry on the release. `subject-checksums` makes every file in the manifest a subject of the attestation in its own right, by name and digest; attesting `SHA256SUMS` itself with `subject-path` would leave a consumer able to verify the manifest and nothing about the assets it lists.
 
