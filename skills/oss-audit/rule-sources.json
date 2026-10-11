@@ -123,7 +123,7 @@
   "R-COM-09": {
     "sources": [
       "https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository",
-      "https://docs.github.com/en/discussions/guides/best-practices-for-community-conversations-on-github"
+      "https://docs.github.com/en/discussions/guides/best-practices-for-community-conversations-on-github.md"
     ],
     "verified": "2026-07-28",
     "note": "The first page documents contact_links in .github/ISSUE_TEMPLATE/config.yml as the mechanism that adds a destination to the chooser, and blank_issues_enabled as the separate switch this rule deliberately leaves alone. The second is GitHub's own case for keeping open-ended conversation out of the tracker, which is why the rule fires only where a second channel already exists: whether to run one is the project's decision, and this rule scores only whether the chooser admits it. The check reads the linked URL because a contact_links entry pointing at a forum nobody opened is the failure the rule exists to catch, and nothing in the file distinguishes it from a working one."
@@ -131,7 +131,7 @@
   "R-CI-01": {
     "sources": [
       "https://github.com/ossf/scorecard/blob/main/docs/checks.md",
-      "https://docs.github.com/actions/reference/workflows-and-actions/events-that-trigger-workflows"
+      "https://docs.github.com/actions/reference/workflows-and-actions/events-that-trigger-workflows.md"
     ],
     "verified": "2026-07-31",
     "note": "Scorecard CI-Tests: tests must run before pull requests are merged. The no-branches-filter clause was added on 2026-07-31 from an observation rather than from a source, and it is this project's own position. A repository audited that day passed this rule while three stacked pull requests ran zero CI between them, including the one that rewrote the CI workflow: its trigger was pull_request with branches: [main], which keys on the base branch, so only the bottom pull request of the stack was ever checked. That is the failure the rule exists to catch, reported as a pass. What retires the clause is GitHub changing what branches: matches on a pull_request trigger, or a project showing a case where filtering the base branch is what the maintainer needs and no unfiltered trigger will do."
@@ -149,7 +149,7 @@
   },
   "R-CI-04": {
     "sources": [
-      "https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching",
+      "https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching.md",
       "https://docs.github.com/en/actions/concepts/workflows-and-actions/dependency-caching"
     ],
     "verified": "2026-07-28",
@@ -157,8 +157,8 @@
   },
   "R-CI-05": {
     "sources": [
-      "https://docs.github.com/en/actions/reference/limits",
-      "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax",
+      "https://docs.github.com/en/actions/reference/limits.md",
+      "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax.md",
       "https://docs.gitlab.com/ci/yaml/"
     ],
     "verified": "2026-07-28",
@@ -176,7 +176,7 @@
     "sources": [
       "https://docs.github.com/en/actions/reference/secure-use-reference",
       "https://github.com/ossf/scorecard/blob/main/docs/checks.md",
-      "https://docs.github.com/en/actions/reference/workflows-and-actions/metadata-syntax"
+      "https://docs.github.com/en/actions/reference/workflows-and-actions/metadata-syntax.md"
     ],
     "verified": "2026-07-31",
     "note": "GitHub: 'Pinning an action to a full-length commit SHA is currently the only way to use an action as an immutable release.' Scorecard Pinned-Dependencies agrees. The Check scoped itself to .github/workflows/ until 2026-07-31. The metadata syntax reference documents runs.steps[*].uses for a composite action, so an action.yml the repository ships can call an unpinned third-party action that no scan of the workflows directory would ever read. The Check now covers both."
@@ -240,7 +240,7 @@
       "https://learn.microsoft.com/en-us/nuget/consume-packages/package-references-in-project-files",
       "https://dart.dev/tools/pub/cmd/pub-get",
       "https://dart.dev/tools/pub/package-layout",
-      "https://bun.com/docs/pm/cli/install"
+      "https://bun.com/docs/pm/cli/install.md"
     ],
     "verified": "2026-07-31",
     "note": "Scorecard Pinned-Dependencies covers pinning to a hash rather than a range. The frozen-install half (npm ci, bundle install --deployment, uv sync --frozen) has one source so far: Bun's install documentation, read on 2026-09-27, which says Bun does not enable --frozen-lockfile in CI by itself. The two narrowing clauses were added on 2026-07-31 after reading the build tools themselves, and the reading corrected the assumption they were written on. The exemption keys on the build tool rather than the registry: Apache Maven publishes no lockfile format at all, opt-in or otherwise, and offers dependencyManagement plus enforcer rules such as banDynamicVersions in its place, while Gradle writes gradle.lockfile whose own generated header says it is expected to be part of source control and already fails a build on a version mismatch without an extra flag. Keying the exemption to Maven Central would therefore have handed it to every Gradle project publishing to the same registry. Even for Maven the exemption covers the version-lock half only, because Maven Resolver's Trusted Checksums record a committed coreutils-format hash file verified at resolution with failIfMissing, which is the hashed-file half this rule already accepts. The commit-convention clause is the second correction: NuGet and Dart both document that a library package should not commit its lockfile while an application should, so without the clause two ecosystems failed this rule for following their own upstream guidance. Retire either clause the day its tooling ships what it currently lacks."
@@ -263,7 +263,7 @@
   },
   "R-SEC-11": {
     "sources": [
-      "https://docs.github.com/en/code-security/reference/supply-chain-security/dependency-graph-supported-package-ecosystems",
+      "https://docs.github.com/en/code-security/reference/supply-chain-security/dependency-graph-supported-package-ecosystems.md",
       "https://docs.github.com/en/code-security/concepts/supply-chain-security/about-dependabot-alerts",
       "https://google.github.io/osv-scanner/supported-languages-and-lockfiles/",
       "https://docs.gitlab.com/user/application_security/dependency_scanning/",
@@ -306,10 +306,11 @@
       "https://docs.gitlab.com/ci/jobs/job_control/",
       "https://github.com/hexpm/hex/blob/main/lib/mix/tasks/hex.user.ex",
       "https://github.com/hexpm/hex/blob/main/lib/hex/state.ex",
-      "https://github.com/hexpm/hexpm/blob/main/lib/hexpm_web/controllers/dashboard/key_controller.ex"
+      "https://github.com/hexpm/hexpm/blob/main/lib/hexpm_web/controllers/dashboard/key_controller.ex",
+      "https://github.com/hexpm/hexpm/blob/main/lib/hexpm_web/templates/docs/workload_identity.html.md"
     ],
     "verified": "2026-08-07",
-    "note": "npm, PyPI, RubyGems, and crates.io document OIDC publishing with short-lived credentials. Hex documents no OIDC flow. Its dashboard can issue a key for one package, as confirmed in the hexpm release controller and key controller. Hex 2.4.0 removed mix hex.user key generate, although the publish page still names it. hexpm/hexpm#1785 would retire the Hex fallback if trusted publishing ships. Maven Central also documents no OIDC flow and no artifact-scoped or namespace-scoped token. Sonatype documents token expiry, revocation, namespace ownership, and autoPublish for CI. The Portal API uses the same user token for upload and for the publish endpoint. A USER_MANAGED deployment therefore provides an optional review stop, but it does not protect publication from CI that still holds that token. The compensating control requires the Central token and signing secret to become available only after a native forge gate. GitHub environment secrets become available after environment approval. GitLab protected environments can limit deployment variables and blocking manual jobs to authorized users. Sonatype's 2025 roadmap lists scoped tokens as planned. Re-read the token page before accepting this fallback."
+    "note": "npm, PyPI, RubyGems, and crates.io document OIDC publishing with short-lived credentials. Hex supports GitHub Workload Identity, checked 2026-10-11 against its publishing page and official setup source. Existing public packages exchange OIDC for a short-lived package token. Unsupported providers retain the scoped dashboard-key fallback. The linked public setup guide returned 404, so target deployment availability still needs checking. Other registry claims retain their earlier verification dates. Maven Central also documents no OIDC flow and no artifact-scoped or namespace-scoped token. Sonatype documents token expiry, revocation, namespace ownership, and autoPublish for CI. The Portal API uses the same user token for upload and for the publish endpoint. A USER_MANAGED deployment therefore provides an optional review stop, but it does not protect publication from CI that still holds that token. The compensating control requires the Central token and signing secret to become available only after a native forge gate. GitHub environment secrets become available after environment approval. GitLab protected environments can limit deployment variables and blocking manual jobs to authorized users. Sonatype's 2025 roadmap lists scoped tokens as planned. Re-read the token page before accepting this fallback."
   },
   "R-PUB-03": {
     "sources": [
@@ -317,10 +318,12 @@
       "https://docs.npmjs.com/trusted-publishers/",
       "https://docs.pypi.org/api/integrity/",
       "https://guides.rubygems.org/trusted-publishing/",
-      "https://hex.pm/docs/publish"
+      "https://hex.pm/docs/publish",
+      "https://guides.rubygems.org/rubygems-org-api.md",
+      "https://github.com/hexpm/hexpm/blob/main/lib/hexpm_web/templates/docs/workload_identity.html.md"
     ],
     "verified": "2026-07-28",
-    "note": "npm confirms what provenance attests to, that npm audit signatures verifies it, and that trusted publishing generates it automatically for public packages. PyPI's Integrity API is the verification endpoint: GET /integrity/<project>/<version>/<filename>/provenance, returning attestation bundles with signatures, certificates, transparency log entries, and publisher identity, 404 when a file has no provenance. RubyGems, crates.io, and Hex are all checked negatives: their publishing documentation covers authentication only and documents no attestation or provenance for the published artifact, so on those three registries this rule falls back to a forge attestation and the registry limitation the Check already tells an auditor to report. Hex is the weakest of the three, because it serves no provenance and offers no OIDC either, leaving the forge attestation as the only link between a published tarball and the workflow that built it. Its page was read on 2026-07-31; the other sources were last read on the verified date."
+    "note": "npm confirms what provenance attests to, that npm audit signatures verifies it, and that trusted publishing generates it automatically for public packages. PyPI's Integrity API is the verification endpoint: GET /integrity/<project>/<version>/<filename>/provenance, returning attestation bundles with signatures, certificates, transparency log entries, and publisher identity, 404 when a file has no provenance. RubyGems documents GET /api/v1/attestations/[GEM NAME]-[VERSION].json, checked 2026-10-11. Hex documents Workload Identity and recorded OIDC claims, but these do not establish a signed artifact attestation. Verify an exact-artifact forge attestation where the registry cannot serve one, and report that hosting limitation. The crates.io publishing documentation was a checked negative for registry-hosted attestations on 2026-10-11. The npm and PyPI descriptions retain the verified date above."
   },
   "R-PUB-04": {
     "sources": [
@@ -391,35 +394,35 @@
   },
   "R-SKL-01": {
     "sources": [
-      "https://agentskills.io/specification"
+      "https://agentskills.io/specification.md"
     ],
     "verified": "2026-07-28",
     "note": "The spec defines a skill as a directory holding SKILL.md. The top-level skills/ directory is the skills CLI's discovery layout, not the spec's, and that half has no source named."
   },
   "R-SKL-02": {
     "sources": [
-      "https://agentskills.io/specification"
+      "https://agentskills.io/specification.md"
     ],
     "verified": "2026-07-28",
     "note": "Confirms the frontmatter contract this repository's validator enforces: name 1-64 chars, lowercase alphanumeric and hyphens, no leading, trailing, or consecutive hyphen, matching the parent directory; description 1-1024 chars."
   },
   "R-SKL-03": {
     "sources": [
-      "https://agentskills.io/specification"
+      "https://agentskills.io/specification.md"
     ],
     "verified": "2026-07-28",
     "note": "'Keep your main SKILL.md under 500 lines' and the under-5000-token recommendation, both in the progressive disclosure section."
   },
   "R-SKL-04": {
     "sources": [
-      "https://agentskills.io/specification"
+      "https://agentskills.io/specification.md"
     ],
     "verified": "2026-07-28",
     "note": "The spec makes license optional. This rule requires it, deliberately: installers extract one directory at a time. The divergence is oss-kit's own and is not upstream."
   },
   "R-SKL-05": {
     "sources": [
-      "https://agentskills.io/specification"
+      "https://agentskills.io/specification.md"
     ],
     "verified": "2026-07-28",
     "note": "The spec permits scripts/ and names Python, Bash, and JavaScript as common options, saying supported languages depend on the implementation. This rule is deliberately stricter; the reason is oss-kit's own."
@@ -430,7 +433,7 @@
   },
   "R-SKL-07": {
     "sources": [
-      "https://agentskills.io/specification"
+      "https://agentskills.io/specification.md"
     ],
     "verified": "2026-07-28",
     "note": "Progressive disclosure section plus the description guidance that it should state what the skill does and when to use it. The verification-loop and no-harness-specific-tools parts are oss-kit's own."
@@ -475,7 +478,7 @@
       "https://pnpm.io/supply-chain-security"
     ],
     "verified": "2026-08-04",
-    "note": "The two updaters differ, and the rule says so because a source settles each half. Dependabot applies a three-day cooldown to version updates with no cooldown block configured: the options reference states it, and the changelog post of 2026-07-14 dates it and scopes it to github.com and to GitHub Enterprise Server 3.23. Renovate's minimumReleaseAge defaults to null, which is no delay, so the open window the rule was written for is still open there. That default is also why the rule now asks for the value to be written down rather than inherited, which is the position R-SEC-08 and R-SEC-15 take about a manager default: a number the platform chose can be changed by the platform, and a reader auditing a repository cannot see it. Both halves of the coverage clause are documented rather than inferred. GitHub's tutorial states that omitting include applies the cooldown to all dependencies, so adding one narrows it, and the options reference gives include and exclude wildcards and 150 entries each with exclude winning, which is what lets a block that looks configured cover nothing. Renovate documents minimumReleaseAge inside packageRules with a worked example, so the same hollowing works there through an override rather than a list. The floor clause follows from the default: Dependabot accepts 1 to 90 days, so a repository cannot write a zero, and every value it can write below 3 is slower than the block it replaced. Dependabot documents the cooldown as never applying to a security update, and Renovate settles the same question through minimumReleaseAgeBehaviour, which is what lets the rule ask for a delay without slowing an advisory-driven fix. The day floor is this project position: no source names a number, and the incidents the rule exists for were found and pulled in hours rather than minutes. pnpm shipping minimumReleaseAge on by default at one day in v11, and Yarn defaulting npmMinimalAgeGate to one week, are the closest thing to a published value. What would retire the rule is every updater defaulting a cooldown on, which Dependabot has now half done."
+    "note": "The two updaters differ, and the rule says so because a source settles each half. Dependabot applies a three-day cooldown to version updates with no cooldown block configured: the options reference states it, and the changelog post of 2026-07-14 dates it and scopes it to github.com and to GitHub Enterprise Server 3.23. Renovate's minimumReleaseAge defaults to null, which is no delay, so the open window the rule was written for is still open there. That default is also why the rule now asks for the value to be written down rather than inherited, which is the position R-SEC-08 and R-SEC-15 take about a manager default: a number the platform chose can be changed by the platform, and a reader auditing a repository cannot see it. Both halves of the coverage clause are documented rather than inferred. GitHub's tutorial states that omitting include applies the cooldown to all dependencies, so adding one narrows it, and the options reference gives include and exclude wildcards and 150 entries each with exclude winning, which is what lets a block that looks configured cover nothing. Renovate documents minimumReleaseAge inside packageRules with a worked example, so the same hollowing works there through an override rather than a list. The floor clause follows from the default: Dependabot accepts 1 to 90 days, so a repository cannot write a zero, and every value it can write below 3 is slower than the block it replaced. Dependabot documents that cooldown never applies to security updates. Rechecked 2026-10-11: Renovate minimumReleaseAgeBehaviour concerns missing timestamps. Its GitHub vulnerabilityAlerts defaults set minimumReleaseAge to null; GitLab OSV behavior requires checking the resolved vulnerability update separately. The day floor is this project position: no source names a number, and the incidents the rule exists for were found and pulled in hours rather than minutes. pnpm shipping minimumReleaseAge on by default at one day in v11, and Yarn defaulting npmMinimalAgeGate to one week, are the closest thing to a published value. What would retire the rule is every updater defaulting a cooldown on, which Dependabot has now half done."
   },
   "R-SEC-15": {
     "sources": [
@@ -483,7 +486,7 @@
       "https://github.com/npm/cli/blob/latest/docs/lib/content/commands/npm-install-scripts.md",
       "https://yarnpkg.com/configuration/yarnrc",
       "https://pnpm.io/supply-chain-security",
-      "https://bun.com/docs/pm/cli/install",
+      "https://bun.com/docs/pm/cli/install.md",
       "https://getcomposer.org/doc/06-config.md",
       "https://pip.pypa.io/en/stable/cli/pip_install/"
     ],

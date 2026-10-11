@@ -92,7 +92,7 @@ Source: [Go Modules Reference](https://go.dev/ref/mod) and [Go, Publishing a mod
 
 The strongest available substitute is the pair the ecosystem does offer. A consumer can verify the downloaded module cache against the checksum database with `go mod verify`, and the repository can sign its release tags so the commit the version resolves to carries an identity. Tag signing is R-SEC-05 and `oss-harden` owns it.
 
-This sits below R-PUB-03, which asks for provenance tied to the repository and the workflow that built the artifact. It stays below it while the published artifact is source that the consumer builds, and it would retire the day Go's toolchain or the mirror served an attestation for a module version. Compiled binaries a Go project attaches to a forge release are a different artifact and Step 6 covers them.
+R-PUB-03 is not applicable on this tag-published track. Record the registry provenance limitation separately, without scoring it as a failed rule. Built assets attached to a forge release still take the inventory and signing checks in Step 6.
 
 ## Describe and sign what the release attaches (Step 6)
 
@@ -156,7 +156,7 @@ gh attestation verify <asset> --repo <owner>/<repo>
 sha256sum -c SHA256SUMS
 ```
 
-Run the first command against each asset downloaded, never against `SHA256SUMS`, which is a subject of nothing. `--signer-workflow <owner>/<repo>/.github/workflows/release.yml` pins which workflow the attestation must have come from. On GitLab CI/CD the forge attestation above is unavailable, so a GitLab release can carry the same `SHA256SUMS` with nothing signing it; say that rather than presenting the file as provenance.
+Run the first command against each asset downloaded, never against `SHA256SUMS`, which is a subject of nothing. `--signer-workflow <owner>/<repo>/.github/workflows/ci.yml` pins which workflow the attestation must have come from. On GitLab CI/CD the forge attestation above is unavailable, so a GitLab release can carry the same `SHA256SUMS` with nothing signing it; say that rather than presenting the file as provenance.
 
 `gh release upload` fails when no release exists for the tag. Either create it in this job with `gh release create "$GITHUB_REF_NAME" --generate-notes` first, or have the maintainer publish the release from the tag. This reference does not choose between them, because release notes are the project's own.
 

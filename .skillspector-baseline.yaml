@@ -38,6 +38,17 @@ rules:
 
   - id: "AE1"
     path: "SKILL.md"
+    message: "references/gitlab.md (partial)"
+    reason: >-
+      oss-harden: SkillSpector 2.12.0's static_patterns_tool_misuse parser
+      reaches its expression-span limit on the GitLab reference after
+      process details moved there. The file contains prose and documented
+      API commands, not an executable script. This accepts the reported
+      parser limitation, not full inspection; retain partial coverage in
+      the scan report.
+
+  - id: "AE1"
+    path: "SKILL.md"
     message: "references/ecosystems/*.md (partial)"
     reason: >-
       oss-ci and oss-publish: the shell parser pairs apostrophes in prose,
@@ -93,6 +104,15 @@ rules:
       Read-only API calls the skills document: the Scorecard API, GitLab's
       protected branches endpoint, a crates.io existence check, and the NuGet
       service index. Each sends only a public package or repository name.
+
+  - id: "SC2"
+    path: "references/github.md"
+    message: "curl -s https://api.scorecard.dev/projects/github.com/{owner}/{repo}*"
+    reason: >-
+      oss-harden: the Scorecard example reads public JSON and prints it.
+      It has no pipe, interpreter, eval, or execution of the response.
+      SkillSpector 2.12.0 includes the closing Markdown fence and following
+      prose in its match and reports them as remote script execution.
 
   - id: "RA2"
     path: "references/*"

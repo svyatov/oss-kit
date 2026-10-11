@@ -12,7 +12,7 @@ Two of the eleven run on the tag-published track, where the registry reads the f
 
 ## How to run this skill
 
-Half of this setup is repository files, which this skill writes directly. The other half is settings on the registry's website and on the forge that only the user can change: the trusted publisher entry, the approval environment, account-level two-factor authentication, tag protection. For that half, give click-by-click instructions with direct links resolved from the repository's own data: the package, gem, or crate name from its manifest, the owner and repository from the forge remote or the manifest's repository field, never a placeholder like "go to your package settings". Present each settings block, wait for the user to confirm it is done, then verify what can be verified from the command line before moving to the next block.
+Half of this setup is repository files, which this skill writes directly. The other half is settings on the registry's website and on the forge that only the user can change: the trusted publisher entry, the approval environment, account-level two-factor authentication, tag protection. For that half, give click-by-click instructions with direct links resolved from the repository's own data: the package, gem, or crate name from its manifest, the owner and repository from the forge remote or the manifest's repository field, never a placeholder like "go to your package settings". Present each settings block with its resolved values, then continue preparing the repository files. Verify the settings and obtain Step 2's confirmation before pushing the first tag or reporting completion.
 
 ## Principles
 
@@ -58,7 +58,7 @@ Detect what the repository ships, not what it merely contains. A manifest presen
 
 Collect, from the manifest and the repository, before changing anything: the package, gem, or crate name and version; the owner and repository, from the manifest's own repository or source metadata first, falling back to the git remote; repository visibility and forge plan, since approval protection is not available on every plan; whether the owner is an organization or a personal account; whether the package is already published, since an unpublished package may need a different first-release path; the existing tag format from `git tag --sort=-creatordate | head`, keeping whatever format is already in use; and any existing release workflow or pipeline, especially one referencing a stored registry token, which this skill's changes should remove.
 
-Identify each release flow. One tag or release event can publish several packages when they version and ship together. Independently tagged packages are separate flows. Inventory every forge and registry approval each flow already requires before proposing a change.
+Identify each release flow. One tag or release event can publish several packages when they version and ship together. Independently tagged packages are separate flows. Include every public release asset in the flow's inventory. Inventory every forge and registry approval each flow already requires before proposing a change.
 
 Detect the forge the same way `oss-ci` does: look for `.github/workflows/` or `.gitlab-ci.yml`, check the git remote host, or ask directly if neither signal is present. If the user states the forge explicitly, trust that over any signal found in the repository.
 
@@ -78,7 +78,7 @@ Trigger the workflow on a version tag, matching the format found in Step 1. Befo
 
 ### Step 4: Gate on manual approval with two-factor authentication
 
-Choose the last enforced publication gate that covers the complete release flow. A registry gate qualifies only when the CI identity cannot approve its own staged artifact. It must also approve every package in the flow with one human action. npm staged publishing meets both conditions for a flow containing one package.
+Choose the last enforced publication gate that covers the complete release flow, including public release assets. A registry gate qualifies only when the CI identity cannot approve its own staged artifact. It must also approve every package in the flow with one human action. npm staged publishing qualifies for one package with no public forge assets. When that flow also publishes forge assets, use one forge gate before direct package publication and asset upload.
 
 Where a registry gate qualifies, use it as the default. Keep any forge environment binding that forms part of the publisher identity, but configure no required reviewer there. Where no registry gate qualifies, pin the publish job to a GitHub environment with required reviewers. On GitLab, use a protected environment with one blocking manual job. Set `when: manual` and `allow_failure: false`, and restrict deployment permission to at least one person who is not an automation account.
 

@@ -22,6 +22,7 @@ Verify every claim against the diff, the source, or command output. Prose that r
 
 - State things in positive form. Keep a negative where prohibition is the point.
 - Use specific, concrete, definite words: `fails on files over 2 MB`, not `fails on large inputs`.
+- Use one name per concept throughout the document. Match identifiers in code and labels in the interface.
 - Omit needless words. Never drop a word that carries a fact, condition, or scope.
 - Avoid succession of loose sentences.
 - Keep related words together.

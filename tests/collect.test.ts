@@ -1,20 +1,50 @@
 import { expect, test } from "bun:test"
 import { execFileSync } from "node:child_process"
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
 const SCRIPT = "skills/oss-audit/scripts/collect.mjs"
 
-const repo = (files: Record<string, string>) => {
+const repo = (files: Record<string, string>, cycle = false) => {
   const dir = mkdtempSync(join(tmpdir(), "collect-"))
   for (const [path, body] of Object.entries(files)) {
     const full = join(dir, path)
     mkdirSync(join(full, ".."), { recursive: true })
     writeFileSync(full, body)
   }
-  return JSON.parse(execFileSync("node", [SCRIPT, dir], { encoding: "utf8" }))
+  try {
+    if (cycle) symlinkSync(dir, join(dir, "loop"))
+    return JSON.parse(execFileSync("node", [SCRIPT, dir], { encoding: "utf8", stdio: "pipe", timeout: 5000 }))
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
 }
+
+test("normalizes quoted workflow keys and action references", () => {
+  const facts = repo({ ".github/workflows/a.yml": `"on": [push, pull_request]
+jobs:
+  a:
+    "timeout-minutes": 10
+    steps:
+      - "uses": actions/checkout@v4
+` })
+  expect(facts.workflows[0].triggers).toEqual(["push", "pull_request"])
+  expect(facts.workflows[0].jobs[0].timeoutMinutes).toBe("10")
+  expect(facts.summary.externalUsesUnpinned).toEqual(["actions/checkout@v4"])
+})
+
+test("fails explicitly on unsupported YAML instead of emitting incomplete facts", () => {
+  for (const yaml of ["permissions: {contents: read}", "jobs: &jobs", "jobs:\n  a:\n    steps: *steps", "on: |\n  push\n"]) {
+    expect(() => repo({ ".github/workflows/a.yml": yaml })).toThrow("Unsupported YAML")
+  }
+})
+
+test("finds deeply nested actions without following directory cycles", () => {
+  const facts = repo({ "a/b/c/d/e/action.yml": "runs:\n  using: composite\n  steps:\n    - uses: actions/cache@v4\n" }, true)
+  expect(facts.actions).toHaveLength(1)
+  expect(facts.summary.externalUsesUnpinned).toEqual(["actions/cache@v4"])
+})
 
 // The R-CI-05 false fail in a real run came from counting job-shaped lines with
 // a regex: a top-level env: block's keys look exactly like job keys.
@@ -89,6 +119,9 @@ test("lists the events for every shape on: takes", () => {
 
   const scalar = repo({ ".github/workflows/a.yml": "on: push\njobs:\n  a:\n    steps:\n      - run: true\n" })
   expect(scalar.workflows[0].triggers).toEqual(["push"])
+
+  const quoted = repo({ ".github/workflows/a.yml": 'on: ["push", "pull_request"]\njobs:\n  a:\n    runs-on: ubuntu-latest\n' })
+  expect(quoted.workflows[0].triggers).toEqual(["push", "pull_request"])
 })
 
 test("reports a uses: as pinned only for a 40 character sha", () => {

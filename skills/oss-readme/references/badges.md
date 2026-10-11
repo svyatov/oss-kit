@@ -11,7 +11,7 @@ Own paragraph directly below the opening sentence, one badge per source line:
 ```markdown
 # project-name
 
-One-sentence description of what it does and why it is different.
+One-sentence description of what it does and who it is for.
 
 [![version](https://img.shields.io/github/v/tag/owner/project-name?sort=semver&label=version)](https://github.com/owner/project-name/tags)
 [![CI](https://github.com/owner/project-name/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/owner/project-name/actions/workflows/main.yml)

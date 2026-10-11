@@ -8,7 +8,7 @@ The gemspec declares it. `license=` takes one name and `licenses=` takes an arra
 
 So the manifest side of R-COM-01 is the gemspec's license value or values, and the file side is the root license file. Where the gemspec lists two, both have to be traceable to what the file says, because an array is a list of licenses that apply and not a menu the reader picks from.
 
-Source: [Specification reference](https://guides.rubygems.org/specification-reference/).
+Source: [Specification reference](https://guides.rubygems.org/specification-reference.md).
 
 ## Funding platform name
 
@@ -16,4 +16,4 @@ Tidelift's platform name for this ecosystem is `rubygems`, so the GitHub funding
 
 The roster at `skills/oss-audit/ecosystems.json` records `"tidelift": "rubygems"` and is the canonical copy. This line exists because a single-skill install of `oss-community` does not carry that file; where the two disagree, the roster is right and this line is corrected to it.
 
-Verified 2026-07-31 against [Specification reference](https://guides.rubygems.org/specification-reference/) and [Displaying a sponsor button in your repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository).
+Verified 2026-07-31 against [Specification reference](https://guides.rubygems.org/specification-reference.md) and [Displaying a sponsor button in your repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository).

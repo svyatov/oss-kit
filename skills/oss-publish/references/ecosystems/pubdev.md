@@ -156,7 +156,7 @@ That is integrity, not provenance. It confirms the archive has not changed since
 
 The strongest substitute for provenance is a forge attestation over the archive the publish produced. `dart pub publish --dry-run` lists what would go into the archive but the reusable workflow does not hand a file to a later job, so attesting the published archive means downloading it from `archive_url` in a job after the publish and attesting those bytes. That is weaker than attesting what the build produced, because it attests what the registry served back; say so rather than presenting it as equivalent.
 
-This sits below R-PUB-03, which asks for provenance tied to the exact published artifact and the workflow that built it. Report it as unmet with the registry limitation named. It retires the day pub.dev serves an attestation for a published version, which is the natural next step for a registry that already validates an OIDC identity at upload.
+Verify the exact published package against the expected repository and workflow through the forge attestation. Report R-PUB-03 as met only when that cryptographic verification succeeds, and name the registry-hosting limitation. Otherwise report it as unmet. A locally rebuilt artifact is not evidence for different bytes served by the registry.
 
 ## Describe and sign what the release attaches (Step 6)
 
@@ -166,7 +166,7 @@ This reference names no SBOM generator for Dart. The ones in common use are thir
 
 Two rules apply here and they ask for different things. R-PUB-05 wants that inventory. R-PUB-06 wants the assets signed, or listed by hash in a signed manifest. A manifest of hashes answers the second and nothing about the first, so do not report R-PUB-05 as met by publishing one.
 
-What answers R-PUB-05 without a generator, on GitHub, is the forge's own export of the repository's dependency graph, which is already SPDX and needs nothing installed. The `gh api` step below writes it into `dist/`, so it ships as a release asset for R-PUB-05 and is listed in `SHA256SUMS` and attested alongside the binaries for R-PUB-06, in a job separate from the one that built them:
+GitHub's SPDX dependency-graph export can supplement an artifact inventory without installing another tool. It does not establish R-PUB-05 coverage by itself. The `gh api` step below writes it into `dist/`, so it ships as supplementary release evidence and is listed in `SHA256SUMS` and attested alongside the binaries for R-PUB-06, in a job separate from the one that built them:
 
 ```yaml
   github-release:
@@ -194,7 +194,7 @@ What answers R-PUB-05 without a generator, on GitHub, is the forge's own export 
           GH_TOKEN: ${{ github.token }}
 ```
 
-State both of the export's limits to the maintainer rather than leaving them to be discovered. It is GitHub only, so a GitLab project keeps this gap and R-PUB-05 stays unmet there with the reason named. And it covers the repository's declared dependency graph rather than what is inside the asset, which is exact for the published package, because it declares its dependencies rather than bundling them, and an approximation for a compiled binary attached beside it. The graph resolves past the direct dependencies only where `pubspec.lock` is committed, which a library does not do, so a library's export lists its direct dependencies alone and the report should say so. Read the output back once with `gh api repos/<owner>/<repo>/dependency-graph/sbom --jq '.sbom.packages | length'` before reporting the rule met: a graph the forge does not parse for this ecosystem returns a near-empty package list rather than an error.
+The export describes the repository graph at the time of the request, not necessarily the tagged build or released asset. Read it back to detect an empty or unsupported graph, but a nonzero package count is not proof of coverage. Before passing R-PUB-05, verify that the inventory matches the exact release and includes every bundled dependency, runtime, and linked component. Otherwise generate an SPDX or CycloneDX inventory from the artifact or build, after vetting the required tool. If that coverage remains unproved, report R-PUB-05 unmet on either forge. A package declaration alone does not establish the contents of a compiled asset.
 
 `sha256sum` runs from inside `dist/` so the names it writes are the names the assets carry on the release. `subject-checksums` makes every file in the manifest a subject of the attestation in its own right, by name and digest; attesting `SHA256SUMS` itself with `subject-path` would leave a consumer able to verify the manifest and nothing about the assets it lists.
 

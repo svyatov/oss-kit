@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+### Changed
+
+- Publishing guidance uses Hex Workload Identity and NuGet GitLab trusted publishing, and covers pnpm-specific packaging behavior.
+- Audit reporting details and hardening mechanics load from references at the steps that need them.
+- Review replies lead with the decision and omit context already established in the visible thread.
+- Synonym variation and false ranges leave the AI-tell catalog. Consistent terminology remains a general writing rule.
+
+### Fixed
+
+- The audit collector rejects unsupported YAML instead of returning incomplete facts, reads quoted keys, and finds deeply nested actions without looping through directory symlinks.
+- Release-note extraction retains referenced issue and migration links. Initial releases use the full commit history, and npm withdrawal guidance includes the dependency restriction.
+- Publishing examples use valid job dependencies and signer-workflow paths. SBOM checks require exact-asset coverage, and provenance checks respect applicability and the standard's forge fallback.
+- npm flows with public forge assets use one forge approval before direct package publication and asset upload.
+- Ecosystem and host references correct Python package detection, Hex cache scope, setup-java cache inputs, GitLab template precedence, Docker Hub funding links, Go command-package installation, and skill discovery locations.
+- Hardening verification preserves the sole-maintainer review exception, blocks GitLab direct pushes, reports protected-tag deletion limits, and corrects Renovate and Bundler configuration guidance.
+
 ## [0.18.0] - 2026-09-28
 
 ### Added

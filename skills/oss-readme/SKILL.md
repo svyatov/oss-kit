@@ -100,7 +100,7 @@ Candidate facts  (pick 3 to 5)
   scope  2. Publishing for npm, RubyGems, PyPI, crates.io
             src: skills/oss-publish/references/
   scale  3. 61 rules, each with the check it is scored by
-            src: STANDARD.md, 59 "### R-" headings
+            src: STANDARD.md, 61 "### R-" headings
   fit    4. Node 22 or Bun, nothing installed
             src: skills/oss-skill/scripts/validate.mjs
   edge   5. Scores a repository, where a checklist only lists it

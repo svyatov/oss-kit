@@ -4,6 +4,15 @@ Concrete commands and settings for the decisions `SKILL.md` makes, on GitHub Act
 
 ## Contents
 
+- [Credential requirements](#credential-requirements)
+- [Resolve action references with the bundled script](#resolve-action-references-with-the-bundled-script)
+- [Workflow permission defaults](#workflow-permission-defaults)
+- [Updater coverage and delay](#updater-coverage-and-delay)
+- [Edit an existing ruleset](#edit-an-existing-ruleset)
+- [Signed-tag verification procedure](#signed-tag-verification-procedure)
+- [Untrusted input procedure](#untrusted-input-procedure)
+- [Required CodeQL checks](#required-codeql-checks)
+
 - [Read the current state (Step 2)](#read-the-current-state-step-2)
 - [Pin external actions and reusable workflows to a commit SHA (R-SEC-01)](#pin-external-actions-and-reusable-workflows-to-a-commit-sha-r-sec-01)
 - [Set least-privilege permissions (R-SEC-02)](#set-least-privilege-permissions-r-sec-02)
@@ -249,9 +258,9 @@ Setting `require_last_push_approval` is the closest a ruleset gets, and it addre
 gh api repos/{owner}/{repo}/rulesets/{ruleset_id}
 ```
 
-Confirm `enforcement` is `active` rather than `disabled` or `evaluate`, that the four rule types above are present, that the `pull_request` rule's review count is at least 1, that `required_status_checks` names the CI checks, and that `bypass_actors` holds only actors the project means to exempt.
+Confirm `enforcement` is `active` rather than `disabled` or `evaluate`, that the four rule types above are present, that the review count is at least 1 where R-SEC-12 applies and remains 0 where one principal holds every merge path, that `required_status_checks` names the CI checks, and that `bypass_actors` holds only actors the project means to exempt.
 
-A repository still on classic protection reports through `gh api repos/{owner}/{repo}/branches/{branch}/protection` instead, where the same intent reads as `required_pull_request_reviews.required_approving_review_count` at 1 or more, `required_status_checks.contexts` or `checks` naming the CI job, and `allow_force_pushes.enabled` and `allow_deletions.enabled` both `false`. That satisfies the rule; leave a working classic rule alone unless the user asks to move it. Migrating means creating the ruleset first, verifying it, and only then deleting the classic rule with `gh api -X DELETE repos/{owner}/{repo}/branches/{branch}/protection`, so the branch is never unguarded in between. Both forms can coexist, and while they do the more restrictive of the two applies.
+A repository still on classic protection reports through `gh api repos/{owner}/{repo}/branches/{branch}/protection` instead, where the same intent reads as `required_pull_request_reviews.required_approving_review_count` at 1 or more only where R-SEC-12 applies, and 0 otherwise, `required_status_checks.contexts` or `checks` naming the CI job, and `allow_force_pushes.enabled` and `allow_deletions.enabled` both `false`. That satisfies the rule; leave a working classic rule alone unless the user asks to move it. Migrating means creating the ruleset first, verifying it, and only then deleting the classic rule with `gh api -X DELETE repos/{owner}/{repo}/branches/{branch}/protection`, so the branch is never unguarded in between. Both forms can coexist, and while they do the more restrictive of the two applies.
 
 ## Signed tags (R-SEC-05)
 
@@ -518,3 +527,53 @@ This returns a JSON object with a top-level `score` and a `checks` array, each e
 Where a result exists, use `Pinned-Dependencies`, `Token-Permissions`, `Dependency-Update-Tool`, and `Branch-Protection` as dated supplementary evidence for R-SEC-01 through R-SEC-04. `Branch-Protection` is tiered and each tier gates the one above it, so a repository outside R-SEC-12 scores 3 of 10 there and cannot score higher whatever else it sets: review is tier 2 and status checks are tier 3. Report that number as the expected result rather than a regression, and never raise the review requirement to move it. `Signed-Releases` examines release artifacts, not git tag signatures, so it is not R-SEC-05 evidence. The weekly scan omits some API-expensive checks, and any individual check can be inconclusive or fail internally. Keep the direct evidence authoritative and quote the result's `reason`, `details`, date, and Scorecard version.
 
 Where no result exists, report that fact without approximating a score or expanding the task into scanner installation.
+
+## Credential requirements
+
+On GitHub, the commands assume `gh` is installed and authenticated; `gh auth status` prints the active account per host. The settings reads and writes need admin on the repository, which is also why `security_and_analysis` is absent rather than `disabled` for a caller without it.
+
+## Resolve action references with the bundled script
+
+`scripts/resolve-pin.mjs` does that resolution. Pipe the workflow through it, or pass the references directly:
+
+```sh
+node skills/oss-harden/scripts/resolve-pin.mjs actions/checkout@v7 ruby/setup-ruby@v1
+cat .github/workflows/ci.yml | node skills/oss-harden/scripts/resolve-pin.mjs -
+```
+
+It dereferences an annotated tag to the commit it points at, which is the extra step, and it says when a ref is a branch rather than a tag, which is a finding in its own right: `ruby/setup-ruby@v1` and `rubygems/release-gem@v1` are both branches, so a workflow naming either runs whatever was last pushed to it. Where the script is not installed, because a single skill was installed on its own, do the same work by hand, and dereference the annotated tag.
+
+## Workflow permission defaults
+
+On GitHub, every workflow needs a top-level `permissions:` block granting no more than `contents: read`, with any job that needs more declaring the extra scope at the job level instead of widening the top-level block, per R-SEC-02. This has no GitLab equivalent as a rule; GitLab's analogous control is the job token scope in Step 7. Read the reference file for the default a workflow gets when `permissions:` is absent entirely, since that default is not the same as writing `contents: read` explicitly and a workflow already at the safe default because a wider default was never in play still benefits from writing the block down.
+
+## Updater coverage and delay
+
+Pinning freezes a reference until something unfreezes it; R-SEC-03 requires an updater covering both the project's application dependencies and its CI dependencies, on both forges. On GitHub, Dependabot's `github-actions` ecosystem is what proposes the SHA and comment update for every workflow this skill just pinned, so a `dependabot.yml` this skill writes or edits needs that ecosystem alongside one entry for every ecosystem the manifests read in Step 2 declare; a `dependabot.yml` that updates the package manager but leaves out `github-actions` re-freezes the actions the moment they are pinned. On GitLab, there is no equivalent of Dependabot shipped by the platform; the reference file names the documented alternative and what running it costs. Where a Renovate configuration already exists on either forge, extend its `packageRules` or presets rather than adding a competing Dependabot config; ask before replacing one updater with the other.
+
+The same configuration answers R-SEC-14, which asks the updater to wait before proposing a version that was published minutes ago. Add a `cooldown` block with `default-days` to `dependabot.yml`, or `minimumReleaseAge` to a Renovate configuration, and set it in days rather than hours: the window this closes is the one between a compromised publish and somebody noticing, which the incidents it exists for have taken hours to close. The two updaters start from different places, so say which one the user is on. Renovate waits zero days until the key is set, and that repository has the window open today. Dependabot already delays a version update by three days on its own, so writing the number pins a value the platform chose and can change again, and gives the next reader a decision to audit. Write at least that three days there, because a smaller number shortens the delay. Then check what the setting reaches: a Dependabot `include` or `exclude` list and a Renovate `packageRules` override both leave a configuration that reads as set and covers little. The reference files carry the resolution rules for each. Dependabot exempts security updates. For Renovate, verify the resolved vulnerability-update configuration for the actual platform and alert source before claiming that exemption. Where the repository has no updater at all, R-SEC-03 is the finding and this rule is not a second one.
+
+
+## Edit an existing ruleset
+
+`scripts/ruleset.mjs` is what edits an existing ruleset without losing the rest of it:
+
+```sh
+node skills/oss-harden/scripts/ruleset.mjs get <owner>/<repo> main
+node skills/oss-harden/scripts/ruleset.mjs put <owner>/<repo> main patch.json
+node skills/oss-harden/scripts/ruleset.mjs actor <login>
+```
+
+`put` reads the ruleset, deep-merges the patch, strips the nulls, PUTs it, and prints what the API reports afterwards rather than what was sent. The null strip is the reason it exists: GitHub reads several rule parameters back as null and rejects those same nulls on write, so a hand-rolled fetch, edit, and PUT answers `422 Invalid property /rules/N: data matches no possible input`. `code_coverage` with `max_coverage_drop: null` is the case every measured run hit. `actor` prints the `{"actor_type": "User", "actor_id": N}` form a bypass entry takes; do not guess a `RepositoryRole` number, which is undocumented and was shipped wrong once and repaired with a second write. Where the script is not installed, do the same three things by hand: read the ruleset by id rather than from the list endpoint, which answers with a summary that omits rules, strip every null before writing, and read the result back rather than inferring it from a 200.
+
+## Signed-tag verification procedure
+
+R-SEC-05 applies the same way on both forges, because the evidence comes from git itself, not from a forge API. Fetch the tags, then establish what the tag is before reaching for any key: `git cat-file -t <tag>` must print `tag`, and one `git for-each-ref` read returns the tagger's address and the signature format together. Only then resolve which account publishes the key and fetch it; the repository owner is that account only when the owner is a user, and neither the release publisher nor the tagged commit's author is a substitute, because either can differ from the tagger. Support OpenPGP, SSH, and X.509 signatures instead of assuming every maintainer uses GPG. Fetching a key by account proves publication and not control, so neither that fetch nor either forge's UI verification badge replaces confirming the maintainer through a channel they control. Distinguish a failed verification from an unconfigured verifier: with SSH signatures and no allowed-signers file, git exits nonzero with a configuration error, which is the check failing to run and scores unknown rather than failed. The per-forge command sequences are in `references/github.md` and `references/gitlab.md`. A repository with no release tag yet has nothing to check; say that rather than reporting a gap, and revisit at the first release.
+
+## Untrusted input procedure
+
+R-SEC-07 applies to both forges through different mechanisms, so read the matching reference file rather than carrying the syntax across. On GitHub the risk is textual: a `${{ }}` expression is substituted into the script before any shell sees it, so `${{ github.event.issue.title }}` inside a `run:` block executes whatever its author wrote. Move user-controlled values into an `env:` block and quote the environment variable in the shell. Separately, a `pull_request_target` or `workflow_run` workflow runs with the base repository's privileges, so it must not execute or check out contributor-controlled code; where one does, that is the highest-severity finding this skill produces and it belongs at the top of the summary. On GitLab, quote every user-controlled predefined variable in `script:` and pass values as arguments rather than evaluating generated shell. Store secrets as masked and hidden variables, protect them when only protected refs need them, and keep variable-reference expansion disabled.
+
+## Required CodeQL checks
+
+On GitHub, use CodeQL advanced setup whenever its result becomes a required check. Default setup skips fork pull requests and, in a measured run, Dependabot's, and a required check that never reports blocks the pull request. Default setup fits only a repository that gets neither. Turning off an existing default setup weakens a security control, so present it as a settings block the user confirms rather than an API write. Give the resolved settings URL the same way Step 6 does; the reference file names the endpoint that reports whether it is already enabled. Where Step 6 set up a ruleset, add its code scanning rule too, which blocks a merge on what the analysis found rather than only on whether it reported, and so also catches the case where the analysis configuration is deleted and the required check simply stops appearing.

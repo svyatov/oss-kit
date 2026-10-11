@@ -22,7 +22,7 @@ The action supports a fixed list of runner images, and the README carries the ta
 
 On GitLab, run the job in the Ruby official image and vary the tag with `parallel:matrix`.
 
-Sources: [ruby/setup-ruby](https://github.com/ruby/setup-ruby), [Gemspec reference](https://guides.rubygems.org/specification-reference/), [docker-library/ruby](https://github.com/docker-library/ruby).
+Sources: [ruby/setup-ruby](https://github.com/ruby/setup-ruby), [Gemspec reference](https://guides.rubygems.org/specification-reference.md), [docker-library/ruby](https://github.com/docker-library/ruby).
 
 ## Dependency caching (R-CI-04)
 
