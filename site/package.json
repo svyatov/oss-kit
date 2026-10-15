@@ -11,14 +11,14 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/markdown-satteri": "^0.4.2",
-    "@astrojs/starlight": "^0.42.4",
+    "@astrojs/markdown-satteri": "^0.4.3",
+    "@astrojs/starlight": "^0.42.5",
     "@fontsource/barlow-condensed": "^5.3.0",
     "@fontsource/commit-mono": "^5.3.0",
     "@fontsource/public-sans": "^5.3.0",
     "@fortawesome/fontawesome-svg-core": "^7.3.1",
     "@fortawesome/free-solid-svg-icons": "^7.3.1",
-    "astro": "^7.3.5",
+    "astro": "^7.3.7",
     "sharp": "^0.35.5"
   }
 }
