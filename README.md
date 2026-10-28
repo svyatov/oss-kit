@@ -66,7 +66,7 @@ this order instead:
 paragraph of docs. Reach for `oss-skill` only if your repository ships agent
 skills of its own.
 
-You can also ask for a skill by name when you already know the job. Use
+Invoke a skill by name when you already know the job. Use
 `oss-readme` for a README, `oss-community` for community files, and `oss-ci`
 for continuous integration.
 
@@ -74,15 +74,20 @@ for continuous integration.
 
 | Skill | What it does |
 |---|---|
-| `oss-audit` | Scores the repository and routes each gap to a skill. |
-| `oss-community` | Writes every community file, from the license to issue forms. |
-| `oss-readme` | Orders the README and checks its claims against the source. |
-| `oss-ci` | Writes the test, lint, and build jobs for either forge. |
-| `oss-harden` | Pins action SHAs, trims permissions, and guards branches and tags. |
-| `oss-publish` | Publishes to eleven ecosystems, gates the run, and signs it. |
-| `oss-changelog` | Keeps CHANGELOG.md, picks the bump, writes release notes. |
+| `oss-audit` | Scores the repository against the standard and routes each gap to the skill that fixes it. |
+| `oss-community` | Creates community and governance files and configures the repository's public profile. |
+| `oss-readme` | Writes or reviews the README, checks its claims, and organizes its sections. |
+| `oss-ci` | Configures tests, linting, builds, and static-site deployment on either forge. |
+| `oss-harden` | Hardens security, workflow permissions, dependency controls, branch protection, and release tags. |
+| `oss-publish` | Sets up secure releases with trusted publishing, approval gates, provenance, SBOMs, and signed artifacts. |
+| `oss-changelog` | Maintains the changelog, chooses versions, writes release notes, and plans deprecations. |
 | `oss-writing` | Fixes the sentences in commits, reviews, docs, and issues. |
-| `oss-skill` | Fixes the structure and portability of the skills you ship. |
+| `oss-skill` | Audits and fixes skill structure, portability, procedures, context use, and specification conformance. |
+
+Only `oss-writing` loads automatically when relevant. The other eight skills
+require explicit invocation in hosts that support invocation controls.
+See the [invocation guide](https://oss-kit.svyatov.com/guides/install/#invocation)
+for host-specific commands.
 
 Each skill page on the [documentation site](https://oss-kit.svyatov.com/skills/)
 carries the full description, including the validator `oss-skill` bundles. That

@@ -1,6 +1,7 @@
 ---
 name: oss-community
-description: "Create the community and governance files an open source project needs: CONTRIBUTING, CODE_OF_CONDUCT, SECURITY.md, issue forms and pull request templates, CODEOWNERS, FUNDING, and the license file, and set the forge project's description, topics, and homepage. Use when starting a new open source project, opening a private repo to the public, when a repo is missing its community health files, or when its issue templates collect reports that still cannot be triaged. Covers GitHub and GitLab. README structure belongs to oss-readme."
+description: "Create community and governance files and configure the repository's public profile on GitHub or GitLab."
+disable-model-invocation: true
 license: MIT
 ---
 

@@ -1,6 +1,7 @@
 ---
 name: oss-ci
-description: "Set up continuous integration for an open source project on GitHub Actions or GitLab CI/CD. Use when the user asks to set up CI, create workflows or pipelines, add automated testing, building, or linting on push and pull requests, deploy a docs or other static site to GitHub Pages or GitLab Pages, or review existing CI configuration. Also use when the user mentions automating tests, running checks on PRs, or a build matrix, even without saying CI. Covers what runs. Security posture of those workflows belongs to oss-harden, and publishing belongs to oss-publish."
+description: "Configure tests, linting, builds, and static-site deployment on GitHub Actions or GitLab CI/CD."
+disable-model-invocation: true
 license: MIT
 ---
 

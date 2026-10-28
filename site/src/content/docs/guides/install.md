@@ -8,6 +8,19 @@ description: Install the full oss-kit collection or one skill in a supported age
 Every host below reads the current skills from the repository's canonical
 `skills/` directory. Only the discovery path changes between hosts.
 
+## Invocation
+
+Only `oss-writing` is available for automatic selection. It supplies writing
+guidance during commits, reviews, and documentation work.
+
+The other eight skills require explicit invocation in Claude Code, Codex, and
+Cursor. Use `/oss-kit:oss-audit` for the Claude Code plugin, `$oss-audit` in
+Codex, or `/oss-audit` in Cursor. Substitute the skill name for another task.
+
+Claude Code and Cursor read `disable-model-invocation` in `SKILL.md`. Codex
+reads `policy.allow_implicit_invocation` in `agents/openai.yaml`.
+Other hosts can load the skills, but may not enforce these controls.
+
 ## Any agent
 
 The open `skills` CLI offers all nine skills under one row you can select in a

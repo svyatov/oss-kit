@@ -1,6 +1,7 @@
 ---
 name: oss-skill
-description: "Fix the structure, portability, and effectiveness of repositories that ship Agent Skills. Covers canonical layout, SKILL.md conformance, trigger descriptions, progressive disclosure, repeatable procedures, bundled scripts, evaluation, licensing, and host install paths. Use when a skill fails to load or trigger, produces inconsistent results, wastes context or tool calls, ships non-portable code, or needs an audit against the current Agent Skills specification and authoring guidance."
+description: "Audit and fix Agent Skills for structure, portability, focused procedures, context use, and specification conformance."
+disable-model-invocation: true
 license: MIT
 compatibility: Requires Node 22+ or Bun to run the bundled validator
 ---

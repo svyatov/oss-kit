@@ -1,6 +1,7 @@
 ---
 name: oss-readme
-description: "Write or improve a README.md for an open source project. Use this for any request to create, rewrite, review, or polish a README, project description, or getting-started docs for a library, framework, or tool, or to make an open source project more attractive to users. Covers structure and section order. For the sentences themselves, oss-writing owns style. Do NOT use for internal or private repo docs, API reference generation, or CHANGELOG and CONTRIBUTING files."
+description: "Write or review an open source README, check its claims, and organize its sections."
+disable-model-invocation: true
 license: MIT
 ---
 
