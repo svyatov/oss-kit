@@ -12,11 +12,61 @@ function rules(findings: { rule: string | null }[]) {
   return findings.map((f) => f.rule)
 }
 
+test("checks imports and runtime globals in extensionless Node executables", () => {
+  for (const body of ['require("outside-package")', 'import "bun:sqlite"', 'Bun.file("input")']) {
+    const root = makeRepo()
+    const skill = addSkill(root, "oss-test", goodFrontmatter("oss-test"))
+    addScript(skill, "check", `#!/usr/bin/env node\n${body}\n`)
+    expect(rules(errors(root))).toContain("R-SKL-05")
+  }
+  const root = makeRepo()
+  const skill = addSkill(root, "oss-test", goodFrontmatter("oss-test"))
+  addScript(skill, "check", '#!/usr/bin/env node\nimport "node:fs"\n')
+  addScript(skill, "shell", '#!/bin/sh\nprintf "%s\\n" done\n')
+  expect(errors(root)).toEqual([])
+})
+
 test("a conforming repository produces no errors", () => {
   const root = makeRepo()
   addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
   expect(errors(root)).toEqual([])
   rmSync(root, { recursive: true, force: true })
+})
+
+test("distinguishes an empty repository from invalid and unreadable scan roots", () => {
+  const root = makeRepo()
+  expect(errors(root)).toEqual([])
+  expect(errors(join(root, "missing")).length).toBeGreaterThan(0)
+  expect(errors(join(root, "LICENSE")).length).toBeGreaterThan(0)
+  const hidden = join(root, "hidden")
+  mkdirSync(hidden)
+  chmodSync(hidden, 0o000)
+  try { expect(errors(root).some((f) => f.file.includes("hidden"))).toBe(true) }
+  finally { chmodSync(hidden, 0o755); rmSync(root, { recursive: true, force: true }) }
+})
+
+test("discovers external skills aliases once and terminates symlink cycles", () => {
+  const root = makeRepo()
+  const external = makeRepo()
+  addSkill(external, "oss-thing", goodFrontmatter("oss-thing"))
+  rmdirSync(join(root, "skills"))
+  symlinkSync(join(external, "skills"), join(root, "skills"))
+  addSkillsSymlink(root, "alias")
+  symlinkSync(root, join(external, "skills", "cycle"))
+  expect(findSkillFiles(root)).toHaveLength(1)
+  expect(errors(root)).toEqual([])
+  rmSync(root, { recursive: true, force: true })
+  rmSync(external, { recursive: true, force: true })
+})
+
+test("warns about typed YAML values while preserving quoted lookalikes", () => {
+  for (const raw of ["[]", "{}", "true", "null", "123", "1.5", ".5", "-.5", "0o7", "0b10", "1e3"]) {
+    const fm = parseFrontmatter(`---\nname: a\ndescription: ${raw}\nmetadata: ${raw}\n---\n`)
+    expect(fm.unreadableKeys.has("description")).toBe(true)
+    expect(fm.unreadableKeys.has("metadata")).toBe(true)
+    expect(parseFrontmatter(`---\nname: a\ndescription: "${raw}"\n---\n`).entries.get("description")).toBe(raw)
+  }
+  expect(parseFrontmatter("---\nname: a\nmetadata:\n  count: 42\n---\n").unreadableKeys.has("metadata")).toBe(true)
 })
 
 test("parseFrontmatter reads quoted and plain scalars", () => {
@@ -118,7 +168,7 @@ test("a 501-character compatibility is an R-SKL-02 error naming the limit", () =
   rmSync(root, { recursive: true, force: true })
 })
 
-test("a symlinked skills directory is not walked, so a skill is found once", () => {
+test("a symlinked skills directory resolves to the same skill once", () => {
   const root = makeRepo()
   addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
   addSkillsSymlink(root, "linked-skills")

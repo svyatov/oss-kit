@@ -16,8 +16,10 @@
   "interface": {
     "displayName": "oss-kit",
     "shortDescription": "Curated agent skills for open source maintainers",
+    "longDescription": "Nine agent skills for open source maintainers. Audit repository practices, improve documentation and CI, harden security, and prepare releases.",
     "developerName": "Leonid Svyatov",
     "category": "Developer Tools",
+    "capabilities": ["Audit repositories", "Write documentation", "Configure CI", "Harden security", "Prepare releases"],
     "websiteURL": "https://github.com/svyatov/oss-kit"
   }
 }

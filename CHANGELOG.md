@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ### Changed
 
+- Eight skills require explicit invocation in Claude Code, Codex, and Cursor. Only `oss-writing` remains available for automatic selection.
 - Publishing guidance uses Hex Workload Identity and NuGet GitLab trusted publishing, and covers pnpm-specific packaging behavior.
 - Audit reporting details and hardening mechanics load from references at the steps that need them.
 - Review replies lead with the decision and omit context already established in the visible thread.
@@ -15,6 +16,14 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ### Fixed
 
+- Skill verification preserves release-asset scope, nested Markdown fences, complete ruleset pagination, annotated-tag chains, and extensionless Node script checks.
+- Release guidance handles registry lookup failures, artifact build dependencies, changelog version keys, and the distinction between integrity and build provenance.
+- References correct npm publishing permissions, Bun defaults, license declarations, Java inputs, and Codex installation steps. Prose checks recognize overlapping proper names.
+- Skill examples preserve release gates, required checks, and unrelated ruleset protections. Helpers resolve from their installed paths.
+- Validation reports incomplete scans and unsupported YAML types. Release-note extraction preserves fenced examples and multiline links; prose checks handle code spans and wrapped sentences.
+- Guidance corrects Hex authentication, NuGet artifact identity, Go versions, Packagist withdrawals, cache prerequisites, Pages inputs, license discovery, and optional standard lookups.
+- The quick start invokes the audit skill explicitly, and Codex package metadata includes the required display fields.
+- The marketplace schema URL resolves, and Cursor's native catalog supports the documented CLI installation route.
 - The audit collector rejects unsupported YAML instead of returning incomplete facts, reads quoted keys, and finds deeply nested actions without looping through directory symlinks.
 - Release-note extraction retains referenced issue and migration links. Initial releases use the full commit history, and npm withdrawal guidance includes the dependency restriction.
 - Publishing examples use valid job dependencies and signer-workflow paths. SBOM checks require exact-asset coverage, and provenance checks respect applicability and the standard's forge fallback.

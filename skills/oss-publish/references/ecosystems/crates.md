@@ -17,7 +17,7 @@ Source: [crates.io Docs, Trusted Publishing](https://crates.io/docs/trusted-publ
 
 ## Gather facts (Step 1)
 
-Read `Cargo.toml`'s `package.repository` field for the owner and repository, falling back to `git remote get-url origin`. Check whether the crate is already published with `curl -s -o /dev/null -w '%{http_code}' https://crates.io/api/v1/crates/<name>` (or check the crate's page directly); anything other than `200` means it needs the first interactive publish before any of the flow below applies.
+Read `Cargo.toml`'s `package.repository` field for the owner and repository, falling back to `git remote get-url origin`. Check the crate at `https://crates.io/api/v1/crates/<name>` or its registry page. HTTP 200 establishes publication; a confirmed 404 selects the first-publication path. Rate limits, authorization errors, server failures, and transport failures leave publication status unknown. Resolve that failure before selecting credentials or attempting publication.
 
 ## Configure trusted publishing (Step 2)
 
@@ -183,7 +183,7 @@ crates.io does not surface or link to that attestation. GitLab CI/CD has no equi
 
 Only for a release that attaches a built asset to the forge release. The `.crate` this workflow uploads is attested in the publish job in Step 3, and the source archives GitHub generates for a tag are not built assets. What this section covers is compiled binaries, which a crate shipping a command-line tool commonly attaches and a library crate does not.
 
-Build those binaries in an uncredentialed job that carries no registry token, alongside the test job, and hand them on as a workflow artifact. Do not build them in the publish job: everything running there could publish the crate, which is why Step 3 keeps that job down to the token exchange and `cargo publish`.
+Build those binaries in an uncredentialed `build` job alongside the test job. Upload them as the `binaries` workflow artifact. For this complete release flow, add `build` to the publish job's `needs` so a failed build prevents publication. The release-asset job below also waits for `build`. Keep compilation outside the credentialed publish job.
 
 Two rules apply here and they ask for different things. R-PUB-05 wants an inventory of what went into the asset, in SPDX or CycloneDX. R-PUB-06 wants the assets signed, or listed by hash in a signed manifest. A manifest of hashes answers the second and nothing about the first, so do not report R-PUB-05 as met by publishing one.
 
@@ -192,7 +192,7 @@ This reference names no SBOM generator for Rust. The ones in common use are thir
 ```yaml
   github-release:
     runs-on: ubuntu-latest
-    needs: [publish]
+    needs: [publish, build]
     permissions:
       contents: write
       id-token: write
@@ -232,7 +232,7 @@ Run the first command against each asset downloaded, never against `SHA256SUMS`,
 
 `gh release upload` fails when no release exists for the tag. Either create it in this job with `gh release create "$GITHUB_REF_NAME" --generate-notes` before the upload, or have the maintainer publish the release from the tag first. This reference does not choose between them, because release notes are the project's own.
 
-The four grants above are copied exactly, on this job only, and `needs: [publish]` is what keeps the assets behind the approval gate. The workflow's top-level block stays `contents: read`. Narrowing anything else, pinning each `uses:` to a commit SHA, and auditing the result are `oss-harden`'s.
+The four grants above apply only to this job. `needs: [publish, build]` waits for both approval and the binary artifact. The workflow's top-level block stays `contents: read`. Other permission changes and action pins belong to `oss-harden`.
 
 On GitLab CI/CD none of this applies: the forge attestation above is GitHub's. A GitLab release can carry the same `SHA256SUMS`, generated the same way, but nothing signs it, so say that rather than presenting the file as provenance.
 

@@ -36,7 +36,7 @@ The rule is scored against the updater, so `cooldown` in `dependabot.yml` or `mi
 - **npm** has `min-release-age`, default `null`, counted in **days**: "only versions that were available more than the given number of days ago will be installed". `min-release-age-exclude` takes package names or minimatch globs. Note the interaction with `npm audit fix`: where the fix is younger than the threshold, npm keeps the vulnerable version and exits non-zero, which is a failure a project has to be ready to read.
 - **yarn** has `npmMinimalAgeGate` and it is already on, defaulting to one week.
 - **pnpm** has `minimumReleaseAge`, counted in **minutes**, and it is on by default at 1440, one day, from pnpm v11. Setting it to `0` turns the protection off.
-- **bun** has `minimumReleaseAge` under `[install]` in `bunfig.toml`, counted in **seconds**, with `minimumReleaseAgeExcludes`. It is off by default and it leaks: it is bypassed for a version already pinned in `bun.lock`, including under `--frozen-lockfile`, `bunx --minimum-release-age` is a silent no-op, and `bun upgrade` ignores it. Set it, and do not report it as the project's only cooldown.
+- **bun** has `minimumReleaseAge` under `[install]` in `bunfig.toml`, counted in **seconds**, with `minimumReleaseAgeExcludes`. It is off by default and does not recheck versions already pinned in `bun.lock`, including under `--frozen-lockfile`. `bunx --minimum-release-age` applies the age gate; older versions affected by issue 30748 ignored it. `bun upgrade` has a separate unresolved limitation. Do not report the install setting as the project's only cooldown.
 
 Three units across four managers, so read which manager the repository uses before writing a number. A value meant as one day is 1 in npm, 1440 in pnpm, and 86400 in bun.
 
@@ -44,12 +44,12 @@ Verified 2026-08-03 against [npm config](https://docs.npmjs.com/cli/v12/using-np
 
 ## Dependency install scripts (R-SEC-15)
 
-An install-time lifecycle script is the shortest path from a compromised package to a shell on the runner, holding whatever token the job holds. Every manager in this ecosystem now blocks dependency scripts by default, but they arrived there at different times and they are configured in four different places, so read which manager the repository uses before concluding anything.
+An install-time lifecycle script can give a compromised package access to the runner and its tokens. Defaults and exceptions differ by manager. Check the actual configuration before reporting dependency scripts blocked.
 
 - **npm** blocks dependency lifecycle scripts by default from version 12, released 2026-07-08, and governs the exceptions with an `allowScripts` field in the root `package.json`. Maintain it with `npm install-scripts approve|deny|ls|prune`; `npm approve-scripts` and `npm deny-scripts` are aliases for the first two. `approve` writes a version-pinned entry such as `pkg@1.2.3` unless `--no-allow-scripts-pin` is passed, `deny` writes a name-only `false` entry that survives a later `approve --all`, `ls` reports what is blocked without editing anything, and `npm rebuild` runs a script that was approved after the install. npm 12 also changed `allow-git` and `allow-remote` to default to `none`, so a git or tarball-URL dependency no longer resolves until one of them is set to `all` or `root`.
 - **yarn** defaults `enableScripts` to false, documented as "Yarn will not execute the postinstall scripts from third-party packages".
 - **pnpm** disabled automatic execution of dependency `postinstall` scripts in version 10. `allowBuilds` lists the dependencies permitted to build; `dangerouslyAllowAllBuilds` turns the protection off wholesale and its name is the review comment.
-- **bun** never runs a dependency lifecycle script, and `trustedDependencies` in `package.json` is the opt-in list.
+- **bun** permits a built-in list of trusted npm packages when `trustedDependencies` is absent. An explicit `trustedDependencies` array replaces that list; `[]` trusts no dependencies. Use `--ignore-scripts` when no lifecycle script should run.
 
 `--ignore-scripts` is a blunter and older instrument that still works and is worth writing in CI anyway, because it is evidence in the workflow file rather than a default the runner's manager version happens to carry. Note what it costs: it suppresses the project's own scripts too, which is why a job that needs `prepare` or `prepublishOnly` runs them as an explicit step rather than relying on the install to trigger them.
 
@@ -57,7 +57,7 @@ Verified 2026-08-03 against [npm config](https://docs.npmjs.com/cli/v12/using-np
 
 ## Static analysis (R-SEC-09)
 
-CodeQL supports JavaScript and TypeScript, so CodeQL default setup covers this ecosystem on GitHub with no workflow to maintain. GitLab's SAST table lists JavaScript and TypeScript under its Semgrep-based analyzer with GitLab-managed rules, available in the tier that ships the open source analyzers.
+CodeQL supports JavaScript and TypeScript. Follow the shared required-check procedure in the GitHub reference to choose and configure setup. GitLab's SAST table lists both languages under its Semgrep-based analyzer with GitLab-managed rules.
 
 ## Vulnerability watch (R-SEC-11)
 

@@ -126,8 +126,9 @@ Attach and attest in a separate job, which is the same job boundary the other ec
 
 ```yaml
   github-release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: [test, build]
     permissions:
       contents: write
       id-token: write
@@ -147,6 +148,8 @@ Attach and attest in a separate job, which is the same job boundary the other ec
           GH_TOKEN: ${{ github.token }}
 ```
 
+Adapt the `v*` tag condition to the release unit's tag convention, including a subdirectory prefix for nested modules. Branch pushes and pull requests run checks without release writes. The release job waits for both tests and the artifact-producing build.
+
 `sha256sum` runs from inside `dist/` so the names it writes are the names the assets carry on the release. `subject-checksums` makes every file in the manifest a subject of the attestation in its own right, by name and digest; attesting `SHA256SUMS` itself with `subject-path` would leave a consumer able to verify the manifest and nothing about the assets it lists.
 
 A consumer verifies an asset, then checks the rest of the download against the manifest:
@@ -161,6 +164,8 @@ Run the first command against each asset downloaded, never against `SHA256SUMS`,
 `gh release upload` fails when no release exists for the tag. Either create it in this job with `gh release create "$GITHUB_REF_NAME" --generate-notes` first, or have the maintainer publish the release from the tag. This reference does not choose between them, because release notes are the project's own.
 
 ### Where the project already uses GoReleaser
+
+Apply the same push-to-release-tag condition and required test dependencies to the job running `goreleaser release`. Keep pull-request checks separate from release writes.
 
 A Go project shipping binaries commonly builds them with GoReleaser, and such a project does not need most of the job above. `goreleaser release` compiles every target into `dist/`, writes a checksum file in `sha256sum` format beside the archives, creates the forge release, and uploads all of it, so the `go build`, `go version -m`, `sha256sum`, and `gh release upload` steps are already covered. Its `sboms:` block answers R-PUB-05 in one of the rule's two formats without further configuration: the default generator is `syft` and the default arguments write `spdx-json`. What the block does not do is install the generator, which is a third-party tool the runner does not ship, so the workflow puts `syft` on the PATH before the release step and the maintainer vets it as they would any other tool this skill leaves them to choose.
 
@@ -185,6 +190,8 @@ What is left is the attestation, and it is the same action:
 Read the checksum file's name from the project's `.goreleaser.yml` rather than assuming it. GoReleaser's default is `{{ .ProjectName }}_{{ .Version }}_checksums.txt`, so a path of `dist/checksums.txt` means the project set `checksum.name_template`, which is what GoReleaser's own attestations page tells a project to do for exactly this reason: the workflow has to name the file and the template has to produce that name. Two settings in the same block break the step rather than rename its input: `checksum.disable` writes no manifest at all, and `checksum.split` writes one file per artifact instead of one manifest, so `subject-checksums` has nothing single to read and the step falls back to a `subject-path` glob over `dist/`. Confirm the manifest lists the SBOMs as well as the archives, because `subject-checksums` attests exactly what the file names and nothing else; `checksum.ids` is what narrows it. See [GoReleaser, Checksums](https://goreleaser.com/customization/package/checksum/) and [GoReleaser, Attestations](https://goreleaser.com/customization/attestations/). The job carries `contents: write`, `id-token: write`, `attestations: write`, and `artifact-metadata: write`, the same four as above.
 
 The job boundary this section argues for collapses here, and saying so is better than presenting a split that is not there: one GoReleaser step both compiles the binaries and writes them to the release, so the build has the release-asset write. Recovering the split means running `goreleaser release --skip=publish` in one job and uploading from another, which gives up the release creation and the changelog handling the project chose GoReleaser for. Where a project accepts the collapse, R-SEC-13's restriction on who may create a tag is the only control left between a push and a published asset, so report it as that rather than as one control among several.
+
+## Withdrawing a bad version
 
 A published version cannot be unpublished; deleting the tag does not remove it from the mirror. The documented remedy is the `retract` directive: add it to `go.mod` and publish a new version containing it, higher than every other release or pre-release. Retracted versions stay available so existing builds keep working, drop out of `@latest` and range queries, hide from `go list -m -versions` unless `-retracted` is passed, and surface to users on `go list -m -u`. `oss-changelog` owns how that gets recorded, under R-CHG-01.
 

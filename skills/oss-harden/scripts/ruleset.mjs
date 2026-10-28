@@ -11,7 +11,7 @@
 //   ruleset.mjs put <owner>/<repo> <name-or-id> <patch.json>
 //   ruleset.mjs actor <login>
 //
-// `put` reads the ruleset, deep-merges the patch over it, strips the nulls
+// `put` reads the ruleset, merges rules by type and other maps recursively, strips the nulls
 // GitHub will not accept, PUTs the result, and prints what the API reports
 // afterwards rather than what was sent. Read the result back; do not infer it
 // from a 200.
@@ -66,6 +66,20 @@ export function merge(base, patch) {
   if (Array.isArray(patch) || patch === null || typeof patch !== "object") return patch
   const out = { ...base }
   for (const [key, value] of Object.entries(patch)) {
+    if (key === "rules") {
+      if (!Array.isArray(value)) throw new Error("rules must be an array of typed rules")
+      const seen = new Set()
+      const rules = [...(base.rules ?? [])]
+      for (const rule of value) {
+        if (!rule || typeof rule.type !== "string" || seen.has(rule.type)) throw new Error("rules need distinct string types")
+        seen.add(rule.type)
+        const index = rules.findIndex((existing) => existing.type === rule.type)
+        if (index < 0) rules.push(rule)
+        else rules[index] = merge(rules[index], rule)
+      }
+      out[key] = rules
+      continue
+    }
     out[key] = key in base && base[key] && typeof base[key] === "object" && !Array.isArray(base[key])
       ? merge(base[key], value)
       : value
@@ -87,7 +101,7 @@ export function writable(ruleset) {
 
 /** @param {string} slug @returns {any[]} */
 function list(slug) {
-  return JSON.parse(gh(["api", `repos/${slug}/rulesets`]))
+  return JSON.parse(gh(["api", `repos/${slug}/rulesets`, "--paginate", "--slurp"])).flat()
 }
 
 /** @param {string} slug @param {number} id @returns {string} */
@@ -135,7 +149,9 @@ if (command === "put") {
   if (!nameOrId || !patchPath) fail("usage: ruleset.mjs put <owner>/<repo> <name-or-id> <patch.json>")
   const current = find(slug, nameOrId)
   const patch = JSON.parse(readFileSync(patchPath, "utf8"))
-  const body = writable(merge(writable(current), patch))
+  let body
+  try { body = writable(merge(writable(current), patch)) }
+  catch (error) { fail(`invalid ruleset patch: ${error instanceof Error ? error.message : error}`) }
   gh(["api", "-X", "PUT", rulesetPath(slug, current.id), "--input", "-"], JSON.stringify(body))
   // Print what the API reports now, not what was sent. A ruleset that accepted
   // a write and stored something else is the case this exists to surface.

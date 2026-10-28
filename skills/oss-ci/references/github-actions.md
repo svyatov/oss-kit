@@ -21,7 +21,7 @@ Run on push to the default branch and on every pull request:
 ```yaml
 on:
   push:
-    branches: [main]
+    branches: [main]  # placeholder: the repository's actual default branch
   pull_request:
 ```
 
@@ -147,7 +147,7 @@ jobs:
         uses: actions/deploy-pages@v5
 ```
 
-Everything not marked a placeholder is copied exactly: the `concurrency` group with `cancel-in-progress: false`, the `needs: build` edge, `upload-pages-artifact` in `build` and `deploy-pages` in `deploy` in that order across it, the deploy job's two `permissions`, and `environment: name: github-pages`. Those lines are what the deployment is; the three placeholders are the only project-specific values in the file.
+Preserve the concurrency, build dependency, artifact handoff, deploy permissions, and `github-pages` environment. Adapt the default branch, install command, build command, and output directory to the project.
 
 The two jobs exist so the privileged token never sits in the same job as the project's own build command. `upload-pages-artifact` hands the built directory across the job boundary, so the split costs the `needs: build` edge and a second `runs-on`, and it matches GitHub's own Node and Jekyll Pages starters. The reason is consistency rather than exposure: whoever controls `npm run build` already controls the artifact that gets deployed. What it buys is that `oss-ci` and `oss-publish` stop teaching opposite things about where `id-token: write` may sit.
 

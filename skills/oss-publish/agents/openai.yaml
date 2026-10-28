@@ -1,0 +1,5 @@
+interface:
+  display_name: "oss-publish"
+  short_description: "Configure secure package and container releases"
+policy:
+  allow_implicit_invocation: false

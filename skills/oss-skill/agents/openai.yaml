@@ -1,0 +1,5 @@
+interface:
+  display_name: "oss-skill"
+  short_description: "Audit skill structure, portability, and context use"
+policy:
+  allow_implicit_invocation: false

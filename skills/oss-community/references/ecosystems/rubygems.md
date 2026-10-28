@@ -6,7 +6,7 @@ The gemspec declares it. `license=` takes one name and `licenses=` takes an arra
 
 `Gemfile` is the other manifest the roster lists for this ecosystem, and it declares dependencies rather than package metadata, so it carries no license at all. A repository holding a `Gemfile` and no gemspec, an application rather than a gem, therefore has nothing on the manifest side of the comparison. That is not a failure to declare; it is an application that publishes no package.
 
-So the manifest side of R-COM-01 is the gemspec's license value or values, and the file side is the root license file. Where the gemspec lists two, both have to be traceable to what the file says, because an array is a list of licenses that apply and not a menu the reader picks from.
+Compare the gemspec's license values with the shipped license text. The array does not state how its licenses combine. Read the terms before deciding whether they apply together or offer alternatives. Report unclear terms rather than inferring a conjunction from the array.
 
 Source: [Specification reference](https://guides.rubygems.org/specification-reference.md).
 

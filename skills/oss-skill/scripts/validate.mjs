@@ -11,7 +11,7 @@
  * ships to whatever the reader already has. R-SKL-05 says the same thing, and
  * this file is held to it.
  */
-import { existsSync, readFileSync, readdirSync, realpathSync } from "node:fs"
+import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs"
 import { basename, dirname, extname, join, relative, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -178,32 +178,36 @@ const SPECIFIER_SHAPE_RE = /^[^\s"'()*<>|?]+$/
 const UNREADABLE_FILE_MESSAGE = "could not read this file"
 
 /**
- * Yields every regular file under dir. Skips .git and node_modules. A symlinked
- * entry is already neither a file nor a directory as Node reports it, so the
- * walk declines it twice over below; the explicit isSymbolicLink() check exists
- * to state that intent at the point where a future edit, such as switching to a
- * recursive readdir or adding a call that resolves the target, would otherwise
- * reintroduce the fault. This matters because a repository may commit
- * .claude/skills and .agents/skills pointing at one real skills/ directory, and
- * following them would report every skill two or three times.
+ * Yields regular files, resolving directory aliases once and stopping cycles.
+ * Skips .git and node_modules. Records incomplete traversal separately from an empty tree.
  * @param {string} dir
+ * @param {Finding[]} [failures]
+ * @param {Set<string>} [visited]
  * @returns {Generator<string>}
  */
-function* walk(dir) {
+function* walk(dir, failures = [], visited = new Set()) {
   let entries
   try {
+    const real = realpathSync(dir)
+    if (visited.has(real)) return
     entries = readdirSync(dir, { withFileTypes: true })
+    visited.add(real)
   } catch {
+    failures.push({ severity: "error", rule: null, file: dir, message: "directory is not readable; scan is incomplete" })
     return
   }
   for (const entry of entries) {
-    // Node reports a symlink as neither a file nor a directory, so this is
-    // usually redundant with the checks below; it stays explicit as a guard.
-    if (entry.isSymbolicLink()) continue
+    if (SKIP_DIRS.has(entry.name)) continue
     const path = join(dir, entry.name)
-    if (entry.isDirectory()) {
-      if (!SKIP_DIRS.has(entry.name)) yield* walk(path)
-    } else if (entry.isFile()) {
+    let type
+    try { type = entry.isSymbolicLink() ? statSync(path) : entry }
+    catch {
+      failures.push({ severity: "error", rule: null, file: path, message: "symlink target is not readable; scan is incomplete" })
+      continue
+    }
+    if (type.isDirectory()) {
+      yield* walk(path, failures, visited)
+    } else if (type.isFile()) {
       yield path
     }
   }
@@ -235,12 +239,16 @@ function* walkDirs(dir) {
 
 /**
  * @param {string} root
+ * @param {Finding[]} [failures]
  * @returns {string[]} absolute paths, sorted
  */
-export function findSkillFiles(root) {
+export function findSkillFiles(root, failures = []) {
   const found = []
-  for (const path of walk(root)) {
-    if (basename(path) === "SKILL.md") found.push(path)
+  for (const path of walk(root, failures)) {
+    if (basename(path) === "SKILL.md") {
+      try { found.push(realpathSync(path)) }
+      catch { found.push(path) } // Per-file validation reports unreadable files.
+    }
   }
   return found.sort()
 }
@@ -323,7 +331,12 @@ export function parseFrontmatter(text) {
     const line = lines[i] ?? ""
     if (line.trim() === "") continue
     if (/^\s/.test(line)) {
-      if (!(inMap && /^\s+[\w.-]+:\s*\S/.test(line))) unreadable.push(i + 1)
+      const child = /^\s+[\w.-]+:\s*(.+)$/.exec(line)
+      const value = child?.[1]?.trim() ?? ""
+      if (!(inMap && child) || unsupportedScalar(value) || ((value.startsWith('"') || value.startsWith("'")) && !QUOTED_RE.test(value))) {
+        unreadable.push(i + 1)
+        if (inMap) unreadableKeys.add("metadata")
+      }
       continue
     }
     inMap = false
@@ -343,7 +356,7 @@ export function parseFrontmatter(text) {
       unreadableKeys.delete(key)
       continue
     }
-    if (/^[>|&*]/.test(raw)) {
+    if (key === "metadata" || unsupportedScalar(raw)) {
       unreadable.push(i + 1)
       unreadableKeys.add(key)
       continue
@@ -369,6 +382,13 @@ export function parseFrontmatter(text) {
     unreadableKeys.delete(key)
   }
   return { ok: true, reason: null, entries, unreadable, unreadableKeys, duplicates, bodyStart: end + 1 }
+}
+
+/** @param {string} raw */
+function unsupportedScalar(raw) {
+  if (raw.startsWith('"') || raw.startsWith("'")) return false
+  const value = raw.replace(/\s+#.*$/, "").trim()
+  return /^[>|&*[{!]/.test(value) || /^(?:null|true|false|~|[-+]?(?:0x[\da-f_]+|0o[0-7_]+|0b[01_]+|(?:\d[\d_]*(?:\.[\d_]*)?|\.[\d_]+)(?:e[-+]?\d+)?|\.inf|\.nan))$/i.test(value)
 }
 
 /**
@@ -744,7 +764,8 @@ export function checkScripts(root, skillDir) {
       err(path, "TypeScript is not portable to the Node 22 floor; ship JavaScript instead")
       continue
     }
-    if (!CODE_EXTENSIONS.has(extension)) continue
+    const nodeShebang = /^#![^\n]*\bnode(?:\s|$)/.test(source.split(/\r?\n/)[0] ?? "")
+    if (!CODE_EXTENSIONS.has(extension) && !nodeShebang) continue
     const runtime = source.match(RUNTIME_GLOBAL_RE)
     if (runtime?.[1]) {
       err(path, `uses the ${runtime[1]} runtime global; a shipped script runs under whatever the reader already has`)
@@ -770,11 +791,13 @@ export function checkScripts(root, skillDir) {
  * @returns {Finding[]}
  */
 export function validate(root) {
-  const skillFiles = findSkillFiles(root)
+  /** @type {Finding[]} */
+  const failures = []
+  const skillFiles = findSkillFiles(root, failures)
   const repoLicense = readRepoLicense(root)
   const realSkills = realSkillsDir(root)
   /** @type {Finding[]} */
-  const out = [...checkLayout(root, skillFiles)]
+  const out = [...failures, ...checkLayout(root, skillFiles)]
   for (const abs of skillFiles) {
     // A file outside skills/<name>/ already drew its whole and correct
     // report from checkLayout above; running the per-skill checks on it too

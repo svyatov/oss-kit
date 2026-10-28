@@ -1,6 +1,7 @@
 ---
 name: oss-audit
-description: "Score an open source repository against the oss-kit standard and report what is missing. Checks documentation, community files, CI, security posture, release process, changelog discipline, and the structure of any agent skills the repository ships, then names the skill that fixes each gap. Use when the user asks how healthy a repo is, what an open source project is missing, to audit or review a repository's open source practices, where to start improving one, what to do before opening a private repository to the public, or to score a repository against a named standard."
+description: "Score an open source repository against the oss-kit standard and report which skills fix each gap."
+disable-model-invocation: true
 license: MIT
 ---
 
@@ -68,7 +69,7 @@ A rule met by a fallback the standard marks below the bar is a pass, and counts 
 
 Some `Check:` lines name evidence that exists once per ecosystem rather than once per repository: a lockfile, a toolchain matrix, an update configuration, a vulnerability feed. Score such a rule against every ecosystem the relevant axis from Step 2 puts in scope for it, one observation each, and mark it pass only when every one of them passes. One failing ecosystem fails the rule, because a repository whose Ruby dependencies are watched and whose JavaScript ones are not is not two thirds covered, it is uncovered on one side. Carry the ecosystem name with the observation; Step 6 puts it in the finding.
 
-The PUB area resolves in one step from the shipped set, not rule by rule. Where nothing is shipped, the whole area is not applicable, which is Step 2's preamble handling and nothing more. Where something is shipped, read the preamble for the track each shipped ecosystem takes, confirm it against that ecosystem's `references/ecosystems/<name>.md`, and record the track once. The track decides which of the area's rules reach the repository at all, so a repository on the tag-published track has the rules that track drops marked not applicable together, on one scope sentence, and they are not checked one at a time. A repository shipping on both tracks scores each rule against the ecosystems whose track keeps it.
+Resolve PUB applicability from the full preamble, including built assets attached to forge releases. An empty shipped-ecosystem set does not exclude a repository publishing those assets. Mark the area not applicable only when neither publication form exists. For each shipped ecosystem, read its track from the preamble and confirm it against `references/ecosystems/<name>.md`. Record the track once. Group the rules excluded by that track under one scope sentence. A repository shipping on both tracks scores each rule against the ecosystems whose track keeps it. Check release-asset requirements even when no registry ecosystem is shipped.
 
 Mark a rule not applicable only when its area preamble, rule text, or `Check:` line states a precondition that the repository does not meet. Do not infer an unstated precondition from missing evidence: where the rule requires a file, setting, or value and does not define an exception, its absence is a failure. Record the scope sentence that made each rule not applicable so another audit reaches the same result.
 
@@ -98,7 +99,7 @@ Open with one count line: how many rules were applicable, how many of those pass
 
 Say in a parenthetical why the not-applicable rules were skipped, grouped by reason, so the reader can tell a rule that does not reach their repository from one the audit quietly dropped. Group by the scope sentence you recorded in Step 3 rather than listing rule IDs one by one. This is the count line's only qualifier; do not follow it with a section listing what was skipped.
 
-Under it, give one line for the ecosystems you detected, with shipped and present kept apart and named in that order, and say plainly when nothing is shipped. Every per-ecosystem finding below was scored against one of those two sets, so a reader who disputes a finding needs to see which set produced it, and one sentence saying the repository publishes nothing is what explains an entire area marked not applicable.
+Under it, name the shipped and present ecosystems separately, in that order. State separately whether the repository publishes built forge-release assets. An empty shipped-ecosystem set alone does not explain PUB being not applicable. Every per-ecosystem finding names which set put it in scope.
 
 Then list every fail and every unknown, most important first, one line each. A line carries the rule ID, the status, the evidence you found, and the skill named in that rule's `Fixed by:` line. Where the rule was scored per ecosystem, name the ecosystem that failed, before the evidence:
 

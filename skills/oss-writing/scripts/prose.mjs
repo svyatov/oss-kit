@@ -51,12 +51,59 @@ const STOPWORDS = new Set(["a", "an", "the", "of", "to", "in", "for", "and", "or
 // a rule may name the pattern it forbids inside backticks.
 function proseOnly(text) {
   const lines = text.split("\n")
-  let fenced = false
-  return lines.map((line) => {
-    if (/^\s*(```|~~~)/.test(line)) { fenced = !fenced; return "" }
-    if (fenced) return ""
-    return line.replace(/`[^`]*`/g, (m) => " ".repeat(m.length))
+  let fence = null
+  const masked = lines.map((line) => {
+    const marker = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line)
+    if (fence) {
+      if (marker && marker[1][0] === fence[0] && marker[1].length >= fence.length && marker[2].trim() === "") fence = null
+      return " ".repeat(line.length)
+    }
+    if (marker && !(marker[1][0] === "`" && marker[2].includes("`"))) {
+      fence = marker[1]
+      return " ".repeat(line.length)
+    }
+    return line
+  }).join("\n")
+  const chars = masked.split("")
+  let offset = 0
+  // Inline spans cannot continue through a blank line or a new block.
+  for (const block of masked.split(/(\n[ \t]*\n|\n(?= {0,3}(?:#{1,6} |[-*+] |\d+[.)] |>|```|~~~)))/)) {
+    const runs = [...block.matchAll(/`+/g)]
+    for (let i = 0; i < runs.length; i++) {
+      const start = runs[i]
+      if ((block.slice(0, start.index).match(/\\+$/)?.[0].length ?? 0) % 2) continue
+      const endIndex = runs.findIndex((run, index) => index > i && run[0].length === start[0].length)
+      if (endIndex < 0) continue
+      const end = runs[endIndex]
+      for (let p = offset + start.index; p < offset + end.index + end[0].length; p++) if (chars[p] !== "\n") chars[p] = " "
+      i = endIndex
+    }
+    offset += block.length
+  }
+  return chars.join("").split("\n")
+}
+
+function sentenceFindings(lines) {
+  const out = []
+  let paragraph = []
+  const flush = () => {
+    const text = paragraph.map((part) => part.text).join("\n")
+    for (const match of text.matchAll(/[^.!?]+(?:[.!?](?=\s|$)|$)/g)) {
+      const n = match[0].trim().split(/\s+/).filter(Boolean).length
+      if (n <= 25) continue
+      const offset = match.index + match[0].search(/\S/)
+      const lineOffset = text.slice(0, offset).split("\n").length - 1
+      out.push({ line: paragraph[lineOffset].line, col: 1, code: "sentence-length", msg: `sentence runs ${n} words, cap is 25` })
+    }
+    paragraph = []
+  }
+  lines.forEach((line, i) => {
+    if (/^\s*$|^\s*[#|]/.test(line)) { flush(); return }
+    if (/^\s*(?:[-*+] |\d+[.)] )/.test(line)) flush()
+    paragraph.push({ text: line.replace(/^\s*(?:>\s*)+/, "").replace(/^\s*(?:[-*+] |\d+[.)] )/, ""), line: i + 1 })
   })
+  flush()
+  return out
 }
 
 function headingFindings(line, lineNo, proper) {
@@ -67,7 +114,12 @@ function headingFindings(line, lineNo, proper) {
   // Title" drops "1." and reads "Title" as a capitalized non-first word.
   text = text.replace(/^\d+[.)]\s+/, "")
   if (!text) return []
-  for (const term of proper) text = text.replace(new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), "")
+  // Match the longest name first, and retain its position until the first
+  // word is removed. Otherwise "Claude Code Guide" can lose its leading name.
+  for (const term of [...proper].sort((a, b) => b.length - a.length)) {
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    text = text.replace(new RegExp(`(?<![\\p{L}\\p{N}_])${escaped}(?![\\p{L}\\p{N}_])`, "gu"), "PROPER")
+  }
   // A colon opens a new clause, whose first word may be capitalized in
   // sentence case. Drop the first word of every clause, not just of the
   // heading, or "Step 6: Report" reads as Title Case.
@@ -75,6 +127,7 @@ function headingFindings(line, lineNo, proper) {
     .flatMap((clause) => clause.split(/\s+/).filter(Boolean).slice(1))
     .filter((w) => !STOPWORDS.has(w.toLowerCase()))
     .filter((w) => /[A-Za-z]/.test(w))
+    .filter((w) => !/^PROPER\b/.test(w))
     .filter((w) => !/[./\\@]/.test(w))
     .filter((w) => !/^[A-Z0-9]+$/.test(w))
   if (words.length === 0) return []
@@ -122,13 +175,8 @@ function scan(file, opts) {
       while ((m = re.exec(line)) !== null) push(i, m.index + 1, "banned-word", `banned word: ${m[0]}`)
     }
     for (const f of headingFindings(line, i + 1, opts.proper)) out.push({ file, ...f })
-    if (opts.length && !/^\s*[-*|>#]/.test(line)) {
-      for (const s of line.split(/(?<=[.!?])\s+/)) {
-        const n = s.trim().split(/\s+/).filter(Boolean).length
-        if (n > 25) push(i, 1, "sentence-length", `sentence runs ${n} words, cap is 25`)
-      }
-    }
   })
+  if (opts.length) for (const finding of sentenceFindings(lines)) out.push({ file, ...finding })
   return out
 }
 

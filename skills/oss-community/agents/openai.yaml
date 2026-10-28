@@ -1,0 +1,5 @@
+interface:
+  display_name: "oss-community"
+  short_description: "Create community files and repository profiles"
+policy:
+  allow_implicit_invocation: false

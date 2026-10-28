@@ -36,7 +36,7 @@ Enter:
 - Repository: the repository name from Step 1
 - Workflow filename: `release.yml`, the filename only, not the full path
 - Environment: the approval environment name from `SKILL.md` Step 4, for example `release`
-- Allowed actions: for one package without public forge assets, enable `npm stage publish` and leave `npm publish` disabled. For multiple packages or any public forge assets, enable `npm publish` and leave staged publishing disabled. Step 4 configures the matching approval gate.
+- Allowed actions: npm always permits `npm stage publish`. For one package without public forge assets, leave `npm publish` disabled. For multiple packages or any public forge assets, enable `npm publish` and use the direct command behind Step 4's forge gate.
 
 In the workflow, the publish job needs:
 
@@ -62,7 +62,7 @@ Enter, at `https://www.npmjs.com/package/<name>/access`:
 - Project name: the project name
 - Top-level CI file path: the path to the pipeline file, for example `.gitlab-ci.yml`
 - Environment name: the approval environment name from Step 4, for example `release`
-- Allowed actions: select staged or direct publishing from the release-flow rule above
+- Allowed actions: leave direct publishing disabled for the staged flow, or enable it for the direct flow above. Staged publishing remains permitted.
 
 In the pipeline, the publish job needs:
 
@@ -149,7 +149,7 @@ Where a release tool already owns the release, keep it and fit the publish job i
 
 ## Gate on manual approval (Step 4)
 
-For multiple packages or any public forge assets, use one forge gate before direct publication. Configure every trusted publisher for `npm publish` and disable staged publishing. Run one `npm publish ./package/<tarball>.tgz --ignore-scripts` command per package. On GitHub, add a required reviewer to `release`. On GitLab Premium or Ultimate, protect `release` and make the publish job blocking and manual. Asset-upload jobs must depend on successful completion of that publish job, without `always()` or another condition that bypasses failure. Do not add a second approval to the asset-upload job.
+For multiple packages or any public forge assets, use one forge gate before direct publication. Enable `npm publish` for every trusted publisher; npm still permits staging. Run one `npm publish ./package/<tarball>.tgz --ignore-scripts` command per package. On GitHub, add a required reviewer to `release`. On GitLab Premium or Ultimate, protect `release` and make the publish job blocking and manual. Asset-upload jobs must depend on successful direct publication, without `always()` or another condition that bypasses failure. A completed staging job does not satisfy that dependency. Do not add a second approval to the asset-upload job.
 
 GitHub required reviewers are available for public repositories on all plans. Private repositories need GitHub Enterprise for this gate. If the native gate is unavailable, report R-PUB-04 unmet for a flow that publishes forge assets.
 

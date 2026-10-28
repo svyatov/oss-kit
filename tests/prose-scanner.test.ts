@@ -36,6 +36,23 @@ test("ignores dashes inside fenced blocks and inline code", () => {
   expect(code).toBe(0)
 })
 
+test("keeps longer fences, mixed delimiters and multiline code spans masked", () => {
+  const result = run("````md\n```js\ncode — here\n~~~\n```\n````\nAnd ``a ` — span``.\nA `multiline\n— span` too.\nReal — prose.\n")
+  expect(result.stdout).toContain(":10:6  em-dash")
+  expect(result.stdout).toContain("1 finding(s)")
+  expect(run("~~~\ncode — here\n").code).toBe(0)
+  expect(run("An unmatched ` leaves — prose.").stdout).toContain("em-dash")
+  expect(run("An unmatched ` ends here.\n\nReal — prose with `code`.\n").stdout).toContain(":3:6  em-dash")
+})
+
+test("counts sentences across soft wraps, list continuations and block quotes", () => {
+  const words = Array.from({ length: 30 }, (_, i) => `word${i}`)
+  for (const body of [words.join(" ") + ".", words.slice(0, 15).join(" ") + "\n" + words.slice(15).join(" ") + ".", "- " + words.join(" ") + ".", "> " + words.join(" ") + "."]) {
+    expect(run(body, ["--length"]).stdout).toContain("sentence runs 30 words")
+  }
+  expect(run(words.slice(0, 15).join(" ") + ".\n" + words.slice(15).join(" ") + ".", ["--length"]).code).toBe(0)
+})
+
 test("reports a Title Case heading and leaves sentence case alone", () => {
   const bad = run("# A Test Of Title Case\n")
   expect(bad.code).toBe(1)
@@ -57,6 +74,15 @@ test("reports the six promotional words R-DOC-05 names, and the rest only under 
   const house = run(body, ["--house"])
   expect(house.stdout).toContain("utilize")
   expect(house.stdout).toContain("simply")
+})
+
+test("matches overlapping proper names without losing the heading's first word", () => {
+  expect(run("# Use Claude Code\n# Use Claude\n").code).toBe(0)
+  expect(run("# Claude Code, GitHub Copilot CLI, and VS Code\n").code).toBe(0)
+  expect(run("# Claude Code Configuration Guide\n").stdout).toContain("heading-case")
+  const file = join(mkdtempSync(join(tmpdir(), "proper-")), "terms.txt")
+  writeFileSync(file, "Claude Code Extension\n")
+  expect(run("# Use Claude Code Extension\n", ["--proper", file]).code).toBe(0)
 })
 
 test("--only narrows the report, and a clean file exits 0", () => {

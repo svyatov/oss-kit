@@ -8,6 +8,19 @@ description: Install the full oss-kit collection or one skill in a supported age
 Every host below reads the current skills from the repository's canonical
 `skills/` directory. Only the discovery path changes between hosts.
 
+## Invocation
+
+Only `oss-writing` is available for automatic selection. It supplies writing
+guidance during commits, reviews, and documentation work.
+
+The other eight skills require explicit invocation in Claude Code, Codex, and
+Cursor. Use `/oss-kit:oss-audit` for the Claude Code plugin, `$oss-audit` in
+Codex, or `/oss-audit` in Cursor. Substitute the skill name for another task.
+
+Claude Code and Cursor read `disable-model-invocation` in `SKILL.md`. Codex
+reads `policy.allow_implicit_invocation` in `agents/openai.yaml`.
+Other hosts can load the skills, but may not enforce these controls.
+
 ## Any agent
 
 The open `skills` CLI offers all nine skills under one row you can select in a
@@ -48,18 +61,36 @@ In VS Code, run `Chat: Install Plugin From Source` and enter
 
 ## Codex CLI
 
-Reads `.codex-plugin/plugin.json`. Codex CLI 0.122 or later:
+This repository supplies `.codex-plugin/plugin.json` for Codex.
+Register the marketplace from the terminal:
 
 ```bash
 codex plugin marketplace add svyatov/oss-kit
 ```
 
+Then install the plugin:
+
+```bash
+codex plugin add oss-kit@oss-kit
+```
+
+If the CLI does not expose `plugin add`, use the client's plugin installation
+interface after registering the marketplace.
+
 ## Cursor
 
-Reads `.cursor-plugin/plugin.json`. Cursor has no CLI or slash command for
-installing a plugin. Install it through the Customize panel inside Cursor, or
-from cursor.com/marketplace. A team admin can add it from the Dashboard,
-under Plugins, Add Marketplace, Import from Repo.
+Reads `.cursor-plugin/plugin.json`. Install through the IDE's Customize panel
+or from cursor.com/marketplace. A team admin can use Dashboard, Plugins & MCPs,
+Add Marketplace, Import from Repo.
+
+The native catalog at `.cursor-plugin/marketplace.json` also supports Cursor
+CLI. With CLI v2026.07.13 or later, register the marketplace from a terminal:
+
+```bash
+agent plugin marketplace add https://github.com/svyatov/oss-kit.git
+```
+
+Then open `/plugin` in Cursor CLI to select and install `oss-kit`.
 
 ## Kimi Code
 

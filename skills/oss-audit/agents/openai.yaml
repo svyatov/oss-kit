@@ -1,0 +1,5 @@
+interface:
+  display_name: "oss-audit"
+  short_description: "Score repositories against the oss-kit standard"
+policy:
+  allow_implicit_invocation: false

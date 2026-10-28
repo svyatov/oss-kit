@@ -26,7 +26,7 @@ Verified 2026-07-31 against [Go modules reference](https://go.dev/ref/mod) and [
 
 ## Static analysis (R-SEC-09)
 
-CodeQL supports Go, so CodeQL default setup covers this ecosystem on GitHub. GitLab's SAST table lists Go under its Semgrep-based analyzer with GitLab-managed rules.
+CodeQL supports Go. Follow the shared required-check procedure in the GitHub reference to configure setup. GitLab's SAST table lists Go under its Semgrep-based analyzer with GitLab-managed rules.
 
 ## Vulnerability watch (R-SEC-11)
 

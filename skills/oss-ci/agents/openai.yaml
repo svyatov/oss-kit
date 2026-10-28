@@ -1,0 +1,5 @@
+interface:
+  display_name: "oss-ci"
+  short_description: "Configure CI checks and static-site deployment"
+policy:
+  allow_implicit_invocation: false

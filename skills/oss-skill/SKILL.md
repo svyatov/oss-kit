@@ -1,6 +1,7 @@
 ---
 name: oss-skill
-description: "Fix the structure, portability, and effectiveness of repositories that ship Agent Skills. Covers canonical layout, SKILL.md conformance, trigger descriptions, progressive disclosure, repeatable procedures, bundled scripts, evaluation, licensing, and host install paths. Use when a skill fails to load or trigger, produces inconsistent results, wastes context or tool calls, ships non-portable code, or needs an audit against the current Agent Skills specification and authoring guidance."
+description: "Audit and fix Agent Skills for structure, portability, focused procedures, context use, and specification conformance."
+disable-model-invocation: true
 license: MIT
 compatibility: Requires Node 22+ or Bun to run the bundled validator
 ---
@@ -15,7 +16,7 @@ Most of what this skill fixes is mechanical, and the validator this skill ships 
 
 The SKL rules belong here: R-SKL-01 layout, R-SKL-02 specification conformance, R-SKL-03 body size, R-SKL-04 licensing, R-SKL-05 portable scripts, R-SKL-06 install paths, and R-SKL-07 focused procedures with progressive disclosure.
 
-When `oss-audit-report.md` exists at the repository root, read the group addressed to this skill and work from that. Each failing rule there carries the audit's evidence and that rule's `Check:` text verbatim, so reading `STANDARD.md` as well adds nothing. Where the file is absent, work from the request as usual.
+Use this skill's quoted checks from `oss-audit-report.md` when supplied. Otherwise resolve `../oss-audit/STANDARD.md` from this installed skill's directory before editing. If neither source exists, follow the request and report standard verification as unavailable. Use the same resolved checks at completion; supplied checks do not establish unlisted rules.
 
 Neighbouring work belongs elsewhere. Wiring the validator into CI is R-CI-02, owned by `oss-ci`, because the rule already requires CI to run the same linter the contributing guide gives to humans, and for a skills repository that linter is the validator. Keeping every host manifest on one version is R-CHG-03, owned by `oss-changelog`. The README's install command and runnable example are R-DOC-02, and its links to the license, changelog, and contributing guide are R-DOC-03, both owned by `oss-readme`. The sentences inside any file are R-DOC-05, owned by `oss-writing`. Note what a repository needs and hand it to the owning skill rather than doing that work from here.
 
@@ -123,7 +124,7 @@ Treat it as one. Say so when proposing the rename, and hand the changelog entry 
 
 ## Verify, then report what you changed
 
-Re-run the validator after every fix, not once at the end, because one edit can introduce a fault another edit was meant to clear. Then read each SKL rule's `Check:` line in `STANDARD.md` against the repository as it now stands, fix what fails, and start the list again. Completion is gated on both: a clean validator exit and every cited rule passing.
+Re-run the validator after every fix, then apply the SKL checks resolved at entry. Fix failures and restart the checks. Report unavailable standard checks explicitly. Completion requires a clean validator exit and passing results for every available cited check.
 
 List every skill you touched, the rule each change satisfies, and every fault the validator reported that you did not fix, with the reason. Name the rename separately from the mechanical fixes, since it is the only one with downstream cost.
 
