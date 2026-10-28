@@ -83,13 +83,13 @@ Resolve the chosen tag to the commit it points at with `gh api`:
 gh api repos/{owner}/{repo}/git/refs/tags/{tag} --jq '.object.sha'
 ```
 
-A lightweight tag's `object.sha` is already the commit SHA. An annotated tag's `object.sha` is the SHA of the tag object, not the commit, and using it directly pins to the wrong thing. When `.object.type` in the same response is `tag` rather than `commit`, make a second call against the tag object to get the commit it points at:
+A lightweight tag's `object.sha` is already the commit SHA. An annotated tag points to a tag object, so inspect its target:
 
 ```bash
-gh api repos/{owner}/{repo}/git/tags/{tag-object-sha} --jq '.object.sha'
+gh api repos/{owner}/{repo}/git/tags/{tag-object-sha} --jq '.object'
 ```
 
-The `^{}` peeled-ref suffix does not work here. It is git wire-protocol syntax, not a REST path segment, so `git/refs/tags/{tag}^{}` returns 404.
+Repeat while the returned object's `type` is `tag`. Accept the final SHA only when `type` is `commit`; reject trees, blobs, and unavailable objects. The `^{}` peeled-ref suffix does not work in REST paths, so `git/refs/tags/{tag}^{}` returns 404.
 
 Where the action's repository is not the one being audited, `git ls-remote` avoids a second `gh` context: `git ls-remote https://github.com/{owner}/{repo} refs/tags/{tag}` prints the commit SHA directly for a lightweight tag, or the tag object's SHA for an annotated one; append `refs/tags/{tag}^{}` to the same command to get the dereferenced commit SHA for an annotated tag in one call.
 
@@ -411,7 +411,11 @@ Quoting the expression directly inside `run:` is not sufficient because expressi
 
 ## Static analysis (R-SEC-09)
 
+### Required CodeQL checks
+
 For a public repository in a CodeQL-supported language, use CodeQL advanced setup wherever its analysis will be a required status check, because default setup does not analyze fork pull requests and, in a measured run, did not analyze Dependabot's. Confirm the check reports on such a pull request before requiring it. Private repositories require GitHub Code Security on an eligible GitHub Team or Enterprise plan. If CodeQL does not support the language, use the project's established analyzer and require its pull request result rather than adding a no-op CodeQL configuration.
+
+Read the existing setup and required checks before changing them. Obtain maintainer confirmation before disabling default setup. Keep the advanced workflow free of path filters so every required result can report. Verify its reported check names on a pull request, including a fork, before adding them to branch protection. Preserve existing protection while the replacement is being verified.
 
 ### The workflow files are one of the languages
 
@@ -464,7 +468,7 @@ Read the setup back before adding the rule:
 gh api repos/{owner}/{repo}/code-quality/setup --jq '{state, languages}'
 ```
 
-`state` reads `configured` or `not-configured`. A 404 reading `Code quality is not available for this repository` means the plan or the ownership excludes the product, rather than that somebody switched it off. Add the rule only on `configured`. On the other two answers it names a tool that never reports, and blocks every merge with nothing to read. R-SEC-09 does not require it, and CodeQL default setup with the `code_scanning` rule satisfies the rule on its own.
+`state` reads `configured` or `not-configured`. A 404 reading `Code quality is not available for this repository` means the plan or ownership excludes the product. Add the rule only on `configured`; otherwise it names a tool that cannot report. R-SEC-09 does not require Code Quality. Configure CodeQL through the required-check procedure above, including advanced setup and fork coverage where required.
 
 ## Detection controls (R-SEC-10, R-SEC-11)
 
@@ -534,14 +538,14 @@ On GitHub, the commands assume `gh` is installed and authenticated; `gh auth sta
 
 ## Resolve action references with the bundled script
 
-`scripts/resolve-pin.mjs` does that resolution. Pipe the workflow through it, or pass the references directly:
+Resolve this installed skill's absolute directory first. Keep the repository being hardened as the working directory. Both helpers require Node 22+. The resolver uses HTTPS and supports anonymous requests; `GH_TOKEN` or `GITHUB_TOKEN` raises the API rate limit. The ruleset helper requires authenticated `gh`. Pass references directly or pipe the target workflow into `scripts/resolve-pin.mjs`:
 
 ```sh
-node skills/oss-harden/scripts/resolve-pin.mjs actions/checkout@v7 ruby/setup-ruby@v1
-cat .github/workflows/ci.yml | node skills/oss-harden/scripts/resolve-pin.mjs -
+node "<installed oss-harden directory>/scripts/resolve-pin.mjs" actions/checkout@v7 ruby/setup-ruby@v1
+cat .github/workflows/ci.yml | node "<installed oss-harden directory>/scripts/resolve-pin.mjs" -
 ```
 
-It dereferences an annotated tag to the commit it points at, which is the extra step, and it says when a ref is a branch rather than a tag, which is a finding in its own right: `ruby/setup-ruby@v1` and `rubygems/release-gem@v1` are both branches, so a workflow naming either runs whatever was last pushed to it. Where the script is not installed, because a single skill was installed on its own, do the same work by hand, and dereference the annotated tag.
+It dereferences every annotated-tag layer and accepts only a final commit. It also identifies moving branch references. Stdin mode accepts block-style `uses` mappings, including quoted keys, and skips literal script bodies. Unsupported mappings and aliases fail explicitly; pass references directly or use the manual procedure in that case. If the helper is absent, use the manual procedure and apply the same final-commit check.
 
 ## Workflow permission defaults
 
@@ -559,12 +563,14 @@ The same configuration answers R-SEC-14, which asks the updater to wait before p
 `scripts/ruleset.mjs` is what edits an existing ruleset without losing the rest of it:
 
 ```sh
-node skills/oss-harden/scripts/ruleset.mjs get <owner>/<repo> main
-node skills/oss-harden/scripts/ruleset.mjs put <owner>/<repo> main patch.json
-node skills/oss-harden/scripts/ruleset.mjs actor <login>
+node "<installed oss-harden directory>/scripts/ruleset.mjs" get <owner>/<repo> main
+node "<installed oss-harden directory>/scripts/ruleset.mjs" put <owner>/<repo> main patch.json
+node "<installed oss-harden directory>/scripts/ruleset.mjs" actor <login>
 ```
 
-`put` reads the ruleset, deep-merges the patch, strips the nulls, PUTs it, and prints what the API reports afterwards rather than what was sent. The null strip is the reason it exists: GitHub reads several rule parameters back as null and rejects those same nulls on write, so a hand-rolled fetch, edit, and PUT answers `422 Invalid property /rules/N: data matches no possible input`. `code_coverage` with `max_coverage_drop: null` is the case every measured run hit. `actor` prints the `{"actor_type": "User", "actor_id": N}` form a bypass entry takes; do not guess a `RepositoryRole` number, which is undocumented and was shipped wrong once and repaired with a second write. Where the script is not installed, do the same three things by hand: read the ruleset by id rather than from the list endpoint, which answers with a summary that omits rules, strip every null before writing, and read the result back rather than inferring it from a 200.
+`put` merges rules by their distinct `type`, preserving rules omitted from the patch. Nested maps merge; other arrays replace their corresponding lists. An empty `rules` array removes nothing. For an approved rule deletion, fetch the complete ruleset and use the API directly with that rule removed. Review that complete payload before writing it.
+
+The helper strips null-valued fields before sending the request, because GitHub can return nulls it rejects on write. It prints the result fetched after the update. `actor` resolves a login to its numeric user ID. If a helper is unavailable, read the complete ruleset by ID, preserve unrelated rules, strip nulls, and verify the stored result.
 
 ## Signed-tag verification procedure
 

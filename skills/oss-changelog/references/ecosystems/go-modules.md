@@ -10,9 +10,9 @@ A repository holding several modules tags each one with its subdirectory as a pr
 
 ## Version syntax (R-CHG-02)
 
-A canonical Go version starts with the letter `v` followed by a semantic version: three non-negative integers separated by dots, an optional pre-release string after a hyphen, and an optional build metadata string after a plus. `v0.0.0`, `v1.12.134`, `v8.0.5-pre`, and `v2.0.9+meta` are all valid. The `v` is not optional here, which is the reverse of every other ecosystem on this roster, and it is the case R-CHG-02's tag-name allowance exists for.
+A canonical Go module version starts with `v`, followed by three non-negative integers and an optional prerelease suffix. Examples are `v0.0.0`, `v1.12.134`, and `v8.0.5-pre`. Canonical module versions omit build metadata except for `+incompatible`. Although `v2.0.9+meta` is a semantic version, it is not a canonical module version.
 
-Build metadata is ignored for comparison, and the `go` command converts a version carrying it into a pseudo-version to keep the ordering total. Two suffixes are special and are not build metadata in that sense: `+incompatible`, which the `go` command adds to a version at major 2 or higher published without a `go.mod` file, and `+dirty`. `+incompatible` should never appear on a tag; it appears only in versions the `go` command computes.
+The `go` command removes ordinary build metadata when converting to canonical form. `+incompatible` identifies supported legacy major versions without a corresponding module-path suffix; it does not belong on the repository tag. `+dirty` can describe a modified working tree in binary build information. It is not a published module-version suffix. See the [canonical-version definition](https://go.dev/ref/mod#glos-canonical-version).
 
 A pseudo-version is what a consumer gets for an untagged revision, built from a base version prefix, a UTC timestamp `yyyymmddhhmmss`, and a twelve-character commit hash prefix. It takes one of three forms, `vX.0.0-yyyymmddhhmmss-abcdefabcdef` with no known base version, `vX.Y.Z-pre.0.yyyymmddhhmmss-abcdefabcdef` after a pre-release, and `vX.Y.(Z+1)-0.yyyymmddhhmmss-abcdefabcdef` after a release. None of those is something a maintainer writes, and seeing one in a consumer's `go.mod` means the module was never tagged at that point rather than that somebody chose an odd version.
 

@@ -15,7 +15,7 @@ Use [references/github.md](references/github.md) for GitHub and [references/gitl
 
 The SEC rules belong here: R-SEC-01 pinned references, R-SEC-02 least-privilege permissions, R-SEC-03 dependency updates, R-SEC-04 branch protection, R-SEC-05 signed tags, R-SEC-06 GitLab pipeline inputs, R-SEC-07 untrusted input, R-SEC-08 committed lockfiles, R-SEC-09 static analysis, R-SEC-10 secret detection, R-SEC-11 vulnerability watching, R-SEC-12 required review, R-SEC-13 immutable release tags, R-SEC-14 update cooldown, and R-SEC-15 install scripts.
 
-When `oss-audit-report.md` exists, read this skill's group and its quoted checks. Otherwise, work from the request and `STANDARD.md`.
+Use this skill's quoted checks from `oss-audit-report.md` when supplied. Otherwise resolve `../oss-audit/STANDARD.md` from this installed skill's directory before editing. If neither source exists, follow the request and report standard verification as unavailable. Use the same resolved checks at completion; supplied checks do not establish unlisted rules.
 
 This skill owns security controls in workflow and pipeline files. `oss-ci` decides what runs and when; `oss-publish` owns publication and registry authentication. `oss-community` writes CODEOWNERS; this skill enforces it. Fix mutable external references and broad or implicit permissions in all those files. Hand other CI or publication needs to their owning skill; do not add product features.
 
@@ -151,7 +151,7 @@ The Scorecard section of the reference file Step 1 chose carries the rest: `refe
 
 ### Step 14: Present the result
 
-Read every R-SEC `Check:` against the resulting repository and settings. Fix failures and restart the checks after each fix. Do not report completion with a failing rule unless the maintainer declined its fix.
+Apply the R-SEC checks resolved at entry to the resulting repository and settings. Fix failures and restart after each fix. Report unavailable checks explicitly. Do not report completion with a failing rule unless the maintainer declined its fix.
 
 Use exactly five statuses: fixed, pending confirmation, outside the repository, unknown, or declined. Fixed requires a written file or verified setting. Pending confirmation means the settings block awaits the user. Outside means the rule's precondition does not apply. Unknown means a read could not answer. Declined requires the maintainer's decision and recorded reason.
 

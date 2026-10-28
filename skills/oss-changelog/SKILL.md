@@ -19,7 +19,7 @@ A changelog section is one version's entry inside `CHANGELOG.md`. A forge releas
 
 The CHG rules belong here: R-CHG-01 changelog format, R-CHG-02 semantic bumps, R-CHG-03 one version, R-CHG-04 release body, R-CHG-05 deprecation window, R-CHG-06 vulnerability entries, and R-CHG-07 major version in package identity.
 
-When `oss-audit-report.md` exists at the repository root, read the group addressed to this skill and work from that. Each failing rule there carries the audit's evidence and that rule's `Check:` text verbatim, so reading `STANDARD.md` as well adds nothing. Where the file is absent, work from the request as usual.
+Use this skill's quoted checks from `oss-audit-report.md` when supplied. Otherwise resolve `../oss-audit/STANDARD.md` from this installed skill's directory before editing. If neither source exists, follow the request and report standard verification as unavailable. Use the same resolved checks at completion; supplied checks do not establish unlisted rules.
 
 This skill owns the changelog and versioning rules above. It does not own the sentences: once an entry's content is decided, phrasing it in plain, active prose free of marketing language is `oss-writing`'s rule, R-DOC-05. It does not own publishing: building the tagged artifact, authenticating to a registry, and gating the release behind approval are `oss-publish`'s R-PUB rules. Do not draft commit or pull request prose, or write a publish workflow, from this skill; note that the project needs it and hand the work to the owning skill.
 
@@ -196,15 +196,17 @@ Keep `CHANGELOG.md` canonical. A forge-generated pull request list is useful raw
 `scripts/release-notes.mjs` extracts the section, so nothing retypes it and no regex gets improvised at release time:
 
 ```sh
-node skills/oss-changelog/scripts/release-notes.mjs v1.2.3
-node skills/oss-changelog/scripts/release-notes.mjs docs/CHANGELOG.md 1.2.3
+node "<installed oss-changelog directory>/scripts/release-notes.mjs" 1.2.3
+node "<installed oss-changelog directory>/scripts/release-notes.mjs" docs/CHANGELOG.md 1.2.3
 ```
 
-It exits 2 when the version's section is absent or empty, which is what makes it usable inside a release job: the job fails rather than publishing a release with a blank body. Where `oss-publish` writes a release workflow that creates the forge release, it copies this file to `.github/scripts/release-notes.mjs` in the repository and calls it there, because the file has to exist on the runner. Run it against the tag about to be pushed before pushing it. Where the script is not installed, read the section out of the file directly; do not fall back to `--generate-notes`, which lists merged pull requests rather than what the project wrote.
+Resolve this installed skill's absolute directory before running the helper. It needs Node 22 or later, or Bun, with no dependencies. Select the release unit's changelog and version heading separately from its tag. For a `gopls/v1.2.3` tag and a `[1.2.3]` heading, pass `1.2.3`. If a shared changelog has repeated version headings, extract the selected unit's section manually rather than accepting the first match.
+
+The helper exits 2 when the version's section is absent or empty, preventing publication with a blank release body. Where `oss-publish` writes the release workflow, copy this helper to `.github/scripts/release-notes.mjs` in the target repository. The runner calls that copied path with the selected changelog and version key. Verify the extracted section before pushing the tag. If the helper is absent, read the section directly; do not substitute `--generate-notes` for the project's changelog.
 
 ### Step 9: Verify, then hand the tag over
 
-Read each R-CHG rule's `Check:` line in `STANDARD.md` against the changelog, the manifests, and the proposed tag as they now stand, and fix what fails. Start the list again after each fix, because setting a version in one place can leave another disagreeing, and do not report done while any cited rule still fails.
+Apply the R-CHG checks resolved at entry to the changelog, manifests, and proposed tag. Fix failures and restart after each fix. Report unavailable or failing checks explicitly; do not claim that they passed.
 
 Then hand the tag and the publish workflow to `oss-publish`, which owns building and uploading what the tag points at.
 

@@ -13,7 +13,7 @@ This skill owns section order and what each section must contain. It does not ow
 
 The README rules belong here: R-DOC-01 opening sentence, R-DOC-02 install and example, R-DOC-03 required links, R-DOC-04 claim accuracy, R-DOC-06 scope statement, R-DOC-07 code block destinations, R-DOC-08 question channel, R-DOC-09 maintenance status, and R-DOC-10 differentiator evidence. R-DOC-05, how each sentence reads, belongs to `oss-writing`.
 
-When `oss-audit-report.md` exists at the repository root, read the group addressed to this skill and work from that. Each failing rule there carries the audit's evidence and that rule's `Check:` text verbatim, so reading `STANDARD.md` as well adds nothing. Where the file is absent, work from the request as usual.
+Use this skill's quoted checks from `oss-audit-report.md` when supplied. Otherwise resolve `../oss-audit/STANDARD.md` from this installed skill's directory before editing. If neither source exists, follow the request and report standard verification as unavailable. Use the same resolved checks at completion; supplied checks do not establish unlisted rules.
 
 ## Three ways in
 
@@ -39,7 +39,7 @@ Immediately below the title, one sentence stating what the project is and who it
 
 Say what the project does in plain terms, without jargon a newcomer would have to look up. If you do not know who the project is for or what makes it different from the alternative a reader already knows, ask rather than guessing at a differentiator. The differentiator does not belong in this sentence. It goes in the `edge` bullet of the facts list below, which is where R-DOC-10 looks for it and where a number can sit beside it.
 
-Keep it short. The standard-readme spec caps a description at 120 characters, which is a useful ceiling rather than a limit this skill enforces. A two-sentence opener earns its second sentence only when the second sentence carries a fact the first cannot.
+Keep it to one sentence. Put supporting facts in the facts list below. The standard-readme spec's 120-character description cap is a useful target, not an additional enforced limit.
 
 The same sentence appears in three places a reader may meet first: the README, the forge repository description, and the `description` field of any package manifest. Read all three and make them agree. A repository description that contradicts the README is a wrong answer served on every search result page, and nobody who reads it ever sees the correction. The forge description belongs to `oss-community`, which R-COM-07 names as its owner, so report a mismatch and hand the edit over rather than making it here.
 
@@ -146,10 +146,10 @@ Curated agent skills for open source maintainers.
 npx skills add svyatov/oss-kit
 ```
 
-Then ask your agent:
+Then invoke the skill in Codex:
 
 ```text
-Audit this repository against the oss-kit standard.
+$oss-audit Audit this repository against the oss-kit standard.
 ```
 
 ```text
@@ -233,10 +233,10 @@ Install it:
 npx skills add svyatov/oss-kit
 ```
 
-Add to `.eslintrc.json`:
+Invoke the audit skill in Codex:
 
-```json
-{ "extends": ["oss-kit"] }
+```text
+$oss-audit Audit this repository against the oss-kit standard.
 ```
 ````
 
@@ -268,4 +268,4 @@ Before finishing, read every package manifest, the lockfile, the CI configuratio
 18. The draft has been through oss-writing: `node <oss-writing skill directory>/scripts/prose.mjs README.md` (a sibling of this skill's directory) reports no findings. A hand-rolled grep for dashes or banned words does not count. Where oss-writing is not installed, say so rather than reporting this item as passing.
 19. Every image has meaningful alt text, and repository images use relative paths.
 
-Fix what the checklist catches, then read each R-DOC rule's `Check:` line in `STANDARD.md` (in the `oss-audit` skill's directory, a sibling of this one) against the README as it now stands. Start the checklist again after each fix, since reordering a section moves what the next item is looking at. Do not report done while any item or any cited rule still fails.
+Fix checklist failures, then apply the R-DOC checks resolved at entry to the resulting README. Restart after each fix. Report unavailable or failing checks explicitly; do not claim that they passed.

@@ -191,3 +191,16 @@ no language here
   expect(facts.readme.fences[0].precededBy).toBe("Install it:")
   expect(facts.readme.fences[1].language).toBeNull()
 })
+
+test("keeps nested fence examples out of Markdown headings", () => {
+  const facts = repo({ "README.md": "````markdown\n```js\n# Example\n~~~\n```\n````\n\n# Project\n\nDescription.\n" })
+  expect(facts.readme.headings).toEqual([{ line: 8, level: 1, text: "Project" }])
+  expect(facts.readme.fences).toEqual([{ startLine: 1, endLine: 6, language: "markdown", precededBy: null }])
+  expect(facts.readme.firstParagraphAfterTitle.text).toBe("Description.")
+})
+
+test("records an unterminated fence through the last content line", () => {
+  const facts = repo({ "README.md": "# Project\n\nExample:\n\n~~~sh\n# Code\n" })
+  expect(facts.readme.fences).toEqual([{ startLine: 5, endLine: 6, language: "sh", precededBy: "Example:" }])
+  expect(facts.readme.headings).toHaveLength(1)
+})

@@ -28,7 +28,7 @@ Check whether a package is already published:
 curl -s -o /dev/null -w '%{http_code}' https://api.nuget.org/v3-flatcontainer/<lowercased id>/index.json
 ```
 
-Anything other than `200` means the ID is unclaimed on nuget.org, or reserved under somebody else's ID prefix reservation. Note also that nuget.org does not support deleting a published package in the general case, so a wrong version is unlisted rather than removed; that is what makes the gate in Step 4 load-bearing here.
+HTTP 200 establishes publication. A confirmed 404 means no package is listed; check ID reservations before treating the name as available. Rate limits, authorization errors, server failures, and transport failures leave publication status unknown. Resolve those failures before selecting a first-publication path. nuget.org generally requires unlisting rather than deleting a wrong version, so verify the version before publication.
 
 ## Configure trusted publishing (Step 2)
 
@@ -211,15 +211,15 @@ Two signatures exist. An author signature is one the project applies itself with
 
 Source: [Microsoft Learn, Signing NuGet packages](https://learn.microsoft.com/en-us/nuget/create-packages/sign-a-package) and [Microsoft Learn, nuget.org FAQ](https://learn.microsoft.com/en-us/nuget/nuget-org/nuget-org-faq).
 
-The strongest substitute for provenance is a forge attestation over the exact `.nupkg` that was pushed. Add it in a job after the publish, attesting the same artifact the publish job downloaded, and verify it against the downloaded package:
+A forge attestation can identify the exact `.nupkg` submitted for publication. Attest that original build artifact in the separate publishing or attestation job. Verify the retained original artifact against it:
 
 ```bash
-gh attestation verify <id>.<version>.nupkg --repo <owner>/<repo>
+gh attestation verify <original-build-artifact>.nupkg --repo <owner>/<repo>
 ```
 
-nuget.org does not surface or link to that attestation, so a consumer has to know to look for it. Signing the package as well is worth doing where the project already holds a certificate, because the signature travels with the package and the attestation does not.
+nuget.org adds an embedded repository signature after upload, which changes the package bytes. Its downloaded package therefore cannot be verified by a raw digest comparison with the original artifact's attestation. Verify the repository signature separately with the documented NuGet signature-verification command. See [signed packages](https://learn.microsoft.com/en-us/nuget/reference/signed-packages-reference) and [package signature structure](https://github.com/NuGet/Home/wiki/Package-Signatures-Technical-Details).
 
-Verify the exact published package against the expected repository and workflow through the forge attestation. Report R-PUB-03 as met only when that cryptographic verification succeeds, and name the registry-hosting limitation. Otherwise report it as unmet. A locally rebuilt artifact is not evidence for different bytes served by the registry.
+Report R-PUB-03 unmet unless a documented method establishes the downloaded package's connection to the original build and workflow. An original-artifact attestation and a valid repository signature establish different facts. Neither justifies blindly attesting downloaded bytes or claiming an unchanged artifact.
 
 ## Describe and sign what the release attaches (Step 6)
 

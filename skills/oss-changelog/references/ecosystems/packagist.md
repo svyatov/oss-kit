@@ -22,8 +22,8 @@ Packagist documents no withdrawal. Its about page covers submitting a package, h
 
 Source: [Packagist about](https://packagist.org/about) and [Composer schema](https://getcomposer.org/doc/04-schema.md).
 
-The strongest documented fallback has two parts, and neither is a yank. Because the version comes from the tag, deleting the tag in the repository removes that version from Packagist at the next crawl, which is every push where a hook is installed and weekly where one is not, so the removal is neither immediate nor observable at the moment it is made. And where the package as a whole is going away, Composer's `abandoned` property, either `true` or the name of a recommended replacement, makes Composer warn every user who installs it. That property is package-level, so it cannot say that one version was bad.
+Packagist has no documented per-version withdrawal state. Preserve the released tag and its contents under R-SEC-13. For package-wide retirement, Composer's `abandoned` property can warn consumers and name a replacement. That property cannot withdraw one version.
 
-This sits below what R-CHG-01 expects a `[YANKED]` heading to correspond to, because nothing in the registry records the withdrawal for a consumer's tooling to read, which leaves the changelog as the only place the fact exists. Mark the heading `[YANKED]`, say what replaced the version, and delete the tag. A per-version withdrawal state documented by Packagist, of the kind crates.io and PyPI already have, would retire the gap.
+Mark the changelog heading `[YANKED]` and state the replacement and the registry limitation. This is a project warning, not a registry-enforced withdrawal. Do not delete or move the tag, or weaken tag protection. A documented per-version withdrawal mechanism would close this gap.
 
 Verified 2026-07-31 against [Packagist about](https://packagist.org/about), [Composer schema](https://getcomposer.org/doc/04-schema.md), and [Composer versions and constraints](https://getcomposer.org/doc/articles/versions.md).

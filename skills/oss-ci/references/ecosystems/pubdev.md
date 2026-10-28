@@ -29,7 +29,7 @@ Source: [dart-lang/setup-dart](https://github.com/dart-lang/setup-dart).
 
 The strongest documented fallback is an explicit cache over the pub system cache, which Dart does document: `$HOME/.pub-cache` on macOS and Linux, `%LOCALAPPDATA%\Pub\Cache` on Windows, and relocatable through `PUB_CACHE`. That is genuine download data, so the directory is not the problem. The key is.
 
-Dart documents that an application package checks `pubspec.lock` into source control and a regular package, its word for a library, does not, because a library is expected to work across a range of dependency versions. A library therefore commits no lockfile, and a cache keyed on `pubspec.yaml` instead survives every resolution change the manifest's ranges permit, which is what R-CI-04 is about. An application package that commits its lockfile has no gap: key on `pubspec.lock`. For a library, the honest options are to key on `pubspec.yaml` and accept that it caches across resolutions, or to run without a cache. Dart changing the library convention, or `setup-dart` gaining a keyed cache, would retire it.
+Dart application packages commit `pubspec.lock`; regular library packages normally do not. For an application with a committed lockfile, key the download cache on `pubspec.lock`. Omit caching for an unlocked library. A `pubspec.yaml` key survives resolution changes and does not meet this skill's cache policy.
 
 On GitLab set `PUB_CACHE` to a project-relative directory first, because GitLab caches only paths inside the project directory.
 

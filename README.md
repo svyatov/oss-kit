@@ -24,11 +24,14 @@ Install the kit:
 npx skills add svyatov/oss-kit
 ```
 
-Then ask your agent:
+Then invoke `oss-audit` explicitly. In Codex:
 
 ```text
-Audit this repository against the oss-kit standard.
+$oss-audit
 ```
+
+For other hosts, use the commands in the
+[invocation guide](https://oss-kit.svyatov.com/guides/install/#invocation).
 
 It answers with the gaps and nothing else, each keyed to the rule it missed and
 routed to the skill that fixes it. Rules that already pass do not appear:

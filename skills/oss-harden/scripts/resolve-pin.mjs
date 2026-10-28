@@ -10,7 +10,8 @@
 //   resolve-pin.mjs --json actions/checkout@v7
 //   cat .github/workflows/ci.yml | resolve-pin.mjs -
 //
-// `-` reads a workflow on stdin and resolves every external `uses:` in it.
+// `-` reads block-style workflow YAML on stdin. Unsupported forms fail with
+// a request to pass references directly, rather than silently omitting them.
 //
 // Runs on Node 22 or later, and under Bun, with nothing installed. It uses
 // global fetch and node: built-ins only. Set GH_TOKEN or GITHUB_TOKEN to raise
@@ -41,11 +42,18 @@ async function resolveTag(owner, repo, ref) {
   const name = encodeURIComponent(ref)
   const found = await api(`/repos/${owner}/${repo}/git/ref/tags/${name}`)
   if (!found) return null
-  const { type, sha } = found.object
-  if (type === "commit") return { sha, kind: "tag" }
-  const tag = await api(`/repos/${owner}/${repo}/git/tags/${sha}`)
-  if (!tag) return null
-  return { sha: tag.object.sha, kind: "annotated tag" }
+  let object = found.object
+  const annotated = object.type === "tag"
+  const seen = new Set()
+  while (object.type === "tag") {
+    if (seen.has(object.sha)) throw new Error(`${ref} has a cyclic tag chain`)
+    seen.add(object.sha)
+    const tag = await api(`/repos/${owner}/${repo}/git/tags/${object.sha}`)
+    if (!tag) throw new Error(`${ref} points to an unavailable tag object`)
+    object = tag.object
+  }
+  if (object.type !== "commit") throw new Error(`${ref} points to ${object.type}, not a commit`)
+  return { sha: object.sha, kind: annotated ? "annotated tag" : "tag" }
 }
 
 // A moving ref is the finding, not a fallback. `ruby/setup-ruby@v1` is a branch,
@@ -97,6 +105,39 @@ function line(r) {
   return `uses: ${pinned} # ${r.ref}${warning}${assumed}`
 }
 
+function workflowReferences(text) {
+  const found = []
+  let blockIndent = null
+  for (const line of text.split(/\r?\n/)) {
+    if (/^\s*(?:#.*)?$/.test(line)) continue
+    const indent = line.match(/^\s*/)[0].length
+    if (blockIndent !== null && indent > blockIndent) continue
+    blockIndent = null
+    const usesKey = /(?:^|[\s{,])(?:uses|"uses"|'uses')\s*:/.test(line)
+    const scalar = /^\s*(?:-\s*)?[^:]+:\s*[|>](?:[+-][1-9]?|[1-9][+-]?)?\s*(?:#.*)?$/.test(line)
+    if (scalar) {
+      if (usesKey) throw new Error("multiline workflow uses values are unsupported; pass action references directly")
+      blockIndent = indent
+      continue
+    }
+    // Aliases and flow mappings can hide uses entries from a line reader.
+    if (/(?:^|[\s:,\[])\s*[&*][\w-]+|(?:^|\s)<<\s*:/.test(line)) {
+      throw new Error("workflow aliases are unsupported; pass action references directly")
+    }
+    if (/^\s*(?:-\s*)?(?:\?|"[^"\n]*\\[^"\n]*"\s*:)/.test(line)) {
+      throw new Error("complex workflow keys are unsupported; pass action references directly")
+    }
+    const withoutExpressions = line.replace(/\$\{\{.*?\}\}/g, "")
+    if (/[{}]/.test(withoutExpressions)) throw new Error("workflow flow mappings are unsupported; pass action references directly")
+    if (!usesKey) continue
+    const match = /^\s*(?:-\s*)?(?:uses|"uses"|'uses'):\s*(?:"([^"\n]+)"|'([^'\n]+)'|([^\s#{}]+))\s*(?:#.*)?$/.exec(line)
+    if (!match) throw new Error("unsupported workflow uses mapping; pass action references directly")
+    const ref = match[1] ?? match[2] ?? match[3]
+    if (!ref.startsWith("./")) found.push(ref)
+  }
+  return found
+}
+
 const args = process.argv.slice(2)
 const json = args.includes("--json")
 let refs = args.filter((a) => a !== "--json")
@@ -113,8 +154,12 @@ if (refs.includes("-")) {
     process.stdin.on("data", (chunk) => (text += chunk))
     process.stdin.on("end", () => resolve(text))
   })
-  const found = [...stdin.matchAll(/^\s*(?:-\s*)?uses:\s*['"]?([^'"\s#]+)/gm)].map((m) => m[1])
-  refs = [...new Set([...refs.filter((r) => r !== "-"), ...found.filter((r) => !r.startsWith("./"))])]
+  try {
+    refs = [...new Set([...refs.filter((r) => r !== "-"), ...workflowReferences(stdin)])]
+  } catch (error) {
+    process.stderr.write(`${error.message}\n`)
+    process.exit(1)
+  }
 }
 
 const results = []

@@ -72,7 +72,7 @@ Codex reads skills from repository, user, admin, and system locations. For repos
 
 Separately, `~/.codex/config.toml` can carry `[[skills.config]]` entries with `path` and `enabled` keys. This is documented as the way to disable a discovered skill without deleting it, not as a way to declare a new discovery path.
 
-Codex's plugin system is separate from skills discovery. Its portable entry point is a `plugin.json` at the plugin root, in the Agent Plugins format. A `.codex-plugin/plugin.json` is optional, and Codex reads it as a compatibility fallback when the root manifest carries no `extensions.com.openai` object. Codex also accepts legacy and Claude-compatible manifests, such as `.claude-plugin/plugin.json`, so a repository that ships only that file still installs. Install with `codex plugin marketplace add svyatov/oss-kit`. That command reads the marketplace list at `$REPO_ROOT/.agents/plugins/marketplace.json`.
+Codex's plugin system is separate from skills discovery. Its portable entry point is a `plugin.json` at the plugin root, in the Agent Plugins format. A `.codex-plugin/plugin.json` is optional, and Codex reads it as a compatibility fallback when the root manifest carries no `extensions.com.openai` object. Codex also accepts legacy and Claude-compatible manifests, such as `.claude-plugin/plugin.json`, so a repository that ships only that file still installs. Register a marketplace with `codex plugin marketplace add svyatov/oss-kit`; registration does not install a plugin. On a CLI exposing `plugin add`, install from the registered catalog with `codex plugin add oss-kit@oss-kit`. Otherwise use the client's plugin installation interface. Marketplace discovery includes `$REPO_ROOT/.agents/plugins/marketplace.json` and compatible catalog locations.
 
 Codex scans `.agents/skills/`, not `.claude/skills/`.
 
@@ -84,7 +84,7 @@ Source: `cursor.com/docs/skills`, `cursor.com/docs/reference/plugins`, and the C
 
 Cursor loads skills automatically from `.cursor/skills/` and `.agents/skills/` in the project (including nested directories such as `apps/web/.cursor/skills/` in a monorepo), and from `~/.cursor/skills/` and `~/.agents/skills/` for skills available across all projects. It also reads `.claude/skills/` and `.codex/skills/`, and their `~/`-rooted equivalents, for compatibility with skills placed for those other hosts. Each skill is a directory holding a `SKILL.md`, with no manifest.
 
-Cursor's plugin system is separate from skills discovery and requires `.cursor-plugin/plugin.json`. Install a marketplace plugin from the editor or with `/add-plugin`; use Cursor's current plugin documentation for source-repository and team-admin flows.
+Cursor supports two plugin formats: portable Agent Plugins use root `plugin.json`, and native Cursor Plugins use `.cursor-plugin/plugin.json`. Classify the format before checking its manifest. Conventional skill directories need neither manifest. Use the current [plugin documentation](https://cursor.com/docs/plugins.md) for installation and validation of the selected format. When both manifests exist, leave precedence unresolved unless the documentation specifies it.
 
 Cursor scans both `.claude/skills/` and `.agents/skills/`.
 

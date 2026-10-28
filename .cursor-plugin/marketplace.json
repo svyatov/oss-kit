@@ -1,0 +1,17 @@
+{
+  "name": "oss-kit",
+  "owner": {
+    "name": "Leonid Svyatov",
+    "email": "leonid@svyatov.com"
+  },
+  "metadata": {
+    "description": "Curated agent skills for open source maintainers"
+  },
+  "plugins": [
+    {
+      "name": "oss-kit",
+      "source": "./",
+      "description": "Curated agent skills for open source maintainers"
+    }
+  ]
+}

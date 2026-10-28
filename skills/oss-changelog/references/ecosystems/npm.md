@@ -16,7 +16,7 @@ Two things sit beside the version and are not versions. A distribution tag is a 
 
 ## Major version in package identity (R-CHG-07)
 
-npm does not encode the major version in package identity. A package name is stable across majors and `foo@1` and `foo@2` are the same registry entry, so R-CHG-07 does not reach this ecosystem. A project that maintains two majors side by side does it by publishing a second package under a different name, which makes them two release units for R-CHG-03 rather than one identity to check.
+npm does not encode the major version in package identity. A package name is stable across majors; `foo@1` and `foo@2` are the same registry entry. R-CHG-07 does not reach this ecosystem. A project can maintain both major release lines under that name. Publishing under another name is an optional separate package identity, not a requirement for maintaining parallel majors.
 
 ## Withdrawing a release (R-CHG-01)
 

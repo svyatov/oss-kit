@@ -54,7 +54,7 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
-    container: php:<the version composer.json requires>-cli  # pin by digest once chosen
+    container: <project PHP-and-Composer CI image>@sha256:<verified digest>
     steps:
       - uses: actions/checkout@v7
         with:
@@ -64,9 +64,9 @@ jobs:
       - run: composer run test  # oss-ci decides the actual command from CONTRIBUTING.md (R-CI-02)
 ```
 
-GitHub-hosted runners ship a PHP release, and most PHP projects reach for a third-party setup action instead so they can choose the version. This reference names none, because it would be naming a third-party action that runs before the project's own code; a container image the project pins by digest gets the same version control with nothing extra to vet. `oss-ci` decides which of the two the project uses. `composer validate --strict` is what catches a malformed or stale `composer.json` before a tag freezes it.
+Select the project's existing CI image containing its required PHP and Composer versions. Verify both executables before using the commands above. The official `php` image alone does not include Composer. If no suitable image exists, prepare one using Composer's [official image instructions](https://github.com/docker-library/docs/blob/master/composer/README.md). Verify its origin and pin its digest before writing the workflow. `oss-ci` owns the project's actual test command.
 
-The release is a tag and a push. Nothing else runs:
+Without public assets, publication requires only a tag and push:
 
 ```bash
 git tag v1.2.3
@@ -101,10 +101,12 @@ This reference names no SBOM generator for PHP. The ones in common use are third
 
 Two rules apply here and they ask for different things. R-PUB-05 wants that inventory. R-PUB-06 wants the assets signed, or listed by hash in a signed manifest. A manifest of hashes answers the second and nothing about the first, so do not report R-PUB-05 as met by publishing one.
 
-GitHub's SPDX dependency-graph export can supplement an artifact inventory without installing another tool. It does not establish R-PUB-05 coverage by itself. The `gh api` step below writes it into `dist/`, so it ships as supplementary release evidence and is listed in `SHA256SUMS` and attested alongside the assets for R-PUB-06:
+GitHub's SPDX dependency-graph export can supplement an artifact inventory without installing another tool. It does not establish R-PUB-05 coverage by itself. Before adding this job, define the project's unprivileged `build` job to upload its assets as the `build` artifact. Adapt that producer's name in `needs` if the project uses another name. Restrict the release condition to the tag convention identified in Step 1; the example uses `v*`.
 
 ```yaml
   github-release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: [test, build]
     runs-on: ubuntu-latest
     permissions:
       contents: write

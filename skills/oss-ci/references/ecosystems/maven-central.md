@@ -2,7 +2,7 @@
 
 ## Toolchain and matrix (R-CI-03)
 
-On GitHub Actions, `actions/setup-java` installs a JDK; `distribution` and `java-version` are both required, so the matrix names a vendor as well as a version.
+On GitHub Actions, `actions/setup-java` installs a JDK. The matrix below supplies `distribution` and `java-version` explicitly. An existing `java-version-file` can supply the version instead; a recognized `.sdkmanrc` entry can supply both version and distribution.
 
 ```yaml
 strategy:
@@ -29,13 +29,13 @@ Sources: [actions/setup-java](https://github.com/actions/setup-java), [maven-com
 
 `node-arch` is the architecture of the runner's Node process. Cache-key inputs checked 2026-10-11 against the action README.
 
-The Maven half is the one to be honest about. Apache Maven publishes no lockfile format, and the roster records `files: []` for it. So there is nothing resolved to key on, and the cache is keyed on the build files that declare requirements instead. Where a `pom.xml` names a version range or a property another artifact resolves, the same key can serve a different dependency set than the one that filled it, and no CI change fixes that because there is no file recording what was resolved. Maven's own answers are upstream of CI: fixed versions, `dependencyManagement`, and the enforcer rule `banDynamicVersions`. Report this as an ecosystem-level limit rather than a keying mistake, and note that Maven Resolver's Trusted Checksums record a committed hash file under `.mvn/checksums/` that pins content without being a lockfile. A Maven lockfile format would retire it.
+Apache Maven publishes no lockfile format, so omit dependency caching under this skill's lockfile policy. Build files describe requirements without recording the resolved dependency set. Maven Resolver's Trusted Checksums can pin content, but they are not a lockfile.
 
 Gradle can lock, opt-in per configuration, writing `gradle.lockfile`. The README's Gradle hash list does not name that file, and `**/*.gradle*` does not match it, so a project using dependency locking names it in `cache-dependency-path` or its lock state stays out of the key.
 
 Two more documented behaviours are worth knowing on a matrix. `cache-read-only: true` restores without uploading, which the README pairs with a seed job so a fan-out matrix does not have every cell race to write the same key. And `cache-path` replaces the cached filesystem locations without changing the key, so jobs meant to share a key have to pass the same `cache-path`.
 
-On GitLab, point the local repository inside the project, `mvn -Dmaven.repo.local=.m2/repository` or `GRADLE_USER_HOME`, and key `cache:key:files` on the build file, because GitLab caches only paths inside the project directory.
+For locked Gradle builds on GitLab, place the download cache inside the project with `GRADLE_USER_HOME`. Key `cache:key:files` on the committed lockfile. Omit the cache when dependency locking is absent. GitLab caches only project-relative paths.
 
 Sources: [actions/setup-java](https://github.com/actions/setup-java), [Maven Resolver, expected checksums](https://maven.apache.org/resolver/expected-checksums.html), [Gradle, dependency locking](https://docs.gradle.org/current/userguide/dependency_locking.html), [GitLab CI/CD YAML reference, cache](https://docs.gitlab.com/ci/yaml/#cachepaths).
 

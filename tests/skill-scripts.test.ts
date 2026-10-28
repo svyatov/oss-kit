@@ -52,6 +52,26 @@ test("merges a patch over the current ruleset without dropping untouched keys", 
   expect(merged.rules).toEqual([{ type: "deletion" }])
 })
 
+test("patches rules by type while preserving other protections and replacing nested lists", () => {
+  const current = { rules: [
+    { type: "deletion" },
+    { type: "pull_request", parameters: { required_approving_review_count: 1 } },
+    { type: "required_status_checks", parameters: { strict_required_status_checks_policy: true, required_status_checks: [{ context: "old" }] } },
+  ] }
+  const result = merge(current, { rules: [
+    { type: "code_scanning", parameters: { code_scanning_tools: [{ tool: "CodeQL" }] } },
+    { type: "required_status_checks", parameters: { required_status_checks: [{ context: "new" }] } },
+  ] })
+  expect(result.rules).toEqual([
+    current.rules[0], current.rules[1],
+    { type: "required_status_checks", parameters: { strict_required_status_checks_policy: true, required_status_checks: [{ context: "new" }] } },
+    { type: "code_scanning", parameters: { code_scanning_tools: [{ tool: "CodeQL" }] } },
+  ])
+  expect(merge(current, { rules: [] }).rules).toEqual(current.rules)
+  expect(() => merge(current, { rules: [null] })).toThrow()
+  expect(() => merge(current, { rules: [{ type: "deletion" }, { type: "deletion" }] })).toThrow()
+})
+
 const CHANGELOG = `# Changelog
 
 ## [Unreleased]
@@ -108,6 +128,21 @@ test("keeps document-level reference destinations used by release notes", () => 
 
 test("returns nothing for a version the file does not carry", () => {
   expect(findSection(CHANGELOG, "v9.9.9")).toBeNull()
+})
+
+test("ignores fenced headings and retains complete multiline reference definitions", () => {
+  for (const fence of ["````", "~~~~"]) {
+    const text = `${fence}\n## [1.2.0]\n${fence}\n\n## [1.2.0]\n\nSee [guide].\n\n${fence}\n## fake heading\n[guide]: fake\n\x60\x60\x60\n${fence}\n\nAfter the example.\n\n## [1.1.0]\n\nOld.\n\n[guide]:\n  https://example.com/guide\n  "Guide title\n  on two lines"\n`
+    const section = findSection(text, "1.2.0")
+    expect(section?.body).toContain("After the example.")
+    expect(section?.body).toContain('[guide]:\n  https://example.com/guide\n  "Guide title\n  on two lines"')
+    expect(section?.body).not.toContain("Old.")
+  }
+})
+
+test("retains unindented multiline reference destinations and titles", () => {
+  const definition = '[guide]:\nhttps://example.com/guide\n"A title\non two lines"'
+  expect(findSection(`## [1.2.0]\n\nRead [guide].\n\n${definition}`, "1.2.0")?.body).toContain(definition)
 })
 
 // The exit code is the load-bearing half: a release job has to fail rather than

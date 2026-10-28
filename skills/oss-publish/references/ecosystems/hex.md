@@ -202,6 +202,8 @@ Verify the exact published package against the expected repository and workflow 
 
 Only for a release that attaches a built asset to the forge release. Publishing to hex.pm attaches nothing to the forge, and the source archives the forge generates for a tag are not built assets, so a library that only publishes goes to Step 7 instead. What this section covers is a project that also attaches a compiled release or an escript.
 
+Build those assets in an uncredentialed `build` job and upload them as the `build` artifact. Add that job to the publish job's existing prerequisites. The asset job below waits for both successful publication and the completed build.
+
 This reference names no SBOM generator for Elixir. The ones in common use are third-party Mix tasks rather than part of the toolchain, and a task that reads the dependency tree inside the release workflow is one the maintainer vets before it goes there. `mix.lock` is the closest thing the project already has, and it is neither SPDX nor CycloneDX, so publishing it does not satisfy R-PUB-05's format requirement; say that rather than presenting the lockfile as a bill of materials.
 
 Two rules apply here and they ask for different things. R-PUB-05 wants that inventory. R-PUB-06 wants the assets signed, or listed by hash in a signed manifest. A manifest of hashes answers the second and nothing about the first, so do not report R-PUB-05 as met by publishing one.
@@ -211,7 +213,7 @@ GitHub's SPDX dependency-graph export can supplement an artifact inventory witho
 ```yaml
   github-release:
     runs-on: ubuntu-latest
-    needs: [publish]
+    needs: [publish, build]
     permissions:
       contents: write
       id-token: write

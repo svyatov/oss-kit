@@ -30,7 +30,7 @@ Verified 2026-07-31 against [dependabot-core's Bundler file fetcher](https://git
 
 ## Static analysis (R-SEC-09)
 
-CodeQL supports Ruby, so CodeQL default setup covers this ecosystem on GitHub. GitLab's SAST table lists Ruby under its Semgrep-based analyzer with GitLab-managed rules.
+CodeQL supports Ruby. Follow the shared required-check procedure in the GitHub reference to configure setup. GitLab's SAST table lists Ruby under its Semgrep-based analyzer with GitLab-managed rules.
 
 ## Vulnerability watch (R-SEC-11)
 

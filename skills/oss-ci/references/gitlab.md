@@ -40,12 +40,10 @@ Use a top-level `workflow:rules` block to control which events start a pipeline,
 workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
-      when: never
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 ```
 
-The second rule skips the branch pipeline while an open merge request already covers the same commits; the third rule keeps the branch pipeline for a direct push to the default branch, where no merge request exists.
+The second rule admits every default-branch push, including when that branch has an outgoing merge request. Feature-branch pushes match neither rule, so they do not duplicate merge request pipelines.
 
 A job can also carry its own `rules:` to run only for certain events:
 
@@ -159,7 +157,7 @@ Unlike GitHub, GitLab deploys Pages from a job inside the ordinary pipeline, so 
 
 ```yaml
 pages:
-  stage: deploy
+  stage: deploy  # placeholder: an existing deployment stage, or add it to stages
   timeout: 10 minutes
   interruptible: false
   script:
@@ -171,7 +169,7 @@ pages:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 ```
 
-Everything not marked a placeholder is copied exactly: the `pages:` hash with its `publish` key, `interruptible: false`, and the `rules:` condition restricting the job to the default branch. The two `script` commands and the published directory are the only project-specific values here.
+Preserve the `pages:` hash, `interruptible: false`, and the rule restricting deployment to the default branch. Adapt the commands, published directory, and stage to the project. If the pipeline declares `stages`, use an appropriate existing stage or add the chosen stage to that list.
 
 `pages:` as a job keyword is what marks a job as a Pages deployment. Setting it to `true` is the short form; the hash form takes `publish` for the built directory and `path_prefix` for parallel deployments under one site. GitLab 17.6 and later accept any job name once the keyword is present, so the job above could be called `deploy-docs`; before that the job had to be named `pages`, which is why so many pipelines still are.
 

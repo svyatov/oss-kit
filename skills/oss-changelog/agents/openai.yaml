@@ -1,2 +1,5 @@
+interface:
+  display_name: "oss-changelog"
+  short_description: "Maintain changelogs, versions, and release notes"
 policy:
   allow_implicit_invocation: false

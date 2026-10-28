@@ -32,7 +32,7 @@ Verified 2026-07-31 against [Gradle dependency locking](https://docs.gradle.org/
 
 ## Static analysis (R-SEC-09)
 
-CodeQL supports Java and Kotlin, so CodeQL default setup covers this ecosystem on GitHub, and the dependency graph's Maven row names Scala alongside Java. GitLab's SAST table lists Java, Kotlin, Groovy, and Scala under its analyzers.
+CodeQL supports Java and Kotlin. Follow the shared required-check procedure in the GitHub reference to configure setup. The dependency graph's Maven row also names Scala. GitLab's SAST table lists Java, Kotlin, Groovy, and Scala under its analyzers.
 
 ## Vulnerability watch (R-SEC-11)
 

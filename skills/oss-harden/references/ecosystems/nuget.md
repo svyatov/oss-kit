@@ -26,7 +26,7 @@ Verified 2026-07-31 against [NuGet PackageReference in project files](https://le
 
 ## Static analysis (R-SEC-09)
 
-CodeQL supports C#, so CodeQL default setup covers this ecosystem on GitHub, and the dependency graph's NuGet row names the same family, .NET languages such as C#, F#, and Visual Basic, plus C++. GitLab's SAST table lists C# under its Semgrep-based analyzer with GitLab-managed rules.
+CodeQL supports C#. Follow the shared required-check procedure in the GitHub reference to configure setup. The dependency graph's NuGet row covers C#, F#, Visual Basic, and C++. GitLab's SAST table lists C# under its Semgrep-based analyzer with GitLab-managed rules.
 
 ## Vulnerability watch (R-SEC-11)
 

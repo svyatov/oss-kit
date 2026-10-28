@@ -1,2 +1,5 @@
+interface:
+  display_name: "oss-harden"
+  short_description: "Harden workflows, dependencies, and repository controls"
 policy:
   allow_implicit_invocation: false

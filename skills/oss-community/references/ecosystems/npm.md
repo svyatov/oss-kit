@@ -6,7 +6,7 @@
 
 Two values name no license at all, and each changes what there is to compare. `"SEE LICENSE IN <filename>"` points at a file the package ships at its top level, so it is the next thing to read rather than the answer. `"UNLICENSED"` marks proprietary work, which is a package granting nobody a license rather than a package whose license is unstated.
 
-The manifest side of R-COM-01 is therefore the `license` string of every `package.json` the repository publishes from, and the file side is the root license file. A workspace has one value per member manifest, so several comparisons rather than one. A manifest carrying `"private": true` and no `license` key declares nothing, which leaves that manifest out of the comparison without leaving the repository out of the rule.
+Compare every `package.json` that declares a `license` with the applicable license file, including private, development, and workspace manifests. A manifest with no `license` key contributes no declaration to compare. It does not place the repository outside R-COM-01.
 
 Source: [package.json fields](https://docs.npmjs.com/cli/v12/configuring-npm/package-json).
 

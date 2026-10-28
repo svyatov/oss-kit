@@ -1,2 +1,5 @@
+interface:
+  display_name: "oss-readme"
+  short_description: "Write and review open source README files"
 policy:
   allow_implicit_invocation: false

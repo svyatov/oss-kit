@@ -41,7 +41,7 @@ Verified 2026-08-03 against [pip install](https://pip.pypa.io/en/stable/cli/pip_
 
 ## Static analysis (R-SEC-09)
 
-CodeQL supports Python, so CodeQL default setup covers this ecosystem on GitHub. GitLab's SAST table lists Python under its Semgrep-based analyzer with GitLab-managed rules.
+CodeQL supports Python. Follow the shared required-check procedure in the GitHub reference to configure setup. GitLab's SAST table lists Python under its Semgrep-based analyzer with GitLab-managed rules.
 
 ## Vulnerability watch (R-SEC-11)
 

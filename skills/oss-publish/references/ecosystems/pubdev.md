@@ -154,13 +154,15 @@ curl -s https://pub.dev/api/packages/<name> \
 
 That is integrity, not provenance. It confirms the archive has not changed since publication and says nothing about which commit or workflow produced it. Use it as the release check after the first tag-triggered publish, and report it as what it is.
 
-The strongest substitute for provenance is a forge attestation over the archive the publish produced. `dart pub publish --dry-run` lists what would go into the archive but the reusable workflow does not hand a file to a later job, so attesting the published archive means downloading it from `archive_url` in a job after the publish and attesting those bytes. That is weaker than attesting what the build produced, because it attests what the registry served back; say so rather than presenting it as equivalent.
+The reusable workflow used above does not hand its package archive to a later job. Downloading from `archive_url` and creating a fresh attestation proves which bytes the registry returned, not which source build produced them.
 
-Verify the exact published package against the expected repository and workflow through the forge attestation. Report R-PUB-03 as met only when that cryptographic verification succeeds, and name the registry-hosting limitation. Otherwise report it as unmet. A locally rebuilt artifact is not evidence for different bytes served by the registry.
+Keep R-PUB-03 unmet unless the published archive independently matches a retained build artifact with verifiable provenance from the expected repository and workflow. Check that artifact's attestation and digest against the registry download. A fresh signature over downloaded bytes or a local rebuild alone cannot establish that link. Report the digest check separately as integrity evidence.
 
 ## Describe and sign what the release attaches (Step 6)
 
 Only for a release that attaches a built asset to the forge release. Publishing to pub.dev attaches nothing to the forge, and the source archives GitHub generates for a tag are not built assets, so a package that only publishes goes to Step 7 instead. What this section covers is a project that also attaches compiled Flutter or Dart binaries.
+
+Build the binaries in an uncredentialed `build` job and upload them as the `binaries` artifact. Make publication depend on that successful build as well as its existing prerequisites. The asset job waits for both publication and the build, so it cannot download unfinished or failed output.
 
 This reference names no SBOM generator for Dart. The ones in common use are third-party tools rather than part of the SDK, and a tool that reads the dependency tree inside the release workflow is one the maintainer vets before it goes there. `pubspec.lock` is the closest thing the project already has, and it is neither SPDX nor CycloneDX, so publishing it does not satisfy R-PUB-05's format requirement; say that rather than presenting the lockfile as a bill of materials. A library that does not commit `pubspec.lock`, which is what Dart's own guidance tells it to do, does not even have that.
 
@@ -171,7 +173,7 @@ GitHub's SPDX dependency-graph export can supplement an artifact inventory witho
 ```yaml
   github-release:
     runs-on: ubuntu-latest
-    needs: [publish]
+    needs: [publish, build]
     permissions:
       contents: write
       id-token: write

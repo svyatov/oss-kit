@@ -253,26 +253,30 @@ function markdownFacts(path) {
   const lines = text.split("\n")
   const fences = []
   const headings = []
-  let fenced = false, opened = 0, lang = ""
+  let fence = null, opened = 0, lang = ""
+  const closeFence = (endLine) => {
+    let p = opened - 2
+    while (p >= 0 && lines[p].trim() === "") p--
+    fences.push({ startLine: opened, endLine, language: lang || null, precededBy: p >= 0 ? lines[p].trim() : null })
+    fence = null
+  }
   lines.forEach((line, idx) => {
-    const f = /^\s*(```|~~~)\s*([A-Za-z0-9_+-]*)/.exec(line)
-    if (f) {
-      if (!fenced) { fenced = true; opened = idx + 1; lang = f[2] }
-      else {
-        fenced = false
-        // R-DOC-07 asks whether a sentence names the block's destination. Give
-        // the audit the preceding non-blank line; deciding is its job.
-        let p = opened - 2
-        while (p >= 0 && lines[p].trim() === "") p--
-        fences.push({ startLine: opened, endLine: idx + 1, language: lang || null, precededBy: p >= 0 ? lines[p].trim() : null })
-      }
+    const f = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line)
+    if (fence) {
+      if (f && f[1][0] === fence[0] && f[1].length >= fence.length && f[2].trim() === "") closeFence(idx + 1)
       return
     }
-    if (fenced) return
+    if (f && !(f[1][0] === "`" && f[2].includes("`"))) {
+      fence = f[1]
+      opened = idx + 1
+      lang = f[2].trim().split(/\s+/)[0]
+      return
+    }
     const h = /^(#{1,6})\s+(.*)$/.exec(line)
     if (h) headings.push({ line: idx + 1, level: h[1].length, text: h[2].trim() })
   })
-  const firstHeadingIdx = lines.findIndex((l) => /^#\s+/.test(l))
+  if (fence) closeFence(lines.at(-1) === "" ? lines.length - 1 : lines.length)
+  const firstHeadingIdx = (headings.find((h) => h.level === 1)?.line ?? 0) - 1
   let firstPara = null
   if (firstHeadingIdx !== -1) {
     for (let j = firstHeadingIdx + 1; j < lines.length; j++) {

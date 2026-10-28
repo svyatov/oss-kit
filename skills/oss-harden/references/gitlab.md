@@ -14,7 +14,7 @@ Ten `curl` invocations appear below. Seven read: the protected branch, the appro
 - [Read the current state (Step 2)](#read-the-current-state-step-2)
 - [No marketplace-action analogue; pin images and includes instead (R-SEC-06)](#no-marketplace-action-analogue-pin-images-and-includes-instead-r-sec-06)
 - [Inbound job token scope (R-SEC-06)](#inbound-job-token-scope-r-sec-06)
-- [Automated dependency updates (R-SEC-03)](#automated-dependency-updates-r-sec-03)
+- [Automated dependency updates (R-SEC-03, R-SEC-14)](#automated-dependency-updates-r-sec-03-r-sec-14)
 - [Branch protection and required review (R-SEC-04, R-SEC-12)](#branch-protection-and-required-review-r-sec-04-r-sec-12)
 - [Signed tags (R-SEC-05)](#signed-tags-r-sec-05)
 - [Protected tags (R-SEC-13)](#protected-tags-r-sec-13)

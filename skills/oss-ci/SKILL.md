@@ -13,7 +13,7 @@ Decide what runs on push and on every change request, then write it in the synta
 
 The CI rules belong here: R-CI-01 triggers, R-CI-02 project commands, R-CI-03 version matrix, R-CI-04 cache keying, R-CI-05 timeouts and cancellation, and R-CI-06 test suite.
 
-When `oss-audit-report.md` exists at the repository root, read the group addressed to this skill and work from that. Each failing rule there carries the audit's evidence and that rule's `Check:` text verbatim, so reading `STANDARD.md` as well adds nothing. Where the file is absent, work from the request as usual.
+Use this skill's quoted checks from `oss-audit-report.md` when supplied. Otherwise resolve `../oss-audit/STANDARD.md` from this installed skill's directory before editing. If neither source exists, follow the request and report standard verification as unavailable. Use the same resolved checks at completion; supplied checks do not establish unlisted rules.
 
 This skill owns what runs: which checks execute, on which triggers, across which versions, with what caching. It shares the workflow and pipeline files it writes with two other skills, and the boundary between them is the rule area, not a description of files.
 
@@ -65,7 +65,7 @@ Detect every ecosystem the repository has a signal for, not only the one it ship
 | `pubspec.yaml` | [references/ecosystems/pubdev.md](references/ecosystems/pubdev.md) |
 | a workflow or pipeline pushing an image to a registry, or an existing image on the forge's registry | [references/ecosystems/containers.md](references/ecosystems/containers.md) |
 
-A lockfile with no manifest beside it is the same signal, and the roster names those too. `skills/oss-audit/ecosystems.json` is the canonical list; where this table and that file disagree, the file wins.
+A lockfile with no manifest beside it is the same signal. Resolve the canonical roster at `../oss-audit/ecosystems.json` from this installed skill's directory. Where this table and the roster disagree, the roster wins. If the roster is absent, use this table and the ecosystem references, and report roster coverage as unavailable.
 
 Find every applicable lint, test, typecheck, and build command the project already defines, whether that is package manager scripts, a Makefile, a Rakefile, or a tool like tox or just, and read them closely enough to know their arguments and side effects. Do not invent a missing class of check: a documentation repository may have no build, and a small script may have no linter. Where the repository ships executable code and defines no test suite at all, that is an R-CI-06 gap rather than a class of check this project does without, so raise it and ask whether to add a suite instead of writing CI that runs nothing. If the repository has a CONTRIBUTING guide, its commands and the project automation must agree; resolve any conflict before copying either into CI.
 
@@ -87,7 +87,7 @@ Build the version matrix from the supported release lines identified in Step 2, 
 
 ### Step 5: Decide caching
 
-Cache only package-manager download data or another directory the tool's official documentation says is safe to reuse. Where the forge ships a first-party mechanism that caches the detected package manager's data and keys on the lockfile, prefer it; the ecosystem file names it, what it actually caches, and what it keys on by default, which is not always the lockfile. Otherwise key an explicit cache on the lockfile plus every compatibility boundary that changes its contents, such as the operating system, architecture, runtime, and package manager. A fallback key is optional and must not cross one of those boundaries. A project with no lockfile or no reusable download cache gets no cache step.
+Cache only package-manager download data or another directory the tool's official documentation says is safe to reuse. Where the forge ships a first-party mechanism that caches the detected package manager's data and keys on the lockfile, prefer it; the ecosystem file names it, what it actually caches, and what it keys on by default, which is not always the lockfile. Otherwise key an explicit package-manager cache on the lockfile plus every compatibility boundary that changes its contents, such as the operating system, architecture, runtime, and package manager. A fallback key is optional and must not cross one of those boundaries. Without a lockfile or reusable download cache, omit the package-manager cache. BuildKit layer caching follows the container reference and its build-graph identity, without requiring a package lockfile.
 
 ### Step 6: Write the configuration
 
@@ -103,6 +103,6 @@ Confirm the configuration is syntactically valid with the forge's own validator 
 
 ### Step 8: Present the result
 
-Before presenting, read each R-CI rule's `Check:` line in `skills/oss-audit/STANDARD.md` (from the plugin root, like the roster in Step 2) against the configuration as it now stands, and fix what fails. The file is long: read only its R-CI section. Start the list again after each fix, and do not report done while any cited rule still fails. On GitHub there is no local validator, so this reference-plus-checklist pass is the validator, and the loop terminates when every cited rule passes rather than when the file looks finished.
+Apply the R-CI checks resolved at entry to the resulting configuration. Fix failures and restart after each fix. Report unavailable checks explicitly. On GitHub, this reference-and-checklist pass supplies the local validation; do not report a failing cited check as complete.
 
 Then show the generated file, a short summary of what was detected and decided, the list of secrets to configure, and anything left for the user to set at the repository or project level, such as branch protection or environment approvers, naming the skill that owns it rather than attempting it here.

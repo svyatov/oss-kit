@@ -34,18 +34,7 @@ Hex documents `HEX_HOME`, defaulting to `~/.hex`, as the directory holding its c
 
 Source: [Hex configuration](https://hex.hexdocs.pm/Mix.Tasks.Hex.Config.md), [erlef/setup-beam](https://github.com/erlef/setup-beam), [Hex FAQ](https://hex.pm/docs/faq), [mix hex](https://hex.hexdocs.pm/Mix.Tasks.Hex.html).
 
-The strongest documented fallback is an explicit cache over the two directories Mix does document, keyed on the lockfile Mix names: `:deps_path` defaults to `deps`, `:build_path` defaults to `_build`, and `:lockfile` defaults to `mix.lock`. Both are inside the project directory, so this shape works unchanged on GitLab.
-
-```yaml
-- uses: actions/cache@v6  # oss-harden pins this to a commit SHA
-  with:
-    path: |
-      deps
-      _build
-    key: ${{ runner.os }}-otp${{ matrix.otp }}-elixir${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
-```
-
-Both directories hold fetched sources and compiled BEAM files rather than package-manager download data, so this sits below the bar R-CI-04 sets and needs the OTP and Elixir versions in the key, since compiled artifacts are not portable across them. An upstream-documented cache-only path suitable for reuse, or `setup-beam` gaining a cache input keyed on `mix.lock`, would retire the gap.
+Mix documents `deps`, `_build`, and `mix.lock`. The directories contain fetched sources and compiled BEAM files, not a reusable download cache. Omit caching under this skill's policy. An upstream-documented download cache or a compliant `setup-beam` cache would permit revisiting that decision.
 
 Sources: [Mix.Project](https://mix.hexdocs.pm/Mix.Project.html), [GitLab CI/CD YAML reference, cache](https://docs.gitlab.com/ci/yaml/#cachepaths).
 

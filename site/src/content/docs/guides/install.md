@@ -61,18 +61,36 @@ In VS Code, run `Chat: Install Plugin From Source` and enter
 
 ## Codex CLI
 
-Reads `.codex-plugin/plugin.json`. Codex CLI 0.122 or later:
+This repository supplies `.codex-plugin/plugin.json` for Codex.
+Register the marketplace from the terminal:
 
 ```bash
 codex plugin marketplace add svyatov/oss-kit
 ```
 
+Then install the plugin:
+
+```bash
+codex plugin add oss-kit@oss-kit
+```
+
+If the CLI does not expose `plugin add`, use the client's plugin installation
+interface after registering the marketplace.
+
 ## Cursor
 
-Reads `.cursor-plugin/plugin.json`. Cursor has no CLI or slash command for
-installing a plugin. Install it through the Customize panel inside Cursor, or
-from cursor.com/marketplace. A team admin can add it from the Dashboard,
-under Plugins, Add Marketplace, Import from Repo.
+Reads `.cursor-plugin/plugin.json`. Install through the IDE's Customize panel
+or from cursor.com/marketplace. A team admin can use Dashboard, Plugins & MCPs,
+Add Marketplace, Import from Repo.
+
+The native catalog at `.cursor-plugin/marketplace.json` also supports Cursor
+CLI. With CLI v2026.07.13 or later, register the marketplace from a terminal:
+
+```bash
+agent plugin marketplace add https://github.com/svyatov/oss-kit.git
+```
+
+Then open `/plugin` in Cursor CLI to select and install `oss-kit`.
 
 ## Kimi Code
 
