@@ -4,6 +4,7 @@ Curated agent skills for open source maintainers.
 
 [![version](https://img.shields.io/github/v/tag/svyatov/oss-kit?sort=semver&label=version)](https://github.com/svyatov/oss-kit/releases)
 [![CI](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/svyatov/oss-kit/actions/workflows/validate.yml)
+[![OSS Kit on StartupScores](https://startupscores.com/badge/oss-kit.svg?style=shield&v=combo&theme=dark)](https://startupscores.com/open-source/oss-kit)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13884/badge)](https://www.bestpractices.dev/projects/13884)
 
 - **61 rules.** Each states the check it is scored by and the one skill that
