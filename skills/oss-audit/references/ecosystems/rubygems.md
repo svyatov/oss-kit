@@ -10,7 +10,7 @@ Sources: [Specification reference](https://guides.rubygems.org/specification-ref
 
 Three cases decide most arguments:
 
-- `spec.metadata['allowed_push_host']` set to anything other than rubygems.org means the gem ships to a private host. RubyGems documents it as the way "to prevent accidental pushes to rubygems.org". Report the gem as shipped and name the host, rather than reading a restriction as an absence.
+- `spec.metadata['allowed_push_host']` restricts the destination of `gem push`. Record a private host as shipped when the release step targets it or its registry lists the gem.
 - A `Gemfile` with no gemspec beside it is present and not shipped. A repository that runs Jekyll for its docs, or Rake for its tests, is this case in full: it resolves gems and publishes none.
 - A `Gemfile.lock` alone is present. So is a gemspec inside a fixture or an example directory, which is present and answers the shipped question for itself rather than for the repository.
 

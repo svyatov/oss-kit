@@ -11,7 +11,7 @@ Sources: [The manifest format](https://doc.rust-lang.org/cargo/reference/manifes
 Three cases decide most arguments:
 
 - A virtual manifest declares no package. Cargo's own words: "a `Cargo.toml` file can be created with a `[workspace]` section but without a `[package]` section... This is called a virtual manifest." The workspace root is present, and each member answers the shipped question for itself.
-- `publish = false` settles the shipped answer, and Cargo documents it as preventing publishing entirely. `publish = ["some-registry-name"]` is the other half of the same field and means the opposite: the crate ships, to the registry named, and crates.io is not it. An omitted `version` has the same practical effect as `publish = false`, which Cargo records as preventing "a package from being published to a registry by mistake".
+- `publish = false` prevents publication. A `publish` allowlist names the permitted registries. Confirm the release command targets the named registry or find the crate there. Cargo also prevents publication when the manifest omits the version.
 - An internal `Cargo.toml` for an `xtask` helper, a fuzz target, or a benchmark harness is present. So is a `Cargo.lock` on its own. Neither says anything about what the repository distributes.
 
 ## Release track

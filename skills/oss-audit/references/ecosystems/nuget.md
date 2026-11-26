@@ -2,7 +2,7 @@
 
 ## Detection signals
 
-NuGet is present when a `*.csproj`, `*.fsproj`, or `*.vbproj` turns up anywhere in the checkout. A `packages.lock.json` beside one is a second present signal and never the only one to rely on, because NuGet's lockfile is opt-in: it appears only when `RestorePackagesWithLockFile` is set or an empty file already exists, so its absence says nothing about whether the ecosystem is in the repository.
+A `*.csproj`, `*.fsproj`, `*.vbproj`, or `packages.lock.json` anywhere in the checkout establishes NuGet presence. The lockfile is opt-in.
 
 NuGet is shipped when a project packs and a publish step exists: a release workflow running `dotnet pack` and `dotnet nuget push`, or an existing page on nuget.org for the project's `PackageId`. NuGet documents `PackageId` as defaulting to `$(AssemblyName)`, so a shipped package often names itself nowhere in the project file.
 

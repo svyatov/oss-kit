@@ -45,7 +45,7 @@
   "R-DOC-08": {
     "sources": [
       "https://github.com/RichardLitt/standard-readme/blob/main/spec.md",
-      "https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/adding-support-resources-to-your-project"
+      "https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/adding-support-resources-to-your-project.md"
     ],
     "verified": "2026-07-28",
     "note": "standard-readme's Contributing section is Required and its first requirement is 'State where users can ask questions', under a preamble giving the list normative force. That sources the channel half only. The rule's further qualifiers, that the channel be public, searchable, addressable by URL, usable without proprietary client software, and cover defect reports, are this standard's own position and have no upstream. GitHub's support-resources page confirms SUPPORT may live in root, docs/, or .github/, and endorses linking it from the README."
@@ -95,15 +95,15 @@
   },
   "R-COM-05": {
     "sources": [
-      "https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository",
-      "https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/creating-a-pull-request-template-for-your-repository"
+      "https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository.md",
+      "https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/creating-a-pull-request-template-for-your-repository.md"
     ],
     "verified": "2026-07-31",
     "note": "Confirms .github/ISSUE_TEMPLATE/ and issue forms as YAML, and that this path is exact: the issue-template page names no root or docs/ alternative. The PR template page resolves the other half: pull_request_template.md is valid in the repository root, docs/, or .github/, and multiple templates live in an uppercase PULL_REQUEST_TEMPLATE/ subdirectory selected by the template query parameter rather than applied automatically. This note recorded that false negative on 2026-07-28 and the Check kept it until 2026-07-31, which is the wrong use of this field: a divergence written down here and left in place is a defect with a paper trail rather than a fixed one. The Check now accepts all four documented layouts. The GitLab paths have no source named."
   },
   "R-COM-06": {
     "sources": [
-      "https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners"
+      "https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners.md"
     ],
     "verified": "2026-07-28",
     "note": "Confirms the .github/, root, and docs/ locations and the catch-all pattern. The page did not state the plan and visibility limits the rule's exemption relies on; that half is unverified. The solo exemption is not from this page either: it tracks R-SEC-12, because the forge requests review from an owner who is the only person who could merge the change anyway."
@@ -122,7 +122,7 @@
   },
   "R-COM-09": {
     "sources": [
-      "https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository",
+      "https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository.md",
       "https://docs.github.com/en/discussions/guides/best-practices-for-community-conversations-on-github.md"
     ],
     "verified": "2026-07-28",
@@ -150,7 +150,7 @@
   "R-CI-04": {
     "sources": [
       "https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching.md",
-      "https://docs.github.com/en/actions/concepts/workflows-and-actions/dependency-caching"
+      "https://docs.github.com/en/actions/concepts/workflows-and-actions/dependency-caching.md"
     ],
     "verified": "2026-07-28",
     "note": "The path this rule used to cite, /actions/how-tos/write-workflows/choose-what-workflows-do/cache-dependencies, is a hard 404 with no redirect. The canonical reference is now /actions/reference/workflows-and-actions/dependency-caching, H1 'Dependency caching reference'. It documents mechanism only. The rationale lives on the sibling concepts page, and even there it is conditional selection guidance, 'Use caching when you want to reuse files that don't change often between workflow runs', not a mandate. So the source gives the check its syntax and does not argue that a workflow must cache."
@@ -301,7 +301,7 @@
       "https://central.sonatype.org/publish/publish-portal-maven/",
       "https://central.sonatype.org/register/namespace/",
       "https://central.sonatype.org/news/20250326_ossrh_sunset/",
-      "https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments",
+      "https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments.md",
       "https://docs.gitlab.com/ci/environments/protected_environments/",
       "https://docs.gitlab.com/ci/jobs/job_control/",
       "https://github.com/hexpm/hex/blob/main/lib/mix/tasks/hex.user.ex",
@@ -327,7 +327,7 @@
   },
   "R-PUB-04": {
     "sources": [
-      "https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments",
+      "https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments.md",
       "https://docs.gitlab.com/ci/environments/deployment_approvals/",
       "https://docs.gitlab.com/ci/environments/protected_environments/",
       "https://docs.gitlab.com/ci/jobs/job_control/",
@@ -341,7 +341,7 @@
       "https://baseline.openssf.org/versions/2026-02-19",
       "https://github.com/ossf/scorecard/blob/main/docs/checks.md",
       "https://best.openssf.org/Concise-Guide-for-Developing-More-Secure-Software.html",
-      "https://docs.github.com/rest/dependency-graph/sboms"
+      "https://docs.github.com/rest/dependency-graph/sboms.md"
     ],
     "verified": "2026-07-28",
     "note": "OSPS-QA-02.02, Maturity 3: 'When the project has made a release, all compiled released software assets MUST be delivered with a software bill of materials.' Concise Guide item 18 names SPDX and CycloneDX as the formats. Scorecard's SBOM check supplies the observable form, an SBOM as a file in the source or a release artifact. Note this sits at Level 3 upstream, so it is a maturity target rather than a floor, and the rule's applicability clause is what keeps that honest. The forge dependency-graph export at GET /repos/{owner}/{repo}/dependency-graph/sbom was adopted on 2026-07-31 as the answer for the eight ecosystems whose reference names no SBOM generator. It returns SPDX, needs nothing installed in the release job, and is GitHub only, so GitLab keeps the gap."
@@ -349,7 +349,7 @@
   "R-PUB-06": {
     "sources": [
       "https://baseline.openssf.org/versions/2026-02-19",
-      "https://docs.github.com/en/actions/concepts/security/artifact-attestations"
+      "https://docs.github.com/en/actions/concepts/security/artifact-attestations.md"
     ],
     "verified": "2026-07-28",
     "note": "OSPS-BR-06.01, Maturity 2-3: 'When an official release is created, that release MUST be signed or accounted for in a signed manifest including each asset's cryptographic hashes.' That sentence is where this rule's two accepted forms come from. Distinct from R-SEC-05, which verifies the tag object with git tag -v and covers the commit, not the files attached to the release. GitHub artifact attestations are the keyless path."
@@ -440,7 +440,7 @@
   },
   "R-SEC-13": {
     "sources": [
-      "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets",
+      "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets.md",
       "https://docs.gitlab.com/user/project/protected_tags/",
       "https://go.dev/doc/modules/publishing",
       "https://go.dev/ref/mod",
@@ -472,7 +472,7 @@
     "sources": [
       "https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference",
       "https://docs.renovatebot.com/configuration-options/",
-      "https://docs.github.com/en/code-security/tutorials/secure-your-dependencies/optimizing-pr-creation-version-updates",
+      "https://docs.github.com/en/code-security/tutorials/secure-your-dependencies/optimizing-pr-creation-version-updates.md",
       "https://github.blog/changelog/2026-07-14-dependabot-version-updates-introduce-default-package-cooldown/",
       "https://github.blog/security/supply-chain-security/our-plan-for-a-more-secure-npm-supply-chain/",
       "https://pnpm.io/supply-chain-security"
@@ -488,9 +488,10 @@
       "https://pnpm.io/supply-chain-security",
       "https://bun.com/docs/pm/cli/install.md",
       "https://getcomposer.org/doc/06-config.md",
-      "https://pip.pypa.io/en/stable/cli/pip_install/"
+      "https://pip.pypa.io/en/stable/cli/pip_install/",
+      "https://learn.microsoft.com/en-us/nuget/concepts/msbuild-props-and-targets"
     ],
-    "verified": "2026-08-03",
-    "note": "The falls-outside list was read once per ecosystem rather than assumed. Cargo documents no way to decline a dependency build.rs beyond the links override, RubyGems builds native extensions on install with no documented allowlist, Mix documents no flag that compiles a project without compiling its dependencies, Maven and NuGet execute only what the consuming project own build file declares, and Go modules, pub.dev packages, and container base images run nothing during resolution. The rule asks for the flag or the allowlist to be written down even where the manager now blocks this code by default, which is this project position and the same one R-SEC-08 takes about frozen installs: a default that depends on the runner manager version is not evidence in a configuration file. What would retire that half is every manager in scope making the control unconditional."
+    "verified": "2026-11-26",
+    "note": "The falls-outside list was read once per ecosystem rather than assumed. Cargo documents no way to decline a dependency build.rs beyond the links override, RubyGems builds native extensions on install with no documented allowlist, Mix documents no flag that compiles a project without compiling its dependencies, Maven resolves artifacts and NuGet restores packages. NuGet restore generates imports for package-supplied MSBuild targets that can run during a later build, and Go modules, pub.dev packages, and container base images run nothing during resolution. The rule asks for the flag or the allowlist to be written down even where the manager now blocks this code by default, which is this project position and the same one R-SEC-08 takes about frozen installs: a default that depends on the runner manager version is not evidence in a configuration file. What would retire that half is every manager in scope making the control unconditional."
   }
 }
