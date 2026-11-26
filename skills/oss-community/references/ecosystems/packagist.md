@@ -18,4 +18,4 @@ One wrinkle belongs to this ecosystem alone. A Packagist package name is itself 
 
 The roster at `skills/oss-audit/ecosystems.json` records `"tidelift": "packagist"` and is the canonical copy. This line exists because a single-skill install of `oss-community` does not carry that file; where the two disagree, the roster is right and this line is corrected to it.
 
-Verified 2026-07-31 against [The composer.json schema](https://getcomposer.org/doc/04-schema.md) and [Displaying a sponsor button in your repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository).
+Verified 2026-07-31 against [The composer.json schema](https://getcomposer.org/doc/04-schema.md) and [Displaying a sponsor button in your repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository.md).

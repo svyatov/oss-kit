@@ -47,7 +47,7 @@ Front matter keys: `name` and `about` are the ones the template chooser shows; `
 
 ### Issue forms
 
-A YAML file, extension `.yml`, using GitHub's form schema. Verify a generated form in GitHub's template chooser before treating it as finished. Top-level keys:
+A YAML file, extension `.yml`, using GitHub's form schema. Check the schema and path before merge. Verify the chooser once Issues is enabled and the form is on the default branch. Top-level keys:
 
 | Key | Required | Type |
 |---|---|---|
@@ -222,7 +222,7 @@ docs/*  docs@example.com
 apps/   @octo-org/octocats
 ```
 
-Owners are `@username`, `@org/team-name`, or an email address already associated with a GitHub account; all must have write access to the repository, and a team must be visible with write access even if every member already has it individually. Multiple owners belong on the same line to all be requested; owners on separate lines each match only as the last-mentioned pattern for their own line. An invalid line is skipped rather than failing the whole file, and GitHub surfaces the specific errors both in the file view and through the REST API.
+Use `@username` for individual owners or `@org/team-name` for teams. Individual owners can also use a linked email address unless they have a managed user account. Use `@username` for managed users. Each owner needs write access. Teams must be visible and have explicit write access. Multiple owners belong on the same line to all be requested; owners on separate lines each match only as the last-mentioned pattern for their own line. An invalid line is skipped rather than failing the whole file, and GitHub surfaces the specific errors both in the file view and through the REST API.
 
 GitHub has no section syntax and no way to require more than one approval from the owners of a given path; an approval from any one listed owner satisfies the requirement. Enforcing CODEOWNERS review at all is a branch protection setting, "Require review from Code Owners," configured outside this file; note that it is needed and leave enabling it to whoever owns branch protection, since it is a repository setting rather than part of this file.
 
@@ -272,7 +272,7 @@ Topics: add no more than 20, use lowercase letters, numbers, and hyphens, and ke
 
 ### Social preview
 
-Settings, General, Social preview. GitHub asks for "a PNG, JPG, or GIF file under 1 MB in size" and "a size of at least 640 by 320 pixels (1280 by 640 pixels for best display)". Until one is set, "repository links expand to show basic information about the repository and the owner's avatar". The REST API does not expose this image, so it cannot be read or set the way the About fields can; check it in Settings and hand the upload to the maintainer.
+Settings, General, Social preview. GitHub asks for "a PNG, JPG, or GIF file under 1 MB in size" and "a size of at least 640 by 320 pixels (1280 by 640 pixels for best display)". Until one is set, "repository links expand to show basic information about the repository and the owner's avatar". Run `gh repo view --json usesCustomOpenGraphImage,openGraphImageUrl` to check the custom image and its URL. The maintainer can upload a replacement in Settings.
 
 ### Feature tabs
 

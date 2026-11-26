@@ -18,4 +18,4 @@ Tidelift's platform name for this ecosystem is `pypi`, so the GitHub funding fil
 
 The roster at `skills/oss-audit/ecosystems.json` records `"tidelift": "pypi"` and is the canonical copy. This line exists because a single-skill install of `oss-community` does not carry that file; where the two disagree, the roster is right and this line is corrected to it.
 
-Verified 2026-07-31 against [Writing your pyproject.toml](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/), [PEP 639](https://peps.python.org/pep-0639/), and [Displaying a sponsor button in your repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository).
+Verified 2026-07-31 against [Writing your pyproject.toml](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/), [PEP 639](https://peps.python.org/pep-0639/), and [Displaying a sponsor button in your repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository.md).

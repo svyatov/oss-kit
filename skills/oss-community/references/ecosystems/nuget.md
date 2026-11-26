@@ -6,7 +6,9 @@ The project file declares it through one of two MSBuild properties. `PackageLice
 
 Three details decide most readings. Only one of `PackageLicenseExpression`, `PackageLicenseFile`, and the deprecated `PackageLicenseUrl` may be set at a time, so a project file states its license exactly once. A referenced license file has to be packed explicitly, with a `<None Include="LICENSE" Pack="true" PackagePath=""/>` item; setting the property alone puts nothing in the package. And NuGet and MSBuild treat a path with no extension as a directory, which is why an extensionless `LICENSE` needs that item spelled out rather than inferred.
 
-So the manifest side of R-COM-01 is `PackageLicenseExpression` in every `.csproj`, `.fsproj`, or `.vbproj` the repository packs from, and the file side is the root license file. A solution packing several projects has one value per project. Where `PackageLicenseFile` is set instead, the project names a path rather than a license, so read the file at that path and check it is the same document the repository root carries. A project still setting only `PackageLicenseUrl` is on a deprecated property and states its license nowhere the package can carry it.
+So the manifest side of R-COM-01 is `PackageLicenseExpression` in every `.csproj`, `.fsproj`, or `.vbproj` the repository packs from, and the file side is the root license file. A solution packing several projects has one value per project. Where `PackageLicenseFile` is set instead, the project names a path rather than a license, so read the file at that path and check it is the same document the repository root carries. For a legacy `PackageLicenseUrl`, inspect the packed `.nuspec` for `licenseUrl` and read the linked terms. Report inaccessible or conflicting terms. Record migration from the deprecated field separately.
+
+Legacy field: [NuGet `licenseUrl`](https://learn.microsoft.com/en-us/nuget/reference/nuspec#licenseurl).
 
 Source: [NuGet pack and restore as MSBuild targets](https://learn.microsoft.com/en-us/nuget/reference/msbuild-targets).
 
@@ -16,4 +18,4 @@ Tidelift's platform name for this ecosystem is `nuget`, so the GitHub funding fi
 
 The roster at `skills/oss-audit/ecosystems.json` records `"tidelift": "nuget"` and is the canonical copy. This line exists because a single-skill install of `oss-community` does not carry that file; where the two disagree, the roster is right and this line is corrected to it.
 
-Verified 2026-07-31 against [NuGet pack and restore as MSBuild targets](https://learn.microsoft.com/en-us/nuget/reference/msbuild-targets) and [Displaying a sponsor button in your repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository).
+Verified 2026-07-31 against [NuGet pack and restore as MSBuild targets](https://learn.microsoft.com/en-us/nuget/reference/msbuild-targets) and [Displaying a sponsor button in your repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository.md).
