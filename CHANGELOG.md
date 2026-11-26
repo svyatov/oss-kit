@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-11-27
+
 ### Changed
 
 - Eight skills require explicit invocation in Claude Code, Codex, and Cursor. Only `oss-writing` remains available for automatic selection.
@@ -492,7 +494,8 @@ Five new rules, and `oss-audit` now reports the gaps alone rather than every rul
 - `oss-audit` scores a repository against `STANDARD.md`, reports each gap with the rule it fails, and names the skill that fixes it.
 - `oss-skill` fixes the structure of a repository that ships agent skills: the top-level `skills/` layout, `SKILL.md` conformance to the Agent Skills specification, oversized bodies that belong in `references/`, and the license field an extracted skill carries with it.
 
-[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.18.0...HEAD
+[Unreleased]: https://github.com/svyatov/oss-kit/compare/v0.19.0...HEAD
+[0.19.0]: https://github.com/svyatov/oss-kit/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/svyatov/oss-kit/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/svyatov/oss-kit/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/svyatov/oss-kit/compare/v0.15.0...v0.16.0
