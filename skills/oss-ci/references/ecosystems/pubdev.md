@@ -19,7 +19,7 @@ The support claim lives in the `environment` field of `pubspec.yaml`, the `sdk` 
 
 On GitLab, run the job in the Dart image and vary the tag with `parallel:matrix`.
 
-Sources: [dart-lang/setup-dart](https://github.com/dart-lang/setup-dart), [The pubspec file](https://dart.dev/tools/pub/pubspec), [dart-lang/dart-docker](https://github.com/dart-lang/dart-docker).
+Sources: [dart-lang/setup-dart](https://github.com/dart-lang/setup-dart), [The pubspec file](https://dart.dev/tools/pub/pubspec.md), [dart-lang/dart-docker](https://github.com/dart-lang/dart-docker).
 
 ## Dependency caching (R-CI-04)
 
@@ -33,7 +33,7 @@ Dart application packages commit `pubspec.lock`; regular library packages normal
 
 On GitLab set `PUB_CACHE` to a project-relative directory first, because GitLab caches only paths inside the project directory.
 
-Sources: [Pub environment variables](https://dart.dev/tools/pub/environment-variables), [Package layout conventions](https://dart.dev/tools/pub/package-layout), [GitLab CI/CD YAML reference, cache](https://docs.gitlab.com/ci/yaml/#cachepaths).
+Sources: [Pub environment variables](https://dart.dev/tools/pub/environment-variables.md), [Package layout conventions](https://dart.dev/tools/pub/package-layout.md), [GitLab CI/CD YAML reference, cache](https://docs.gitlab.com/ci/yaml/#cachepaths).
 
 ## Test command (R-CI-06)
 
@@ -41,6 +41,6 @@ Sources: [Pub environment variables](https://dart.dev/tools/pub/environment-vari
 
 setup-dart's own README shows the full check sequence a Dart package runs, `dart pub get`, `dart format --output=none --set-exit-if-changed .`, `dart analyze`, then `dart test`, which is the order to keep in CI so the fast checks fail first.
 
-Sources: [dart test](https://dart.dev/tools/dart-test), [dart-lang/setup-dart](https://github.com/dart-lang/setup-dart).
+Sources: [dart test](https://dart.dev/tools/dart-test.md), [dart-lang/setup-dart](https://github.com/dart-lang/setup-dart).
 
-Verified 2026-07-31 against https://github.com/dart-lang/setup-dart, https://dart.dev/tools/pub/pubspec, https://dart.dev/tools/pub/environment-variables, https://dart.dev/tools/dart-test, https://github.com/dart-lang/dart-docker, and https://docs.gitlab.com/ci/yaml/.
+Verified 2026-07-31 against https://github.com/dart-lang/setup-dart, https://dart.dev/tools/pub/pubspec.md, https://dart.dev/tools/pub/environment-variables.md, https://dart.dev/tools/dart-test.md, https://github.com/dart-lang/dart-docker, and https://docs.gitlab.com/ci/yaml/.

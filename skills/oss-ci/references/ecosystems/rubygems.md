@@ -30,7 +30,7 @@ Sources: [ruby/setup-ruby](https://github.com/ruby/setup-ruby), [Gemspec referen
 
 The key comes from the lockfile hash. Where the repository commits no `Gemfile.lock`, which is the normal case for a gem, the action generates one with `bundle lock` first and hashes that, so the key still tracks a resolved dependency set rather than a range. A committed `Gemfile.lock` additionally turns on `bundle config --local deployment true`. `cache-version` is the documented escape hatch for a cache that has gone bad, for instance a gem with a C extension built against a system library that has since changed.
 
-On GitLab there is no equivalent. Set `BUNDLE_PATH` to a project-relative directory, key `cache:key:files` on `Gemfile.lock`, and cache that directory, because GitLab caches only paths inside the project directory.
+On GitLab, omit the installed bundle from `cache:paths`. A `Gemfile.lock` hash alone cannot separate Ruby versions, platforms, or native extensions. Run the project's Bundler install command in each job.
 
 Sources: [ruby/setup-ruby](https://github.com/ruby/setup-ruby), [GitLab CI/CD YAML reference, cache](https://docs.gitlab.com/ci/yaml/#cachepaths).
 

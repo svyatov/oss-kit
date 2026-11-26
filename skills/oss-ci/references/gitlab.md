@@ -22,12 +22,13 @@ A `.gitlab-ci.yml` is a set of jobs, each a top-level key with a `script:`. `sta
 
 ```yaml
 stages:
-  - build
+  - lint
   - test
+  - build
   - deploy
 
 lint:
-  stage: test
+  stage: lint
   script:
     - npm run lint
 ```
@@ -78,7 +79,7 @@ test:
 
 ## Caching keyed on the lockfile (R-CI-04)
 
-`cache:key:files` generates a new cache key when the content of the named files changes, which is how a GitLab cache stays keyed on the lockfile. It accepts at most two files, and it does not expand CI/CD variables, so name the lockfile paths literally:
+`cache:key:files` hashes the contents of the listed paths. Use up to two literal lockfile paths for portability. GitLab 19.5 introduced a ten-path limit behind `increase_ci_cache_key_files_limit`, disabled by default. Confirm instance support before using more than two paths. CI/CD variables do not expand here.
 
 ```yaml
 test:
@@ -128,7 +129,7 @@ workflow:
     on_new_commit: interruptible
 ```
 
-`on_new_commit` takes `conservative` (the default: cancel the pipeline only if no `interruptible: false` job has already started), `interruptible` (cancel only jobs marked `interruptible: true`), or `none`. `workflow:rules:auto_cancel` can override it per rule, for example to turn cancellation off on a protected branch. A job left at the `interruptible` default of `false` is never itself cancelled, and under the default `on_new_commit: conservative` it also blocks cancellation of the whole pipeline while it is running, so mark every job that is safe to cancel. Deployment and migration jobs are usually not safe to cancel.
+With `conservative` (default), pending jobs count as interruptible until they start. Once a job with `interruptible: false` starts, the pipeline is protected from auto-cancellation. With `interruptible`, GitLab cancels only jobs marked `interruptible: true`. With `none`, it leaves the pipeline running. Use `workflow:rules:auto_cancel` for branch-specific overrides. Keep deployments and migrations non-interruptible when stopping them could leave partial changes.
 
 The project setting Auto-cancel redundant pipelines, under Settings > CI/CD > General pipelines, is an older, coarser mechanism that still works alongside these keywords. Prefer the YAML above so the behavior travels with the pipeline definition; mention the project setting in the setup summary only as a fallback for a GitLab version that predates these keywords.
 
@@ -169,11 +170,13 @@ pages:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 ```
 
-Preserve the `pages:` hash, `interruptible: false`, and the rule restricting deployment to the default branch. Adapt the commands, published directory, and stage to the project. If the pipeline declares `stages`, use an appropriate existing stage or add the chosen stage to that list.
+Keep `interruptible: false` and the default-branch rule. Adapt the commands, output directory, and deployment stage to the project. Use Pages syntax for the target GitLab version:
 
-`pages:` as a job keyword is what marks a job as a Pages deployment. Setting it to `true` is the short form; the hash form takes `publish` for the built directory and `path_prefix` for parallel deployments under one site. GitLab 17.6 and later accept any job name once the keyword is present, so the job above could be called `deploy-docs`; before that the job had to be named `pages`, which is why so many pipelines still are.
+- **17.10 and later:** Use `pages.publish` as shown. GitLab adds the published directory to `artifacts:paths` automatically.
+- **17.9:** Use `pages.publish` and list the same directory under `artifacts:paths`.
+- **Before 17.9:** Use a job named `pages`, place the built site in `public/`, and list `public` under `artifacts:paths`. Omit the nested `pages` keyword.
 
-In GitLab 17.10 and later, the `pages.publish` path is appended to `artifacts:paths` automatically, and `public` is appended when `publish` is not set at all. On an older GitLab, name the directory in `artifacts:paths` as well, or the job publishes nothing.
+Validate the job with CI Lint on the target instance.
 
 `interruptible: false` is deliberate here and is the one place R-CI-05's cancellation guidance inverts, for the reason the timeout section above gives: a deploy cancelled mid-publish can leave the previous build live. Leave the rest of the pipeline interruptible.
 
@@ -191,11 +194,12 @@ Both flags are off by default. The default is an unmasked, unprotected variable 
 
 Masking replaces the value with `[MASKED]` in the job log. GitLab masks a value only when it is one line, has no spaces, and is 8 characters or longer. A value that fails those conditions cannot be masked, so change the value rather than dropping the flag. A job that transforms the value before printing it, by escaping or encoding it, defeats the masking either way.
 
-`--protected` restricts the variable to pipelines running on protected branches and protected tags. A merge request pipeline reaches a protected variable only when all three of these hold:
+Protected variables are available on protected branches and tags. For a merge request pipeline, check every condition:
 
+- the project enables **Allow merge request pipelines to access protected variables and runners** (GitLab 18.1 and later)
 - the source branch and the target branch are both protected
 - both branches belong to the same project
-- the user who triggered the pipeline can push to the target branch
+- the triggering user can push or merge into the target branch
 
 A merge request from a fork reaches no protected variable, whatever the branches are called. A check that needs the variable on every merge request therefore gives up either the protection or the run on forks. Present that choice in Step 3 rather than shipping a job that fails only for outside contributors.
 

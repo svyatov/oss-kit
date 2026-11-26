@@ -159,10 +159,11 @@
     "sources": [
       "https://docs.github.com/en/actions/reference/limits.md",
       "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax.md",
+      "https://docs.github.com/en/actions/reference/workflows-and-actions/reusing-workflow-configurations.md",
       "https://docs.gitlab.com/ci/yaml/"
     ],
-    "verified": "2026-07-28",
-    "note": "Limits confirms the 6-hour job ceiling the rule cites. Workflow syntax confirms concurrency and cancel-in-progress, and jobs.<job_id>.timeout-minutes carries 'Default: 360'. That default matters to the check: 360 is simultaneously GitHub's default and its hosted ceiling, so every job already has an effective timeout and only an explicit key in the file is observable evidence. Step-level timeout-minutes is a separate key with a maximum of 360 and no default; do not conflate them. GitLab's YAML reference confirms the analogues, timeout as 'a custom job-level timeout that takes precedence over the project-wide setting' and interruptible as whether a job 'can be canceled when made redundant by a newer run'; their defaults were not readable in the fetched excerpt."
+    "verified": "2026-11-26",
+    "note": "GitHub documents a 360-minute job default. Check explicit job-level timeouts where steps run. Reusable workflow callers exclude timeout-minutes from their supported keywords. GitLab documents job-level timeout and the interaction between interruptible and workflow:auto_cancel:on_new_commit."
   },
   "R-CI-06": {
     "sources": [

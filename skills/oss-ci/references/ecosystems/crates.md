@@ -2,21 +2,17 @@
 
 ## Toolchain and matrix (R-CI-03)
 
-The Rust project publishes no first-party GitHub Actions setup action. Its own continuous integration chapter drives the toolchain with `rustup`, which is preinstalled on GitHub-hosted runners:
+Use the project toolchain for a single-version Rust build. Without a selected toolchain, use stable. GitHub-hosted runners include `rustup`:
 
 ```yaml
-strategy:
-  matrix:
-    toolchain: [stable, beta, nightly]
 steps:
   - uses: actions/checkout@v7  # oss-harden pins this to a commit SHA
-  - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
   - run: cargo test --verbose
 ```
 
-The support claim lives in `rust-version` in `[package]` of `Cargo.toml`, the minimum supported Rust version. Note what it is and is not: it is a floor, not a range, so the matrix above tests the release channels while the floor needs its own check. Cargo's book documents that check as `cargo hack check --rust-version`, which needs `cargo-hack`, a third-party tool the maintainer vets before it enters a workflow. Where the project ships no `rust-version`, it makes no claim to cover and the channel matrix is the whole of it.
+`rust-version` in `Cargo.toml` declares the minimum supported Rust version. Check that version separately when declared. Cargo documents `cargo hack check --rust-version` for this check. Vet `cargo-hack` before adding it.
 
-On GitLab, the same chapter uses `image: rust:latest` for the stable job and `image: rustlang/rust:nightly` with `allow_failure: true` for nightly, so a nightly regression reports without failing the pipeline.
+Add beta or nightly jobs only when requested. On GitLab, use a Rust image matching the selected toolchain. Use `rust:latest` for stable. For an optional nightly check, use `rustlang/rust:nightly` with `allow_failure: true`.
 
 Sources: [The Cargo Book, continuous integration](https://doc.rust-lang.org/cargo/guide/continuous-integration.html), [The Cargo Book, the rust-version field](https://doc.rust-lang.org/cargo/reference/rust-version.html), [rust-lang/docker-rust](https://github.com/rust-lang/docker-rust).
 
