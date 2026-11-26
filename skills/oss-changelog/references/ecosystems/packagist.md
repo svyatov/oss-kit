@@ -20,10 +20,10 @@ Packagist does not encode the major version in package identity. The `vendor/pro
 
 Packagist documents no withdrawal. Its about page covers submitting a package, how versions are fetched from tags, how the crawl is scheduled, and how to force an update, and says nothing about deleting a package or removing a published version. Composer's schema documents no per-version state either.
 
-Source: [Packagist about](https://packagist.org/about) and [Composer schema](https://getcomposer.org/doc/04-schema.md).
+Source: [Packagist about](https://packagist.org/about) and [Composer schema](https://getcomposer.org/doc/04-schema.md.md).
 
 Packagist has no documented per-version withdrawal state. Preserve the released tag and its contents under R-SEC-13. For package-wide retirement, Composer's `abandoned` property can warn consumers and name a replacement. That property cannot withdraw one version.
 
 Mark the changelog heading `[YANKED]` and state the replacement and the registry limitation. This is a project warning, not a registry-enforced withdrawal. Do not delete or move the tag, or weaken tag protection. A documented per-version withdrawal mechanism would close this gap.
 
-Verified 2026-07-31 against [Packagist about](https://packagist.org/about), [Composer schema](https://getcomposer.org/doc/04-schema.md), and [Composer versions and constraints](https://getcomposer.org/doc/articles/versions.md).
+Verified 2026-07-31 against [Packagist about](https://packagist.org/about), [Composer schema](https://getcomposer.org/doc/04-schema.md.md), and [Composer versions and constraints](https://getcomposer.org/doc/articles/versions.md.md).

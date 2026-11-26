@@ -22,7 +22,7 @@ npm does not encode the major version in package identity. A package name is sta
 
 npm has two mechanisms and only one of them removes anything.
 
-A newly created package can be unpublished within 72 hours only if no npm Public Registry package depends on it. After that window npm permits it only when no other package in the public registry depends on it, it had fewer than 300 downloads over the last week, and it has a single owner. The version string is spent either way: "Once `package@version` has been used, you can never use it again. You must publish a new version even if you unpublished the old one." Republishing the same package name is blocked for 24 hours after an unpublish.
+A newly created package can be unpublished within 72 hours only if no npm Public Registry package depends on it. After that window npm permits it only when no other package in the public registry depends on it, it had fewer than 300 downloads over the last week, and it has a single owner. The version string is spent either way: "Once `package@version` has been used, you can never use it again. You must publish a new version even if you unpublished the old one." The 24-hour wait before publishing under the same name applies only after all versions have been unpublished.
 
 Deprecation is what npm recommends where those criteria are not met, and it removes nothing. `npm deprecate <pkg>@"<range>" "<message>"` updates the registry entry so an install prints the message, and passing an empty string undoes it. The range form covers versions in bulk, including prereleases, so `npm deprecate my-thing@1.x "1.x is no longer supported"` also flags `1.0.0-beta.0`.
 

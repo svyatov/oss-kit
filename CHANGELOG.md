@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 - The quick start invokes the audit skill explicitly, and Codex package metadata includes the required display fields.
 - The marketplace schema URL resolves, and Cursor's native catalog supports the documented CLI installation route.
 - The audit collector rejects unsupported YAML instead of returning incomplete facts, reads quoted keys, and finds deeply nested actions without looping through directory symlinks.
+- Release-note extraction ignores commented headings, rejects comment-only sections, and keeps issue links after literal brackets. Historical tag backfills require evidence of the shipped commit.
 - Release-note extraction retains referenced issue and migration links. Initial releases use the full commit history, and npm withdrawal guidance includes the dependency restriction.
 - Publishing examples use valid job dependencies and signer-workflow paths. SBOM checks require exact-asset coverage, and provenance checks respect applicability and the standard's forge fallback.
 - npm flows with public forge assets use one forge approval before direct package publication and asset upload.

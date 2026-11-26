@@ -20,7 +20,7 @@ crates.io does not encode the major version in package identity. A crate name is
 
 ## Withdrawing a release (R-CHG-01)
 
-`cargo yank --version <version>` removes the version from the registry's index. Cargo states plainly what that does not do: "This command does not delete any data, and the crate will still be available for download via the registry's download link", and "Existing lock files or direct downloads are not affected". What changes is selection, because Cargo will not use a yanked version for any new project or checkout without a pre-existing lockfile. `cargo yank --undo` puts the version back into the index.
+`cargo yank --version <version>` removes the version from the registry's index. Cargo states plainly what that does not do: "This command does not delete any data, and the crate will still be available for download via the registry's download link", and "Existing lock files or direct downloads are not affected". What changes is selection, because Cargo will not use a yanked version for any new project or checkout without a pre-existing lockfile. `cargo yank --undo --version <version>` puts the version back into the index.
 
 Two consequences worth stating to a maintainer. Yanking is not a recall: bytes already fetched stay fetched, and the guide says yanking cannot stop further spreading. And crates.io offers no deletion, so the version number stays taken and the fix ships as a new version.
 

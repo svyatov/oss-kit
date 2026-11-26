@@ -34,7 +34,9 @@ export function findSection(text, version, keepHeading = false) {
   const lines = text.split("\n")
   /** @type {string|null} */
   let fence = null
-  const structural = lines.map((line) => {
+  let inComment = false
+  const visibleLines = [...lines]
+  const structural = lines.map((line, index) => {
     const marker = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line)
     const delimiter = marker?.[1] ?? ""
     const suffix = marker?.[2] ?? ""
@@ -42,8 +44,39 @@ export function findSection(text, version, keepHeading = false) {
       if (delimiter[0] === fence[0] && delimiter.length >= fence.length && suffix.trim() === "") fence = null
       return false
     }
-    if (delimiter && !(delimiter[0] === "`" && suffix.includes("`"))) { fence = delimiter; return false }
-    return true
+    if (!inComment && delimiter && !(delimiter[0] === "`" && suffix.includes("`"))) { fence = delimiter; return false }
+    if (!inComment && !line.includes("<!--")) return true
+
+    const beganInComment = inComment
+    let visible = ""
+    let pos = 0
+    // Code spans and escaped characters can quote a comment opener.
+    const tokens = /\\.|`+|<!--/g
+    while (pos < line.length) {
+      if (inComment) {
+        const close = line.indexOf("-->", pos)
+        if (close === -1) break
+        pos = close + 3
+        inComment = false
+        continue
+      }
+      tokens.lastIndex = pos
+      const token = tokens.exec(line)
+      if (!token) { visible += line.slice(pos); break }
+      visible += line.slice(pos, token.index)
+      pos = tokens.lastIndex
+      if (token[0] === "<!--") {
+        inComment = true
+      } else {
+        if (token[0].startsWith("`")) {
+          const closing = [...line.slice(pos).matchAll(/`+/g)].find(match => match[0] === token[0])
+          if (closing) pos += closing.index + closing[0].length
+        }
+        visible += line.slice(token.index, pos)
+      }
+    }
+    visibleLines[index] = visible
+    return !beganInComment
   })
   const isVersionHeading = (/** @type {string} */ line) => /^##\s+/.test(line)
   const headingVersion = (/** @type {string} */ line) => {
@@ -103,12 +136,15 @@ export function findSection(text, version, keepHeading = false) {
   }
   const body = lines.slice(start + 1, end).filter((_, i) => !definitionLines.has(start + 1 + i)).join("\n").trim()
   const heading = lines[start] ?? ""
+  if (!visibleLines.slice(start + 1, end).some((line, i) => line.trim() && !definitionLines.has(start + 1 + i))) {
+    return { heading, body: "" }
+  }
   const normalize = (/** @type {string} */ label) => label.trim().replace(/\s+/g, " ").toLowerCase()
-  const used = new Set([...`${keepHeading ? heading : ""}\n${body}`.matchAll(/\[([^\]]+)\]/g)].map((m) => normalize(m[1] ?? "")))
+  const referenceText = normalize(`${keepHeading ? heading : ""}\n${body}`)
   const seen = new Set()
   const definitions = allDefinitions.filter((entry) => {
     const label = normalize(entry.label)
-    if (!used.has(label) || seen.has(label)) return false
+    if (seen.has(label) || !referenceText.includes(`[${label}]`)) return false
     seen.add(label)
     return true
   }).map((entry) => entry.text)
