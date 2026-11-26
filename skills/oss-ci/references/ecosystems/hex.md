@@ -26,17 +26,17 @@ Two constraints bound the matrix from outside the manifest. The README carries a
 
 On GitLab, run the job in the Elixir official image, whose tags carry both versions, and vary the tag with `parallel:matrix`.
 
-Sources: [erlef/setup-beam](https://github.com/erlef/setup-beam), [Mix.Project](https://mix.hexdocs.pm/Mix.Project.html), [erlef/docker-elixir](https://github.com/erlef/docker-elixir).
+Sources: [erlef/setup-beam](https://github.com/erlef/setup-beam), [Mix.Project](https://mix.hexdocs.pm/Mix.Project.md), [erlef/docker-elixir](https://github.com/erlef/docker-elixir).
 
 ## Dependency caching (R-CI-04)
 
 Hex documents `HEX_HOME`, defaulting to `~/.hex`, as the directory holding its cache and configuration. This does not establish that the entire directory is safe to cache. `erlef/setup-beam` has no cache input.
 
-Source: [Hex configuration](https://hex.hexdocs.pm/Mix.Tasks.Hex.Config.md), [erlef/setup-beam](https://github.com/erlef/setup-beam), [Hex FAQ](https://hex.pm/docs/faq), [mix hex](https://hex.hexdocs.pm/Mix.Tasks.Hex.html).
+Source: [Hex configuration](https://hex.hexdocs.pm/Mix.Tasks.Hex.Config.md), [erlef/setup-beam](https://github.com/erlef/setup-beam), [Hex FAQ](https://hex.pm/docs/faq), [mix hex](https://hex.hexdocs.pm/Mix.Tasks.Hex.md).
 
 Mix documents `deps`, `_build`, and `mix.lock`. The directories contain fetched sources and compiled BEAM files, not a reusable download cache. Omit caching under this skill's policy. An upstream-documented download cache or a compliant `setup-beam` cache would permit revisiting that decision.
 
-Sources: [Mix.Project](https://mix.hexdocs.pm/Mix.Project.html), [GitLab CI/CD YAML reference, cache](https://docs.gitlab.com/ci/yaml/#cachepaths).
+Sources: [Mix.Project](https://mix.hexdocs.pm/Mix.Project.md), [GitLab CI/CD YAML reference, cache](https://docs.gitlab.com/ci/yaml/#cachepaths).
 
 ## Test command (R-CI-06)
 
@@ -44,9 +44,9 @@ Sources: [Mix.Project](https://mix.hexdocs.pm/Mix.Project.html), [GitLab CI/CD Y
 
 The command is declared by the layout rather than by a line in `mix.exs`, so read for the directory and the `_test.exs` files. A project that has moved its tests declares `test_paths` in the project list, and a project with an alias, such as an `aliases` entry mapping `test` to a setup step plus `test`, has already written the command CI should call.
 
-Sources: [mix test](https://mix.hexdocs.pm/Mix.Tasks.Test.html).
+Sources: [mix test](https://mix.hexdocs.pm/Mix.Tasks.Test.md).
 
 
 Cache location checked 2026-10-11 against https://hex.hexdocs.pm/Mix.Tasks.Hex.Config.md.
 
-Verified 2026-07-31 against https://github.com/erlef/setup-beam, https://mix.hexdocs.pm/Mix.Project.html, https://mix.hexdocs.pm/Mix.Tasks.Test.html, https://hex.pm/docs/faq, https://hex.hexdocs.pm/Mix.Tasks.Hex.html, https://github.com/erlef/docker-elixir, and https://docs.gitlab.com/ci/yaml/.
+Verified 2026-07-31 against https://github.com/erlef/setup-beam, https://mix.hexdocs.pm/Mix.Project.md, https://mix.hexdocs.pm/Mix.Tasks.Test.md, https://hex.pm/docs/faq, https://hex.hexdocs.pm/Mix.Tasks.Hex.md, https://github.com/erlef/docker-elixir, and https://docs.gitlab.com/ci/yaml/.

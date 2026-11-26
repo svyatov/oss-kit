@@ -1,6 +1,6 @@
 # GitHub Actions reference
 
-Concrete syntax for the decisions `SKILL.md` makes. This file covers what runs: triggers, matrices, caching, timeouts, and cancellation. It does not cover the security posture of the same workflow file, such as `permissions:`, pinning `uses:` to a commit SHA, or OIDC; that is `oss-harden`'s reference. It does not cover a publish job; that is `oss-publish`'s reference.
+Use these examples for GitHub Actions. The Pages section includes the deployment permissions required under Scope in `SKILL.md`. Other permissions and action pinning belong to `oss-harden`. Registry publishing belongs to `oss-publish`.
 
 Every `uses:` line below names a version tag, not a commit SHA. Resolving a tag to a full commit SHA is R-SEC-01, which belongs to `oss-harden`; emit the tag form here and let `oss-harden` pin it before the workflow ships. Resolve each action's current major from its own repository before you emit it, because the majors written below age with this file.
 
@@ -40,8 +40,8 @@ Leave `pull_request` unfiltered, and remove a `branches:` filter from an existin
     eslint src/ --format=stylish
 
 # Prefer: CI calls the project's own commands
-- run: npm test
 - run: npm run lint
+- run: npm test
 ```
 
 ## Test matrix (R-CI-03)
@@ -77,7 +77,7 @@ Use `actions/cache` directly only when no official setup action supports the req
 
 ## Timeout and cancellation of superseded runs (R-CI-05)
 
-Every job sets `timeout-minutes`, because the platform default is six hours:
+Set `timeout-minutes` on each job that runs steps. For a job-level `uses`, follow the workflow at the referenced revision, including nested calls. Set timeouts inside workflows the project controls. Report a missing external timeout, or mark it unverified when the workflow is inaccessible. GitHub rejects `timeout-minutes` on the caller.
 
 ```yaml
 jobs:
@@ -108,7 +108,6 @@ name: pages
 on:
   push:
     branches: [main]
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -147,7 +146,9 @@ jobs:
         uses: actions/deploy-pages@v5
 ```
 
-Preserve the concurrency, build dependency, artifact handoff, deploy permissions, and `github-pages` environment. Adapt the default branch, install command, build command, and output directory to the project.
+Preserve concurrency, the build dependency, artifact handoff, and deploy permissions. Adapt the branch, commands, output directory, and environment to the project.
+
+If manual deployment is requested, add `workflow_dispatch` and guard the build job with `if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)`. Keep `needs: build` on deploy so a skipped build also skips deployment.
 
 The two jobs exist so the privileged token never sits in the same job as the project's own build command. `upload-pages-artifact` hands the built directory across the job boundary, so the split costs the `needs: build` edge and a second `runs-on`, and it matches GitHub's own Node and Jekyll Pages starters. The reason is consistency rather than exposure: whoever controls `npm run build` already controls the artifact that gets deployed. What it buys is that `oss-ci` and `oss-publish` stop teaching opposite things about where `id-token: write` may sit.
 
@@ -155,7 +156,7 @@ GitHub documents `pages: write` and `id-token: write` as the minimum for the dep
 
 The `concurrency` block above is the one place R-CI-05's cancellation guidance inverts. Cancelling a superseded test run costs a contributor nothing, and `cancel-in-progress` stays scoped to pull requests in the CI workflow. A deploy cancelled mid-publish can leave the previous build live, so the deploy workflow keeps its own group and never cancels.
 
-`environment: github-pages` is required. GitHub creates the environment automatically, and it is what applies deployment protection rules and reports the deployed URL back to the run.
+Keep the project's protected deployment environment. For a new Pages environment, use the default name `github-pages`. The environment applies deployment protection rules and records the deployment URL.
 
 `actions/configure-pages` is optional, and where it is needed it goes in the `build` job, between `checkout` and the build command. It exports the site's base path and origin, which a project served from `owner.github.io/repo/` usually needs and a build reads only if it runs after the export. Placing it in `deploy`, or after `npm run build`, exports the values into a job or a step that has already finished with them, and the run stays green: the site deploys with every asset path resolving against the domain root, so the pages return 404s for their own CSS and JavaScript with nothing in the log to point at. A site whose own config already states its full URL, as a custom domain implies, skips the action and has one less thing to pin and update.
 

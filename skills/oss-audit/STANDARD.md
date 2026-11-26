@@ -235,7 +235,7 @@ Forges: both
 
 A hung job holds a runner until the platform's default timeout expires, which is six hours on GitHub. Queued runs for commits nobody will merge burn the same minutes.
 
-Check: every job sets `timeout-minutes` (GitHub) or `timeout` (GitLab), and the configuration sets `concurrency` with `cancel-in-progress: true` for change-request runs (GitHub) or marks jobs `interruptible: true` with auto-cancel enabled (GitLab).
+Check: each job that executes steps sets `timeout-minutes` (GitHub) or `timeout` (GitLab), and the configuration sets `concurrency` with `cancel-in-progress: true` for change-request runs (GitHub) or marks jobs `interruptible: true` with auto-cancel enabled (GitLab). For a GitHub reusable workflow, inspect the called jobs at the referenced revision. Report inaccessible jobs as unverified.
 
 Fixed by: oss-ci
 Forges: both
