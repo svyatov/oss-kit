@@ -24,8 +24,8 @@ Hex has two mechanisms separated by a hard one-hour boundary, re-verified upstre
 
 Inside one hour of the first publication, `mix hex.publish --revert VERSION` removes the release, and Hex documents that the package may be published again for up to one hour after first publication. That is the only removal Hex offers.
 
-After that hour the version stays forever and the mechanism is retirement: `mix hex.retire PACKAGE VERSION REASON`, where the reason is one of renamed, deprecated, security, invalid, or other, each requiring a message that explains it. `mix hex.retire PACKAGE VERSION --unretire` reverses it. Retirement changes nothing about availability: "A retired package is still resolvable and usable but it will be flagged as retired in the repository and a message will be displayed to users when they use the package."
+After that hour the version stays forever and the mechanism is retirement: `mix hex.retire PACKAGE VERSION REASON --message "Reason for retirement"`, where the reason is one of renamed, deprecated, security, invalid, or other, each requiring a message that explains it. `mix hex.retire PACKAGE VERSION --unretire` reverses it. Retirement changes nothing about availability: "A retired package is still resolvable and usable but it will be flagged as retired in the repository and a message will be displayed to users when they use the package."
 
 So a Hex withdrawal after the first hour is a label, not a removal, and the reason plus message is the whole of what a user sees. Write them to say what a reader of the changelog would need. `[YANKED]` on the changelog heading maps to a retirement, or to a revert inside the hour, and comes off again after an `--unretire`.
 
-Verified 2026-07-31 against [Publishing a package](https://hex.pm/docs/publish), [mix hex.retire](https://hex.hexdocs.pm/Mix.Tasks.Hex.Retire.html), and [Elixir Version](https://elixir.hexdocs.pm/Version.html).
+Verified 2026-07-31 against [Publishing a package](https://hex.pm/docs/publish), [mix hex.retire](https://hex.hexdocs.pm/Mix.Tasks.Hex.Retire.md), and [Elixir Version](https://elixir.hexdocs.pm/Version.md).

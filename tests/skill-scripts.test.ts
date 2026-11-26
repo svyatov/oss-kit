@@ -145,6 +145,24 @@ test("retains unindented multiline reference destinations and titles", () => {
   expect(findSection(`## [1.2.0]\n\nRead [guide].\n\n${definition}`, "1.2.0")?.body).toContain(definition)
 })
 
+test("keeps issue references after a literal bracket in code", () => {
+  const text = "## [1.0.0]\nAccepts `[` ([#128]).\n\n[#128]: /issues/128"
+  for (const heading of [false, true]) {
+    expect(findSection(text, "1.0.0", heading)?.body).toContain("[#128]: /issues/128")
+  }
+})
+
+test("ignores comment headings, hidden definitions and comment-only notes", () => {
+  const text = "<!--\n## 1.0.0\n-->\n## 2.0.0\n<!-- TODO -->\n## 1.0.0\n<!--\n## Ignore\n[guide]: /hidden\n-->\nSee [guide].\n\n[guide]: /visible"
+  for (const heading of [false, true]) {
+    expect(findSection(text, "2.0.0", heading)?.body).toBe("")
+    expect(findSection(text, "1.0.0", heading)?.body).toContain("See [guide].\n\n[guide]: /visible")
+  }
+  for (const example of ["`<!--`", "```html\n<!--\n```", "<!-- hidden --> Visible."]) {
+    expect(findSection(`## 2.0.0\n${example}\n## 1.0.0\nOlder.`, "1.0.0")?.body).toBe("Older.")
+  }
+})
+
 // The exit code is the load-bearing half: a release job has to fail rather than
 // publish a release whose body is empty.
 test("exits 2 on a missing section and 0 on a present one", () => {

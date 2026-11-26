@@ -10,7 +10,7 @@ The changelog is the fourth thing to compare, and it is the only one of the four
 
 ## Version syntax (R-CHG-02)
 
-A registry constrains the tag string and says nothing about its meaning. An OCI tag is "a custom, human-readable pointer to a manifest", at most 128 characters, matching `[a-zA-Z0-9_][a-zA-Z0-9._-]{0,127}`. Any SemVer release version fits, with one exception: `+` is not in that character class, so SemVer build metadata cannot appear in a tag and a version carrying it has to be rewritten, conventionally with the `+` replaced by a `-`.
+An OCI tag must match `[a-zA-Z0-9_][a-zA-Z0-9._-]{0,127}` and fit within 128 characters. SemVer has no length limit and permits `+` in versions with build metadata. Replacing `+` with `-` would give `1.0.0+ci` and `1.0.0-ci` the same tag. When the version needs a mapping, assign a distinct immutable tag and record the full version in `org.opencontainers.image.version`.
 
 Two common tag habits are not versions and should not be read as ones. A rolling tag such as `latest` or a branch name names no version at all. A truncated tag such as `1` or `1.2` is moved forward as new patches ship, so it names a moving set of versions. Both are convenience pointers; the released version is the full one, and that is the tag a changelog heading corresponds to.
 
@@ -30,4 +30,4 @@ One thing to rule out rather than reach for: never re-point a released version t
 
 `[YANKED]` on the changelog heading maps to deleting the version-tagged image where the registry allows it, and to publishing a fixed version and saying so where it does not. Name the digest in the entry, because for anyone who pinned one, that string is the only identifier the withdrawal is about.
 
-Verified 2026-07-31 against [OCI distribution specification](https://github.com/opencontainers/distribution-spec/blob/main/spec.md), [OCI image annotations](https://github.com/opencontainers/image-spec/blob/main/annotations.md), [Working with the Container registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry), and [Deleting and restoring a package](https://docs.github.com/en/packages/learn-github-packages/deleting-and-restoring-a-package).
+Verified 2026-07-31 against [OCI distribution specification](https://github.com/opencontainers/distribution-spec/blob/main/spec.md), [OCI image annotations](https://github.com/opencontainers/image-spec/blob/main/annotations.md), [Working with the Container registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry.md), and [Deleting and restoring a package](https://docs.github.com/en/packages/learn-github-packages/deleting-and-restoring-a-package.md).

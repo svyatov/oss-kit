@@ -243,7 +243,7 @@ Run the first command against each asset downloaded, never against `SHA256SUMS`,
 
 `gh release upload` fails when no release exists for the tag, which is why the job creates it. The notes come from `CHANGELOG.md` rather than from `--generate-notes`, because `oss-changelog` already mandates the Keep a Changelog structure, so the section for this version is guaranteed to exist and is what the project itself wrote about the release. `--generate-notes` would list merged pull requests instead, which is a different document and one the project did not write.
 
-Resolve `scripts/release-notes.mjs` from the installed `oss-changelog` directory. Copy it unchanged to `.github/scripts/release-notes.mjs` in the target repository and include it with the workflow. It needs Node 22 or later and imports only Node built-ins. If the helper cannot be copied, extract the section with the project's established tooling.
+For a unique level-two heading starting with the version, copy `scripts/release-notes.mjs` from the installed `oss-changelog` directory to `.github/scripts/release-notes.mjs`. It needs Node 22 or later and imports only Node built-ins. For other heading formats, repeated version keys, or an unavailable helper, use the project's changelog tooling in the workflow. Verify that it selects the intended unit and fails for missing or empty notes.
 
 It exits 2 when the version's section is absent or empty. The example passes `$GITHUB_REF_NAME` because its tags and changelog headings differ only by a leading `v`. For another tag convention, pass the selected changelog file and its version key separately from the tag. Verify that section before pushing. Shared changelogs with repeated version headings require an unambiguous per-package extraction.
 

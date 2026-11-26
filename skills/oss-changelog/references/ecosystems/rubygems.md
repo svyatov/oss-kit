@@ -24,4 +24,4 @@ Two things follow. The guide warns that several hundred services are pinged when
 
 `[YANKED]` on the changelog heading maps to a yank. The registry stops serving the version, which makes the changelog the only place a user who already installed it can find out why it went.
 
-Verified 2026-07-31 against [Removing a published gem](https://guides.rubygems.org/removing-a-published-gem/), [Patterns](https://guides.rubygems.org/patterns/), and [Make your own gem](https://guides.rubygems.org/make-your-own-gem/).
+Verified 2026-07-31 against [Removing a published gem](https://guides.rubygems.org/removing-a-published-gem.md), [Patterns](https://guides.rubygems.org/patterns.md), and [Make your own gem](https://guides.rubygems.org/make-your-own-gem.md).

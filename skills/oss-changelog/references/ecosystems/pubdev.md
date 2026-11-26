@@ -28,4 +28,4 @@ Retraction does not remove anything: "Retraction isn't deletion." A retracted ve
 
 Past the seven-day window the response is the same as on any registry with no withdrawal: publish a fixed version and say so. `[YANKED]` on the changelog heading maps to a retraction, and after the window it is the only record of the withdrawal that exists, which is what makes leaving the entry in place matter.
 
-Verified 2026-07-31 against [Publishing packages](https://dart.dev/tools/pub/publishing), [Package versioning](https://dart.dev/tools/pub/versioning), and [Pub glossary](https://dart.dev/tools/pub/glossary).
+Verified 2026-07-31 against [Publishing packages](https://dart.dev/tools/pub/publishing.md), [Package versioning](https://dart.dev/tools/pub/versioning.md), and [Pub glossary](https://dart.dev/tools/pub/glossary).

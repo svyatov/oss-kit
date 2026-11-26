@@ -12,7 +12,7 @@ NuGet follows Semantic Versioning 2.0.0, supported by NuGet 4.3.0 and later and 
 
 Restore normalizes on top of that: leading zeros are removed, a zero fourth part is dropped so `1.0.0.0` is treated as `1.0.0`, and build metadata is removed so `1.0.7+r3456` is treated as `1.0.7`. Two strings that normalize to the same version are the same package to NuGet, and NuGet says a repository holding `1.0` should not also host `1.0.0` as a separate package. For R-CHG-03 that means comparing normalized forms, and the way to avoid the question is to write the plain three-part version in the project file, the tag, and the changelog heading.
 
-One publishing consequence belongs in a release decision rather than in a syntax note. A version is SemVer 2.0.0 specific when its prerelease label is dot-separated, as in `1.0.0-alpha.1`, or when it carries build metadata, and so is a package any of whose dependency ranges names such a version. Upload one of those to nuget.org and it is invisible to clients older than NuGet 4.3.0.
+One publishing consequence belongs in a release decision rather than in a syntax note. A version is SemVer 2.0.0 specific when its prerelease label is dot-separated, as in `1.0.0-alpha.1`, or when it carries build metadata, and so is a package any of whose dependency ranges names such a version. Only clients with SemVer 2 support see those packages, including NuGet 4.3.0+ and Visual Studio 2015 with NuGet VSIX v3.6.0.
 
 ## Major version in package identity (R-CHG-07)
 

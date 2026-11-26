@@ -7,7 +7,7 @@ license: MIT
 
 # Changelog and versioning
 
-Keep `CHANGELOG.md` in the convention it declares, Keep a Changelog 2.0.0 where the project has none yet, decide the Semantic Versioning bump a set of merged changes forces, write the release entry from the merged work, and run a deprecation window before an API is removed. The sentences themselves follow `oss-writing`; this skill decides what goes in and what version it ships under. Publishing the tagged release, the workflow that builds and uploads it, belongs to `oss-publish`.
+Keep `CHANGELOG.md` in the convention it declares, Keep a Changelog 2.0.0 for a new changelog, decide the Semantic Versioning bump a set of merged changes forces, write the release entry from the merged work, and run a deprecation window before an API is removed. The sentences themselves follow `oss-writing`; this skill decides what goes in and what version it ships under. Publishing the tagged release, the workflow that builds and uploads it, belongs to `oss-publish`.
 
 Write changelog entries as changes rather than as a description of the current state. That is the exception `oss-writing` already carves out from its ban on diff-anchored documentation, and a changelog is the artifact it carves it out for.
 
@@ -51,7 +51,7 @@ A release unit that ships to two of these, such as a module and an image, reads 
 
 ### Step 2: Read the changelog that already exists
 
-Find `CHANGELOG.md` and read its preamble before writing anything. A changelog that already exists is a file the project's users read, and it lands in one of three states.
+Read the existing changelog and its preamble before adding entries. If the file names no convention, preserve its established format. Confirm the intended format if its entries follow no consistent pattern.
 
 There is no changelog. Write one from the structure in Step 6. Backfill only the releases the repository can establish from its own tags, and stop there rather than reconstructing entries from commit history, which produces a list of commits wearing a changelog's headings.
 
@@ -67,15 +67,15 @@ Resolve the previous release tag for this release unit. For its first release, u
 git log --oneline <confirmed-prior-tag>..HEAD
 ```
 
-`git describe --abbrev=0` suppresses the long format and prints the closest tag alone, and `--tags` makes it match a lightweight tag as well as an annotated one, so the range starts at the last release whichever kind the project pushes.
+Check annotated and lightweight tags against the selected unit’s tag convention, release line, and history. A closer tag can belong to another package or a prerelease.
 
-On GitHub, add the merged pull requests, which carry the discussion a commit subject leaves out:
+On GitHub, look up merged pull requests for commits in the confirmed range. For each commit whose context you need:
 
 ```bash
-gh pr list --state merged --search "merged:>=<date of that tag>"
+gh api --paginate 'repos/{owner}/{repo}/commits/<commit-sha>/pulls' --jq '.[] | select(.merged_at != null) | .html_url'
 ```
 
-That call needs `gh` installed and authenticated. Where it is not, the log alone is enough to work from.
+Use each merged request once. Include only changes present in the selected unit and release line. If `gh` is unavailable or unauthenticated, use the Git history.
 
 ### Step 4: Classify each change as user-visible or not
 
@@ -91,13 +91,13 @@ A normal version is `MAJOR.MINOR.PATCH`, with optional prerelease and build meta
 
 Major version zero has different upstream semantics: `0.y.z` is initial development and SemVer permits anything to change. This standard uses MINOR for an incompatible change and PATCH for a backward-compatible fix so pre-1.0 versions still communicate risk. Do not force a project to declare stability by changing `0.y.z` to `1.0.0`; that decision defines the public API and belongs to the maintainer.
 
-Source: [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html).
+Source: [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.md).
 
-The test that survives both cases people get wrong: will something that worked, unmodified, on the previous version keep working, unmodified, on the new one? If no, the change is backward incompatible and forces MAJOR, regardless of what kind of change produced it.
+Check whether a caller using the declared public API can upgrade without changing its code or configuration. An incompatible change takes MAJOR on a stable line or MINOR on a `0.y.z` line.
 
-A bug fix is not automatically a PATCH. Determine whether the old behavior belonged to the declared public API and whether restoring the intended contract breaks realistic callers. SemVer explicitly calls for judgment when a widely used accidental behavior conflicts with the intended API. If the correction is incompatible with the public API, use MAJOR after 1.0.0; otherwise use PATCH. Do not assume that undocumented behavior is harmless or that every documented bug is a permanent contract.
+A bug fix is not automatically a PATCH. Determine whether the old behavior belonged to the declared public API and whether restoring the intended contract breaks realistic callers. SemVer explicitly calls for judgment when a widely used accidental behavior conflicts with the intended API. If the correction is incompatible with the public API, use MAJOR on a stable line or MINOR before 1.0. A compatible correction takes PATCH. Do not assume that undocumented behavior is harmless or that every documented bug is a permanent contract.
 
-A new required config value is the second case. The instinct is that adding something is growth, so it should be MINOR. But a config value with no default, one the project now refuses to start without, breaks every existing deployment the moment they upgrade without editing their config. Apply the test: a config file that worked, unmodified, on the previous version no longer starts the previous version. That forces MAJOR. A new config value with a default that preserves the old behavior is backward compatible and stays MINOR.
+A required config value without a default can prevent the new version from starting with the old config. This takes MAJOR on a stable line or MINOR before 1.0. A new value with a compatible default is an addition: MINOR on a stable line or PATCH before 1.0.
 
 Under `0.y.z` this standard reserves MINOR for an incompatible change, so a compatible addition takes PATCH alongside a compatible fix. That is what keeps a MINOR bump before 1.0.0 meaning "this may break you".
 
@@ -187,7 +187,7 @@ R-CHG-01 is the check for this structure.
 
 Write the version decided in Step 5 into every file Step 1 found, and into the changelog heading written in Step 6. R-CHG-03 checks that the release tag, the version sources for that release unit, and its newest changelog entry agree, so all three have to carry one number before the tag is pushed.
 
-When earlier changelog versions have no tag, as in a project that released by commit alone, tag each version on the commit that shipped it. Use the release commit that set the manifest to that version where the project made one. Otherwise, use the last commit whose manifest still carries that version and whose changes the next version's section does not list. Check each commit with `git show <sha>:<manifest>` before pushing, and put the version-to-commit mapping in the report, because once a tag ruleset is in place a pushed tag cannot be moved.
+Backfill a historical tag only when release evidence identifies the shipped commit. Record the version, commit, and evidence, such as a release job tied to that commit or an artifact with verified source provenance. A matching manifest version alone cannot distinguish the shipped commit from later work. Leave ambiguous versions untagged and report the candidates to the maintainer.
 
 ### Step 8: Derive the forge release body from the changelog section
 
@@ -200,9 +200,9 @@ node "<installed oss-changelog directory>/scripts/release-notes.mjs" 1.2.3
 node "<installed oss-changelog directory>/scripts/release-notes.mjs" docs/CHANGELOG.md 1.2.3
 ```
 
-Resolve this installed skill's absolute directory before running the helper. It needs Node 22 or later, or Bun, with no dependencies. Select the release unit's changelog and version heading separately from its tag. For a `gopls/v1.2.3` tag and a `[1.2.3]` heading, pass `1.2.3`. If a shared changelog has repeated version headings, extract the selected unit's section manually rather than accepting the first match.
+Resolve this installed skill's absolute directory before running the helper. It needs Node 22 or later, or Bun, with no dependencies. Select the release unit's changelog and version heading separately from its tag. For a `gopls/v1.2.3` tag and a `[1.2.3]` heading, pass `1.2.3`. The helper expects a level-two heading starting with the version, such as `## [1.2.3]` or `## v1.2.3`. For other layouts or repeated version keys, read the unit’s section directly. Configure the workflow to extract that section with tooling for the project’s layout.
 
-The helper exits 2 when the version's section is absent or empty, preventing publication with a blank release body. Where `oss-publish` writes the release workflow, copy this helper to `.github/scripts/release-notes.mjs` in the target repository. The runner calls that copied path with the selected changelog and version key. Verify the extracted section before pushing the tag. If the helper is absent, read the section directly; do not substitute `--generate-notes` for the project's changelog.
+The helper exits 2 when the version's section is absent or empty, preventing publication with a blank release body. When the layout fits the helper and `oss-publish` writes the release workflow, copy this helper to `.github/scripts/release-notes.mjs` in the target repository. The runner calls that copied path with the selected changelog and version key. Verify the extracted section before pushing the tag. If the helper is absent, read the section directly; do not substitute `--generate-notes` for the project's changelog.
 
 ### Step 9: Verify, then hand the tag over
 
