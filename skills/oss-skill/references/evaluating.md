@@ -1,6 +1,6 @@
 # Evaluating a skill
 
-Read this when a skill has to be shown to work, rather than shown to conform. Format conformance is what the validator decides; whether the skill improves the task it claims to handle is decided here, and nothing in the frontmatter answers it.
+Read this when a skill has to be shown to work, rather than shown to conform. Resolve format findings first. Use the evaluations below to measure whether the skill improves task outcomes.
 
 ## Evaluate before writing at length
 
@@ -29,7 +29,7 @@ Every entry in `expected_behavior` is an outcome that can be observed in the res
 
 Run each task in a clean context, once with the skill and once against a baseline, either no skill or the previous version. Grade each assertion against concrete evidence from the output. Read the execution trace for steps that were wasted, and record the time and the tokens the run cost. Keep a change only where the improvement justifies that cost.
 
-Activation is nondeterministic, so repeat the runs. For trigger tuning, use varied positive prompts alongside near-miss negatives, and hold a validation set back from the prompts the description was tuned against.
+On hosts that select the skill implicitly, repeat the activation tests. For explicit-only commands, check the menu summary and invocation by name. For trigger tuning, use varied positive prompts alongside near-miss negatives, and hold a validation set back from the prompts the description was tuned against.
 
 ## Author with one instance, use the skill with another
 

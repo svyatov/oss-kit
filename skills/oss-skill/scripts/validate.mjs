@@ -12,8 +12,9 @@
  * this file is held to it.
  */
 import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs"
-import { basename, dirname, extname, join, relative, sep } from "node:path"
-import { fileURLToPath } from "node:url"
+import { createRequire } from "node:module"
+import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path"
+import { fileURLToPath, pathToFileURL } from "node:url"
 
 /**
  * @typedef {object} Finding
@@ -35,7 +36,6 @@ import { fileURLToPath } from "node:url"
  */
 
 const SPEC_KEYS = ["name", "description", "license", "compatibility", "metadata", "allowed-tools"]
-const SKIP_DIRS = new Set([".git", "node_modules"])
 // This charset admits no < or >, so it already enforces on name the XML-tag
 // constraint that checkSpec below tests separately on description. Loosening it
 // would drop that constraint silently, so a name branch has to gain the test
@@ -130,10 +130,7 @@ const BUILTINS = new Set([
   ...NODE_22_BUILTINS.map((name) => `node:${name}`),
   // Built-ins Node exposes only under the node: prefix, so they cannot go in
   // the list above. node:sea arrived in v21.7.0 and needs no flag to import.
-  // node:sqlite arrived in v22.5.0 and left --experimental-sqlite in v22.13.0,
-  // below the 22.23.1 that ubuntu-24.04 ships.
   "node:sea",
-  "node:sqlite",
   "node:test",
   "node:test/reporters",
 ])
@@ -170,7 +167,7 @@ const RUNTIME_GLOBAL_RE = /(?<![\w$.'"`])(Bun|Deno)[^\S\n]*(?:\?\.|\.|\[)/
 // below, because that set reflects whichever runtime is running this file, and a
 // runtime that ships its own modules lists them there as though they were Node's.
 const RUNTIME_MODULE_RE = /^(?:bun|deno)(?::|$)/
-const SPECIFIER_RE = /\b(?:from|require|import)\s*\(?\s*["']([^"']+)["']/g
+const SPECIFIER_RE = /\b(from|require|import)\s*\(?\s*["']([^"']+)["']/g
 // A specifier contains no whitespace and none of the characters a regex
 // literal or a shell string brings with it. A capture that fails this test is
 // prose the specifier scan misread, not a dependency.
@@ -183,9 +180,10 @@ const UNREADABLE_FILE_MESSAGE = "could not read this file"
  * @param {string} dir
  * @param {Finding[]} [failures]
  * @param {Set<string>} [visited]
+ * @param {(path: string) => void} [onModulesDirectory]
  * @returns {Generator<string>}
  */
-function* walk(dir, failures = [], visited = new Set()) {
+function* walk(dir, failures = [], visited = new Set(), onModulesDirectory) {
   let entries
   try {
     const real = realpathSync(dir)
@@ -197,45 +195,26 @@ function* walk(dir, failures = [], visited = new Set()) {
     return
   }
   for (const entry of entries) {
-    if (SKIP_DIRS.has(entry.name)) continue
     const path = join(dir, entry.name)
+    if (entry.name === ".git" || (entry.name === "node_modules" && !onModulesDirectory)) continue
     let type
     try { type = entry.isSymbolicLink() ? statSync(path) : entry }
     catch {
       failures.push({ severity: "error", rule: null, file: path, message: "symlink target is not readable; scan is incomplete" })
       continue
     }
+    if (entry.name === "node_modules" && type.isDirectory()) {
+      onModulesDirectory?.(path)
+      continue
+    }
     if (type.isDirectory()) {
-      yield* walk(path, failures, visited)
+      yield* walk(path, failures, visited, onModulesDirectory)
     } else if (type.isFile()) {
       yield path
     }
   }
 }
 
-/**
- * Yields every directory under dir, including one named node_modules, which
- * walk() skips. R-SKL-05 bans that directory, so the check has to be able to
- * see it. Does not descend into a directory it reports, since one finding for a
- * vendored tree is enough.
- * @param {string} dir
- * @returns {Generator<string>}
- */
-function* walkDirs(dir) {
-  let entries
-  try {
-    entries = readdirSync(dir, { withFileTypes: true })
-  } catch {
-    return
-  }
-  for (const entry of entries) {
-    if (entry.isSymbolicLink() || !entry.isDirectory()) continue
-    if (entry.name === ".git") continue
-    const path = join(dir, entry.name)
-    yield path
-    if (entry.name !== "node_modules") yield* walkDirs(path)
-  }
-}
 
 /**
  * @param {string} root
@@ -327,20 +306,31 @@ export function parseFrontmatter(text) {
     return { ok: false, reason: "unterminated", entries, unreadable, unreadableKeys, duplicates, bodyStart: 0 }
   }
   let inMap = false
+  let metadataIndent = 0
+  const metadataKeys = new Set()
   for (let i = 1; i < end; i++) {
     const line = lines[i] ?? ""
-    if (line.trim() === "") continue
+    if (line.trim() === "" || line.trimStart().startsWith("#")) continue
     if (/^\s/.test(line)) {
-      const child = /^\s+[\w.-]+:\s*(.+)$/.exec(line)
-      const value = child?.[1]?.trim() ?? ""
-      if (!(inMap && child) || unsupportedScalar(value) || ((value.startsWith('"') || value.startsWith("'")) && !QUOTED_RE.test(value))) {
+      const child = /^( +)([\w.-]+):(?:[ \t]+(.*))?$/.exec(line)
+      const indent = child?.[1]?.length ?? 0
+      const key = child?.[2] ?? ""
+      const value = child?.[3]?.trim() ?? ""
+      if (inMap && child && (metadataIndent === 0 || indent === metadataIndent)) {
+        metadataIndent = indent
+        if (metadataKeys.has(key)) duplicates.push(i + 1)
+        metadataKeys.add(key)
+      }
+      const quoted = value.startsWith('"') || value.startsWith("'")
+      if (!inMap || !child || indent !== metadataIndent || !value || value.startsWith("#") ||
+          unsupportedScalar(value) || (quoted && !QUOTED_RE.test(value))) {
         unreadable.push(i + 1)
         if (inMap) unreadableKeys.add("metadata")
       }
       continue
     }
     inMap = false
-    const match = line.match(/^([\w.-]+):(.*)$/)
+    const match = line.match(/^([\w.-]+):(?:[ \t]+(.*))?$/)
     if (!match) {
       unreadable.push(i + 1)
       continue
@@ -351,6 +341,8 @@ export function parseFrontmatter(text) {
     if (raw === "") {
       if (key === "metadata") {
         inMap = true
+        metadataIndent = 0
+        metadataKeys.clear()
       }
       entries.set(key, "")
       unreadableKeys.delete(key)
@@ -388,7 +380,7 @@ export function parseFrontmatter(text) {
 function unsupportedScalar(raw) {
   if (raw.startsWith('"') || raw.startsWith("'")) return false
   const value = raw.replace(/\s+#.*$/, "").trim()
-  return /^[>|&*[{!]/.test(value) || /^(?:null|true|false|~|[-+]?(?:0x[\da-f_]+|0o[0-7_]+|0b[01_]+|(?:\d[\d_]*(?:\.[\d_]*)?|\.[\d_]+)(?:e[-+]?\d+)?|\.inf|\.nan))$/i.test(value)
+  return /:(?:\s|$)/.test(value) || /^[>|&*[{!]/.test(value) || /^(?:null|true|false|~|[-+]?(?:0x[\da-f_]+|0o[0-7_]+|0b[01_]+|(?:\d[\d_]*(?:\.[\d_]*)?|\.[\d_]+)(?:e[-+]?\d+)?|\.inf|\.nan))$/i.test(value)
 }
 
 /**
@@ -460,7 +452,7 @@ export function checkSpec(rel, dirName, fm) {
     warn(`line ${line} uses a construct this validator does not read; check it with a YAML parser`)
   }
   for (const line of fm.duplicates) {
-    warn(`line ${line} repeats a key already set; a strict YAML parser rejects a duplicate key`)
+    err(`line ${line} repeats a key already set; a strict YAML parser rejects a duplicate key`)
   }
 
   if (!fm.unreadableKeys.has("name")) {
@@ -488,8 +480,8 @@ export function checkSpec(rel, dirName, fm) {
     const description = fm.entries.get("description")
     if (description === undefined || description === "") {
       err("frontmatter declares no description, which the specification requires")
-    } else if (description.length > 1024) {
-      err(`description is ${description.length} characters; the limit is 1024`)
+    } else if ([...description].length > 1024) {
+      err(`description is ${[...description].length} characters; the limit is 1024`)
     }
     const tag = description === undefined ? null : XML_TAG_RE.exec(description)
     if (tag !== null) {
@@ -501,8 +493,10 @@ export function checkSpec(rel, dirName, fm) {
 
   if (!fm.unreadableKeys.has("compatibility")) {
     const compatibility = fm.entries.get("compatibility")
-    if (compatibility !== undefined && compatibility.length > 500) {
-      err(`compatibility is ${compatibility.length} characters; the limit is 500`)
+    if (compatibility !== undefined) {
+      const length = [...compatibility].length
+      if (!length) err("compatibility must contain at least one character when present")
+      if (length > 500) err(`compatibility is ${length} characters; the limit is 500`)
     }
   }
 
@@ -575,7 +569,7 @@ export function checkLayout(root, skillFiles) {
       severity: "error",
       rule: "R-SKL-01",
       file: `skills${sep}`,
-      message: "no top-level skills/ directory; the skills CLI installer and every plugin loader read that path",
+      message: "no top-level skills/ directory as required by R-SKL-01",
     })
     return out
   }
@@ -585,7 +579,7 @@ export function checkLayout(root, skillFiles) {
       severity: "error",
       rule: "R-SKL-01",
       file: relative(root, abs),
-      message: "not a direct child of a top-level skills/<name>/ directory; move the whole skill directory under skills/",
+      message: "not a direct child of a top-level skills/<name>/ directory; check the install paths before moving it",
     })
   }
   for (const entry of entries) {
@@ -624,9 +618,10 @@ export function checkBody(rel, text, fm) {
 
 /**
  * @param {string} root
+ * @param {Finding[]} [failures]
  * @returns {string|null} the opening text of the repository license file
  */
-export function readRepoLicense(root) {
+export function readRepoLicense(root, failures = []) {
   for (const name of [
     "LICENSE",
     "LICENSE.md",
@@ -640,8 +635,10 @@ export function readRepoLicense(root) {
   ]) {
     try {
       return readFileSync(join(root, name), "utf8").slice(0, 400)
-    } catch {
-      // try the next candidate
+    } catch (error) {
+      if (/** @type {NodeJS.ErrnoException} */ (error).code !== "ENOENT") {
+        failures.push({ severity: "error", rule: null, file: name, message: UNREADABLE_FILE_MESSAGE })
+      }
     }
   }
   return null
@@ -653,6 +650,12 @@ export function readRepoLicense(root) {
  */
 function normalizeLicenseId(value) {
   return value.toLowerCase().replace(/(-or-later|-only|\+)$/, "")
+}
+
+/** @param {string} skillDir @param {string} file */
+function insideSkill(skillDir, file) {
+  const local = relative(realpathSync(skillDir), realpathSync(file))
+  return local !== ".." && !local.startsWith(".." + sep) && !isAbsolute(local)
 }
 
 /**
@@ -668,9 +671,10 @@ function normalizeLicenseId(value) {
  * @param {string} rel
  * @param {Frontmatter} fm
  * @param {string|null} repoLicense
+ * @param {string} skillDir
  * @returns {Finding[]}
  */
-export function checkLicense(rel, fm, repoLicense) {
+export function checkLicense(rel, fm, repoLicense, skillDir) {
   if (fm.unreadableKeys.has("license")) return []
   const value = fm.entries.get("license")
   if (value === undefined || value === "") {
@@ -682,6 +686,19 @@ export function checkLicense(rel, fm, repoLicense) {
         message: "frontmatter declares no license; an installer copies one skill directory and leaves the repository license behind",
       },
     ]
+  }
+  // A filename or relative path names terms that must travel with the skill.
+  const pathValue = /^(?:\.{0,2}\/|[^\s]+\/)|\.(?:txt|md|rst)$|^(?:LICEN[CS]E|COPYING)(?:-[\w.-]+)?$/i
+  const embeddedFile = /(?:^|\s)((?:[\w.-]+\/)*(?:LICEN[CS]E|COPYING)\.[\w.-]+)(?=\s|$)/i
+  const filename = pathValue.test(value) ? value : embeddedFile.exec(value)?.[1]
+  if (filename) {
+    try {
+      const file = realpathSync(resolve(skillDir, filename))
+      if (!isAbsolute(filename) && insideSkill(skillDir, file) && statSync(file).isFile()) return []
+    } catch {
+      // Missing files and unresolved links both leave the skill without its terms.
+    }
+    return [{ severity: "error", rule: "R-SKL-04", file: rel, message: 'license "' + value + '" must name a file inside the skill directory' }]
   }
   if (!repoLicense) return []
   const text = repoLicense.toLowerCase()
@@ -733,28 +750,24 @@ export function checkScripts(root, skillDir) {
    */
   const err = (path, message) => out.push({ severity: "error", rule: "R-SKL-05", file: relative(root, path), message })
 
-  for (const path of walk(skillDir)) {
+  const rejectModules = (/** @type {string} */ path) => err(path, "a skill ships no node_modules; its scripts use only Node built-in modules")
+  for (const path of walk(skillDir, out, new Set(), rejectModules)) {
     if (MANIFESTS.includes(basename(path))) {
       err(path, "a skill ships no manifest and no lockfile; its scripts run with no install step")
-    }
-  }
-  for (const path of walkDirs(skillDir)) {
-    if (basename(path) === "node_modules") {
-      err(path, "a skill ships no node_modules; its scripts use only Node built-in modules")
     }
   }
 
   const scriptsDir = join(skillDir, "scripts")
   if (!existsSync(scriptsDir)) return out
 
-  for (const path of walk(scriptsDir)) {
+  for (const path of walk(scriptsDir, out)) {
     const extension = extname(path)
     const isData = DATA_EXTENSIONS.has(extension)
     let source
     try {
       source = readFileSync(path, "utf8")
     } catch {
-      out.push({ severity: "warning", rule: null, file: relative(root, path), message: UNREADABLE_FILE_MESSAGE })
+      out.push({ severity: "error", rule: null, file: relative(root, path), message: UNREADABLE_FILE_MESSAGE })
       continue
     }
     if (!isData && !SHEBANG_RE.test(source)) {
@@ -772,15 +785,33 @@ export function checkScripts(root, skillDir) {
     }
     const withoutComments = stripComments(source)
     for (const match of withoutComments.matchAll(SPECIFIER_RE)) {
-      const specifier = match[1] ?? ""
+      const specifier = match[2] ?? ""
+      if (/^\.{1,2}(?:\/|$)/.test(specifier) || isAbsolute(specifier)) {
+        try {
+          const importer = resolve(path)
+          const imported = match[1] === "require"
+            ? createRequire(importer).resolve(specifier)
+            : fileURLToPath(new URL(specifier, pathToFileURL(importer)))
+          if (!statSync(imported).isFile()) {
+            err(path, `path "${specifier}" resolves to a directory or another non-file`)
+            continue
+          }
+          if (isAbsolute(specifier) || !insideSkill(skillDir, imported)) {
+            out.push({ severity: "warning", rule: "R-SKL-05", file: relative(root, path),
+              message: `path "${specifier}" depends on the machine or a file outside the skill; verify portability` })
+          }
+        } catch {
+          err(path, `path "${specifier}" does not resolve to a file`)
+        }
+        continue
+      }
       if (!SPECIFIER_SHAPE_RE.test(specifier)) continue
-      if (specifier.startsWith(".") || specifier.startsWith("/")) continue
       if (RUNTIME_MODULE_RE.test(specifier)) {
         err(path, `imports "${specifier}", which is a module only one runtime provides; a skill ships no dependencies`)
         continue
       }
       if (BUILTINS.has(specifier)) continue
-      err(path, `imports "${specifier}", which is not a Node built-in module; a skill ships no dependencies`)
+      err(path, `imports "${specifier}", which is not a built-in at the Node 22.0 floor; a skill ships no dependencies`)
     }
   }
   return out
@@ -794,7 +825,7 @@ export function validate(root) {
   /** @type {Finding[]} */
   const failures = []
   const skillFiles = findSkillFiles(root, failures)
-  const repoLicense = readRepoLicense(root)
+  const repoLicense = skillFiles.length ? readRepoLicense(root, failures) : null
   const realSkills = realSkillsDir(root)
   /** @type {Finding[]} */
   const out = [...failures, ...checkLayout(root, skillFiles)]
@@ -809,13 +840,13 @@ export function validate(root) {
     try {
       text = readFileSync(abs, "utf8")
     } catch {
-      out.push({ severity: "warning", rule: null, file: rel, message: UNREADABLE_FILE_MESSAGE })
+      out.push({ severity: "error", rule: null, file: rel, message: UNREADABLE_FILE_MESSAGE })
       continue
     }
     const fm = parseFrontmatter(text)
     out.push(...checkSpec(rel, basename(dir), fm))
     out.push(...checkBody(rel, text, fm))
-    out.push(...checkLicense(rel, fm, repoLicense))
+    out.push(...checkLicense(rel, fm, repoLicense, dir))
     out.push(...checkScripts(root, dir))
   }
   return out
@@ -841,7 +872,7 @@ function main() {
 /**
  * True when this file is the script the runtime was asked to run. Compares real
  * paths because a reader may link this file into their PATH, and resolve() is
- * lexical. import.meta.main landed in Node 24 and this file supports Node 22.
+ * lexical. Node 22 gained import.meta.main in 22.18; earlier 22.x releases need this check.
  * @returns {boolean}
  */
 function isMain() {

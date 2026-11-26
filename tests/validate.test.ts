@@ -12,6 +12,54 @@ function rules(findings: { rule: string | null }[]) {
   return findings.map((f) => f.rule)
 }
 
+test("uses Unicode code points for description and compatibility limits", () => {
+  const root = makeRepo()
+  for (const [length, valid] of [[0, false], [500, true], [501, false]] as const) {
+    addSkill(root, "demo", `name: demo\ndescription: "${"😀".repeat(600)}"\nlicense: MIT\ncompatibility: "${"😀".repeat(length)}"`)
+    expect(errors(root).length === 0).toBe(valid)
+  }
+})
+
+test("checks YAML separators, metadata indentation and duplicate metadata keys", () => {
+  const root = makeRepo()
+  addSkill(root, "demo", "name: demo\ndescription:hello\nlicense: MIT")
+  expect(errors(root).some((finding) => finding.message.includes("no description"))).toBe(true)
+  addSkill(root, "demo", goodFrontmatter("demo") + "\nmetadata:\n  owner: team\n  owner: other")
+  expect(errors(root).some((finding) => finding.message.includes("duplicate"))).toBe(true)
+  addSkill(root, "demo", goodFrontmatter("demo") + "\nmetadata:\n  owner:\n    team: release")
+  expect(validate(root).some((finding) => finding.message.includes("YAML parser"))).toBe(true)
+})
+
+test("requires a bundled license reference to resolve inside the skill", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "demo", goodFrontmatter("demo").replace("MIT", "LICENSE.txt"))
+  expect(rules(errors(root))).toContain("R-SKL-04")
+  writeFileSync(join(dir, "LICENSE.txt"), "Example terms\n")
+  expect(errors(root)).toEqual([])
+  rmSync(join(dir, "LICENSE.txt"))
+  symlinkSync(join(root, "LICENSE"), join(dir, "LICENSE.txt"))
+  expect(rules(errors(root))).toContain("R-SKL-04")
+})
+
+test("checks CommonJS and ESM local resolution and the Node 22.0 built-ins", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "demo", goodFrontmatter("demo"))
+  addScript(dir, "lib/index.js", "#!/usr/bin/env node\nmodule.exports = 1\n")
+  addScript(dir, "use.cjs", '#!/usr/bin/env node\nrequire("./lib")\n')
+  expect(errors(root)).toEqual([])
+  for (const specifier of ["./lib", "./missing.mjs", "node:sqlite"]) {
+    addScript(dir, "use.mjs", `#!/usr/bin/env node\nimport "${specifier}"\n`)
+    expect(errors(root).map((finding) => finding.message).join(" ")).toContain(specifier)
+  }
+})
+
+test("reports a symlinked node_modules once", () => {
+  const root = makeRepo()
+  const dir = addSkill(root, "demo", goodFrontmatter("demo"))
+  symlinkSync(dir, join(dir, "node_modules"), "dir")
+  expect(rules(errors(root))).toEqual(["R-SKL-05"])
+})
+
 test("checks imports and runtime globals in extensionless Node executables", () => {
   for (const body of ['require("outside-package")', 'import "bun:sqlite"', 'Bun.file("input")']) {
     const root = makeRepo()
@@ -176,7 +224,7 @@ test("a symlinked skills directory resolves to the same skill once", () => {
   rmSync(root, { recursive: true, force: true })
 })
 
-test("an unreadable SKILL.md warns and does not stop the run", () => {
+test("an unreadable SKILL.md fails the scan and does not stop the run", () => {
   const root = makeRepo()
   const unreadableDir = addSkill(root, "oss-broken", goodFrontmatter("oss-broken"))
   const unreadablePath = join(unreadableDir, "SKILL.md")
@@ -189,7 +237,7 @@ test("an unreadable SKILL.md warns and does not stop the run", () => {
   expect(() => {
     findings = validate(root)
   }).not.toThrow()
-  expect(findings.some((f) => f.severity === "warning" && f.rule === null && f.file.includes("oss-broken"))).toBe(
+  expect(findings.some((f) => f.severity === "error" && f.rule === null && f.file.includes("oss-broken"))).toBe(
     true,
   )
   expect(errors(root).some((f) => f.file.includes("oss-thing"))).toBe(false)
@@ -357,12 +405,10 @@ test("a description containing a hash with no space before it survives intact", 
   expect(fm.entries.get("description")).toBe("uses C# syntax")
 })
 
-test("a duplicate key warns and the last value drives the outcome", () => {
+test("a duplicate key fails even when the last value is valid", () => {
   const root = makeRepo()
   addSkill(root, "oss-thing", 'name: oss-other\nname: oss-thing\ndescription: "x"\nlicense: MIT')
-  const warned = validate(root).filter((f) => f.severity === "warning")
-  expect(warned.some((f) => f.message.includes("duplicate") && f.message.includes("strict YAML parser"))).toBe(true)
-  expect(errors(root)).toEqual([])
+  expect(errors(root).some((f) => f.message.includes("duplicate"))).toBe(true)
   rmSync(root, { recursive: true, force: true })
 })
 
@@ -379,11 +425,10 @@ test("a readable description after a block-scalar description of the same key is
   rmSync(root, { recursive: true, force: true })
 })
 
-test("a block-scalar description followed by a second description line warns of a duplicate", () => {
+test("a block-scalar description followed by a second description line fails on the duplicate", () => {
   const root = makeRepo()
   addSkill(root, "oss-thing", 'name: oss-thing\ndescription: >\n  folded text\ndescription: "x"\nlicense: MIT')
-  const warned = validate(root).filter((f) => f.severity === "warning")
-  expect(warned.some((f) => f.message.includes("duplicate") && f.message.includes("strict YAML parser"))).toBe(true)
+  expect(errors(root).some((f) => f.message.includes("duplicate"))).toBe(true)
   rmSync(root, { recursive: true, force: true })
 })
 
@@ -553,7 +598,7 @@ test("an unreadable license file still lets a skill's checks run without throwin
   expect(() => {
     found = errors(root)
   }).not.toThrow()
-  expect(found).toEqual([])
+  expect(found.some((finding) => finding.file === "LICENSE" && finding.rule === null)).toBe(true)
   chmodSync(licensePath, 0o644)
   rmSync(root, { recursive: true, force: true })
 })
@@ -670,6 +715,7 @@ test("a nonexistent node-prefixed module is an R-SKL-05 error", () => {
 test("a relative import passes", () => {
   const root = makeRepo()
   const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
+  addScript(dir, "other.mjs", "#!/usr/bin/env node\nexport const x = 1\n")
   addScript(dir, "rel.mjs", '#!/usr/bin/env node\nimport { x } from "./other.mjs"\nconsole.log(x)\n')
   expect(errors(root)).toEqual([])
   rmSync(root, { recursive: true, force: true })
@@ -838,10 +884,7 @@ test("a comment ending in a runtime name does not bind to a chained call on the 
   rmSync(root, { recursive: true, force: true })
 })
 
-// Fix 5: an unreadable script file is a warning with a null rule, not an
-// R-SKL-05 violation.
-
-test("an unreadable script file warns instead of failing R-SKL-05", () => {
+test("an unreadable script fails the scan and records its path", () => {
   const root = makeRepo()
   const dir = addSkill(root, "oss-thing", goodFrontmatter("oss-thing"))
   const path = addScript(dir, "locked.mjs", '#!/usr/bin/env node\nconsole.log(1)\n')
@@ -850,8 +893,7 @@ test("an unreadable script file warns instead of failing R-SKL-05", () => {
   expect(() => {
     found = validate(root)
   }).not.toThrow()
-  expect(found.some((f) => f.severity === "warning" && f.rule === null && f.file.includes("locked.mjs"))).toBe(true)
-  expect(errors(root).some((f) => f.file.includes("locked.mjs"))).toBe(false)
+  expect(found.some((f) => f.severity === "error" && f.rule === null && f.file.includes("locked.mjs"))).toBe(true)
   chmodSync(path, 0o644)
   rmSync(root, { recursive: true, force: true })
 })
