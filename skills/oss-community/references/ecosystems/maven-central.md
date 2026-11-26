@@ -18,4 +18,4 @@ Tidelift's platform name for this ecosystem is `maven`, not `maven-central` and 
 
 The roster at `skills/oss-audit/ecosystems.json` records `"tidelift": "maven"` and is the canonical copy. This line exists because a single-skill install of `oss-community` does not carry that file; where the two disagree, the roster is right and this line is corrected to it. This is the one ecosystem whose roster key and Tidelift platform name differ, so it is the one worth checking rather than assuming.
 
-Verified 2026-07-31 against [POM reference](https://maven.apache.org/pom.html) and [Displaying a sponsor button in your repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository).
+Verified 2026-07-31 against [POM reference](https://maven.apache.org/pom.html) and [Displaying a sponsor button in your repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository.md).

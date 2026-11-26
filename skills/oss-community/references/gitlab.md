@@ -81,11 +81,13 @@ Enforcing Code Owner approval, the setting on a protected branch that blocks mer
 
 Project name, description, topics, and avatar all sit in Settings, General, in the section holding the project's naming, description, and topics. Editing any of them needs the Maintainer or Owner role, so confirm the maintainer has it before proposing changes they cannot apply.
 
+GitLab has no separate external homepage field. With maintainer approval, link the documentation or package page in the project description.
+
 Topics are how GitLab's Explore section and its topic RSS feeds surface a project. GitLab's documentation states no limit on the number of topics or the length of a name, so there is no cap to work against; the reason to keep the list short is the same as on GitHub, that a topic nobody searches for adds nothing. Visibility is split: only users with access to the project can see that project's topics, while the instance's list of available topics is visible to everyone, including unauthenticated visitors.
 
 GitLab's documentation describes no equivalent of GitHub's social preview upload. The project avatar set in the same settings section is the image GitLab shows beside the project, so treat that as the closest thing and do not promise an OpenGraph card.
 
-Which tabs exist is controlled in Settings, General, under visibility and project features, where Issues, Repository, Merge requests, Wiki, and Snippets each turn off or restrict to an audience. Issues has to be enabled for R-COM-05's templates to be reachable. Service Desk, which R-COM-04 may name as the security reporting channel, is enabled from the project's settings as well, so check it there rather than assuming an address works.
+Which tabs exist is controlled in Settings, General, under visibility and project features, where Issues, Repository, Merge requests, Wiki, and Snippets each turn off or restrict to an audience. Issues has to be enabled for R-COM-05's templates to be reachable. For R-COM-04, confirm Service Desk is enabled and the address is monitored. Public projects create confidential tickets by default. In private and internal projects, verify that **New tickets are confidential by default** is selected. If confidentiality is uncertain or disabled, ask for another private channel.
 
 ## FUNDING.yml
 

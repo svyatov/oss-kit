@@ -16,4 +16,4 @@ Tidelift's platform name for this ecosystem is `npm`, so the GitHub funding file
 
 The roster at `skills/oss-audit/ecosystems.json` records `"tidelift": "npm"` and is the canonical copy. This line exists because a single-skill install of `oss-community` does not carry that file; where the two disagree, the roster is right and this line is corrected to it.
 
-Verified 2026-08-03 against [package.json fields](https://docs.npmjs.com/cli/v12/configuring-npm/package-json) and [Displaying a sponsor button in your repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository).
+Verified 2026-08-03 against [package.json fields](https://docs.npmjs.com/cli/v12/configuring-npm/package-json) and [Displaying a sponsor button in your repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository.md).

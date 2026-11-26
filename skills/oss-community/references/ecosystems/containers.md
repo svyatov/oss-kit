@@ -18,7 +18,7 @@ Tidelift lists no platform for this ecosystem, so there is no `tidelift` value a
 
 GitHub's own documentation for the funding file enumerates the accepted `tidelift` platform names. It names six, every one of them a language package registry; no container registry appears. That is why the roster at `skills/oss-audit/ecosystems.json` carries no `tidelift` key for this ecosystem.
 
-Source: [Displaying a sponsor button in your repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository).
+Source: [Displaying a sponsor button in your repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository.md).
 
 Use the forge-level `github`, `open_collective`, `liberapay`, and `custom` funding keys to reach repository visitors. A registry may also provide project information: Docker Hub's repository overview supports Markdown and can carry the project's funding link. Check the registry in use before proposing that surface. The `org.opencontainers.image.url` and `org.opencontainers.image.source` annotations can also point image users back to the project.
 
@@ -27,4 +27,4 @@ No rule in `STANDARD.md` requires a funding file, so the missing Tidelift platfo
 
 Docker Hub overview checked 2026-10-11 against [repository information](https://docs.docker.com/docker-hub/repos/manage/information.md).
 
-Verified 2026-07-31 against [OCI image annotations](https://github.com/opencontainers/image-spec/blob/main/annotations.md) and [Displaying a sponsor button in your repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository).
+Verified 2026-07-31 against [OCI image annotations](https://github.com/opencontainers/image-spec/blob/main/annotations.md) and [Displaying a sponsor button in your repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository.md).
