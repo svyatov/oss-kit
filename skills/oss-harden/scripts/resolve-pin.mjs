@@ -114,10 +114,10 @@ function workflowReferences(text) {
     if (blockIndent !== null && indent > blockIndent) continue
     blockIndent = null
     const usesKey = /(?:^|[\s{,])(?:uses|"uses"|'uses')\s*:/.test(line)
-    const scalar = /^\s*(?:-\s*)?[^:]+:\s*[|>](?:[+-][1-9]?|[1-9][+-]?)?\s*(?:#.*)?$/.test(line)
+    const scalar = /^(\s*(?:-\s+)?)[^:]+:\s*[|>](?:[+-][1-9]?|[1-9][+-]?)?\s*(?:#.*)?$/.exec(line)
     if (scalar) {
       if (usesKey) throw new Error("multiline workflow uses values are unsupported; pass action references directly")
-      blockIndent = indent
+      blockIndent = scalar[1].length
       continue
     }
     // Aliases and flow mappings can hide uses entries from a line reader.
