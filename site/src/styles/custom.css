@@ -1500,6 +1500,19 @@ html[data-theme="light"] .domain-bay__count i {
   text-transform: uppercase;
 }
 
+.right-sidebar-panel skill-outline a {
+  display: block;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  font-family: var(--kit-body);
+  line-height: 1.45;
+}
+
+skill-outline code {
+  font-family: var(--kit-mono);
+  white-space: nowrap;
+}
+
 .standard-areas ul {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(10rem, 100%), 1fr));
@@ -1630,7 +1643,7 @@ body:has(.standard-areas) starlight-toc a {
 }
 
 .skill-rule a,
-.skill-rules a {
+.skill-rules li a {
   display: grid;
   grid-template-columns: 6.5rem 1fr;
   gap: 0.5rem 1rem;
@@ -1641,7 +1654,7 @@ body:has(.standard-areas) starlight-toc a {
 }
 
 .skill-rule a:hover span,
-.skill-rules a:hover span {
+.skill-rules li a:hover span {
   color: var(--kit-signal-strong);
 }
 
@@ -1698,7 +1711,7 @@ body:has(.standard-areas) starlight-toc a {
 }
 
 .skill-rule span,
-.skill-rules span {
+.skill-rules li span {
   font-size: 0.92rem;
   line-height: 1.45;
 }
@@ -1709,7 +1722,7 @@ body:has(.standard-areas) starlight-toc a {
 
 @media (max-width: 34rem) {
   .skill-rule a,
-  .skill-rules a {
+  .skill-rules li a {
     grid-template-columns: 1fr;
     gap: 0.25rem;
   }

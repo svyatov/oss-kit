@@ -1,0 +1,24 @@
+---
+import TableOfContents from "@astrojs/starlight/components/TableOfContents.astro"
+
+const isSkill = /^skills\/oss-[^/]+$/.test(Astro.locals.starlightRoute.entry.id)
+---
+
+{isSkill ? <skill-outline><TableOfContents /></skill-outline> : <TableOfContents />}
+
+<script>
+  customElements.define("skill-outline", class extends HTMLElement {
+    connectedCallback() {
+      for (const label of this.querySelectorAll("a > span")) {
+        const parts = (label.textContent ?? "").split(/\b(R-[A-Z]{2,3}-\d{2})\b/g)
+        if (parts.length === 1) continue
+        label.replaceChildren(...parts.map((part, index) => {
+          if (index % 2 === 0) return part
+          const code = document.createElement("code")
+          code.textContent = part
+          return code
+        }))
+      }
+    }
+  })
+</script>

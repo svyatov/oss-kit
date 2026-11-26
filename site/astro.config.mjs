@@ -68,6 +68,7 @@ export default defineConfig({
       customCss: ["./src/styles/custom.css"],
       components: {
         Header: "./src/components/Header.astro",
+        TableOfContents: "./src/components/TableOfContents.astro",
         Hero: "./src/components/HomeHero.astro",
         Footer: "./src/components/Footer.astro",
         ThemeProvider: "./src/components/ThemeProvider.astro",
@@ -124,7 +125,7 @@ export default defineConfig({
           // Nine skills each expanding their references ran the sidebar past 70
           // links and pushed Rules off the bottom of every viewport.
           collapsed: true,
-          items: [{ autogenerate: { directory: "skills" } }],
+          items: [{ autogenerate: { directory: "skills", collapsed: true } }],
         },
         {
           label: "Rules",

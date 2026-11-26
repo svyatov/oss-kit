@@ -204,7 +204,7 @@ test("agentNotice names the source file and links to it", () => {
 })
 
 test("agentNotice tells a human reader what to do with a page written for an agent", () => {
-  expect(agentNotice("skills/oss-readme/SKILL.md")).toContain("You do not have to read it")
+  expect(agentNotice("skills/oss-readme/SKILL.md")).toContain("[install the kit](/guides/install/)")
 })
 
 test("renderSkillPage anchors the rule list the skill body already carries", () => {
@@ -223,10 +223,7 @@ test("renderSkillPage falls back to a generated panel when the body lists no rul
   const source = `---\nname: oss-skill\n---\n\n# Skills\n\nR-SKL-01 is named only inside this sentence.\n`
   const page = renderSkillPage("skills/oss-skill/SKILL.md", source, undefined, parseRules(TWO_RULES).slice(1))
   expect(page).toContain('<li id="r-sec-01">')
-  // Raw HTML, not a Markdown heading: nine owned rules would otherwise be nine
-  // entries in the table of contents.
-  expect(page).toContain("<h2>Rules this skill fixes</h2>")
-  expect(page).not.toContain("## Rules this skill fixes")
+  expect(page.match(/^## Rules this skill fixes$/gm)).toHaveLength(1)
   // A skill that owns no rule renders no empty panel.
   expect(renderSkillPage("skills/oss-audit/SKILL.md", source, undefined, [])).not.toContain("skill-rules")
 })
