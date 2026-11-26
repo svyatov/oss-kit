@@ -38,6 +38,22 @@ rules:
 
   - id: "AE1"
     path: "SKILL.md"
+    message: "scripts/resolve-pin.mjs (partial)"
+    reason: >-
+      oss-harden: static_patterns_tool_misuse reaches its expression-span
+      limit in the JavaScript resolver. Keep the script path in the skill
+      and retain the scanner's partial-coverage result.
+
+  - id: "AE1"
+    path: "SKILL.md"
+    message: "scripts/ruleset.mjs (partial)"
+    reason: >-
+      oss-harden: the same analyzer reaches its expression-span limit in
+      the ruleset helper. The helper invokes gh with an argument array.
+      This entry covers only the partial-analysis notice.
+
+  - id: "AE1"
+    path: "SKILL.md"
     message: "references/gitlab.md (partial)"
     reason: >-
       oss-harden: SkillSpector 2.12.0's static_patterns_tool_misuse parser

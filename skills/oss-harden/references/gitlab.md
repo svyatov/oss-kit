@@ -2,7 +2,7 @@
 
 Concrete commands and settings for the decisions `SKILL.md` makes, on GitLab CI/CD and project settings. Every path below was checked against current GitLab documentation, and several against a live API response. Several of GitHub's controls have no GitLab equivalent, and the reverse is also true; do not translate a GitHub setting name or API path here by analogy.
 
-Ten `curl` invocations appear below. Seven read: the protected branch, the approval rules, the project, the job-token scope, its allowlist, the security settings, and the protected tags. Three write: the job-token allowlist `POST` under R-SEC-06, the security-settings `PUT` under R-SEC-10, and the protected-tags `POST` under R-SEC-13. `$TOKEN` in each is the environment variable holding the token `SKILL.md` Step 2 provisioned, which is `read_api` for a sweep that only reports and `api` only for a run that repairs.
+Use a token with `read_api` for reports and `api` for repairs. Supply it through `$TOKEN`. For collection reads, inspect the response headers with `curl --include`. Follow the same instance's `Link` with `rel="next"` until no next page remains. Combine all pages before evaluating approval rules, job-token grants, or protected-tag patterns. A denied or interrupted collection leaves the result unknown.
 
 ## Contents
 
@@ -43,7 +43,7 @@ The response's `allow_force_push` boolean and its `push_access_levels` and `merg
 The protected-branch response does not report required approval rules or the "Pipelines must succeed" merge check. On Premium or Ultimate, read approval rules separately, and on every tier read the project setting:
 
 ```bash
-curl --header "PRIVATE-TOKEN: $TOKEN" \
+curl --include --header "PRIVATE-TOKEN: $TOKEN" \
   "https://gitlab.example.com/api/v4/projects/:id/approval_rules"
 curl --header "PRIVATE-TOKEN: $TOKEN" \
   "https://gitlab.example.com/api/v4/projects/:id"
@@ -51,16 +51,18 @@ curl --header "PRIVATE-TOKEN: $TOKEN" \
 
 Require at least one applicable rule with `approvals_required` of 1 or more on paid tiers where two or more principals can merge. Require `only_allow_merge_if_pipeline_succeeds` to be `true`.
 
-Read the inbound job-token scope and allowlist separately, per R-SEC-06:
+Read the inbound job-token scope, project grants, and group grants separately for R-SEC-06:
 
 ```bash
 curl --header "PRIVATE-TOKEN: $TOKEN" \
   "https://gitlab.example.com/api/v4/projects/:id/job_token_scope"
-curl --header "PRIVATE-TOKEN: $TOKEN" \
+curl --include --header "PRIVATE-TOKEN: $TOKEN" \
   "https://gitlab.example.com/api/v4/projects/:id/job_token_scope/allowlist"
+curl --include --header "PRIVATE-TOKEN: $TOKEN" \
+  "https://gitlab.example.com/api/v4/projects/:id/job_token_scope/groups_allowlist"
 ```
 
-`inbound_enabled` on the first call reports whether the allowlist is active at all; the second lists which projects it names. `gitlab.example.com` in each example stands for `gitlab.com` for a project hosted there, or the project's self-managed host otherwise; resolve it from the git remote rather than assuming `gitlab.com`.
+`inbound_enabled` reports whether the allowlist is active. A group grant can admit projects absent from the project list. Resolve `gitlab.example.com` from the project's git remote.
 
 ## No marketplace-action analogue; pin images and includes instead (R-SEC-06)
 
@@ -97,7 +99,7 @@ Resolve the version the file already selects unless the user separately authoriz
 
 ## Inbound job token scope (R-SEC-06)
 
-The job-token allowlist belongs to the target project. It names source projects whose job tokens may access this project. It does not list targets that this project's own jobs may call. Where `inbound_enabled` from the read above is `false`, jobs from any project may authenticate to this project when the user who triggered them has sufficient access. Enable the allowlist and confirm it names only source projects that need inbound access, at Settings > CI/CD > Job token permissions. When the project uses GitLab 18.3 or later, use fine-grained permissions for each entry so its token can call only the required API endpoint groups.
+The job-token allowlist belongs to the target project. It admits source projects both directly and through group grants. It does not list targets that this project's own jobs may call. Where `inbound_enabled` from the read above is `false`, jobs from any project may authenticate to this project when the user who triggered them has sufficient access. Enable the allowlist and review every page of project and group grants, confirm each grant is needed, and repeat both reads after any change, at Settings > CI/CD > Job token permissions. When the project uses GitLab 18.3 or later, use fine-grained permissions for each entry so its token can call only the required API endpoint groups.
 
 In this API call, the project in the URL is the target being protected and `target_project_id` is the source project being allowed:
 
@@ -158,7 +160,7 @@ Protected tags are a separate object from protected branches, set in the same Se
 Read what is protected now:
 
 ```bash
-curl --header "PRIVATE-TOKEN: $TOKEN" \
+curl --include --header "PRIVATE-TOKEN: $TOKEN" \
   "https://gitlab.example.com/api/v4/projects/:id/protected_tags"
 ```
 

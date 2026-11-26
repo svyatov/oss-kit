@@ -49,7 +49,7 @@ Check for an existing updater with `test -f .github/dependabot.yml` or a search 
 What guards the default branch lives in one of two places, and neither endpoint reports the other. Read both. Rulesets first, since that is the form to create:
 
 ```bash
-gh api repos/{owner}/{repo}/rulesets
+gh api repos/{owner}/{repo}/rulesets --paginate
 gh api repos/{owner}/{repo}/rulesets/{ruleset_id}
 ```
 
@@ -215,26 +215,27 @@ The four review fields sit at their off values because that is correct where one
 
 ### Deriving the required checks
 
-Read the checks that actually report, twice, and require their union, then drop any check that has not reported on a pull request head:
+Inventory all check runs and external commit statuses before choosing which checks to require. Replace `{ref}` with each commit SHA under review:
 
 ```bash
-gh api repos/{owner}/{repo}/commits/{ref}/check-runs \
-  --jq '[.check_runs[] | {context: .name, integration_id: .app.id}] | unique'
+gh api --paginate repos/{owner}/{repo}/commits/{ref}/check-runs \
+  --jq '.check_runs[] | {context: .name, integration_id: .app.id}'
+gh api --paginate repos/{owner}/{repo}/commits/{ref}/statuses --jq '.[].context'
 ```
 
-Run it once against the default branch and once against the head commit of a recently merged pull request. One read is not enough: the endpoint returns only what reported on the commit named, so a workflow triggered by `pull_request` alone never appears on a default-branch commit and drops out of the ruleset silently. This repository is the worked example, since `.github/workflows/osv-scanner.yml` triggers on `pull_request` and `schedule` only. The checks most often scoped to pull requests are the security scans, and a ruleset that reports complete while the scan gates nothing is the failure R-SEC-04 exists to prevent.
+Read the default branch, the pull request head, and the test merge commit when available. GitHub uses the test merge commit when it has a status, otherwise the head. Compare those results with the checks GitHub shows as required on the pull request. If the inventory is incomplete, report coverage as unknown.
 
-The union can also fail the other way. A ruleset evaluates the pull request head, so a check that reports on the default branch and not on a pull request head blocks every pull request. CodeQL default setup is the measured case: it analyzed pushes to `main` and reported `1 configuration not found` on a Dependabot pull request, so a required `Analyze (actions)` never arrived there. Before you require a check, confirm it on a pull request head. Once Step 5's updater has opened a pull request, confirm it on that Dependabot pull request too.
+Inspect the producing workflow's events, branch and path filters, and job conditions. Verify the check reports on applicable fork and Dependabot pull requests. For merge queues, verify the workflow also reports on `merge_group`. Leave a conditional workflow optional or require an always-reporting aggregate that fails when required jobs fail. A missing required result leaves the pull request waiting. See [GitHub's required-check troubleshooting guide](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/troubleshooting-required-status-checks).
 
-The command returns `integration_id` alongside each context for the reason given above: without it, anything reporting the same context name satisfies the check. A check reported by more than one app is the escape hatch, and takes the bare `context` with no `integration_id`. The known cost of pinning is that a check migrating to a different app makes the requirement unsatisfiable until somebody edits the ruleset.
+For check runs, bind the context to the expected app's `integration_id` when possible. For external statuses, confirm the context and expected provider on the pull request. If a check run and a commit status share a required name, GitHub requires both.
 
 ### Updating an existing ruleset
 
-`POST` creates a new ruleset every time, so a rerun stacks a second one beside the first and both then apply. Read the ruleset list first, and where one already exists for this branch, send `PUT /repos/{owner}/{repo}/rulesets/{ruleset_id}` with the same body instead. The `id` comes from `gh api repos/{owner}/{repo}/rulesets`.
+`POST` creates a new ruleset every time, so a rerun stacks a second one beside the first and both then apply. Read the ruleset list first, and where one already exists for this branch, send `PUT /repos/{owner}/{repo}/rulesets/{ruleset_id}` with the same body instead. The `id` comes from `gh api --paginate repos/{owner}/{repo}/rulesets`.
 
 ### The bypass list
 
-A ruleset's bypass list replaces the classic "Do not allow bypassing the above settings" checkbox, inverted: classic protection exempted admins unless the box was ticked, where a ruleset binds everyone unless an actor is listed. Each entry carries an `actor_type`, an `actor_id`, and a `bypass_mode` of either `always` or `pull_request`. Prefer `pull_request`: the actor can merge a pull request that violates the rules, but still cannot push straight to the branch, so every change leaves a reviewable trail.
+A ruleset's bypass list replaces the classic "Do not allow bypassing the above settings" checkbox, inverted: classic protection exempted admins unless the box was ticked, where a ruleset binds everyone unless an actor is listed. Each entry carries an `actor_type`, an `actor_id`, and a `bypass_mode` of `always`, `pull_request`, or `exempt`. Preserve existing entries when editing unrelated rules. For a new branch exception, prefer `pull_request`: the actor can merge a pull request that violates the rules, but still cannot push straight to the branch, so every change leaves a reviewable trail.
 
 The case this matters most is a single-maintainer project, and it needs saying before the ruleset goes in rather than after. Nobody can approve their own pull request, so a ruleset requiring one approving review with an empty bypass list makes every change the sole maintainer opens unmergeable. A bypass entry is the wrong way out of that. R-SEC-12 does not reach a repository where one principal holds every merge path, so leave `required_approving_review_count` at 0 and leave the bypass list empty. The ruleset then binds the owner as tightly as anyone else, and GitHub stops reporting `BLOCKED` on a pull request nothing is actually blocking. A requirement nobody can meet, undone by an exemption for the one person it named, is weaker than not setting it: it costs the repository an unbypassable ruleset and buys a status that stops nobody.
 
@@ -291,7 +292,7 @@ On `Organization`, the owner has no signing keys of its own and there is nothing
 Fetch the account's signing keys, build an allowed-signers file naming the tagger's email, and verify against it:
 
 ```bash
-gh api users/{account}/ssh_signing_keys --jq '.[].key' > keys.txt
+gh api --paginate users/{account}/ssh_signing_keys --jq '.[].key' > keys.txt
 sed 's|^|{tagger-email} namespaces="git" |' keys.txt > allowed_signers
 git -c gpg.ssh.allowedSignersFile=allowed_signers tag -v {tag}
 ```
@@ -388,7 +389,7 @@ Match `refs/tags/*` only where the project tags nothing else. Where releases are
 Read it back rather than trusting the write, the same two calls the branch case needs:
 
 ```bash
-gh api repos/{owner}/{repo}/rulesets --jq '.[] | select(.target == "tag")'
+gh api --paginate repos/{owner}/{repo}/rulesets --jq '.[] | select(.target == "tag")'
 gh api repos/{owner}/{repo}/rulesets/{ruleset_id}
 ```
 
@@ -447,7 +448,7 @@ Where the branch is guarded by a ruleset, the `code_scanning` rule is the strong
 }
 ```
 
-A required status check asks whether the analysis reported; this rule asks what it found. It blocks the merge on three distinct conditions: the named tool found an alert at or above either threshold, the tool's analysis is still running, or the tool is not configured for the repository at all. That third condition is what a status check cannot express, since deleting the analysis setup removes the check rather than failing it, and a required check nobody reports stops being a gate.
+A missing required status check blocks the merge until a result arrives. The `code_scanning` rule also enforces the alert thresholds and requires the named analysis tool to be configured and finished.
 
 `security_alerts_threshold` takes `none`, `critical`, `high_or_higher`, `medium_or_higher`, or `all`, and governs security alerts. `alerts_threshold` takes `none`, `errors`, `errors_and_warnings`, or `all`, and governs everything else the tool reports. The two are separate so a project can block on any security finding above a bar while tolerating style-grade alerts. `tool` matches the analysis tool's reported name, `CodeQL` for default setup; confirm the spelling against what the repository actually reports rather than assuming it:
 
@@ -582,4 +583,4 @@ R-SEC-07 applies to both forges through different mechanisms, so read the matchi
 
 ## Required CodeQL checks
 
-On GitHub, use CodeQL advanced setup whenever its result becomes a required check. Default setup skips fork pull requests and, in a measured run, Dependabot's, and a required check that never reports blocks the pull request. Default setup fits only a repository that gets neither. Turning off an existing default setup weakens a security control, so present it as a settings block the user confirms rather than an API write. Give the resolved settings URL the same way Step 6 does; the reference file names the endpoint that reports whether it is already enabled. Where Step 6 set up a ruleset, add its code scanning rule too, which blocks a merge on what the analysis found rather than only on whether it reported, and so also catches the case where the analysis configuration is deleted and the required check simply stops appearing.
+On GitHub, use CodeQL advanced setup whenever its result becomes a required check. Default setup skips fork pull requests and, in a measured run, Dependabot's, and a required check that never reports blocks the pull request. Default setup fits only a repository that gets neither. Turning off an existing default setup weakens a security control, so present it as a settings block the user confirms rather than an API write. Give the resolved settings URL the same way Step 6 does; the reference file names the endpoint that reports whether it is already enabled. Where Step 6 set up a ruleset, add its code scanning rule to enforce the alert thresholds as well as the required check.
