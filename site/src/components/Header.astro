@@ -66,4 +66,29 @@ const links = [
   // reader needs to see where they landed.
   const current = document.querySelector('#starlight__sidebar [aria-current="page"]')
   current?.scrollIntoView({ block: "center" })
+
+  if (document.querySelector(".standard-areas")) {
+    function revealActive(panel: HTMLElement | null | undefined, outline: Element | null | undefined) {
+      const active = outline?.querySelector('[aria-current="true"]')
+      if (!panel || !active || !panel.clientHeight) return
+      const row = active.getBoundingClientRect()
+      if (!row.height) return
+      const bounds = panel.getBoundingClientRect()
+      if (row.top < bounds.top || row.bottom > bounds.bottom) {
+        panel.scrollTop += row.top - bounds.top - (panel.clientHeight - row.height) / 2
+      }
+    }
+
+    const outline = document.querySelector<HTMLDetailsElement>("#starlight__mobile-toc")
+    outline?.addEventListener("toggle", () => {
+      if (outline.open) revealActive(outline.querySelector(".dropdown"), outline)
+    })
+    const sidebar = document.querySelector<HTMLElement>(".right-sidebar")
+    const desktopOutline = sidebar?.querySelector("starlight-toc")
+    if (desktopOutline) {
+      const observer = new MutationObserver(() => revealActive(sidebar, desktopOutline))
+      observer.observe(desktopOutline, { subtree: true, attributeFilter: ["aria-current"] })
+      revealActive(sidebar, desktopOutline)
+    }
+  }
 </script>

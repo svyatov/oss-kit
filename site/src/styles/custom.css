@@ -1500,6 +1500,41 @@ html[data-theme="light"] .domain-bay__count i {
   text-transform: uppercase;
 }
 
+.standard-areas ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(10rem, 100%), 1fr));
+  gap: 0.25rem 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.standard-areas li {
+  margin: 0;
+}
+
+.standard-areas a {
+  display: block;
+  padding-block: 0.375rem;
+}
+
+.standard-areas small {
+  display: block;
+  color: var(--kit-muted);
+  font-family: var(--kit-mono);
+  font-size: 0.75rem;
+}
+
+/* Starlight tracks the active heading in both outlines. Keep all areas
+   reachable and show the rules for the area the reader is visiting. */
+body:has(.standard-areas) :is(starlight-toc, mobile-starlight-toc):has([aria-current]) li:not(:has([aria-current])) > ul {
+  display: none;
+}
+
+body:has(.standard-areas) starlight-toc a {
+  display: block;
+  line-height: 1.45;
+}
+
 .pagination-links a {
   border-color: var(--kit-line);
   border-radius: var(--kit-radius-panel);
@@ -2181,8 +2216,8 @@ html[data-theme="light"] .domain-bay__count i {
      Menu button, and reserving the gap there anyway pushed its own nav toggle
      past the right edge below 380px. Nothing overflowed the page, because the
      header clips its own child, so the control was simply unreachable. */
-  .page:has(starlight-menu-button) > .header {
-    padding-inline: 1rem 4rem;
+  .page:has(.sl-menu-button) > .header {
+    padding-inline-end: calc(var(--sl-nav-pad-x) + 3.25rem);
   }
 
   .kit-header {
@@ -2204,9 +2239,6 @@ html[data-theme="light"] .domain-bay__count i {
     margin-left: auto;
   }
 
-  /* The theme control and Install both stay. Hiding the first left a phone with
-     no way back to light; hiding the second removed the site's primary action
-     from every page a reader is most likely to arrive on. */
   .kit-header__tools starlight-theme-select select,
   .kit-header__install {
     height: 2.75rem;
@@ -2219,7 +2251,7 @@ html[data-theme="light"] .domain-bay__count i {
   }
 
   .kit-header__tools site-search button[data-open-modal],
-  starlight-menu-button button,
+  .sl-menu-button,
   .kit-mobile-nav summary {
     min-width: 2.75rem;
     min-height: 2.75rem;
@@ -2230,12 +2262,19 @@ html[data-theme="light"] .domain-bay__count i {
     height: 2.75rem;
   }
 
-  starlight-menu-button button {
+  .sl-menu-button {
+    --sl-menu-button-size: 2.75rem;
     border: 1px solid var(--kit-line);
     border-radius: var(--kit-radius-control);
     background: var(--kit-panel);
     color: var(--kit-text);
     box-shadow: none;
+  }
+}
+
+@media (max-width: 34rem) {
+  .page:has(.sl-menu-button) .kit-header__install {
+    display: none;
   }
 }
 

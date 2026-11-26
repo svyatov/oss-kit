@@ -293,6 +293,13 @@ test("writeAll produces every page the site needs", () => {
   expect(existsSync(join(out, "guides/install.md"))).toBe(false)
 
   const secOne = read(join(out, "rules/r-sec-01.md"), "utf8")
+  expect(secOne).toContain('<dd data-pagefind-meta="ruleId">R-SEC-01</dd>')
+  const standard = read(join(out, "standard.md"), "utf8")
+  for (const section of new Set(currentRules.map((rule) => rule.section))) {
+    expect(standard).toContain(`href="#${section.toLowerCase().replaceAll(" ", "-")}"`)
+  }
+  expect(standard.indexOf('href="#documentation"')).toBeLessThan(standard.indexOf("Some rules name a fallback"))
+  expect(standard).toContain("Two areas are gated")
   expect(secOne).toContain("/skills/oss-harden/")
   // End to end from rule-sources.json onto a written page. renderRuleSources is
   // unit-tested on a literal, so only this catches writeAll reading the wrong
