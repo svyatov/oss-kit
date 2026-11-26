@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 - Publishing guidance uses Hex Workload Identity and NuGet GitLab trusted publishing, and covers pnpm-specific packaging behavior.
 - Audit reporting details and hardening mechanics load from references at the steps that need them.
 - Review replies lead with the decision and omit context already established in the visible thread.
+- The prose scanner reads explicitly named text files and skips symlinks during directory scans. It recognizes emoji sequences, protects quoted and list-nested fences, and counts words across version numbers. Spaced double hyphens require `--house`.
 - Synonym variation and false ranges leave the AI-tell catalog. Consistent terminology remains a general writing rule.
 
 ### Fixed

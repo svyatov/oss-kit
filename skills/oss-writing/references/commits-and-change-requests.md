@@ -18,7 +18,7 @@ A body that has to describe more than one change is the signal the commit should
 
 Structure: Conventional Commits. Content: git SubmittingPatches.
 
-- Follow the subject convention the repository declares. Where that is [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/), the specification carries the type list and the breaking-change marker; do not recite either from memory.
+- Read the repository's contribution guide or commitlint configuration for accepted types. For type syntax and breaking-change markers, consult the [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/).
 - Keep the subject to 72 characters or fewer, counting any number the forge appends on squash.
 - Explain motivation in the body, not the subject.
 - The body explains WHY the change is needed and HOW it differs from the prior behavior. Do not restate the diff.

@@ -84,7 +84,7 @@ for continuous integration.
 | `oss-harden` | Hardens security, workflow permissions, dependency controls, branch protection, and release tags. |
 | `oss-publish` | Sets up secure releases with trusted publishing, approval gates, provenance, SBOMs, and signed artifacts. |
 | `oss-changelog` | Maintains the changelog, chooses versions, writes release notes, and plans deprecations. |
-| `oss-writing` | Fixes the sentences in commits, reviews, docs, and issues. |
+| `oss-writing` | Writes and edits commit messages, pull requests, review replies, issues, and documentation. |
 | `oss-skill` | Audits and fixes skill structure, portability, procedures, context use, and specification conformance. |
 
 Only `oss-writing` loads automatically when relevant. The other eight skills
