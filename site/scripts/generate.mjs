@@ -374,7 +374,7 @@ export function stripUnreleased(markdown) {
  */
 export function agentNotice(sourcePath) {
   return `:::note
-This page is the instruction text an agent loads, reproduced verbatim from [\`${sourcePath}\`](${BLOB}/${sourcePath}). You do not have to read it: install the kit and ask your agent for the skill by name.
+This page is the instruction text an agent loads, reproduced verbatim from [\`${sourcePath}\`](${BLOB}/${sourcePath}). You do not have to read it: [install the kit](/guides/install/) and ask your agent for the skill by name.
 :::`
 }
 
@@ -430,7 +430,7 @@ function anchorOwnedRules(body, byId) {
 /**
  * The fallback for a skill that names its rules only inside prose, so the
  * transform above finds no line to anchor and a Fixed by link would land
- * nowhere. Raw HTML, so the heading stays out of the table of contents.
+ * nowhere. The Markdown heading adds one contents entry for the whole list.
  * @param {Rule[]} rules
  */
 function ownedRules(rules) {
@@ -440,7 +440,9 @@ function ownedRules(rules) {
       `  <li id="${rule.id.toLowerCase()}"><a href="/rules/${rule.id.toLowerCase()}/"><code>${rule.id}</code> <span>${rule.statement}</span></a></li>`,
   )
   return `<section class="skill-rules">
-<h2>Rules this skill fixes</h2>
+
+## Rules this skill fixes
+
 <ul>
 ${items.join("\n")}
 </ul>
