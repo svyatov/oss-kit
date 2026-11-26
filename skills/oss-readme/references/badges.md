@@ -24,15 +24,13 @@ Never put badges inside the `#` heading: they leak into the generated anchor slu
 
 ## 1. Version
 
-Keep the registry's own label, since it tells the reader where the package lives for free. Relabel only where the default names a git artifact rather than a published version, which is the tag badge on both forges: it labels itself `tag`, and `label=version` is what a reader needs.
+Use a registry version badge when its data identifies the published package. Keep its registry label and link to the package page.
 
-A repository published to no registry falls back to that tag badge, and so does an ecosystem whose registry serves no version endpoint. It is `https://img.shields.io/github/v/tag/OWNER/REPO?sort=semver&label=version`, or `https://img.shields.io/gitlab/v/tag/NAMESPACE/PROJECT?sort=semver&label=version` on GitLab, linked to the repository's tag list. Both sort by tag date without `sort=semver`, which reports whichever tag was pushed last rather than the highest version.
-
-The endpoint, the label, the link target, and the install command for each ecosystem live in one file per ecosystem: [npm](ecosystems/npm.md), [PyPI](ecosystems/pypi.md), [RubyGems](ecosystems/rubygems.md), [crates.io](ecosystems/crates.md), [Go modules](ecosystems/go-modules.md), [Packagist](ecosystems/packagist.md), [NuGet](ecosystems/nuget.md), [Maven Central](ecosystems/maven-central.md), [Hex](ecosystems/hex.md), [pub.dev](ecosystems/pubdev.md), and [container images](ecosystems/containers.md). Read the one the project publishes to.
+For source distributed by version tag, the tag itself identifies the release. The example above uses `label=version` for that case. Use `img.shields.io/github/v/tag/OWNER/REPO?sort=semver` or `img.shields.io/gitlab/v/tag/NAMESPACE/PROJECT?sort=semver` for the highest semantic version. Use only tags belonging to the documented release unit. For a registry package, a source tag alone does not establish publication. Keep the `tag` label if showing that source tag and link to the forge's tag list.
 
 ## 2. CI
 
-Use GitHub Actions' documented native status badge. It reports the default branch when `branch` is absent, but spell out the real default branch so the README states what it measures.
+Use the badge from the CI provider that runs the build. For GitHub Actions, identify the workflow and default branch:
 
 ```
 https://github.com/OWNER/REPO/actions/workflows/WORKFLOW.yml/badge.svg?branch=DEFAULT_BRANCH
@@ -40,15 +38,13 @@ https://github.com/OWNER/REPO/actions/workflows/WORKFLOW.yml/badge.svg?branch=DE
 
 Link to `https://github.com/OWNER/REPO/actions/workflows/WORKFLOW.yml`. Substitute the real workflow filename and default branch.
 
+For GitLab CI/CD, append `/badges/BRANCH/pipeline.svg` to the project URL, including any subgroups. Use the project's default branch and link to its pipelines page. See [GitLab project badges](https://docs.gitlab.com/user/project/badges/).
+
 ## 3. Coverage
 
-When the repository uses Codecov, use Codecov's documented native badge and link it to the report. Substitute the actual forge and default branch. Do not add a Codecov badge to a repository that uploads coverage somewhere else.
+When GitLab CI/CD collects coverage, append `/badges/BRANCH/coverage.svg` to the project URL. Link to the pipeline that reports coverage.
 
-```
-https://codecov.io/gh/OWNER/REPO/branch/DEFAULT_BRANCH/graph/badge.svg
-```
-
-Link to `https://app.codecov.io/gh/OWNER/REPO`.
+For Codecov, copy the badge and report URLs from the project's badge settings. Check the forge and branch. Omit the coverage badge if the project publishes no coverage result.
 
 ## What never gets a badge
 

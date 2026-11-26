@@ -38,4 +38,4 @@ Show both only where the project supports both, which for a library published to
 
 `<scope>` stays out of a README snippet unless the artifact is genuinely test-only or provided-only. The Maven guide includes it in its own example, and a reader who copies `<scope>test</scope>` for a runtime library gets a compile error.
 
-Verified 2026-07-31 against [Maven Getting Started Guide](https://maven.apache.org/guides/getting-started/index.html), [Declaring dependencies](https://docs.gradle.org/current/userguide/declaring_dependencies.html), [Maven Central Version badge](https://shields.io/badges/maven-central-version), and `services/maven-central/maven-central.service.js` in [badges/shields](https://github.com/badges/shields).
+Verified 2026-07-31 against [Maven Getting Started Guide](https://maven.apache.org/guides/getting-started/index.html), [Declaring dependencies](https://docs.gradle.org/current/userguide/declaring_dependencies.md), [Maven Central Version badge](https://shields.io/badges/maven-central-version), and `services/maven-central/maven-central.service.js` in [badges/shields](https://github.com/badges/shields).

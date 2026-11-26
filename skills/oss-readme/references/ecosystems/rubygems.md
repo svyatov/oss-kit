@@ -26,4 +26,4 @@ bundle add GEM
 
 Bundler documents that as adding the named gem to the `Gemfile` and running `bundle install`, so it is one line where the alternative is a line to paste into a file plus a second command to run. Show one of the two, chosen by how the gem is actually consumed, not both.
 
-Verified 2026-07-31 against [RubyGems basics](https://guides.rubygems.org/rubygems-basics/), `lib/bundler/man/bundle-add.1.ronn` in [rubygems/rubygems](https://github.com/rubygems/rubygems), and `services/gem/gem-version.service.js` in [badges/shields](https://github.com/badges/shields).
+Verified 2026-07-31 against [RubyGems basics](https://guides.rubygems.org/rubygems-basics.md), `lib/bundler/man/bundle-add.1.ronn` in [rubygems/rubygems](https://github.com/rubygems/rubygems), and `services/gem/gem-version.service.js` in [badges/shields](https://github.com/badges/shields).

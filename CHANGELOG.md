@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ### Fixed
 
+- `oss-readme` keeps reviews read-only, verifies install commands before running them, and handles projects with declarative setup. Badge guidance distinguishes source tags from published packages and covers GitLab CI/CD.
 - `oss-publish` prepares immutable GitHub releases with their assets, transfers deployed Maven JARs, and configures a Docker builder for attestations. npm guidance covers branch-triggered releases, batch approvals, publisher expiry, and token revocation.
 
 - Skill pages link to the install guide and list the rules they fix in the contents menu. The sidebar opens the current skill’s references, and long step names wrap in the desktop contents list.

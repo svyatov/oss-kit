@@ -32,4 +32,4 @@ Hex documents the dependency form as `{:package, requirement}` and `mix deps.get
 
 Keep the atom and the package name identical. Hex documents the `:hex` option as the package name, defaulting to the dependency's application name, so a package whose Hex name differs from the atom needs that option in the snippet and a README that shows the atom alone documents a dependency that does not resolve.
 
-Verified 2026-07-31 against [Hex usage](https://hex.pm/docs/usage), [Elixir Version](https://elixir.hexdocs.pm/Version.html), and `services/hexpm/hexpm.service.js` in [badges/shields](https://github.com/badges/shields).
+Verified 2026-07-31 against [Hex usage](https://hex.pm/docs/usage), [Elixir Version](https://elixir.hexdocs.pm/Version.md), and `services/hexpm/hexpm.service.js` in [badges/shields](https://github.com/badges/shields).
