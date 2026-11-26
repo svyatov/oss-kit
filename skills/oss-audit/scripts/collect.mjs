@@ -16,13 +16,21 @@
 // script does not duplicate that skill's banned-word table.
 
 import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs"
-import { join, relative } from "node:path"
+import { isAbsolute, join, relative, sep } from "node:path"
 import process from "node:process"
 
-const root = process.argv[2] && !process.argv[2].startsWith("-") ? process.argv[2] : "."
+const root = realpathSync(process.argv[2] && !process.argv[2].startsWith("-") ? process.argv[2] : ".")
 const rel = (p) => relative(root, p) || "."
 const read = (p) => readFileSync(p, "utf8")
-const has = (p) => existsSync(join(root, p))
+const unavailable = new Set()
+function withinRoot(path) {
+  const resolved = realpathSync(path)
+  const part = relative(root, resolved)
+  if (part !== ".." && !part.startsWith(".." + sep) && !isAbsolute(part)) return true
+  unavailable.add(rel(path))
+  return false
+}
+const has = (p) => existsSync(join(root, p)) && withinRoot(join(root, p))
 
 // ---------------------------------------------------------------- yaml subset
 // Enough YAML for a workflow: nested maps, scalars, and sequences of maps.
@@ -156,10 +164,10 @@ function readYaml(path) {
   catch (error) { throw new Error(`${rel(path)}: ${error.message}`) }
 }
 
-function actionUses(value) {
-  if (!value || typeof value !== "object") return []
-  return Object.entries(value).flatMap(([key, child]) => {
-    if (key !== "uses" || typeof child !== "string") return actionUses(child)
+function actionUses(entries) {
+  return entries.flatMap(entry => {
+    const child = entry?.uses
+    if (typeof child !== "string") return []
     const at = child.lastIndexOf("@")
     const version = at === -1 ? null : child.slice(at + 1)
     return [{ ref: child, local: child.startsWith("./"), pinnedToSha: version !== null && /^[0-9a-f]{40}$/.test(version), version }]
@@ -188,10 +196,11 @@ function triggerFilters(on) {
 function collectWorkflows() {
   const dir = join(root, ".github/workflows")
   const out = []
-  if (!existsSync(dir)) return out
+  if (!has(".github/workflows")) return out
   for (const name of readdirSync(dir)) {
     if (!/\.ya?ml$/.test(name)) continue
     const path = join(dir, name)
+    if (!withinRoot(path)) continue
     const doc = readYaml(path)
     const jobs = doc.jobs && typeof doc.jobs === "object" && !Array.isArray(doc.jobs) ? doc.jobs : {}
     // `on` is YAML 1.1's boolean true, so a reader may see either key.
@@ -213,8 +222,7 @@ function collectWorkflows() {
         uses: job?.uses ?? null,
         steps: Array.isArray(job?.steps) ? job.steps.length : 0,
       })),
-      // Every uses: in the file, including inside steps, with how it is pinned.
-      uses: actionUses(doc),
+      uses: Object.values(jobs).flatMap(job => actionUses([job, ...(Array.isArray(job?.steps) ? job.steps : [])])),
     })
   }
   return out
@@ -229,15 +237,18 @@ function collectActions() {
     const real = realpathSync(dir)
     if (visited.has(real)) return
     visited.add(real)
-    for (const e of readdirSync(dir)) {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const e = entry.name
       if (e === "node_modules" || e === ".git") continue
       const p = join(dir, e)
-      const s = statSync(p)
+      if (entry.isSymbolicLink() && !withinRoot(p)) continue
+      const s = entry.isSymbolicLink() ? statSync(p) : entry
       if (s.isDirectory()) walk(p)
       else if (/^action\.ya?ml$/.test(e)) {
+        const runs = readYaml(p).runs
         out.push({
           file: rel(p),
-          uses: actionUses(readYaml(p)),
+          uses: runs?.using === "composite" && Array.isArray(runs.steps) ? actionUses(runs.steps) : [],
         })
       }
     }
@@ -315,19 +326,19 @@ function presence() {
     community[f] = [f, `.github/${f}`, `docs/${f}`].filter(has)
   }
   return {
-    licenseFiles: rootEntries.filter((e) => LICENSE_RE.test(e)),
+    licenseFiles: rootEntries.filter((e) => LICENSE_RE.test(e) && has(e)),
     community,
     prTemplates: PR_TEMPLATES.filter(has),
     issueTemplateDir: has(".github/ISSUE_TEMPLATE"),
     issueTemplates: has(".github/ISSUE_TEMPLATE")
-      ? readdirSync(join(root, ".github/ISSUE_TEMPLATE")).filter((f) => f !== "config.yml")
+      ? readdirSync(join(root, ".github/ISSUE_TEMPLATE")).filter((f) => f !== "config.yml" && has(join(".github/ISSUE_TEMPLATE", f)))
       : [],
     issueChooser: has(".github/ISSUE_TEMPLATE/config.yml"),
     codeowners: [".github/CODEOWNERS", "CODEOWNERS", "docs/CODEOWNERS"].filter(has),
     dependabot: has(".github/dependabot.yml") || has(".github/dependabot.yaml"),
     gitlabCi: has(".gitlab-ci.yml"),
     gitlabTemplates: [".gitlab/issue_templates", ".gitlab/merge_request_templates"].filter(has),
-    lockfiles: rootEntries.filter((e) => /\.lock$|-lock\.json$|\.locked$|lock\.(json|yaml|toml)$/i.test(e)),
+    lockfiles: rootEntries.filter((e) => /\.lock$|-lock\.json$|\.locked$|lock\.(json|yaml|toml)$/i.test(e) && has(e)),
   }
 }
 
@@ -349,6 +360,7 @@ const facts = {
   actions: collectActions(),
   readme: markdownFacts("README.md"),
   changelog: markdownFacts("CHANGELOG.md"),
+  unavailablePaths: [...unavailable].sort(),
 }
 
 // R-CI-05 is the reason this script parses instead of grepping: a regex over
