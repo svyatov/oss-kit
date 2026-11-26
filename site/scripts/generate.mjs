@@ -156,7 +156,7 @@ function ruleInstrument(rule, { position = "", level, full }) {
   const cells = [
     ...(full
       ? [
-          `<div><dt>Rule</dt><dd>${rule.id}</dd></div>`,
+          `<div><dt>Rule</dt><dd data-pagefind-meta="ruleId">${rule.id}</dd></div>`,
           `<div><dt>Area</dt><dd><a href="/rules/${area}/">${rule.section}</a>${position}</dd></div>`,
         ]
       : []),
@@ -271,6 +271,34 @@ ${renderRuleSources(entry)}
     },
     body,
   )
+}
+
+/** @param {string} text @param {Rule[]} rules @param {string} sourcePath */
+function standardPage(text, rules, sourcePath) {
+  const firstArea = text.search(/^## /m)
+  const introduction = text.slice(0, firstArea).replace(/^# .*\n/, "")
+  // The source index is validated against the rules in tests/rule-counts.test.ts.
+  const index = /^The standard holds \d+ rules:\n\n((?:- .+\n)+)/m.exec(introduction)
+  if (!index) throw new Error("Missing standard area index")
+  const links = [...(index[1] ?? "").matchAll(/^- (.+): (R-\S+) through (R-\S+)$/gm)]
+    .map(([, name = "", first, last]) =>
+      `<li><a href="#${name.toLowerCase().replaceAll(" ", "-")}">${name}<small>${first} to ${last}</small></a></li>`)
+  return `<nav class="standard-areas" aria-label="Rule areas">
+<ul>
+${links.join("\n")}
+</ul>
+</nav>
+
+<details>
+<summary>How to read the standard</summary>
+
+${introduction.replace(index[0], "").trim()}
+
+Source: [${sourcePath}](${BLOB}/${sourcePath})
+
+</details>
+
+${renderStandardBody(text.slice(firstArea), rules)}`
 }
 
 const BLOB = "https://github.com/svyatov/oss-kit/blob/main"
@@ -548,7 +576,7 @@ that settles it and the skill that fixes it.
           // same rule twice for one query, so search resolves to the rule page.
           pagefind: false,
         },
-        `${agentNotice(standardPath)}\n\n${renderStandardBody(standardText.replace(/^# .*\n/m, ""), rules)}`,
+        standardPage(standardText, rules, standardPath),
       ),
     ),
   )

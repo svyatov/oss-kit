@@ -61,6 +61,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: "oss-kit",
+      pagefind: { ranking: { metaWeights: { ruleId: 100 } } },
       description: "Curated agent skills for open source maintainers.",
       disable404Route: true,
       favicon: "/icon.svg",

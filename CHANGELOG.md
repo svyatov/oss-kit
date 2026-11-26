@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 
 ### Fixed
 
+- The documentation search prioritizes rule definitions for exact IDs. The standard links to each area and shows its rules in the outline. On small screens, Install is available in the sidebar menu.
 - CI guidance checks timeouts inside reusable workflows, limits GitHub Pages deployments to the default branch, and uses Pages syntax supported by the target GitLab version.
 - The audit collector stays inside the checkout and counts action references only in jobs and steps. Repeat audits preserve the previous report. Fix plans distinguish verification of existing releases from work that needs a new release.
 - Skill verification preserves release-asset scope, nested Markdown fences, complete ruleset pagination, annotated-tag chains, and extensionless Node script checks.
