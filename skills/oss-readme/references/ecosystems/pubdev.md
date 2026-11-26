@@ -24,4 +24,4 @@ Dart documents that as adding the latest stable version compatible with the proj
 
 A package meant for Flutter shows `flutter pub add PACKAGE`, the same subcommand under the Flutter tool. Choose by what the package depends on rather than by preference: a package that imports `package:flutter` cannot be added to a plain Dart project, and showing the Dart form for it sends the reader into a resolution error.
 
-Verified 2026-07-31 against [dart pub add](https://dart.dev/tools/pub/cmd/pub-add), [Using packages](https://docs.flutter.dev/packages-and-plugins/using-packages), [Pub Version badge](https://shields.io/badges/pub-version), and `services/pub/pub.service.js` in [badges/shields](https://github.com/badges/shields).
+Verified 2026-07-31 against [dart pub add](https://dart.dev/tools/pub/cmd/pub-add.md), [Using packages](https://docs.flutter.dev/packages-and-plugins/using-packages.md), [Pub Version badge](https://shields.io/badges/pub-version), and `services/pub/pub.service.js` in [badges/shields](https://github.com/badges/shields).

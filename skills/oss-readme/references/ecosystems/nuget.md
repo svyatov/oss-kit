@@ -22,4 +22,4 @@ That is the current form. Microsoft renamed the command in the .NET 10 SDK, from
 
 Which one a README shows follows from what the project supports. A package targeting current .NET shows the noun-first form alone. A package whose readers are still on an older SDK shows the verb-first form, or both with the SDK each one needs, because a reader on .NET 9 who pastes the noun-first form gets an error that says nothing about SDK versions.
 
-Verified 2026-07-31 against [dotnet package add](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-package-add) and `services/nuget/nuget.service.js` in [badges/shields](https://github.com/badges/shields).
+Verified 2026-07-31 against [dotnet package add](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-package-add?accept=text/markdown) and `services/nuget/nuget.service.js` in [badges/shields](https://github.com/badges/shields).
