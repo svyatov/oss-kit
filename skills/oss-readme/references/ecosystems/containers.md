@@ -16,4 +16,4 @@ Copy the published registry host and complete image path from the package page. 
 
 Show the release tag for readers trying the image. Link to its published digest for deployments that need immutable content.
 
-Verified 2026-11-27 against [Docker image pull](https://docs.docker.com/reference/cli/docker/image/pull/), [Working with the Container registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry.md), [GitLab container registry](https://docs.gitlab.com/user/packages/container_registry/), and `services/docker/docker-version.service.js` in [badges/shields](https://github.com/badges/shields).
+Verified 2026-11-26 against [Docker image pull](https://docs.docker.com/reference/cli/docker/image/pull/), [Working with the Container registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry.md), [GitLab container registry](https://docs.gitlab.com/user/packages/container_registry/), and `services/docker/docker-version.service.js` in [badges/shields](https://github.com/badges/shields).
