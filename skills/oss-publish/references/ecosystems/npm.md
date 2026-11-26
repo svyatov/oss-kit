@@ -26,7 +26,7 @@ Read the root `package.json`. If it declares `workspaces`, or a `pnpm-workspace.
 
 ## Configure trusted publishing (Step 2)
 
-On npmjs.com, open `https://www.npmjs.com/package/<name>/access` for the package (in a monorepo, once per public workspace package) and add a trusted publisher.
+Open `https://www.npmjs.com/package/<name>/access` for each public package. Create the trusted publisher when the workflow is ready. Its first successful publish must occur within two days of creation. If it expires unused, recreate it and complete publication within the new window.
 
 ### GitHub Actions
 
@@ -36,7 +36,7 @@ Enter:
 - Repository: the repository name from Step 1
 - Workflow filename: `release.yml`, the filename only, not the full path
 - Environment: the approval environment name from `SKILL.md` Step 4, for example `release`
-- Allowed actions: npm always permits `npm stage publish`. For one package without public forge assets, leave `npm publish` disabled. For multiple packages or any public forge assets, enable `npm publish` and use the direct command behind Step 4's forge gate.
+- Allowed actions: npm always permits `npm stage publish`. Keep direct publishing disabled when one npm approval covers the release. Enable it only for Step 4's forge-gated flow.
 
 In the workflow, the publish job needs:
 
@@ -77,7 +77,7 @@ id_tokens:
 Before choosing the pack command, inspect the existing package manager, workspace protocols, and packing hooks. For pnpm `workspace:` dependencies or `.pnpmfile.cjs` `beforePacking` hooks, use the project's frozen pnpm install and pack commands in the uncredentialed build job. Verify the package name, version, and rewritten dependency fields inside the resulting tarball. Hand that exact tarball to the publish job. The npm example below applies when npm can reproduce the project's packaging behavior; do not switch the credentialed client without establishing a separate need.
 
 
-The publish job installs no dependencies, uses no cache, and calls no third-party action beyond checkout, `actions/setup-node`, and `actions/download-artifact`; anything else running in that job could publish the package. Build the package in a separate job, upload the output as an artifact, and download it in the publish job. This example uses direct publishing behind Step 4's forge approval gate, which also covers Step 6's release assets. For one package without forge assets, Step 4 gives the staged-publishing variant.
+The publish job installs no dependencies, uses no cache, and calls no third-party action beyond checkout, `actions/setup-node`, and `actions/download-artifact`; anything else running in that job could publish the package. Build the package in a separate job, upload the output as an artifact, and download it in the publish job. This example uses direct publishing behind Step 4's forge approval gate, which also covers Step 6's release assets. Step 4 covers stage-only releases.
 
 ```yaml
 name: Release
@@ -145,15 +145,15 @@ The version comparison assumes tags such as `v1.2.3`; derive the comparison from
 
 If an existing workflow uses `secrets.NPM_TOKEN`, remove it from the YAML now and tell the user to delete the corresponding secret and revoke the token once the new flow is verified.
 
-Where a release tool already owns the release, keep it and fit the publish job inside it rather than adding a second release path. release-please, semantic-release, and changesets all work the same way: the workflow triggers on a merge to the default branch, the tool decides whether that merge is a release, and where it is, the tool creates the tag and the forge release and the publish runs behind it in the same job graph. That satisfies R-PUB-01 through the clause covering a run that creates the release tag itself, so do not rewrite it into a `push: tags` trigger to make the rule read more literally. Three things do change. The tool's own job outputs whether a release happened, and every job after it needs the condition, or the workflow publishes on every merge; the version check against the tag comes from the tool's manifest rather than from `GITHUB_REF_NAME`; and any selected forge gate belongs on the publish job, after the tool creates the tag.
+Keep the project's release tool. For a default-branch run, require its release-created output before building, publishing, or attaching assets. Pass its tag output to each consumer. Check the tag's commit and package version before publication. Use that tag in Step 6 instead of `GITHUB_REF_NAME`, which names the branch. When automation owns the forge release, use Step 6's draft procedure in `SKILL.md`.
 
 ## Gate on manual approval (Step 4)
 
-For multiple packages or any public forge assets, use one forge gate before direct publication. Enable `npm publish` for every trusted publisher; npm still permits staging. Run one `npm publish ./package/<tarball>.tgz --ignore-scripts` command per package. On GitHub, add a required reviewer to `release`. On GitLab Premium or Ultimate, protect `release` and make the publish job blocking and manual. Asset-upload jobs must depend on successful direct publication, without `always()` or another condition that bypasses failure. A completed staging job does not satisfy that dependency. Do not add a second approval to the asset-upload job.
+Use one forge gate for public forge assets or when one npm approval cannot cover the package set. Enable `npm publish` for every trusted publisher; npm still permits staging. Run one `npm publish ./package/<tarball>.tgz --ignore-scripts` command per package. On GitHub, add a required reviewer to `release`. On GitLab Premium or Ultimate, protect `release` and make the publish job blocking and manual. Asset-upload jobs must depend on successful direct publication, without `always()` or another condition that bypasses failure. A completed staging job does not satisfy that dependency. Do not add a second approval to the asset-upload job.
 
 GitHub required reviewers are available for public repositories on all plans. Private repositories need GitHub Enterprise for this gate. If the native gate is unavailable, report R-PUB-04 unmet for a flow that publishes forge assets.
 
-For GitHub's forge gate, create a new environment with a required reviewer and tag policy:
+For a tag-triggered GitHub release, create the environment with a reviewer and the project's release tag pattern:
 
 ```sh
 ENV=release
@@ -168,17 +168,19 @@ gh api -X POST "repos/{owner}/{repo}/environments/$ENV/deployment-branch-policie
   -f 'name=v*' -f type=tag
 ```
 
+For default-branch release automation, replace the tag policy with `-f name="$RELEASE_BRANCH" -f type=branch`. Set `RELEASE_BRANCH` to the protected release branch. GitHub evaluates the triggering ref even when the workflow creates a tag. Apply this restriction to both direct and staged flows. [GitHub deployment rules](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments)
+
 `gh api` substitutes `{owner}` and `{repo}` from the checkout it runs in. Use `-F` for booleans and the numeric reviewer ID. A team reviewer needs `type=Team` and that team's ID.
 
-For one package without public forge assets, use npm staged publishing as the publication gate. Replace the example's publish command with `npm stage publish ./package/*.tgz --ignore-scripts`. Keep `environment: release` as part of the trusted-publisher identity and restrict it to version tags. Configure no required reviewer on a new environment for this branch; omit the reviewer lookup and reviewer fields above. Preserve an established gate until the maintainer accepts its removal.
+With no public forge assets, use staging if one approval covers the release. Stage each tarball separately with `npm stage publish ./package/<tarball>.tgz --ignore-scripts`. Keep `environment: release` as part of the trusted-publisher identity and restrict it to the triggering ref as above. Configure no required reviewer on a new environment for this branch; omit the reviewer lookup and reviewer fields above. Preserve an established gate until the maintainer accepts its removal.
 
-The registry-level gate is npm's staged publishing: the workflow runs `npm stage publish`, which uploads the package to a staging area without requiring 2FA, and a maintainer then runs `npm stage approve <stage-id>` from the CLI or approves it on npmjs.com, which does require 2FA. Because the trusted publisher above only allows `npm stage publish` and not `npm publish`, no run of this workflow, compromised or not, can ship a version without that 2FA step. Also set publishing access at `https://www.npmjs.com/package/<name>/access` to "Require two-factor authentication and disallow tokens", which revokes any existing publish token; warn the user first if another automation still uses one.
+The registry-level gate is npm's staged publishing: the workflow runs `npm stage publish`, which uploads the package to a staging area without requiring 2FA, and a maintainer then runs `npm stage approve <stage-id>` from the CLI or approves it on npmjs.com, which does require 2FA. Because the trusted publisher above only allows `npm stage publish` and not `npm publish`, no run of this workflow, compromised or not, can ship a version without that 2FA step. Also set publishing access at `https://www.npmjs.com/package/<name>/access` to "Require two-factor authentication and disallow tokens". This blocks token-based publishing for that package. After verifying trusted publishing, identify other consumers before explicitly revoking the old token.
 
-npm creates one stage and one approval per package. A completed staging job has not passed npm's approval step and cannot authorize a public asset upload.
+For multiple packages, confirm the maintainer's npm account offers web batch approval. A batch accepts up to 100 validated versions, one per package, with one 2FA challenge. Verify each result before reporting completion. If an account lacks batch approval or the flow exceeds either limit, use the forge gate. On partial failure, reconcile published versions before retrying outstanding stages. A stage cannot authorize a public forge asset upload.
 
 If an established flow has both forge review and staged approval, preserve both until the maintainer accepts a migration. Report how many actions the flow requires. Select the branch above from both its package count and public asset inventory.
 
-Approval scope checked 2026-10-11 against [npm staged publishing](https://docs.npmjs.com/staged-publishing/) and [GitHub deployment environments](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments).
+Approval scope checked 2026-11-27 against [npm staged publishing](https://docs.npmjs.com/staged-publishing/) and [GitHub deployment environments](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments).
 
 ## Verify provenance (Step 5)
 
@@ -218,6 +220,8 @@ This flow requires Step 4's forge gate and direct npm publication. Attach and at
 
 ```yaml
   github-release:
+    env:
+      GH_REPO: ${{ github.repository }}
     runs-on: ubuntu-latest
     needs: [publish]
     permissions:
@@ -230,9 +234,6 @@ This flow requires Step 4's forge gate and direct npm publication. Attach and at
         with:
           name: package-tarball
           path: dist/
-      - run: gh release upload "$GITHUB_REF_NAME" dist/*.tgz dist/*.cyclonedx.json
-        env:
-          GH_TOKEN: ${{ github.token }}
       - uses: actions/attest@v4
         with:
           subject-path: dist/*.tgz
@@ -240,11 +241,12 @@ This flow requires Step 4's forge gate and direct npm publication. Attach and at
         with:
           subject-path: dist/*.tgz
           sbom-path: dist/<name>-<version>.cyclonedx.json  # placeholder: the same filename as above
+      - run: gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes dist/*.tgz dist/*.cyclonedx.json
+        env:
+          GH_TOKEN: ${{ github.token }}
 ```
 
 The two attestation steps are not a duplicate. `actions/attest` generates SLSA build provenance when it is given a subject alone, and an SBOM attestation when it is also given `sbom-path`, so the first step records how the tarball was built and the second records what is inside it. A consumer reads the second with `gh attestation verify <file>.tgz --repo <owner>/<repo> --predicate-type https://cyclonedx.org/bom`, because `gh` looks for SLSA provenance unless told otherwise.
-
-`gh release upload` fails when no release exists for the tag. Either create it in this job with `gh release create "$GITHUB_REF_NAME" --generate-notes` before the upload, or have the maintainer publish the release from the tag first. This reference does not choose between them, because release notes are the project's own.
 
 A third job preserves the credential split, so copy the job boundary along with it. The build job runs project code and must not upload release assets before approval. The publish job holds the registry identity and runs only the actions Step 3 permits. With Step 4's forge gate, `needs: [publish]` places asset upload after approval and successful direct publication. That dependency alone cannot wait for approval of an npm stage. Keep the asset job's default success condition and omit another environment approval.
 
@@ -252,11 +254,11 @@ The four grants above are copied exactly, on this job only. The workflow's top-l
 
 ## Not yet published packages
 
-A trusted publisher is configured on the package's npm settings page, which does not exist until the package is published once. If `npm view <name>` returned `E404`: confirm the name is actually free rather than restricted, then have the user publish the first version manually and interactively, with 2FA, from their own machine: `npm publish --ignore-scripts` (add `--access public` for a scoped package). That single release has no provenance and no trusted publisher; every release after it goes through the flow above, starting with adding the trusted publisher immediately after the manual publish.
+A trusted publisher is configured on the package's npm settings page, which does not exist until the package is published once. If `npm view <name>` returned `E404`: confirm the name is actually free rather than restricted, then have the user publish the first version manually and interactively, with 2FA, from their own machine: `npm publish --ignore-scripts` (add `--access public` for a scoped package). That single release has no provenance and no trusted publisher; every release after it goes through the flow above, using the trusted publisher configured in Step 2 before its first CI release.
 
 ## Monorepo packages
 
-Every public workspace package needs its own trusted publisher entry pointing at the same repository and workflow filename; a package left out stays unprotected. `npm stage` is unaware of workspaces. Independently tagged packages are separate release flows. Each can use staged publishing only when its flow has no public forge assets. Packages released together, or with public forge assets, use direct publishing behind one forge gate. Pack every package in the build job and publish each tarball explicitly. Match each independently versioned job's tag trigger and version check to that package. `npm sbom --workspace <name>` scopes Step 6's bill of materials to one of them.
+Every public workspace package needs its own trusted publisher entry pointing at the same repository and workflow filename; a package left out stays unprotected. `npm stage` is unaware of workspaces. Independently tagged packages are separate release flows. Apply Step 4 to each release flow, including packages that ship together. Pack every package in the build job and publish each tarball explicitly. Match each independently versioned job's tag trigger and version check to that package. `npm sbom --workspace <name>` scopes Step 6's bill of materials to one of them.
 
 ## Why this file never reaches for a token
 

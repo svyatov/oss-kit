@@ -133,7 +133,7 @@ jobs:
 
 `oss-harden` pins every `uses:` line above to a commit SHA and sets the test job's minimal permissions. On GitLab CI/CD the same `mvn deploy` runs unchanged: the credential path is identical because there is no OIDC on either forge. Store each secret as a masked, protected variable scoped to `release`. Make the publish job blocking and manual, and restrict it through the protected environment.
 
-Neither `setup-java` block above sets `cache`, so nothing is restored. `oss-harden` owns dependency caching under R-CI-04, and a restored cache in a job that can sign and publish is the same cache-poisoning exposure every other reference in this directory refuses; leave the input off rather than setting it to a value.
+Neither `setup-java` block above sets `cache`, so nothing is restored. `oss-ci` owns cache keying under R-CI-04, and a restored cache in a job that can sign and publish is the same cache-poisoning exposure every other reference in this directory refuses; leave the input off rather than setting it to a value.
 
 ## Gate on manual approval (Step 4)
 
@@ -190,10 +190,27 @@ Only for a release that attaches a built asset to the forge release. Deploying t
 
 Two rules apply here and they ask for different things. R-PUB-05 wants an inventory of what went into the asset, in SPDX or CycloneDX. R-PUB-06 wants the assets signed, or listed by hash in a signed manifest. A manifest of hashes answers the second and nothing about the first, so do not report R-PUB-05 as met by publishing one.
 
+For public JAR assets, add these steps immediately after `mvn deploy` in the publish job. Extract the selected JARs from the same bundle the plugin uploaded. Replace the example member with each exact coordinate, version, and classifier in the release inventory. Use distinct release filenames and the project's configured bundle path. Omit these steps for a registry-only release.
+
+```yaml
+      - run: |
+          mkdir release-jars
+          unzip -j target/central-publishing/central-bundle.zip 'com/example/library/1.2.3/library-1.2.3.jar' -d release-jars
+      - uses: actions/upload-artifact@v7
+        with:
+          name: jars
+          path: release-jars/*.jar
+          if-no-files-found: error
+```
+
+Generate the asset inventory in an unprivileged job. Compare its subject digests with the extracted JARs before signing. If deployment produced different bytes, inventory those bytes in an unprivileged job before the release job consumes both artifacts.
+
 This reference names no SBOM generator for Java. The ones in common use are plugins rather than part of Maven or Gradle, and a plugin that reads the dependency tree inside a job holding a signing key is one the maintainer vets before it goes there. GitHub's SPDX dependency-graph export can supplement an artifact inventory without installing another tool. It does not establish R-PUB-05 coverage by itself. The `gh api` step below writes it into `dist/`, so it ships as supplementary release evidence and is listed in `SHA256SUMS` and attested alongside the jars for R-PUB-06:
 
 ```yaml
   github-release:
+    env:
+      GH_REPO: ${{ github.repository }}
     runs-on: ubuntu-latest
     needs: [publish]
     permissions:
@@ -213,7 +230,7 @@ This reference names no SBOM generator for Java. The ones in common use are plug
       - uses: actions/attest@v4
         with:
           subject-checksums: SHA256SUMS
-      - run: gh release upload "$GITHUB_REF_NAME" dist/* SHA256SUMS
+      - run: gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes dist/* SHA256SUMS
         env:
           GH_TOKEN: ${{ github.token }}
 ```

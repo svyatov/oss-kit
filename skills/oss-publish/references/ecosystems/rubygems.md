@@ -216,10 +216,7 @@ This reference names no SBOM generator for Ruby. The ones in common use are thir
         with:
           subject-checksums: SHA256SUMS
       - run: node .github/scripts/release-notes.mjs "$GITHUB_REF_NAME" > notes.md
-      - run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md
-        env:
-          GH_TOKEN: ${{ github.token }}
-      - run: gh release upload "$GITHUB_REF_NAME" pkg/* SHA256SUMS
+      - run: gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" --notes-file notes.md pkg/* SHA256SUMS
         env:
           GH_TOKEN: ${{ github.token }}
 ```
@@ -240,8 +237,6 @@ sha256sum -c SHA256SUMS
 ```
 
 Run the first command against each asset downloaded, never against `SHA256SUMS`, which is a subject of nothing. It proves that this workflow in this repository produced those exact bytes, and it prints the signing workflow it accepted; `--signer-workflow <owner>/<repo>/.github/workflows/release.yml` pins that, so an attestation from any other workflow in the repository fails. The second command is what a consumer without `gh` has. It proves the files match a list published beside them, and nothing about who produced either. These verify the forge release's copy; the gem installed from rubygems.org is verified through the registry record in Step 5.
-
-`gh release upload` fails when no release exists for the tag, which is why the job creates it. The notes come from `CHANGELOG.md` rather than from `--generate-notes`, because `oss-changelog` already mandates the Keep a Changelog structure, so the section for this version is guaranteed to exist and is what the project itself wrote about the release. `--generate-notes` would list merged pull requests instead, which is a different document and one the project did not write.
 
 For a unique level-two heading starting with the version, copy `scripts/release-notes.mjs` from the installed `oss-changelog` directory to `.github/scripts/release-notes.mjs`. It needs Node 22 or later and imports only Node built-ins. For other heading formats, repeated version keys, or an unavailable helper, use the project's changelog tooling in the workflow. Verify that it selects the intended unit and fails for missing or empty notes.
 
