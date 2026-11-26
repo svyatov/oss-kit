@@ -28,9 +28,9 @@ Locate every `SKILL.md` in the repository. Resolve symlinked directories to thei
 
 Sort what you find into three cases. A `SKILL.md` that is a direct child of a top-level `skills/<name>/` satisfies R-SKL-01. A `SKILL.md` reached only through a symlink to that directory is the same file and not a finding. A `SKILL.md` anywhere else is a real finding.
 
-Fix a real finding by moving the whole skill directory under `skills/`, keeping its `references/` and `assets/` subdirectories with it, and by pointing every host manifest that names a skills path at `skills/`. Read [references/hosts.md](references/hosts.md) for which manifest each host reads. Moving the directory without updating the manifests trades one loading failure for another.
+For a misplaced skill outside an intentional plugin layout, move the whole skill directory under `skills/`, including its references and assets. Update each affected host manifest to point at the new location. Read [references/hosts.md](references/hosts.md) for which manifest each host reads. Moving the directory without updating the manifests trades one loading failure for another.
 
-Where a repository ships skills only as a plugin and keeps them under a nested plugin directory, say so plainly rather than moving them: that layout loads in the plugin host and fails the `skills` CLI installer, and choosing between them is the maintainer's call, not yours.
+For nested plugins, record the R-SKL-01 layout finding before proposing a move. Check the manifest, source path, and discovery options for each installer. The `skills` CLI supports manifest-declared paths and recursive discovery. Ask the maintainer before moving a working plugin.
 
 ## Step 2: Validate against the specification (R-SKL-02)
 
@@ -40,7 +40,7 @@ Run the bundled validator over the repository and fix what it names:
 node /path/to/oss-skill/scripts/validate.mjs /path/to/repository
 ```
 
-It needs Node 22 or later, or Bun, and nothing installed. It reads files: it writes nothing, spawns nothing, and makes no network call. It reports an error for every violation of R-SKL-01 through R-SKL-05, and exits 1 if any error was found. It warns in two cases, and a warning never moves the exit code. The first is a frontmatter construct it does not read, which says nothing about whether the construct is valid. The second is a value that breaks a constraint a host enforces and the specification does not; that warning names the constraint and the host, and says the specification permits the value. Read which kind you have before acting: the first asks you to check the construct with a YAML parser, and the second asks you to change a file that already conforms.
+Run the validator with Node 22 or later, or Bun. It reads local files and prints findings. Errors give exit status 1, including incomplete reads and duplicate YAML keys. Warnings leave the exit status unchanged. Check unsupported syntax with a strict YAML parser. Check unknown fields and host constraints against the selected host. Compare license warnings with the applicable terms. Record the evidence for each warning or mark that check incomplete.
 
 The faults come in a small set.
 
@@ -48,7 +48,7 @@ A name and directory mismatch means the frontmatter `name` and the directory nam
 
 An invalid name means the value breaks the character rules: 1 to 64 characters, lowercase letters, digits, and hyphens only, no leading or trailing hyphen, no consecutive hyphens. Rewrite it and rename the directory to match.
 
-An over-long description means the field exceeds 1024 characters. Cut the parts a reader already knows, keeping both halves the field must carry: what the skill does, and when to use it. Cutting the when half to fit the limit produces a skill that validates and never triggers.
+A description can contain up to 1024 Unicode code points. Preserve the task outcome when shortening it. For implicit invocation, also preserve the situations that should trigger it.
 
 A missing required field means `name` or `description` is absent or empty. Both are required and neither has a default.
 
@@ -58,7 +58,7 @@ Frontmatter that fails to parse needs a YAML fix, not a guessed rewrite. Quote s
 
 ## Step 3: Bring an oversized body under the ceiling (R-SKL-03)
 
-Count the lines of each `SKILL.md`. Where one exceeds 500, the fix is to move material into that skill's own `references/` directory, not to compress the prose until it fits.
+Count body lines after the closing frontmatter delimiter. At 500 lines or more, move conditional material into the skill’s `references/` directory.
 
 Decide what moves by asking what the reader needs on every run against what they need only sometimes. The procedure, the decisions, and the facts that defy assumption stay in `SKILL.md`. Long tables, per-platform detail, worked examples, and anything consulted only in one branch of the work move out.
 
@@ -92,9 +92,7 @@ Where the work is writing a script rather than judging one, read [references/scr
 
 Start from real task evidence: upstream documentation, project artifacts, recurring corrections, and failure cases. Remove generic knowledge the agent already has. Keep one coherent unit of work whose output and boundary can be stated precisely.
 
-Write the description for activation. State what outcome the skill produces and when to use it, using the language a user is likely to use. Include adjacent cases only when the skill truly handles them. Test near-miss prompts too, because a description that triggers on unrelated work wastes the whole body load.
-
-Write the description in the third person throughout. "I can help you write a README" and "You can use this to write a README" are the two openers that go wrong, and both spend the field's opening words on the reader rather than on the trigger terms a selector matches.
+Check how each supported host selects the skill. For implicit selection, describe the outcome and user intent in the host’s recommended voice. Test representative requests and near misses. For explicit-only selection, use a concise menu summary and check that users can invoke it by name. Keep trigger guidance when another supported host selects the skill implicitly.
 
 Name the skill for what it does, preferring a gerund or a noun phrase, and keep one naming shape across a collection so the set reads as one product. Avoid `helper`, `utils`, `documents`, and `data`, which name nothing a user would search for.
 
@@ -110,7 +108,7 @@ Inside the body:
 6. Bundle a tested script only when repeated runs otherwise recreate the same deterministic logic.
 7. End state-changing work with validation, correction, and re-validation.
 
-Evaluate behavior separately from format. A validator exit code says a skill loads, not that it helps. Where the work is to establish that a skill improves the task it claims, or to decide whether a change to one was worth making, read [references/evaluating.md](references/evaluating.md): it covers the task records, the two-session loop that keeps an author from grading their own instructions, and what the read order of the bundled files says about where the body points.
+Evaluate behavior separately from format. A clean run covers only the checks the validator performed. Verify host loading and task outcomes separately. Where the work is to establish that a skill improves the task it claims, or to decide whether a change to one was worth making, read [references/evaluating.md](references/evaluating.md): it covers the task records, the two-session loop that keeps an author from grading their own instructions, and what the read order of the bundled files says about where the body points.
 
 ## Step 7: Check the install path behind every claimed host
 
@@ -124,7 +122,7 @@ Treat it as one. Say so when proposing the rename, and hand the changelog entry 
 
 ## Verify, then report what you changed
 
-Re-run the validator after every fix, then apply the SKL checks resolved at entry. Fix failures and restart the checks. Report unavailable standard checks explicitly. Completion requires a clean validator exit and passing results for every available cited check.
+Re-run the validator after every fix, then apply the SKL checks resolved at entry. Fix failures and restart the checks. Report unavailable standard checks explicitly. Completion requires zero errors, evidence for each warning, and passing results for every available cited check. Report unresolved warnings as incomplete checks.
 
 List every skill you touched, the rule each change satisfies, and every fault the validator reported that you did not fix, with the reason. Name the rename separately from the mechanical fixes, since it is the only one with downstream cost.
 

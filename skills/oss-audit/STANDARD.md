@@ -541,7 +541,7 @@ Forges: both
 
 The specification gives hosts a shared skill format. A host may reject a nonconforming skill, warn, or continue loading it. Validate the files directly rather than inferring conformance from whether a skill appears or runs.
 
-Check: a specification validator exits 0 for every directory under `skills/`. `oss-skill` ships one at `scripts/validate.mjs` in its own installed directory, which reads files, needs nothing installed, and runs on Node 22 or later and on Bun.
+Check: validation covers every skill under `skills/`, exits 0, and records evidence that resolves each warning. `oss-skill` ships one at `scripts/validate.mjs` in its own installed directory, which reads files, needs nothing installed, and runs on Node 22 or later and on Bun.
 
 Fixed by: oss-skill
 Forges: both
@@ -550,7 +550,7 @@ Forges: both
 
 The whole body loads into context when the skill activates, competing there with the conversation and with every other active skill. The specification recommends fewer than 500 lines and 5000 tokens, with supporting files loaded only when the task calls for them.
 
-Check: every `skills/*/SKILL.md` is under 500 lines, and any skill needing more material ships it under that skill's own `references/` directory.
+Check: the body of every `skills/*/SKILL.md` is under 500 lines, excluding YAML frontmatter and its delimiters, and any skill needing more material ships it under that skill's own `references/` directory.
 
 Fixed by: oss-skill
 Forges: both
@@ -586,7 +586,7 @@ Forges: both
 
 A skill adds value only when it triggers for the right task, supplies knowledge the agent lacks, and leads the work through a repeatable procedure. Generic explanation, broad menus of equal choices, and unnecessary reference loads consume context without improving the result.
 
-Check: the description states both the task outcome and when to use the skill; the body keeps one coherent workflow, gives a default when several approaches exist, preserves non-obvious gotchas, and includes a verification loop; conditional detail lives in directly linked files loaded only at the branch that needs it; and the instructions name capabilities rather than harness-specific tools.
+Check: the description states the task outcome and gives trigger conditions on hosts that select the skill implicitly; the body keeps one coherent workflow, gives a default when several approaches exist, preserves non-obvious gotchas, and includes a verification loop; conditional detail lives in directly linked files loaded only at the branch that needs it; and the instructions name capabilities rather than harness-specific tools.
 
 Fixed by: oss-skill
 Forges: both

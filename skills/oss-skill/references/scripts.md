@@ -6,23 +6,23 @@ Read this when a skill ships a `scripts/` directory, or when the work is about t
 
 A script handles the failures it can foresee rather than stopping and leaving the agent to work out what happened. Decide, for each one, whether the run can continue with a finding recorded or genuinely has to end.
 
-`validate.mjs` meets a file it cannot read and records `could not read this file` as a warning against that path, then carries on through the rest of the repository. A reader gets every other finding in the same run. A script that threw on the first unreadable file would cost them one run per bad file, and each run would report one fault.
+`validate.mjs` meets a file it cannot read and records `could not read this file` as an error against that path, then carries on through the rest of the repository. A reader gets every other finding in the same run. A script that threw on the first unreadable file would cost them one run per bad file, and each run would report one fault.
 
 ## Every constant carries its reason
 
 A configuration value with nothing beside it is one nobody can change safely later, because the next reader cannot tell what it was chosen against. Write the reason, not the value's history.
 
-`validate.mjs` keeps `node:sqlite` in its list of built-in modules with a comment naming the release that dropped the flag it needed, so a reader can see the floor it was written against. Its name pattern carries three lines saying that the charset admits no `<` or `>`, and that loosening it drops a constraint the description branch tests separately. That comment is what stops a later edit from removing a check nobody knew was there.
+The validator fixes its built-in module list at Node 22.0. Using the installed runtime’s list could admit modules unavailable at that minimum.
 
 ## An error message names what was expected
 
 Compare `invalid license` with what the validator prints:
 
 ```text
-error R-SKL-04 skills/oss-demo/SKILL.md: license "MIT-0" does not appear in the repository license file; confirm both name the same license
+error R-SKL-04 skills/oss-demo/SKILL.md: license "LICENSE.txt" must name a file inside the skill directory
 ```
 
-The second names the value it read, what it compared that value against, and the next action. A message naming only the rule sends the reader to the rule to find out what to do, which is the work the message existed to save.
+The second names the value it read, where the file belongs, and the next action. A message naming only the rule sends the reader to the rule to find out what to do, which is the work the message existed to save.
 
 ## Say whether to run the script or read it
 
@@ -36,7 +36,7 @@ The general practice for a bundled script is to list the packages it needs and c
 
 Read that list off the script rather than from memory. The whole point of the practice is that a reader can open the file and check the claim.
 
-`validate.mjs` names Node 22 or later in its header comment, imports `node:fs`, `node:path`, and `node:url`, and shells out to nothing, so its only precondition is the runtime. A shell script states the same thing as the commands it calls: this repository's own `scripts/check-drift.sh` needs `grep`, `awk`, `tr`, and `sort`.
+`validate.mjs` names Node 22 or later in its header comment, imports `node:fs`, `node:module`, `node:path`, and `node:url`, and shells out to nothing, so its only precondition is the runtime. A shell script states the same thing as the commands it calls: this repository's own `scripts/check-drift.sh` needs `grep`, `awk`, `tr`, and `sort`.
 
 ## Print a path the reader can paste
 

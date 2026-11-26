@@ -66,9 +66,9 @@ Verified 2026-07-23 against the current `code.claude.com` documentation.
 
 ## Codex
 
-Source: `developers.openai.com/codex/skills`, which redirects to `learn.chatgpt.com/docs/build-skills.md`, `developers.openai.com/plugins/build/plugins.md`, and `learn.chatgpt.com/docs/enterprise/plugin-management.md`.
+Source: `learn.chatgpt.com/docs/build-skills.md`, `developers.openai.com/plugins/build/plugins.md`, and `learn.chatgpt.com/docs/enterprise/plugin-management.md`.
 
-Codex reads skills from repository, user, admin, and system locations. For repositories it scans `.agents/skills/` in the current working directory, in the parent directory above it, and at the repository root, when run inside a git repository. At the user level it reads `~/.agents/skills/`. At the machine or container level it reads `/etc/codex/skills/`. It also ships a set of its own skills, bundled with Codex by OpenAI. Codex follows a symlinked skill folder to its target when scanning any of these locations. Each skill is a directory holding a `SKILL.md`.
+Codex reads skills from repository, user, admin, and system locations. For repositories it scans `.agents/skills/` in every directory from the working directory up to and including the Git repository root. At the user level it reads `~/.agents/skills/`. At the machine or container level it reads `/etc/codex/skills/`. It also ships a set of its own skills, bundled with Codex by OpenAI. Codex follows a symlinked skill folder to its target when scanning any of these locations. Each skill is a directory holding a `SKILL.md`.
 
 Separately, `~/.codex/config.toml` can carry `[[skills.config]]` entries with `path` and `enabled` keys. This is documented as the way to disable a discovered skill without deleting it, not as a way to declare a new discovery path.
 
@@ -76,11 +76,11 @@ Codex's plugin system is separate from skills discovery. Its portable entry poin
 
 Codex scans `.agents/skills/`, not `.claude/skills/`.
 
-Verified 2026-07-23, and the plugin manifest paragraph on 2026-09-27.
+Verified 2026-07-23. Plugin manifest details checked 2026-09-27 and repository discovery checked 2026-11-27.
 
 ## Cursor
 
-Source: `cursor.com/docs/skills`, `cursor.com/docs/reference/plugins`, and the Cursor 2.5 changelog.
+Source: `cursor.com/docs/skills.md`, `cursor.com/docs/reference/plugins.md`, and the Cursor 2.5 changelog.
 
 Cursor loads skills automatically from `.cursor/skills/` and `.agents/skills/` in the project (including nested directories such as `apps/web/.cursor/skills/` in a monorepo), and from `~/.cursor/skills/` and `~/.agents/skills/` for skills available across all projects. It also reads `.claude/skills/` and `.codex/skills/`, and their `~/`-rooted equivalents, for compatibility with skills placed for those other hosts. Each skill is a directory holding a `SKILL.md`, with no manifest.
 
@@ -128,7 +128,7 @@ Verified 2026-07-23.
 
 ## OpenCode
 
-Source: `opencode.ai/docs/skills` and `opencode.ai/docs/plugins`.
+Source: `opencode.ai/docs/skills.md` and `opencode.ai/docs/plugins.md`.
 
 OpenCode scans `.opencode/skills/`, `.claude/skills/`, and `.agents/skills/` at the project level, walking up to the git worktree root, and `~/.config/opencode/skills/`, `~/.claude/skills/`, and `~/.agents/skills/` globally. There is no manifest file and no git-URL install command; placing a skills directory at one of these paths is the install.
 

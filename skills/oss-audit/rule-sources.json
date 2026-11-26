@@ -404,15 +404,15 @@
     "sources": [
       "https://agentskills.io/specification.md"
     ],
-    "verified": "2026-07-28",
-    "note": "Confirms the frontmatter contract this repository's validator enforces: name 1-64 chars, lowercase alphanumeric and hyphens, no leading, trailing, or consecutive hyphen, matching the parent directory; description 1-1024 chars."
+    "verified": "2026-11-26",
+    "note": "Resolving each warning is repository policy. The specification defines the frontmatter contract this repository's validator enforces: name 1-64 chars, lowercase alphanumeric and hyphens, no leading, trailing, or consecutive hyphen, matching the parent directory; description 1-1024 chars."
   },
   "R-SKL-03": {
     "sources": [
       "https://agentskills.io/specification.md"
     ],
-    "verified": "2026-07-28",
-    "note": "'Keep your main SKILL.md under 500 lines' and the under-5000-token recommendation, both in the progressive disclosure section."
+    "verified": "2026-11-26",
+    "note": "The specification recommends a short SKILL.md. The repository applies its 500-line limit to the body after frontmatter."
   },
   "R-SKL-04": {
     "sources": [
@@ -436,8 +436,8 @@
     "sources": [
       "https://agentskills.io/specification.md"
     ],
-    "verified": "2026-07-28",
-    "note": "Progressive disclosure section plus the description guidance that it should state what the skill does and when to use it. The verification-loop and no-harness-specific-tools parts are oss-kit's own."
+    "verified": "2026-11-26",
+    "note": "The specification describes progressive disclosure, task descriptions, and use cases. This standard requires trigger wording for implicit selection. The verification loop and host-neutral instructions are project requirements."
   },
   "R-SEC-13": {
     "sources": [
