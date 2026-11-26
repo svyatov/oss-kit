@@ -75,6 +75,15 @@ test("workflow extraction handles both block-indicator orders and aliases in seq
   }
 })
 
+test("keeps sibling action keys after literal and folded step names", () => {
+  for (const indicator of ["|", ">-"]) {
+    const input = `steps:\n  - name: ${indicator}\n      uses: ignored/repo@${SHA}\n    uses: real/repo@${SHA}\n  - uses: ./local\n`
+    const result = pin(["-"], {}, input)
+    expect(result.status).toBe(0)
+    expect(JSON.parse(result.stdout).map((item: { owner: string }) => item.owner)).toEqual(["real"])
+  }
+})
+
 test("ruleset list and lookup include later pages before a read or write", () => {
   const dir = mkdtempSync(join(tmpdir(), "ruleset-"))
   const log = join(dir, "calls.jsonl")

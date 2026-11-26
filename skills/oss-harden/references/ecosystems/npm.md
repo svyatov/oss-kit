@@ -10,12 +10,12 @@ On GitLab, where nothing equivalent to Dependabot ships with the platform, the R
 
 Every package manager here writes a lockfile without being asked: `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, or `bun.lock`. The frozen-install command differs by manager, and each fails rather than re-resolving:
 
-- `npm ci`, which needs an existing `package-lock.json`, and where "If dependencies in the package lock do not match those in `package.json`, `npm ci` will exit with an error, instead of updating the package lock".
-- `yarn install --immutable`, documented as "Abort with an error exit code if the lockfile was to be modified".
+- `npm ci`, which needs a lockfile supported by the CI version of npm (see the shrinkwrap guidance below), and where "If dependencies in the package lock do not match those in `package.json`, `npm ci` will exit with an error, instead of updating the package lock".
+- Yarn Classic (1.x): `yarn install --frozen-lockfile` fails if an update is needed. Modern Yarn (2+): `yarn install --immutable` fails if the lockfile would change.
 - `pnpm install --frozen-lockfile`, which "doesn't generate a lockfile and fails to install if the lockfile is out of sync with the manifest / an update is needed or no lockfile is present".
 - `bun install --frozen-lockfile`, which installs the exact versions in the lockfile and exits with an error when `package.json` disagrees with `bun.lock`.
 
-Yarn and pnpm both default that flag on in CI, and pnpm's default also requires a lockfile to be present. Write the flag anyway. A default that depends on the runner exporting `CI` is not evidence in a workflow file, and the same command run locally or on a runner that does not set it silently re-resolves.
+Modern Yarn and pnpm both default that flag on in CI, and pnpm's default also requires a lockfile to be present. Write the flag anyway. A default that depends on the runner exporting `CI` is not evidence in a workflow file, and the same command run locally or on a runner that does not set it silently re-resolves.
 
 ### What breaks the first time you commit the lockfile
 
@@ -25,16 +25,16 @@ Yarn and pnpm both default that flag on in CI, and pnpm's default also requires 
 
 **Every lockfile needs a directory the updater is configured to read.** Dependabot reaches the directories its configuration lists and no others, so a workspace or a nested package whose directory is unlisted keeps a lockfile nobody bumps. List each one, and give the project a single command that regenerates them all.
 
-**`npm-shrinkwrap.json` is no longer a lockfile.** npm 12 removed the `npm shrinkwrap` command and no longer loads or honors a file of that name, so a repository still carrying one is installing from nothing. Rename it to `package-lock.json`, or use `bundleDependencies` where the point was to ship a locked tree. The roster still lists the filename because repositories still carry it, and finding one is now a finding rather than a pass.
+**Check the npm version before scoring shrinkwrap.** npm 11 honors `npm-shrinkwrap.json` and prefers it when both lockfiles exist. Accept a valid shrinkwrap on that version. npm 12 ignores shrinkwrap at the project root and in published tarballs. For npm 12 CI, use `package-lock.json`. If the project publishes a locked dependency tree, review `bundleDependencies` before migrating. For mixed-version CI or publication, verify which file each version consumes and whether the published package retains its intended dependencies.
 
-Verified 2026-07-31 against [npm install](https://docs.npmjs.com/cli/v12/commands/npm-install), [package-lock.json](https://docs.npmjs.com/cli/v12/configuring-npm/package-lock-json), and [npm/cli issue 4828](https://github.com/npm/cli/issues/4828), and the shrinkwrap paragraph on 2026-08-03 against [npm CLI v12.0.0](https://github.com/npm/cli/releases/tag/v12.0.0).
+Verified 2026-07-31 against [npm install](https://docs.npmjs.com/cli/v12/commands/npm-install), [package-lock.json](https://docs.npmjs.com/cli/v12/configuring-npm/package-lock-json), and [npm/cli issue 4828](https://github.com/npm/cli/issues/4828), and the shrinkwrap paragraph on 2026-08-03 against [npm CLI v12.0.0](https://github.com/npm/cli/releases/tag/v12.0.0). See also [npm 11 shrinkwrap](https://docs.npmjs.com/cli/v11/configuring-npm/npm-shrinkwrap-json/) and [Yarn Classic install](https://classic.yarnpkg.com/en/docs/cli/install).
 
 ## Update cooldown (R-SEC-14)
 
 The rule is scored against the updater, so `cooldown` in `dependabot.yml` or `minimumReleaseAge` in a Renovate configuration is what closes it, and `references/github.md` and `references/gitlab.md` carry those. Three of the four managers here also carry their own, which is worth setting alongside because it covers an install the updater never touched, such as a contributor adding a dependency by hand.
 
 - **npm** has `min-release-age`, default `null`, counted in **days**: "only versions that were available more than the given number of days ago will be installed". `min-release-age-exclude` takes package names or minimatch globs. Note the interaction with `npm audit fix`: where the fix is younger than the threshold, npm keeps the vulnerable version and exits non-zero, which is a failure a project has to be ready to read.
-- **yarn** has `npmMinimalAgeGate` and it is already on, defaulting to one week.
+- **Modern Yarn** has `npmMinimalAgeGate` and it is already on, defaulting to one week in versions that document this default. Yarn Classic has no `npmMinimalAgeGate` setting.
 - **pnpm** has `minimumReleaseAge`, counted in **minutes**, and it is on by default at 1440, one day, from pnpm v11. Setting it to `0` turns the protection off.
 - **bun** has `minimumReleaseAge` under `[install]` in `bunfig.toml`, counted in **seconds**, with `minimumReleaseAgeExcludes`. It is off by default and does not recheck versions already pinned in `bun.lock`, including under `--frozen-lockfile`. `bunx --minimum-release-age` applies the age gate; older versions affected by issue 30748 ignored it. `bun upgrade` has a separate unresolved limitation. Do not report the install setting as the project's only cooldown.
 
@@ -47,7 +47,7 @@ Verified 2026-08-03 against [npm config](https://docs.npmjs.com/cli/v12/using-np
 An install-time lifecycle script can give a compromised package access to the runner and its tokens. Defaults and exceptions differ by manager. Check the actual configuration before reporting dependency scripts blocked.
 
 - **npm** blocks dependency lifecycle scripts by default from version 12, released 2026-07-08, and governs the exceptions with an `allowScripts` field in the root `package.json`. Maintain it with `npm install-scripts approve|deny|ls|prune`; `npm approve-scripts` and `npm deny-scripts` are aliases for the first two. `approve` writes a version-pinned entry such as `pkg@1.2.3` unless `--no-allow-scripts-pin` is passed, `deny` writes a name-only `false` entry that survives a later `approve --all`, `ls` reports what is blocked without editing anything, and `npm rebuild` runs a script that was approved after the install. npm 12 also changed `allow-git` and `allow-remote` to default to `none`, so a git or tarball-URL dependency no longer resolves until one of them is set to `all` or `root`.
-- **yarn** defaults `enableScripts` to false, documented as "Yarn will not execute the postinstall scripts from third-party packages".
+- **Yarn Classic** supports `yarn install --ignore-scripts` to disable project and dependency scripts. For modern Yarn, set `enableScripts: false` explicitly in `.yarnrc.yml` and review any per-package `dependenciesMeta.built` exceptions. Check the project's Yarn version before relying on a default.
 - **pnpm** disabled automatic execution of dependency `postinstall` scripts in version 10. `allowBuilds` lists the dependencies permitted to build; `dangerouslyAllowAllBuilds` turns the protection off wholesale and its name is the review comment.
 - **bun** permits a built-in list of trusted npm packages when `trustedDependencies` is absent. An explicit `trustedDependencies` array replaces that list; `[]` trusts no dependencies. Use `--ignore-scripts` when no lifecycle script should run.
 
