@@ -27,7 +27,7 @@ The specification validator that ships in `skills/oss-skill/scripts/validate.mjs
 uv tool install git+https://github.com/NVIDIA/skillspector.git@c7958a3268d9498644b22edb75d0f051bbc8cbfc
 ```
 
-It installs from its upstream repository, pinned to a full commit SHA, because it has no official package on a registry. The SHA is the v2.12.0 release, the version CI runs through `svyatov/setup-skillspector`. When a Dependabot bump of that action changes the SkillSpector version, reinstall with `--force` at the new release's commit.
+The command pins SkillSpector to v2.12.0 by commit SHA to match the version CI runs through `svyatov/setup-skillspector`. When the action updates SkillSpector, reinstall with `--force` at the new release's commit.
 
 ## Test
 

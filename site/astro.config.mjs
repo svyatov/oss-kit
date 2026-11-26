@@ -53,6 +53,7 @@ const meta = (property, content) => ({
 
 export default defineConfig({
   site: SITE,
+  scopedStyleStrategy: "where",
   redirects: {
     "/skills/oss-publish/pypi/": "/ecosystems/pypi/#oss-publish",
   },
