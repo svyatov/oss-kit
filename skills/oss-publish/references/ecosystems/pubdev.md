@@ -172,6 +172,8 @@ GitHub's SPDX dependency-graph export can supplement an artifact inventory witho
 
 ```yaml
   github-release:
+    env:
+      GH_REPO: ${{ github.repository }}
     runs-on: ubuntu-latest
     needs: [publish, build]
     permissions:
@@ -191,7 +193,7 @@ GitHub's SPDX dependency-graph export can supplement an artifact inventory witho
       - uses: actions/attest@v4
         with:
           subject-checksums: SHA256SUMS
-      - run: gh release upload "$GITHUB_REF_NAME" dist/* SHA256SUMS
+      - run: gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes dist/* SHA256SUMS
         env:
           GH_TOKEN: ${{ github.token }}
 ```

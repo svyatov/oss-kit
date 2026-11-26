@@ -90,7 +90,7 @@ Nothing in the Go module ecosystem serves build provenance, and the thing that l
 
 Source: [Go Modules Reference](https://go.dev/ref/mod) and [Go, Publishing a module](https://go.dev/doc/modules/publishing).
 
-The strongest available substitute is the pair the ecosystem does offer. A consumer can verify the downloaded module cache against the checksum database with `go mod verify`, and the repository can sign its release tags so the commit the version resolves to carries an identity. Tag signing is R-SEC-05 and `oss-harden` owns it.
+Go authenticates downloads using `go.sum` and, when applicable, the checksum database. Run `go mod verify` to detect changes to cached modules since download. A signed release tag identifies the signer of the commit. Tag signing is R-SEC-05 and `oss-harden` owns it.
 
 R-PUB-03 is not applicable on this tag-published track. Record the registry provenance limitation separately, without scoring it as a failed rule. Built assets attached to a forge release still take the inventory and signing checks in Step 6.
 
@@ -126,6 +126,8 @@ Attach and attest in a separate job, which is the same job boundary the other ec
 
 ```yaml
   github-release:
+    env:
+      GH_REPO: ${{ github.repository }}
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     needs: [test, build]
@@ -143,7 +145,7 @@ Attach and attest in a separate job, which is the same job boundary the other ec
       - uses: actions/attest@v4
         with:
           subject-checksums: SHA256SUMS
-      - run: gh release upload "$GITHUB_REF_NAME" dist/* SHA256SUMS
+      - run: gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes dist/* SHA256SUMS
         env:
           GH_TOKEN: ${{ github.token }}
 ```
@@ -160,8 +162,6 @@ sha256sum -c SHA256SUMS
 ```
 
 Run the first command against each asset downloaded, never against `SHA256SUMS`, which is a subject of nothing. `--signer-workflow <owner>/<repo>/.github/workflows/ci.yml` pins which workflow the attestation must have come from. On GitLab CI/CD the forge attestation above is unavailable, so a GitLab release can carry the same `SHA256SUMS` with nothing signing it; say that rather than presenting the file as provenance.
-
-`gh release upload` fails when no release exists for the tag. Either create it in this job with `gh release create "$GITHUB_REF_NAME" --generate-notes` first, or have the maintainer publish the release from the tag. This reference does not choose between them, because release notes are the project's own.
 
 ### Where the project already uses GoReleaser
 

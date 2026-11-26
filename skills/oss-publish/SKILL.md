@@ -9,7 +9,7 @@ license: MIT
 
 Set up CI releases with trusted publishing, a release tag, and a human approval gate. The workflow may receive the tag or create it during release automation. Gather the facts, configure authentication, prepare the workflow, gate publication, and verify provenance. Registry fields and workflow syntax differ by ecosystem and forge. Read the matching file before writing configuration or giving settings instructions: [npm](references/ecosystems/npm.md), [pypi](references/ecosystems/pypi.md), [rubygems](references/ecosystems/rubygems.md), [crates](references/ecosystems/crates.md), [go-modules](references/ecosystems/go-modules.md), [packagist](references/ecosystems/packagist.md), [nuget](references/ecosystems/nuget.md), [maven-central](references/ecosystems/maven-central.md), [hex](references/ecosystems/hex.md), [pubdev](references/ecosystems/pubdev.md), or [containers](references/ecosystems/containers.md). Each covers both forges and identifies unsupported steps. Do not infer one ecosystem's publication flow from another.
 
-Two of the eleven run on the tag-published track, where the registry reads the forge instead of taking an upload: Go modules and Packagist. There is no publish credential on that track at all, so R-PUB-01 through R-PUB-04 do not reach it and R-PUB-07 does. `STANDARD.md`'s release preamble is what assigns the track, and each of those two files states it at the top.
+Two of the eleven run on the tag-published track, where the registry reads the forge instead of taking an upload: Go modules and Packagist. There is no publish credential on that track at all, so R-PUB-01 through R-PUB-04 do not apply. R-PUB-07 covers Packagist. Go modules expose no registry entry to update. `STANDARD.md`'s release preamble is what assigns the track, and each of those two files states it at the top.
 
 ## How to run this skill
 
@@ -79,7 +79,7 @@ Use the existing release tool's trigger, or a version-tag trigger matching Step 
 
 ### Step 4: Gate on manual approval with two-factor authentication
 
-Choose the last enforced publication gate that covers the complete release flow, including public release assets. A registry gate qualifies only when the CI identity cannot approve its own staged artifact. It must also approve every package in the flow with one human action. npm staged publishing qualifies for one package with no public forge assets. When that flow also publishes forge assets, use one forge gate before direct package publication and asset upload.
+Choose the last enforced publication gate that covers the complete release flow, including public release assets. A registry gate qualifies only when the CI identity cannot approve its own staged artifact. It must also approve every package in the flow with one human action. npm staging qualifies when one approval covers every package and the flow has no public forge assets. When that flow also publishes forge assets, use one forge gate before direct package publication and asset upload.
 
 Where a registry gate qualifies, use it as the default. Keep any forge environment binding that forms part of the publisher identity, but configure no required reviewer there. Where no registry gate qualifies, pin the publish job to a GitHub environment with required reviewers. On GitLab, use a protected environment with one blocking manual job. Set `when: manual` and `allow_failure: false`, and restrict deployment permission to at least one person who is not an automation account.
 
@@ -94,6 +94,8 @@ After the first release, verify the published artifact against the repository an
 ### Step 6: Describe and sign what the release ships (R-PUB-05, R-PUB-06)
 
 This step applies when the release attaches built assets; forge-generated source archives do not qualify. Generate an SPDX or CycloneDX inventory of the exact assets in the unprivileged build job. Transfer the inventory and assets to a separate gated job for signing, attestation, and upload. Sign each asset or a manifest of its hashes. Prefer the forge's attestation when it covers those exact bytes; use `actions/attest` for new GitHub workflows. Otherwise identify the verification key and where consumers obtain it. Follow documented ecosystem exceptions where the build and publish boundary cannot be separated. A source-tree SBOM does not establish a binary's contents.
+
+For a new GitHub release, pass the verified tag and all assets to `gh release create --verify-tag`. Preserve the project's release notes. If another tool owns the release, have it prepare a draft. Attach and verify all expected files before that tool publishes the draft. On retry, check the tag, draft status, and uploaded digests. Upload only missing files. Stop on conflicting digests. For a published immutable release, report missing assets and leave the release intact.
 
 ### Step 7: Verify before reporting done
 

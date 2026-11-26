@@ -191,6 +191,8 @@ This reference names no SBOM generator for Python. The ones in common use are th
 
 ```yaml
   github-release:
+    env:
+      GH_REPO: ${{ github.repository }}
     runs-on: ubuntu-latest
     needs: [publish]
     permissions:
@@ -210,7 +212,7 @@ This reference names no SBOM generator for Python. The ones in common use are th
       - uses: actions/attest@v4
         with:
           subject-checksums: SHA256SUMS
-      - run: gh release upload "$GITHUB_REF_NAME" dist/* SHA256SUMS
+      - run: gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes dist/* SHA256SUMS
         env:
           GH_TOKEN: ${{ github.token }}
 ```
@@ -229,8 +231,6 @@ sha256sum -c SHA256SUMS
 ```
 
 Run the first command against each asset downloaded, never against `SHA256SUMS`, which is a subject of nothing. It proves that this workflow in this repository produced those exact bytes, and it prints the signing workflow it accepted; `--signer-workflow <owner>/<repo>/.github/workflows/release.yml` pins that, so an attestation from any other workflow in the repository fails. The second command is what a consumer without `gh` has. It proves the files match a list published beside them, and nothing about who produced either.
-
-`gh release upload` fails when no release exists for the tag. Either create it in this job with `gh release create "$GITHUB_REF_NAME" --generate-notes` before the upload, or have the maintainer publish the release from the tag first. This reference does not choose between them, because release notes are the project's own.
 
 A third job is what makes the grants above safe, so copy the job boundary along with them. The build job runs the project's own build command, so giving it release-asset writes and an attestation identity is exactly the credential split Step 3 exists to enforce, and it would write assets before the approval gate. The publish job holds the OIDC identity PyPI trusts. Only a separate job satisfies both, and `needs: [publish]` is what keeps the assets behind the gate.
 

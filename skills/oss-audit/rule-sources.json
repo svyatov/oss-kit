@@ -335,7 +335,7 @@
       "https://docs.npmjs.com/staged-publishing/"
     ],
     "verified": "2026-08-07",
-    "note": "GitHub confirms that required reviewers gate a job and that Prevent self-review is a separate setting. GitLab supports two native gates. A protected environment can restrict who runs a blocking manual deployment job. Deployment approval rules block the deployment, but an approved job still needs a separate manual start. npm staged publishing keeps a package unavailable until a person approves its stage with 2FA. Each stage has its own stage ID and approval command, so a release flow with several packages needs several npm approvals. R-PUB-04 requires at least one verified gate. Extra gates remain valid."
+    "note": "GitHub confirms that required reviewers gate a job and that Prevent self-review is a separate setting. GitLab supports two native gates. A protected environment can restrict who runs a blocking manual deployment job. Deployment approval rules block the deployment, but an approved job still needs a separate manual start. npm staged publishing keeps a package unavailable until a person approves its stage with 2FA. The npm documentation checked on 2026-11-27 also describes web batch approval where available. One 2FA challenge covers up to 100 validated versions, one per package. Check each result independently. R-PUB-04 requires at least one verified gate. Extra gates remain valid."
   },
   "R-PUB-05": {
     "sources": [
