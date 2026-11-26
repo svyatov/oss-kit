@@ -6,7 +6,7 @@ import { join } from "node:path"
 
 const SCRIPT = "skills/oss-audit/scripts/collect.mjs"
 
-const repo = (files: Record<string, string>, cycle = false) => {
+const repo = (files: Record<string, string>, setup?: (dir: string) => void) => {
   const dir = mkdtempSync(join(tmpdir(), "collect-"))
   for (const [path, body] of Object.entries(files)) {
     const full = join(dir, path)
@@ -14,7 +14,7 @@ const repo = (files: Record<string, string>, cycle = false) => {
     writeFileSync(full, body)
   }
   try {
-    if (cycle) symlinkSync(dir, join(dir, "loop"))
+    setup?.(dir)
     return JSON.parse(execFileSync("node", [SCRIPT, dir], { encoding: "utf8", stdio: "pipe", timeout: 5000 }))
   } finally {
     rmSync(dir, { recursive: true, force: true })
@@ -41,9 +41,39 @@ test("fails explicitly on unsupported YAML instead of emitting incomplete facts"
 })
 
 test("finds deeply nested actions without following directory cycles", () => {
-  const facts = repo({ "a/b/c/d/e/action.yml": "runs:\n  using: composite\n  steps:\n    - uses: actions/cache@v4\n" }, true)
+  const facts = repo({ "a/b/c/d/e/action.yml": "runs:\n  using: composite\n  steps:\n    - uses: actions/cache@v4\n" }, dir => symlinkSync(dir, join(dir, "loop")))
   expect(facts.actions).toHaveLength(1)
   expect(facts.summary.externalUsesUnpinned).toEqual(["actions/cache@v4"])
+})
+
+test("records external links as unavailable and follows internal links", () => {
+  const outside = mkdtempSync(join(tmpdir(), "collect-neighbor-"))
+  try {
+    writeFileSync(join(outside, "action.yml"), "name: Neighbor\n")
+    const facts = repo({ "docs/intro.md": "# Project\n", ".github/workflows/local.yml": "on: push\n" }, dir => {
+      symlinkSync("docs/intro.md", join(dir, "README.md"))
+      symlinkSync(outside, join(dir, "neighbor"))
+      for (const name of ["CHANGELOG.md", "LICENSE", ".github/workflows/other.yml"]) {
+        symlinkSync(join(outside, "action.yml"), join(dir, name))
+      }
+    })
+    expect(facts.unavailablePaths.sort()).toEqual([".github/workflows/other.yml", "CHANGELOG.md", "LICENSE", "neighbor"])
+    expect(facts.actions).toEqual([])
+    expect(facts.presence.licenseFiles).toEqual([])
+    expect(facts.changelog).toBeNull()
+    expect(facts.readme.headings[0].text).toBe("Project")
+    expect(facts.workflows.map((w: { file: string }) => w.file)).toEqual([".github/workflows/local.yml"])
+  } finally {
+    rmSync(outside, { recursive: true, force: true })
+  }
+})
+
+test("counts action calls in jobs and steps while ignoring input data named uses", () => {
+  const facts = repo({
+    ".github/workflows/ci.yml": "jobs:\n  shared:\n    uses: org/repo/.github/workflows/ci.yml@main\n    with:\n      uses: data\n  build:\n    steps:\n      - uses: actions/checkout@v4\n        with:\n          uses: data\n",
+    "action.yaml": "runs:\n  using: composite\n  steps:\n    - uses: actions/cache@v4\n      with:\n        uses: data\n",
+  })
+  expect(facts.summary.externalUsesUnpinned).toEqual(["org/repo/.github/workflows/ci.yml@main", "actions/checkout@v4", "actions/cache@v4"])
 })
 
 // The R-CI-05 false fail in a real run came from counting job-shaped lines with

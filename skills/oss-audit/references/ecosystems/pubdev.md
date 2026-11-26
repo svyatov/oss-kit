@@ -11,7 +11,7 @@ Sources: [Pubspec format](https://dart.dev/tools/pub/pubspec), [Publishing packa
 Three cases decide most arguments:
 
 - `publish_to: none` settles the shipped answer. Dart's own words: "Specify `none` to prevent a package from being published." Almost every Flutter application carries it, which is why a repository full of Dart code often ships nothing through pub.dev.
-- `publish_to` naming a custom server means the package ships somewhere else. Report it as shipped and name the server, rather than reading a redirect as an absence.
+- A custom `publish_to` names the destination. Look for a release step publishing there or a package record on that server before recording shipment.
 - A `pubspec.lock` decides nothing in either direction, because Dart tells a library package not to commit it and an application to commit it. Its absence from a library is the documented convention rather than a gap. An `example/pubspec.yaml` inside a published package is present and is not separately shipped.
 
 ## Release track

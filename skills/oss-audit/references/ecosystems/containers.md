@@ -6,7 +6,7 @@ Container images are the one roster entry with no manifest and no lockfile, so t
 
 Container images are shipped when something pushes one to a registry. On GitHub the push targets `ghcr.io`, in the form `docker push ghcr.io/NAMESPACE/IMAGE_NAME:latest`. On GitLab a job authenticates against `$CI_REGISTRY` and pushes to `$CI_REGISTRY_IMAGE`, which GitLab documents as resolving "to the address of the registry tied to this project". A step doing either, or an image already published under the repository's namespace, is the evidence.
 
-Sources: [Working with the Container registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry), [Build and push container images](https://docs.gitlab.com/user/packages/container_registry/build_and_push_images/).
+Sources: [Working with the Container registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry.md), [Build and push container images](https://docs.gitlab.com/user/packages/container_registry/build_and_push_images/).
 
 Three cases decide most arguments:
 
@@ -18,4 +18,4 @@ Three cases decide most arguments:
 
 Container images take the registry-push track. A push uploads built layers to a registry under a credential, which is the same shape as any package upload and is what assigns the track. The roster records `"track": "registry-push"` for container images and the release area's preamble names them in its registry-push list.
 
-Verified 2026-07-31 against https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry and https://docs.gitlab.com/user/packages/container_registry/build_and_push_images/.
+Verified 2026-07-31 against https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry.md and https://docs.gitlab.com/user/packages/container_registry/build_and_push_images/.
