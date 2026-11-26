@@ -35,7 +35,7 @@ Look for `.github/workflows/` or `.gitlab-ci.yml`, check the git remote for a gi
 
 ### Step 2: Read the current state
 
-Settle the credential before the first call rather than discovering the gap on a failed one. Every read and write from here on goes through the forge's API.
+Inspect repository files in the working tree, including uncommitted changes. Use local Git for tag objects and signatures. Resolve the credential before the first forge API call for remote settings.
 
 For GitHub, read [Credential requirements](references/github.md#credential-requirements) before calling the API.
 
@@ -77,7 +77,7 @@ Verified 2026-08-07 against [GitHub repository REST endpoints](https://docs.gith
 
 For R-SEC-01, pin every external GitHub `uses:` reference to a full 40-character SHA, including reusable workflows and composite actions. Preserve the selected version in a trailing comment. For R-SEC-06 on GitLab, pin `image:`, `services:`, and external `include:` entries. Resolve the existing version unless an upgrade is authorized. Check current compatible and major releases and report lag separately.
 
-On GitHub, use [the bundled resolver](references/github.md#resolve-action-references-with-the-bundled-script), or its documented manual fallback. Dereference annotated tags and report branch references explicitly.
+On GitHub, run `scripts/resolve-pin.mjs` from the installed skill with Node 22+ or Bun. Follow the [resolver instructions or manual fallback](references/github.md#resolve-action-references-with-the-bundled-script). Dereference annotated tags and identify branch references.
 
 Installer commands inside steps are outside R-SEC-01 and R-SEC-06. Registry installs belong to R-SEC-08 in Step 10. Git-URL and piped-script installers need the origin check below.
 
@@ -95,19 +95,19 @@ For R-SEC-14, configure the updater's release-age delay and resolve its effectiv
 
 For R-SEC-15, inspect every CI registry install for an explicit block on dependency-supplied install code or a committed allowlist. Read the ecosystem reference for supported controls. Report unsupported ecosystems as outside scope. Write the flag or allowlist even when the current manager defaults to blocking scripts.
 
-Verified 2026-08-07 against [GitHub Actions metadata syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/metadata-syntax.md), [GitHub secure use reference](https://docs.github.com/en/actions/reference/security/secure-use.md), [Dependabot options](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference.md), [Dependabot cooldown guidance](https://docs.github.com/en/code-security/tutorials/secure-your-dependencies/optimizing-pr-creation-version-updates), [Renovate configuration options](https://docs.renovatebot.com/configuration-options/), and the current sources named in `references/ecosystems/`. The two GitHub Dependabot pages conflict on the unset cooldown default.
+Verified 2026-08-07 against [GitHub Actions metadata syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/metadata-syntax.md), [GitHub secure use reference](https://docs.github.com/en/actions/reference/security/secure-use.md), [Dependabot options](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference.md), [Dependabot cooldown guidance](https://docs.github.com/en/code-security/tutorials/secure-your-dependencies/optimizing-pr-creation-version-updates), [Renovate configuration options](https://docs.renovatebot.com/configuration-options/), and the current sources named in `references/ecosystems/`.
 
 ### Step 6: Branch protection and required review
 
 For R-SEC-04 on both forges, require change requests and passing CI, and reject force pushes and branch deletion. Apply these controls even with one maintainer. Present the resolved settings URL, obtain confirmation, and verify read-back evidence. Create GitHub rulesets for new protection; retain working classic protection unless migration is requested.
 
-On GitHub, use [the ruleset helper](references/github.md#edit-an-existing-ruleset) for existing rulesets. Preserve unrelated rules, strip API-read nulls before writing, and read the result back. Do not infer applied settings from a successful write.
+On GitHub, edit existing rulesets with `scripts/ruleset.mjs` from the installed skill. It requires Node 22+ or Bun and authenticated `gh`. Follow the [helper instructions or manual fallback](references/github.md#edit-an-existing-ruleset). Preserve unrelated rules, strip API-read nulls before writing, and verify the stored result.
 
 Read the access list before applying R-SEC-12. It applies only where at least two principals hold merge access. Otherwise report it outside scope and leave review requirements off, without compensating bypass entries. Where applicable, require approval and enforce existing CODEOWNERS. If the plan lacks enforced review, report that limitation and the strongest available fallback; do not claim paid controls on a free plan.
 
 ### Step 7: GitLab job token scope
 
-R-SEC-06 also covers which other projects' job tokens may access this GitLab project. The allowlist is an inbound control on the target project, not a list of projects this pipeline's token may call. Read the current inbound scope and allowlist with the commands in `references/gitlab.md`; where the scope is open, enable it and retain only source projects that need access. Where fine-grained job-token permissions are enabled, grant each allowlisted source only the endpoints it needs.
+R-SEC-06 covers inbound access from GitLab job tokens. Read the scope and every page of both the project and group allowlists in `references/gitlab.md`. Identify the sources each grant admits. Enable an open scope and retain only necessary grants after confirmation. Where fine-grained permissions are enabled, grant only the required endpoints. Verify both lists after a repair. Report incomplete evidence as unknown.
 
 ### Step 8: Signed and protected tags
 
@@ -115,7 +115,7 @@ For R-SEC-05, follow the signed-tag procedure in [GitHub](references/github.md#s
 
 For R-SEC-13, read tag protection separately from branch protection: GitHub tag rulesets or GitLab protected tags. Establish which person or workflow creates releases before restricting creation. Present missing settings and verify read-back evidence using the matching forge reference. Configure protection before the first release, and report any remaining deletion capability described by the forge.
 
-Verified 2026-08-07 against [GitHub rules REST endpoints](https://docs.github.com/en/rest/repos/rules), [GitHub ruleset rules](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets), [Git tag](https://git-scm.com/docs/git-tag), [Git configuration](https://git-scm.com/docs/git-config), [GitLab merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/), and [GitLab protected tags](https://docs.gitlab.com/user/project/protected_tags/).
+Verified 2026-08-07 against [GitHub rules REST endpoints](https://docs.github.com/en/rest/repos/rules.md), [GitHub ruleset rules](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/available-rules-for-rulesets), [Git tag](https://git-scm.com/docs/git-tag), [Git configuration](https://git-scm.com/docs/git-config), [GitLab merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/), and [GitLab protected tags](https://docs.gitlab.com/user/project/protected_tags/).
 
 ### Step 9: Keep untrusted input out of privileged contexts
 
@@ -153,7 +153,7 @@ The Scorecard section of the reference file Step 1 chose carries the rest: `refe
 
 Apply the R-SEC checks resolved at entry to the resulting repository and settings. Fix failures and restart after each fix. Report unavailable checks explicitly. Do not report completion with a failing rule unless the maintainer declined its fix.
 
-Use exactly five statuses: fixed, pending confirmation, outside the repository, unknown, or declined. Fixed requires a written file or verified setting. Pending confirmation means the settings block awaits the user. Outside means the rule's precondition does not apply. Unknown means a read could not answer. Declined requires the maintainer's decision and recorded reason.
+Report each rule as already compliant, fixed, pending confirmation, outside the repository, unknown, or declined. Use already compliant for an existing file or setting verified without edits. Use fixed for a repair made during this run and verified afterward. Pending confirmation means the settings block awaits the user. Outside means the rule's precondition does not apply. Unknown means a read could not answer. Declined requires the maintainer's decision and recorded reason.
 
 Group findings by rule ID, naming edited files and pending settings with resolved URLs. Include Step 3's supply-chain observations separately. Show dated Scorecard findings only as supplementary evidence. Never mark an unconfirmed setting fixed.
 

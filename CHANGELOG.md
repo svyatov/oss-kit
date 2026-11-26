@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.
 ### Fixed
 
 - Skill pages link to the install guide and list the rules they fix in the contents menu. The sidebar opens the current skill’s references, and long step names wrap in the desktop contents list.
+- `oss-harden` finds action pins after multiline step names, checks paginated protection settings and GitLab group grants, and distinguishes existing controls from repairs. Lockfile guidance covers Yarn Classic and npm 11 shrinkwrap.
 - `oss-community` limits repairs to the request, checks GitLab ticket confidentiality, and defers GitHub chooser verification until forms reach the default branch.
 - The documentation search prioritizes rule definitions for exact IDs. The standard links to each area and shows its rules in the outline. On small screens, Install is available in the sidebar menu.
 - CI guidance checks timeouts inside reusable workflows, limits GitHub Pages deployments to the default branch, and uses Pages syntax supported by the target GitLab version.
