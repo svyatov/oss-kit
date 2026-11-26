@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
-import { execFileSync } from "node:child_process"
-import { mkdtempSync, writeFileSync } from "node:fs"
+import { execFileSync, spawnSync } from "node:child_process"
+import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
@@ -19,12 +19,48 @@ const run = (body: string, args: string[] = []) => {
   }
 }
 
-test("reports the three forbidden dashes in prose", () => {
+test("reports ASCII double hyphens only in house style", () => {
   const { code, stdout } = run("A sentence — with an em dash.\nAnd – an en dash.\nAnd -- two hyphens.\n")
   expect(code).toBe(1)
   expect(stdout).toContain("em-dash")
   expect(stdout).toContain("en-dash")
-  expect(stdout).toContain("double-hyphen")
+  expect(stdout).not.toContain("double-hyphen")
+  expect(run("one -- two", ["--house"]).stdout).toContain("double-hyphen")
+})
+
+test("explicit files are scanned regardless of extension and directory searches skip symlinks", () => {
+  const root = mkdtempSync(join(tmpdir(), "prose-"))
+  const docs = join(root, "docs")
+  mkdirSync(docs)
+  for (const name of ["COMMIT_EDITMSG", "issue.txt"]) {
+    const file = join(docs, name)
+    writeFileSync(file, "robust")
+    const result = spawnSync("node", [SCRIPT, file], { encoding: "utf8" })
+    expect(result.status).toBe(1)
+    expect(result.stdout).toContain(`${file}:1:1  banned-word`)
+  }
+  writeFileSync(join(root, "outside.md"), "robust")
+  symlinkSync(root, join(docs, "loop"))
+  symlinkSync(join(root, "outside.md"), join(docs, "linked.md"))
+  expect(execFileSync("node", [SCRIPT, docs], { encoding: "utf8" })).toContain("0 finding(s)")
+  expect(spawnSync("node", [SCRIPT, join(docs, "linked.md")], { encoding: "utf8" }).stdout).toContain("banned-word")
+})
+
+test("detects emoji sequences and preserves plain license symbols", () => {
+  expect(run("© ® ™ 1 # *").code).toBe(0)
+  expect(run("🇦🇲 1️⃣ #⃣ ©️ ®️ ™️").stdout).toContain("6 finding(s)")
+})
+
+test("masks fences inside containers and resumes when a container ends", () => {
+  const body = "> ~~~text\n> robust\n> ~~~\n> robust\n- item\n  - child\n    ~~~\n    robust\n    ~~~\n    robust\n> ~~~\n> robust\nrobust"
+  const result = run(body)
+  expect(result.stdout).toContain("3 finding(s)")
+  for (const line of [4, 10, 13]) expect(result.stdout).toContain(`:${line}:`)
+})
+
+test("counts across internal punctuation in versions and decimals", () => {
+  const half = "word ".repeat(12)
+  expect(run(`${half}2.0\n3.14 ${half}finish. Short sentence.`, ["--length"]).stdout).toContain("sentence runs 27 words")
 })
 
 // The skill reproduces quoted code, output, and config verbatim, so a dash

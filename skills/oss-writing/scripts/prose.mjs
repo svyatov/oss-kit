@@ -52,8 +52,29 @@ const STOPWORDS = new Set(["a", "an", "the", "of", "to", "in", "for", "and", "or
 function proseOnly(text) {
   const lines = text.split("\n")
   let fence = null
+  const containers = []
   const masked = lines.map((line) => {
-    const marker = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line)
+    let content = line
+    // A quote needs its marker on every fenced line. A list item continues
+    // at its content indent, including across blank lines.
+    for (const [index, prefix] of containers.entries()) {
+      const continuation = prefix === ">" ? /^ {0,3}>[ \t]?/.exec(content)?.[0]
+        : content.startsWith(prefix) ? prefix : content.trim() === "" ? content : undefined
+      if (continuation === undefined) {
+        containers.length = index
+        fence = null
+        break
+      }
+      content = content.slice(continuation.length)
+    }
+    if (!fence) {
+      let prefix
+      while ((prefix = /^ {0,3}(?:>[ \t]?|(?:[-+*]|\d{1,9}[.)]) {1,4}(?! ))/.exec(content))) {
+        containers.push(prefix[0].includes(">") ? ">" : " ".repeat(prefix[0].length))
+        content = content.slice(prefix[0].length)
+      }
+    }
+    const marker = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(content)
     if (fence) {
       if (marker && marker[1][0] === fence[0] && marker[1].length >= fence.length && marker[2].trim() === "") fence = null
       return " ".repeat(line.length)
@@ -88,7 +109,7 @@ function sentenceFindings(lines) {
   let paragraph = []
   const flush = () => {
     const text = paragraph.map((part) => part.text).join("\n")
-    for (const match of text.matchAll(/[^.!?]+(?:[.!?](?=\s|$)|$)/g)) {
+    for (const match of text.matchAll(/\S[\s\S]*?(?:[.!?](?=\s|$)|$)/g)) {
       const n = match[0].trim().split(/\s+/).filter(Boolean).length
       if (n <= 25) continue
       const offset = match.index + match[0].search(/\S/)
@@ -148,12 +169,11 @@ function scan(file, opts) {
   const patterns = [
     ["em-dash", /—/g, "em dash"],
     ["en-dash", /–/g, "en dash"],
-    ["double-hyphen", / -- /g, '" -- "'],
-    // Extended_Pictographic covers the copyright, registered, and trademark
-    // signs, which are not emoji and appear in license text. Exclude them.
-    ["emoji", /(?!©|®|™)\p{Extended_Pictographic}/gu, "emoji"],
+    // Keep plain license symbols. Their emoji presentation has a selector.
+    ["emoji", /\p{RGI_Emoji}|[0-9#*]\u20e3|(?!©|®|™)\p{Extended_Pictographic}/gv, "emoji"],
   ]
   if (opts.house) patterns.push(
+    ["double-hyphen", / -- /g, '" -- "'],
     ["curly-quote", /[‘’“”]/g, "curly quote"],
     ["inline-header-bullet", /^\s*[-*] \*\*[^*]+:\*\*\s/g, "inline-header bullet"],
   )
@@ -180,11 +200,12 @@ function scan(file, opts) {
   return out
 }
 
-function walk(p) {
-  if (statSync(p).isDirectory()) {
-    return readdirSync(p).flatMap((e) => walk(join(p, e)))
-  }
-  return /\.(md|markdown)$/i.test(p) ? [p] : []
+function markdownFiles(directory) {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(directory, entry.name)
+    if (entry.isDirectory()) return markdownFiles(path)
+    return entry.isFile() && /\.(md|markdown)$/i.test(entry.name) ? [path] : []
+  })
 }
 
 const argv = process.argv.slice(2)
@@ -199,11 +220,12 @@ for (let i = 0; i < argv.length; i++) {
   else if (a === "--help" || a === "-h") {
     process.stdout.write(`usage: prose.mjs [--house] [--length] [--only a,b] [--proper FILE] PATH...
 
-Default reports what R-DOC-05's Check names: em and en dashes, " -- ", emoji,
+Pass text files directly. Directories include only Markdown files and skip symlinks.
+Default reports what R-DOC-05's Check names: em and en dashes, emoji,
 Title Case headings, and the six promotional words that rule lists.
 
   --house   add the rest of the house style in references/linting.md:
-            curly quotes, inline-header bullets, and the full banned-word
+            spaced double hyphens, curly quotes, inline-header bullets, and the full banned-word
             table. Every hit needs a human decision.
   --length  add sentences over 25 words. Noisy by design; opt in.
   --only    report only the named checks, comma separated.
@@ -216,7 +238,8 @@ Exits 1 when anything is reported, 0 when nothing is.
 }
 if (paths.length === 0) { process.stderr.write("prose.mjs: no path given, try --help\n"); process.exit(2) }
 
-let findings = paths.flatMap(walk).flatMap((f) => scan(f, opts))
+const files = paths.flatMap((path) => statSync(path).isDirectory() ? markdownFiles(path) : [path])
+let findings = files.flatMap((f) => scan(f, opts))
 if (opts.only) findings = findings.filter((f) => opts.only.has(f.code))
 
 for (const f of findings) process.stdout.write(`${f.file}:${f.line}:${f.col}  ${f.code}  ${f.msg}\n`)
